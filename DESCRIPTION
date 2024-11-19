@@ -8,7 +8,7 @@ Description: Tools and utilities for preparing data for and running 'LANDIS-II' 
     and post-processing their outputs.
 License: GPL (>= 3)
 Encoding: UTF-8
-Language: en-CA
+Language: en-US
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
 Suggests: 
