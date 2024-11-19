@@ -1,6 +1,7 @@
 # landisutils
 
 <!-- badges: start -->
+[![R-CMD-check](https://github.com/FOR-CAST/landisutils/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/FOR-CAST/landisutils/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
 Tools and utilities for preparing data for and running LANDIS-II simulations, and post-processing their outputs.
