@@ -2,7 +2,7 @@
 % Please edit documentation in R/biomass_succession.R
 \name{InitalCommunities}
 \alias{InitalCommunities}
-\title{InitialCommunities}
+\title{Initial Communities File}
 \usage{
 InitalCommunities()
 }
@@ -10,5 +10,5 @@ InitalCommunities()
 \code{NULL} (invisibly). Invoked for side effect of writing to file.
 }
 \description{
-InitialCommunities
+Initial Communities File
 }

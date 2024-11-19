@@ -1,4 +1,4 @@
-#' InitialCommunities
+#' Initial Communities File
 #'
 #' @return `NULL` (invisibly). Invoked for side effect of writing to file.
 #'
@@ -6,5 +6,6 @@
 #'
 InitalCommunities <- function() {
   ##
-  ##
+
+  return(invisible(NULL))
 }
