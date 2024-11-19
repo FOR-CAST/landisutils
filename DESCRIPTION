@@ -1,0 +1,13 @@
+Package: landisutils
+Title: Utilities for running LANDIS-II simulations
+Version: 0.0.0.9000
+Authors@R: 
+    person(c("Alex", "M"), "Chubaty", email = "achubaty@for-cast.ca", role = c("aut", "cre"),
+           comment = c(ORCID = "0000-0001-7146-8135"))
+Description: Tools and utilities for preparing data for and running 'LANDIS-II' simulations,
+    and post-processing their outputs.
+License: GPL (>= 3)
+Encoding: UTF-8
+Language: en-CA
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
