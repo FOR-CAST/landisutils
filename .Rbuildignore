@@ -1,4 +1,7 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
-^LICENSE\.md$
 ^\.github$
+^inputs$
+^outputs$
+^man-roxygen$
+^LICENSE\.md$

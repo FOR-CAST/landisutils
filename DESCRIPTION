@@ -11,7 +11,20 @@ Encoding: UTF-8
 Language: en-US
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
-Suggests: 
+Imports:
+    data.table,
+    dplyr,
+    glue,
+    terra
+Suggests:
+    LandR,
+    knitr,
+    rmarkdown,
+    SpaDES.core,
     spelling,
     testthat (>= 3.0.0)
+Remotes:
+    PredictiveEcology/LandR@development,
+    PredictiveEcology/SpaDES.core@development
 Config/testthat/edition: 3
+VignetteBuilder: knitr

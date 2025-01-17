@@ -2,3 +2,9 @@
 .Rhistory
 .RData
 .Ruserdata
+inputs
+inputs/
+inst/doc
+outputs
+outputs/
+

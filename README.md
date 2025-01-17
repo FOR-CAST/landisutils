@@ -8,17 +8,48 @@ Tools and utilities for preparing data for and running LANDIS-II simulations, an
 
 ## Installation
 
-You can install the development version of landisutils like so:
+You can install the development version of `landisutils` like so:
 
 ``` r
 remotes::install_github("FOR-CAST/landisutils")
 ```
 
-## Example
+## Preparing data
 
-This is a basic example which shows you how to solve a common problem:
+Use `prep*()` functions to convert input data to LANDIS-II data formats.
+
+```r
+ic_files <- prepInitialCommunities()
+```
+
+## Creating LANDIS-II input files
+
+Use `insert*()` functions when generating LANDIS-II input text files.
 
 ``` r
-library(landisutils)
-## basic example code
+insInitialCommunities(ic_files) |>
+  writeLines() ## TODO
+```
+
+## Creating LANDIS-II scenario files
+
+Use `scenario()` to construct scenario files.
+
+```r
+pix_size <- 250 ## TODO: get this from the prepared data
+sim_time <- 200
+
+scenario(
+  cell_length = pix_size,
+  duration = sim_time,
+  extensions = list(
+    succession = list(),
+    disturbance = list(),
+    other = list()
+  ),
+  name = "",
+  path = file.path(),
+  version = 7
+)
+## TODO - deal with more detailed customizations later
 ```
