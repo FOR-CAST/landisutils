@@ -4,10 +4,27 @@
 \alias{BiomassSuccessionInput}
 \title{Create  Succession Input File}
 \usage{
-BiomassSuccessionInput(...)
+BiomassSuccessionInput(path, ...)
 }
 \arguments{
-\item{...}{arguments passed to other functions}
+\item{path}{}
+
+\item{...}{arguments passed to other functions:
+\itemize{
+\item \code{CalibrateMode};
+\item \code{ClimateConfigFile} (can be NULL; optional for v7);
+\item \code{EcoregionParametersFiles};
+\item \code{FireReductionParameters};
+\item \code{HarvestReductionParameters};
+\item \code{InitialCommunitiesFiles};
+\item \code{MinRelativeBiomass};
+\item \code{SeedingAlgorithm};
+\item \code{SpeciesDataFile};
+\item \code{SpeciesEcoregionDataFile};
+\item \code{SufficientLight};
+\item \code{SpinupMortalityFraction};
+\item \code{Timestep};
+}}
 }
 \description{
 Follows the  Biomass Succession User Guide.

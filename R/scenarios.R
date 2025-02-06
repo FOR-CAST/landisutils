@@ -2,64 +2,70 @@
 #'
 #' @param name Character. Label to use as a filename and label for this scenario.
 #'
-#' @param duration Numeric. Number of years to run the simulation.
-#'
-#' @param cell_length Numeric. Size of ecoregion raster cells (in $m$).
-#'
-#' @param distRndOrder Logical. Should disturbances be applied in a random order?
-#'
 #' @param extensions Named list of `r paste(.extTypes, collapse = " , ")` extensions.
 #'
 #' @param path Character. Path specifying a directory to use for the scenario runs.
 #'
 #' @template LANDIS_version
 #'
+#' @param ... arguments passed to other functions:
+#'   - `CellLength` Numeric. Size of ecoregion raster cells (in $m$);
+#'   - `DisturbancesRandomOrder` Logical. Should disturbances be applied in a random order?
+#'   - `Duration` Numeric. Number of years to run the simulation;
+#'   - `EcoregionsFiles` List of length 2 containing character file paths (TODO);
+#'   - `RandomNumberSeed` Integer. Seed used to initialize the LANDIS-II random number generator;
+#'   - `SpeciesDataFile` Character. (TODO);
+#'   -
+#'
 #' @template return_file
 #'
 #' @export
-scenario <- function(name = NULL, duration = NULL, cell_length = NULL, distRndOrder = FALSE,
-                     extensions = NULL, seed = NULL, path = NULL, version = landisVersion()) {
+scenario <- function(name = NULL, extensions = NULL, path = NULL, version = landisVersion(), ...) {
+  dots <- list(...)
+
   stopifnot(
     !is.null(name), length(name) == 1, is.character(name),
-    !is.null(duration), length(duration) == 1, is.numeric(duration),
-    !is.null(cell_length), length(cell_length) == 1, is.numeric(cell_length),
+
     !is.null(extensions), is.list(extensions), all(names(extensions) %in% .extTypes),
-    !is.null(name),
-    !is.null(path)
+
+    !is.null(path), length(path) == 1, is.character(path),
+
+    ## mandatory dots params
+    !is.null(dots$Duration), length(dots$Duration) == 1, is.numeric(dots$Duration),
+
+    !is.null(dots$EcoregionsFiles), length(dots$EcoregionsFiles) == 2,
+    all(is.character(dots$EcoregionsFiles)),
+
+    !is.null(dots$SpeciesDataFile), length(dots$SpeciesDataFile) == 1,
+    is.character(dots$SpeciesDataFile)
   )
   checkVersion(version)
 
-  LandisData <- "Scenario"
-  Duration <- duration
+  ## optional dots params
+  if (!is.null(dots$RandomNumberSeed)) {
+    stopifnot(
+      length(dots$RandomNumberSeed) == 1, is.numeric(dots$RandomNumberSeed), dots$RandomNumberSeed > 0
+    )
+  }
 
-  Species <- insertSpeciesDataFile() ## needs file
-  Ecoregions <- insertEcoregions() ## needs files
+  if (!is.null(dots$CellLength)) {
+    stopifnot(
+      length(dots$CellLength) == 1, is.numeric(dots$CellLength), dots$CellLength > 0
+    )
+  }
 
-  CellLength <- cell_length ## TODO: get this from data. does LANDIS do so automatically?
-
-  SuccessionExtensions <- insertSuccessionExtensions(extensions$succession)
-
-  DisturbanceExtensions <- insertDisturbanceExtensions(extensions$disturbance)
-
-  DisturbancesRandomOrder <- insertDisturbancesRandomOrder(distRndOrder)
-
-  OtherExtensions <- insertOtherExtensions(extensions$other)
-
-  RandomNumberSeed <- insertRandomNumberSeed(seed)
-
-  ## TODO
-  file <- glue::glue("{file.path(path, name)}.txt")
+  file <- file.path(path, glue::glue("{name}.txt"))
   writeLines(c(
-    .landisutilsHeader,
-    LandisData,
-    Duration,
-    Species,
-    Ecoregions,
-    CellLength,
-    SuccessionExtensions,
-    DisturbanceExtensions,
-    OtherExtensions,
-    RandomNumberSeed
+    LandisData("Scenario"),
+    insertDuration(duration),
+    insertSpeciesDataFile(dots$SpeciesDataFile),
+    insertEcoregionsFiles(dots$EcoregionsFiles),
+    insertCellLength(dots$CellLength), ## TODO: get this from data
+    insertSuccessionExtensions(extensions$succession),
+    insertDisturbanceExtensions(extensions$disturbance),
+    insertDisturbancesRandomOrder(dots$DisturbancesRandomOrder),
+    insertOtherExtensions(extensions$other),
+    insertRandomNumberSeed(dots$RandomNumberSeed)
   ), file)
 }
 

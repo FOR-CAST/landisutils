@@ -14,17 +14,20 @@ RoxygenNote: 7.3.2
 Imports:
     data.table,
     dplyr,
+    fs,
     glue,
+    LandR,
     terra
 Suggests:
-    LandR,
     knitr,
     rmarkdown,
     SpaDES.core,
     spelling,
-    testthat (>= 3.0.0)
+    testthat (>= 3.0.0),
+    withr
 Remotes:
     PredictiveEcology/LandR@development,
     PredictiveEcology/SpaDES.core@development
 Config/testthat/edition: 3
+Config/testthat/parallel: true
 VignetteBuilder: knitr

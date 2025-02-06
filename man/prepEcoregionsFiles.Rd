@@ -4,25 +4,18 @@
 \alias{prepEcoregionsFiles}
 \title{Create \code{Ecoregions} and \code{EcoregionsMap} Files}
 \usage{
-prepEcoregionsFiles(x)
+prepEcoregionsFiles(ecoregion, ecoregionMap, path)
 }
 \arguments{
-\item{x}{TODO}
+\item{ecoregion}{\code{data.frame}}
 
-\item{version}{LANDIS-II version to target (either \code{7} or \code{8}). See details.}
+\item{ecoregionMap}{\code{SpatRaster}}
+
+\item{path}{character}
 }
 \value{
-Character string(s) to write to the suitable LANDIS-II input file.
+Character string(s) specifying suitable LANDIS-II input file(s).
 }
 \description{
 Create \code{Ecoregions} and \code{EcoregionsMap} Files
-}
-\details{
-Several important changes to inputs were made in version 8, including:
-\itemize{
-\item using GeoTIFF (\code{.tif}) file format for rasters;
-\item remove shade and fire tolerance from species input files;
-\item add 'Full Name' to species input file;
-\item updated input format for the climate library;
-}
 }

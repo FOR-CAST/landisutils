@@ -6,29 +6,31 @@
 \usage{
 scenario(
   name = NULL,
-  duration = NULL,
-  cell_length = NULL,
-  distRndOrder = FALSE,
   extensions = NULL,
-  seed = NULL,
   path = NULL,
-  version = landisVersion()
+  version = landisVersion(),
+  ...
 )
 }
 \arguments{
 \item{name}{Character. Label to use as a filename and label for this scenario.}
-
-\item{duration}{Numeric. Number of years to run the simulation.}
-
-\item{cell_length}{Numeric. Size of ecoregion raster cells (in $m$).}
-
-\item{distRndOrder}{Logical. Should disturbances be applied in a random order?}
 
 \item{extensions}{Named list of succession , disturbance , other extensions.}
 
 \item{path}{Character. Path specifying a directory to use for the scenario runs.}
 
 \item{version}{LANDIS-II version to target (either \code{7} or \code{8}). See details.}
+
+\item{...}{arguments passed to other functions:
+\itemize{
+\item \code{CellLength} Numeric. Size of ecoregion raster cells (in $m$);
+\item \code{DisturbancesRandomOrder} Logical. Should disturbances be applied in a random order?
+\item \code{Duration} Numeric. Number of years to run the simulation;
+\item \code{EcoregionsFiles} List of length 2 containing character file paths (TODO);
+\item \code{RandomNumberSeed} Integer. Seed used to initialize the LANDIS-II random number generator;
+\item \code{SpeciesDataFile} Character. (TODO);
+\item 
+}}
 }
 \value{
 Character string(s) specifying suitable LANDIS-II input file(s).

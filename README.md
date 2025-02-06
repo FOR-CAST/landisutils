@@ -27,7 +27,7 @@ ic_files <- prepInitialCommunities()
 Use `insert*()` functions when generating LANDIS-II input text files.
 
 ``` r
-insInitialCommunities(ic_files) |>
+insertInitialCommunities(ic_files) |>
   writeLines() ## TODO
 ```
 
