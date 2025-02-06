@@ -12,6 +12,7 @@ prepSpeciesData <- function(species = NULL, path = NULL, version = landisVersion
     !is.null(species),
     !is.null(path)
   )
+  path <- .checkPath(path)
   checkVersion(version)
 
   SpeciesData <- species |>

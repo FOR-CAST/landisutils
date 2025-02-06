@@ -39,6 +39,7 @@ scenario <- function(name = NULL, extensions = NULL, path = NULL, version = land
     !is.null(dots$SpeciesDataFile), length(dots$SpeciesDataFile) == 1,
     is.character(dots$SpeciesDataFile)
   )
+  path <- .checkPath(path)
   checkVersion(version)
 
   ## optional dots params

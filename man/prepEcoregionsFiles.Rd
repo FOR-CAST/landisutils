@@ -4,7 +4,7 @@
 \alias{prepEcoregionsFiles}
 \title{Create \code{Ecoregions} and \code{EcoregionsMap} Files}
 \usage{
-prepEcoregionsFiles(ecoregion, ecoregionMap, path)
+prepEcoregionsFiles(ecoregion, ecoregionMap, path = NULL)
 }
 \arguments{
 \item{ecoregion}{\code{data.frame}}
