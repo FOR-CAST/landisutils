@@ -11,7 +11,7 @@
 
 #' @keywords internal
 landisutilsVersion <- function() {
-  packageVersion('landisutils')
+  packageVersion("landisutils")
 }
 
 #' @keywords internal
