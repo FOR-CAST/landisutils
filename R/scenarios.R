@@ -6,8 +6,6 @@
 #'
 #' @param path Character. Path specifying a directory to use for the scenario runs.
 #'
-#' @template LANDIS_version
-#'
 #' @param ... arguments passed to other functions:
 #'   - `CellLength` Numeric. Size of ecoregion raster cells (in $m$);
 #'   - `DisturbancesRandomOrder` Logical. Should disturbances be applied in a random order?
@@ -20,7 +18,7 @@
 #' @template return_file
 #'
 #' @export
-scenario <- function(name = NULL, extensions = NULL, path = NULL, version = landisVersion(), ...) {
+scenario <- function(name = NULL, extensions = NULL, path = NULL, ...) {
   dots <- list(...)
 
   stopifnot(
@@ -40,7 +38,6 @@ scenario <- function(name = NULL, extensions = NULL, path = NULL, version = land
     is.character(dots$SpeciesDataFile)
   )
   path <- .checkPath(path)
-  checkVersion(version)
 
   ## optional dots params
   if (!is.null(dots$RandomNumberSeed)) {

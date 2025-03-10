@@ -15,8 +15,4 @@ Character string(s) to write to the suitable LANDIS-II input file.
 \description{
 Specify \code{Ecoregions} and \code{EcoregionsMap} Files
 }
-\seealso{
-Other scenario-write: 
-\code{\link{insertEcoregionParameters}()}
-}
 \concept{scenario-write}

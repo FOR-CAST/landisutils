@@ -10,7 +10,8 @@ insertRandomNumberSeed(seed)
 \item{seed}{Integer (>0). Seed to initialize LANDIS-II random number generator.}
 }
 \value{
-Character string(s) specifying suitable LANDIS-II input file(s).
+Character string(s) specifying suitable LANDIS-II input file(s),
+created as a side effect of the function.
 }
 \description{
 Optional.

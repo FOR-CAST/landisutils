@@ -10,7 +10,8 @@ insertDisturbancesRandomOrder(x)
 \item{x}{Logical. Should disturbances be applied in a random order?}
 }
 \value{
-Character string(s) specifying suitable LANDIS-II input file(s).
+Character string(s) specifying suitable LANDIS-II input file(s),
+created as a side effect of the function.
 }
 \description{
 Optional, although if not specified the default is \code{FALSE}.

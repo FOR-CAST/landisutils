@@ -7,7 +7,7 @@
 insertSufficientLight(df)
 }
 \arguments{
-\item{df}{data.frame}
+\item{df}{data.frame corresponding to the \code{SufficientLight} table}
 }
 \value{
 Character string(s) to write to the suitable LANDIS-II input file.

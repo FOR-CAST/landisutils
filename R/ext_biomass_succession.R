@@ -6,7 +6,7 @@
 #'
 #' @param ... arguments passed to other functions:
 #'   - `CalibrateMode`;
-#'   - `ClimateConfigFile` (can be NULL; optional for v7);
+#'   - `ClimateConfigFile`;
 #'   - `EcoregionParametersFiles`;
 #'   - `FireReductionParameters`;
 #'   - `HarvestReductionParameters`;
@@ -16,7 +16,6 @@
 #'   - `SpeciesDataFile`;
 #'   - `SpeciesEcoregionDataFile`;
 #'   - `SufficientLight`;
-#'   - `SpinupMortalityFraction`;
 #'   - `Timestep`;
 #'
 #' @export
@@ -24,7 +23,6 @@ BiomassSuccessionInput <- function(path, ...) {
   stopifnot(
     !is.null(path)
   )
-  checkVersion(version)
 
   dots <- list(...)
   stopifnot(
@@ -39,7 +37,6 @@ BiomassSuccessionInput <- function(path, ...) {
     insertInitialCommunities(dots$InitialCommunitiesFiles),
     insertClimateConfigFile(dots$ClimateConfigFile),
     insertCalibrateMode(dots$CalibrateMode),
-    insertSpinupMortalityFraction(dots$SpinupMortalityFraction),
     insertMinRelativeBiomass(dots$MinRelativeBiomass),
     insertSufficientLight(dots$SufficientLight),
     insertSpeciesDataFile(dots$SpeciesDataFile),
@@ -95,32 +92,9 @@ insertCalibrateMode <- function(cal_mode = FALSE) {
   }
 }
 
-
-#' Specify Biomass Succession Extension `SpinupMortalityFraction`
-#'
-#' @template return_insert
-#'
-#' @export
-#'
-insertSpinupMortalityFraction <- function(frac = NULL) {
-  if (is.null(frac)) {
-    c(
-      glue::glue(">> SpinupMortalityFraction    {0.001} << optional parameter"),
-      glue::glue("") ## add blank line after each item group
-    )
-  } else {
-    c(
-      glue::glue("SpinupMortalityFraction    {frac} << optional parameter"),
-      glue::glue("") ## add blank line after each item group
-    )
-  }
-}
-
 #' Prepare Biomass Succession Extension `MinRelativeBiomass` Table
 #'
-#' @param df data.frame
-#'
-#' @template LANDIS_version
+#' @param df data.frame corresponding to `MinRelativeBiomass` table
 #'
 #' @returns data.frame
 #'
@@ -136,9 +110,7 @@ prepMinRelativeBiomass <- function(df = NULL) {
 
 #' Specify Biomass Succession Extension `MinRelativeBiomass` Table
 #'
-#' @param df data.frame
-#'
-#' @template LANDIS_version
+#' @param df data.frame corresponding to `MinRelativeBiomass` table
 #'
 #' @template return_insert
 #'
@@ -147,13 +119,24 @@ prepMinRelativeBiomass <- function(df = NULL) {
 insertMinRelativeBiomass <- function(df = NULL) {
   stopifnot(!is.null(df), is(df, "data.frame"))
 
+  # MinRelativeBiomass
+  # >> Shade
+  # >> Class Ecoregions
+  # >> ----- ------------
+  #          eco1 eco2
+  #        1 25% 20%
+  #        2 35% 30%
+  #        3 45% 40%
+  #        4 60% 50%
+  #        5 95% 80%
+
   c(
     glue::glue(">> MinRelativeBiomass"),
     glue::glue(">> Shade Class    Ecoregions"),
     glue::glue(">> -----------    ------------------------"),
     paste0(
       "   1              ",
-      glue::glue("{df[1, ]}") |> glue::glue_collapse(sep = "  ")
+      glue::glue("{df[1, ]}") |> glue::glue_collapse(sep = "  ") ## TODO: is the '%' needed?
     ),
     paste0(
       "   2              ",
@@ -181,7 +164,7 @@ insertMinRelativeBiomass <- function(df = NULL) {
 
 #' Specify Biomass Succession Extension `SufficientLight` Table
 #'
-#' @param df data.frame
+#' @param df data.frame corresponding to the `SufficientLight` table
 #'
 #' @template return_insert
 #'
@@ -216,11 +199,84 @@ insertSufficientLight <- function(df) {
   )
 }
 
+#' Create Ecoregion Parameters Table
+#'
+#' @param df data.frame corresponding to the ecoregion parameters table
+#'
+#' @returns data.frame
+#'
+#' @export
+prepEcoregionParameters <- function(df) {
+  browser() ## TODO
+
+  df <- df |>
+    dplyr::mutate(
+      Ecoregions = ecoregionGroup,
+      AET = AET, ## TODO
+      .keep = "used"
+    )
+
+  return(df)
+}
+
+#' Specify `EcoregionParameters` table
+#'
+#' @param files
+#'
+#' @template return_insert
+#'
+#' @export
+insertEcoregionParameters <- function(files) {
+  browser() ## TODO
+  c(
+    glue::glue("") ## add blank line after each item group
+  )
+}
+
+#' Create Species Ecoregion Data File
+#'
+#' @param df data.frame
+#'
+#' @template return_file
+#'
+#' @export
+#'
+prepSpeciesEcoregionDataFile <- function(df, path) {
+  df <- df |>
+    dplyr::mutate(
+      Year = 0,
+      EcoregionName = ecoregionGroup,
+      SpeciesCode = speciesCode,
+      ProbEstablish = establishprob,
+      ProbMortality = 0.0, ## TODO: this is missing???
+      ANPPmax = maxANPP,
+      BiomassMax = maxB,
+      .keep = "used"
+    )
+
+  file <- file.path(path, "species-ecoregion.csv") ## TODO
+  write.csv(df, path)
+
+  return(file)
+}
+
+#' Specify `SpeciesEcoregionData` File
+#'
+#' @param file
+#'
+#' @template return_insert
+#'
+#' @export
+insertSpeciesEcoregionDataFile <- function(file) {
+  c(
+    glue::glue("SpeciesEcoregionDataFile    \"{file}\""),
+    glue::glue("") ## add blank line after each item group
+  )
+}
+
 #' Prepare Biomass Succession Extension `FireReductionParameters` Table
 #'
 #' @param df `data.frame` with columns `FireSeverity`, `WoodReduction`, and `LitterReduction`.
-#'
-#' @template LANDIS_version
 #'
 #' @returns data.frame
 #'
@@ -263,8 +319,6 @@ insertFireReductionParameters <- function(df) {
 #'
 #' @param df data.frame
 #'
-#' @template LANDIS_version
-#'
 #' @returns data.frame
 #'
 #' @export
@@ -274,15 +328,16 @@ prepHarvestReductionParameters <- function(df = NULL) {
   if (is.null(df)) {
     df <- data.table(
       PrescriptionName = c(), ## TODO
-      DeadWoodReduction = c(), ## [0, 1]
-      DeadLitterReduction = c(), ## [0, 1]
-      CohortWoodRemoval = c(), ## [0, 1]
-      CohortLeafRemoval = c() ## [0, 1]
+      DeadWoodReduction = c(),
+      DeadLitterReduction = c(),
+      CohortWoodRemoval = c(),
+      CohortLeafRemoval = c()
     )
   } else {
     df <- as.data.table(df)
   }
 
+  ## enforce typing and bounds
   df[, FireSeverity := as.integer(FireSeverity)]
   df[, between(DeadWoodReduction, 0.0, 1.0)]
   df[, between(DeadLitterReduction, 0.0, 1.0)]

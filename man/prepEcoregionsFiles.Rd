@@ -14,7 +14,8 @@ prepEcoregionsFiles(ecoregion, ecoregionMap, path = NULL)
 \item{path}{character}
 }
 \value{
-Character string(s) specifying suitable LANDIS-II input file(s).
+Character string(s) specifying suitable LANDIS-II input file(s),
+created as a side effect of the function.
 }
 \description{
 Create \code{Ecoregions} and \code{EcoregionsMap} Files

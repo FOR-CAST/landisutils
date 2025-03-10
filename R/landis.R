@@ -15,8 +15,6 @@ landis_find <- function() {
 #'
 #' @param landis_console Character. Path to LANDIS-II console executable.
 #'
-#' @template LANDIS_version
-#'
 #' @returns List of output files produced by the LANDIS-II simulation run.
 #'
 #' @export

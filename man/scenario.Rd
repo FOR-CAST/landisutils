@@ -4,13 +4,7 @@
 \alias{scenario}
 \title{Create LANDIS-II scenario files}
 \usage{
-scenario(
-  name = NULL,
-  extensions = NULL,
-  path = NULL,
-  version = landisVersion(),
-  ...
-)
+scenario(name = NULL, extensions = NULL, path = NULL, ...)
 }
 \arguments{
 \item{name}{Character. Label to use as a filename and label for this scenario.}
@@ -18,8 +12,6 @@ scenario(
 \item{extensions}{Named list of succession , disturbance , other extensions.}
 
 \item{path}{Character. Path specifying a directory to use for the scenario runs.}
-
-\item{version}{LANDIS-II version to target (either \code{7} or \code{8}). See details.}
 
 \item{...}{arguments passed to other functions:
 \itemize{
@@ -33,17 +25,9 @@ scenario(
 }}
 }
 \value{
-Character string(s) specifying suitable LANDIS-II input file(s).
+Character string(s) specifying suitable LANDIS-II input file(s),
+created as a side effect of the function.
 }
 \description{
 Create LANDIS-II scenario files
-}
-\details{
-Several important changes to inputs were made in version 8, including:
-\itemize{
-\item using GeoTIFF (\code{.tif}) file format for rasters;
-\item remove shade and fire tolerance from species input files;
-\item add 'Full Name' to species input file;
-\item updated input format for the climate library;
-}
 }

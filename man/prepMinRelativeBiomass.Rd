@@ -7,22 +7,11 @@
 prepMinRelativeBiomass(df = NULL)
 }
 \arguments{
-\item{df}{data.frame}
-
-\item{version}{LANDIS-II version to target (either \code{7} or \code{8}). See details.}
+\item{df}{data.frame corresponding to \code{MinRelativeBiomass} table}
 }
 \value{
 data.frame
 }
 \description{
 Prepare Biomass Succession Extension \code{MinRelativeBiomass} Table
-}
-\details{
-Several important changes to inputs were made in version 8, including:
-\itemize{
-\item using GeoTIFF (\code{.tif}) file format for rasters;
-\item remove shade and fire tolerance from species input files;
-\item add 'Full Name' to species input file;
-\item updated input format for the climate library;
-}
 }

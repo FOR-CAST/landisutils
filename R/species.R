@@ -1,19 +1,16 @@
 #' Species Data File
 #'
-#' @param species data.frame
+#' @param df data.frame corresponding to the species data table
 #'
-#' @template LANDIS_version
-#'
-#' @template return_insert
+#' @template return_file
 #'
 #' @export
-prepSpeciesData <- function(species = NULL, path = NULL, version = landisVersion()) {
+prepSpeciesData <- function(df = NULL, path = NULL) {
   stopifnot(
     !is.null(species),
     !is.null(path)
   )
   path <- .checkPath(path)
-  checkVersion(version)
 
   SpeciesData <- species |>
     dplyr::mutate(
@@ -25,13 +22,8 @@ prepSpeciesData <- function(species = NULL, path = NULL, version = landisVersion
       LeafLignin = leafLignin
     )
 
-  if (version == 7) {
-    file <- file.path(path, "species.txt") ## TODO: confirm v7 works with csv
-    writeLines(SpeciesData, file) ## TODO
-  } else if (version == 8) {
-    file <- file.path(path, "species.csv")
-    write.csv(SpeciesData, file)
-  }
+  file <- file.path(path, "species.csv")
+  write.csv(SpeciesData, file)
 
   return(file)
 }

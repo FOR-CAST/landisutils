@@ -12,7 +12,7 @@ BiomassSuccessionInput(path, ...)
 \item{...}{arguments passed to other functions:
 \itemize{
 \item \code{CalibrateMode};
-\item \code{ClimateConfigFile} (can be NULL; optional for v7);
+\item \code{ClimateConfigFile};
 \item \code{EcoregionParametersFiles};
 \item \code{FireReductionParameters};
 \item \code{HarvestReductionParameters};
@@ -22,7 +22,6 @@ BiomassSuccessionInput(path, ...)
 \item \code{SpeciesDataFile};
 \item \code{SpeciesEcoregionDataFile};
 \item \code{SufficientLight};
-\item \code{SpinupMortalityFraction};
 \item \code{Timestep};
 }}
 }

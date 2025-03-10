@@ -10,21 +10,10 @@ landis_run(scenario_file = NULL, landis_console = NULL)
 \item{scenario_file}{}
 
 \item{landis_console}{Character. Path to LANDIS-II console executable.}
-
-\item{version}{LANDIS-II version to target (either \code{7} or \code{8}). See details.}
 }
 \value{
 List of output files produced by the LANDIS-II simulation run.
 }
 \description{
 Run a LANDIS-II simulation from the R session
-}
-\details{
-Several important changes to inputs were made in version 8, including:
-\itemize{
-\item using GeoTIFF (\code{.tif}) file format for rasters;
-\item remove shade and fire tolerance from species input files;
-\item add 'Full Name' to species input file;
-\item updated input format for the climate library;
-}
 }

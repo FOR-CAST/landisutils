@@ -2,10 +2,10 @@ testthat::test_that("Biomass Succession inputs are properly created", {
   testthat::skip_if_not_installed("SpaDES.core")
   testthat::skip_if_not_installed("withr")
 
-  fireModel <- "landis" # "scfm"
+  fireModel <- "scfm" # "landis"
   frpType <- "FRT" # "ECODISTRICT"
   d <- file.path("~/GitHub/BC_HRV/outputs",
-                 glue::glue("NRD_Quesnel_{fireModel}_LH_hrv_{frpType}_res125"))
+                 glue::glue("NRD_Quesnel_{fireModel}_LH_hrv_NDTBEC_{frpType}_res125"))
   f <- file.path(d, "simOutDataPrep_NRD_Quesnel.rds")
 
   testthat::skip_if_not(file.exists(f))
@@ -45,29 +45,17 @@ testthat::test_that("Biomass Succession inputs are properly created", {
 
   hrp_df <- prepHarvestReductionParameters() ## TODO
 
-  ## TODO
-  # ic_files <- prepInitialCommunities(
-  #   speciesLayers = speciesLayers,
-  #   standAgeMap = standAgeMap,
-  #   path = tmp_pth,
-  #   version = 7
-  # )
-
-  # all(file.exists(ic_files))
-
-  icc_files <- prepInitialCommunitiesFromCohortData(
+  ic_files <- prepInitialCommunities(
     cohortData = cohortData,
     pixelGroupMap = pixelGroupMap,
-    path = tmp_pth,
-    version = 7
+    path = tmp_pth
   )
 
-  testthat::expect_true(all(file.exists(icc_files)))
+  testthat::expect_true(all(file.exists(ic_files)))
 
   spp_file <- prepSpeciesData( ## TODO
     species = species,
-    path = tmp_pth,
-    version = 7
+    path = tmp_pth
   )
 
   testthat::expect_true(file.exists(spp_file))
@@ -87,7 +75,6 @@ testthat::test_that("Biomass Succession inputs are properly created", {
     SpeciesDataFile = ,
     SpeciesEcoregionDataFile = ,
     SufficientLight = ,
-    SpinupMortalityFraction = ,
     Timestep
   )
 
@@ -105,7 +92,6 @@ testthat::test_that("Biomass Succession inputs are properly created", {
     name = "test_biomass_succession",
     extensions = list(succession = "Biomass Succession"),
     path = tmp_pth,
-    version = 7,
 
     ## additional arguments
     CellLength = terra::res(ecoregionMap)[1],
