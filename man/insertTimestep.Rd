@@ -4,7 +4,7 @@
 \alias{insertTimestep}
 \title{Specify Extension \code{Timestep}}
 \usage{
-insertTimestep(t = 1)
+insertTimestep(t = NULL)
 }
 \value{
 Character string(s) to write to the suitable LANDIS-II input file.

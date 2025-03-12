@@ -11,7 +11,7 @@ prepEcoregionsFiles(ecoregion, ecoregionMap, path = NULL)
 
 \item{ecoregionMap}{\code{SpatRaster}}
 
-\item{path}{character}
+\item{path}{Character. Path specifying a directory to use for the scenario runs.}
 }
 \value{
 Character string(s) specifying suitable LANDIS-II input file(s),

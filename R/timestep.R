@@ -4,6 +4,8 @@
 #'
 #' @export
 #'
-insertTimestep <- function(t = 1) {
+insertTimestep <- function(t = NULL) {
+  t %||% 1L
+
   glue::glue("TimeStep    {t}")
 }

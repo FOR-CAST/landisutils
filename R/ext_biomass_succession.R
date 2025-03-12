@@ -2,7 +2,7 @@
 #'
 #' Follows the  Biomass Succession User Guide.
 #'
-#' @param path
+#' @template param_path
 #'
 #' @param ... arguments passed to other functions:
 #'   - `CalibrateMode`;
@@ -255,7 +255,7 @@ prepSpeciesEcoregionDataFile <- function(df, path) {
     )
 
   file <- file.path(path, "species-ecoregion.csv") ## TODO
-  write.csv(df, path)
+  write.csv(df, file)
 
   return(file)
 }
@@ -295,8 +295,12 @@ prepFireReductionParameters <- function(df = NULL) {
   }
 
   df[, FireSeverity := as.integer(FireSeverity)]
-  df[, between(WoodReduction, 0.0, 1.0)]
-  df[, between(LitterReduction, 0.0, 1.0)]
+  stopifnot(
+    all(df[["WoodReduction"]] >= 0.0),
+    all(df[["WoodReduction"]] <= 1.0),
+    all(df[["LitterReduction"]] >= 0.0),
+    all(df[["LitterReduction"]] <= 1.0)
+  )
 
   return(as.data.frame(df))
 }
@@ -339,10 +343,16 @@ prepHarvestReductionParameters <- function(df = NULL) {
 
   ## enforce typing and bounds
   df[, FireSeverity := as.integer(FireSeverity)]
-  df[, between(DeadWoodReduction, 0.0, 1.0)]
-  df[, between(DeadLitterReduction, 0.0, 1.0)]
-  df[, between(CohortWoodRemoval, 0.0, 1.0)]
-  df[, between(CohortLeafRemoval, 0.0, 1.0)]
+  stopifnot(
+    all(df[["DeadWoodReduction"]] >= 0.0),
+    all(df[["DeadWoodReduction"]] <= 1.0),
+    all(df[["DeadLitterReduction"]] >= 0.0),
+    all(df[["DeadLitterReduction"]] <= 1.0),
+    all(df[["CohortWoodRemoval"]] >= 0.0),
+    all(df[["CohortWoodRemoval"]] <= 1.0),
+    all(df[["CohortLeafRemoval"]] >= 0.0),
+    all(df[["CohortLeafRemoval"]] <= 1.0)
+  )
 
   return(as.data.frame(df))
 }

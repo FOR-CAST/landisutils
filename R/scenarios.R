@@ -4,7 +4,7 @@
 #'
 #' @param extensions Named list of `r paste(.extTypes, collapse = " , ")` extensions.
 #'
-#' @param path Character. Path specifying a directory to use for the scenario runs.
+#' @template param_path
 #'
 #' @param ... arguments passed to other functions:
 #'   - `CellLength` Numeric. Size of ecoregion raster cells (in $m$);

@@ -4,7 +4,7 @@
 #'
 #' @param ecoregionMap `SpatRaster`
 #'
-#' @param path character
+#' @template param_path
 #'
 #' @template return_file
 #'
@@ -21,7 +21,7 @@ prepEcoregionsFiles <- function(ecoregion, ecoregionMap, path = NULL) {
   ecoregionMap[is.na(ecoregionMap[]) | is.nan(ecoregionMap[])] <- 0L
   er_range <- terra::minmax(ecoregionMap)
 
-  stopifnot(er_range[1] >= 0, er_range[2] <= 65535) ## LANDIS-II requires mapcodes [0, 65535];
+  stopifnot(er_range[1] >= 0, er_range[2] <= 65535)
 
   ecoregionsMapFile <- file.path(path, "ecoregions.tif")
   terra::writeRaster(ecoregionMap, ecoregionsMapFile, overwrite = TRUE)

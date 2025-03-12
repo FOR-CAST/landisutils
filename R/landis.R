@@ -25,9 +25,7 @@ landis_run <- function(scenario_file = NULL, landis_console = NULL) {
 
   scenario_dir <- dirname(scenario_file)
 
-  if (is.null(landis_console)) {
-    landis_console <- landis_find() ## TODO: if multiple found, select the first one? or error?
-  }
+  landis_console %||% landis_find() ## TODO: if multiple found, select the first one? or error?
 browser() ## TODO: setwd for landis console execution
   landis_result <- system2(landis_console, scenario_file, wait = TRUE)
   ## TODO: check execution status, though presumably landis errors will propagate to R session

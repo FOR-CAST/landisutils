@@ -7,7 +7,7 @@
 BiomassSuccessionInput(path, ...)
 }
 \arguments{
-\item{path}{}
+\item{path}{Character. Path specifying a directory to use for the scenario runs.}
 
 \item{...}{arguments passed to other functions:
 \itemize{

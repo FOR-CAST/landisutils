@@ -5,6 +5,46 @@ collapseSpp <- function(x) {
     paste0(collapse = "__")
 }
 
+#' Simplify cohorts
+#'
+#' Reduce the number of cohorts / pixel groups for LANDIS-II, which only supports (integer)
+#' initial community map codes between 0 and 65535.
+#'
+#' @note Ideally, the user should reduce the number of cohorts upstream
+#'       (i.e., in `Biomass_borealDataPrep`), to ensure consistency of all data inputs.
+#'
+#' @param cohortData A `data.table` containing cohort information (see \pkg{LandR})
+#'
+#' @param pixelGroupMap A `SpatRaster` identifying the locations of the pixel groups in `cohortData`
+#'
+#' @param ageBin integer specifying the bin width for the new age categories
+#'
+#' @returns list containing updated `cohortData` and `pixelGroupMap` objects
+#'
+#' @export
+simplifyCohorts <- function(cohortData, pixelGroupMap, ageBin = 20) {
+  browser()
+  ## TODO: revisit this simplification (ideally simplification done upstream in B_bDP)
+  cd <- data.table::copy(cohortData)
+  cd[, community := lapply(.SD, collapseSpp), by = pixelGroup, .SDcols = "speciesCode"]
+  cd[, newAge := as.integer(age %/% ageBin * ageBin + ageBin / 2)]
+  cd[, newPixelGroup := .GRP, by = c("community", "ecoregionGroup")]
+  cd[, newB := as.integer(newAge / max(newAge) * mean(B)), by = c("newPixelGroup", "speciesCode")]
+
+  stopifnot(
+    all(cd[["newPixelGroup"]] >= 0L),
+    all(cd[["newPixelGroup"]] <= 65535L)
+  )
+
+  pgm <- terra::deepcopy(pixelGroupMap) |>
+    terra::classify(unique(cd[, .(pixelGroup, newPixelGroup)]))
+
+  set(cd, NULL, c("community"), NULL)
+  setnames(cd, c("newAge", "newB", "newPixelGroup"), c("age", "B", "pixelGroup"))
+
+  return(list(cd, pgm))
+}
+
 #' Create `InitialCommunities` and `InitialCommunitiesMap` Files
 #'
 #' @param cohortData A `data.table` containing cohort information (see LandR)
@@ -19,38 +59,36 @@ prepInitialCommunities <- function(cohortData, pixelGroupMap, path) {
   stopifnot(is(pixelGroupMap, "SpatRaster"))
 
   .checkPath(path)
-browser() ## TODO for csv
+
   initialCommunities <- data.table::copy(cohortData)
-  initialCommunities[, community := lapply(.SD, collapseSpp), by = pixelGroup, .SDcols = "speciesCode"]
-  initialCommunities[, MapCode := as.factor(community), by = pixelGroup]
-  initialCommunities[, SpeciesName := TODO]
+  initialCommunities[, MapCode := as.integer(pixelGroup)]
+  initialCommunities[, CohortAge := as.integer(age)]
+  initialCommunities[, CohortBiomass := as.integer(B)]
+  initialCommunities[, SpeciesName := as.character(speciesCode)]
 
-  ## simplify cohorts (large number of communities take a long time to write to disk + lots of RAM)
-  ## TODO: revisit this simplification
-  ageinc <- 40
-  initialCommunities[, newAge := as.integer(age %/% ageinc * ageinc + ageinc / 2)]
-  initialCommunities[, newBiomass := as.integer(B)] ## TODO
-  initialCommunities[, newPixelGroup := .GRP, by = c("community")] ## by ecoregionGroup ??
-
-  initialCommunitiesMap <- terra::deepcopy(pixelGroupMap) |>
-    terra::classify(unique(initialCommunities[, .(pixelGroup, newPixelGroup)]))
-  initialCommunitiesMap[is.na(initialCommunitiesMap[])] <- 0L
-
-  cols2rm <- c("age", "B", "community", "ecoregionGroup", "pixelGroup", "totalBiomass")
-  data.table::set(initialCommunities, NULL, cols2rm, NULL)
-  data.table::setnames(initialCommunities, c("newAge", "newPixelGroup"), c("CohortAge", "pixelGroup"))
+  cols2keep <- c("MapCode", "SpeciesName", "CohortAge", "CohortBiomass")
+  initialCommunities <- initialCommunities[, cols2keep, with = FALSE]
   initialCommunities <- unique(initialCommunities)
+  setkeyv(initialCommunities, cols2keep[1:3])
+  initialCommunities <- list(
+    data.table(MapCode = 0L, SpeciesName = NA_character_, CohortAge = 0L, CohortBiomass = 0L),
+    initialCommunities
+  ) |>
+    rbindlist()
 
-  ## enforce types and bounds
-  initialCommunities[, between(MapCode, 0L, 65535L)]
+  stopifnot(
+    all(initialCommunities[["MapCode"]] >= 0L),
+    all(initialCommunities[["MapCode"]] <= 65535L)
+  )
+
+  initialCommunitiesMap <- terra::deepcopy(pixelGroupMap)
 
   ## write files
   initialCommunitiesMapFile <- file.path(path, "initial-communities.tif")
   terra::writeRaster(initialCommunitiesMap, initialCommunitiesMapFile, overwrite = TRUE)
 
-  browser() ## TODO: "The CSV format requires a header with the following names: X, Y, Z." ???????
   initialCommunitiesFile <- file.path(path, "initial-communities.csv")
-  write.csv(initialCommunities, file = initialCommunitiesFile)
+  fwrite(initialCommunities, initialCommunitiesFile)
 
   return(c(initialCommunities, initialCommunitiesMap))
 }
