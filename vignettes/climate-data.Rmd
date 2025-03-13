@@ -1,0 +1,59 @@
+---
+title: "Preparing Climate Data for Use With LANDIS-II"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Preparing Climate Data for Use With LANDIS-II}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(landisutils)
+```
+
+## Define a 'study area' or 'area of interest'
+
+```{r, study-area}
+studyAreaBC <- terra::vect(cbind(-122.14, 52.14), crs = "epsg:4326") |>
+  terra::project(paste("+proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95",
+                       "+x_0=0 +y_0=0 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0")) |>
+  SpaDES.tools::randomStudyArea(seed = 60, size = 1e10) |>
+  scfmutils::prepInputsFireRegimePolys(studyArea = _, type = "FRT")
+
+plot(studyAreaBC["FRT"])
+```
+
+## Historical daily weather
+
+```{r, get-daymet-data}
+climvars <- c("prcp", "tmax", "tmin")
+
+daily_weather <- purrr::map(
+  .x = climvars,
+  .f = prep_daily_weather,
+  studyArea = studyAreaBC,
+  id = "FRT",
+  start = "2018-01-01",
+  end = "2019-12-31"
+) |>
+  purrr::list_rbind()
+
+head(daily_weather)
+```
+
+## Climate projections
+
+See <https://mikejohnson51.github.io/climateR/articles/intro.html#climate-projections>
+
+```{r, get-maca-data}
+## TODO
+```

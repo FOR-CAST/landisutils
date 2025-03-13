@@ -2,6 +2,7 @@
 "_PACKAGE"
 
 ## usethis namespace: start
+#' @importFrom climateR getDaymet
 #' @importFrom data.table :=
 #' @importFrom data.table .BY
 #' @importFrom data.table .EACHI
@@ -29,6 +30,8 @@
 #' @importFrom glue glue
 #' @importFrom glue glue_collapse
 #' @importFrom LandR standAgeMapGenerator
+#' @importFrom purrr list_rbind
+#' @importFrom purrr map
 #' @importFrom terra names
 #' @importFrom terra nlyr
 #' @importFrom terra rast
@@ -36,5 +39,8 @@
 #' @importFrom terra values
 #' @importFrom terra values<-
 #' @importFrom terra writeRaster
+#' @importFrom tidyr pivot_longer
+#' @importFrom tidyr pivot_wider
+#' @importFrom zonal execute_zonal
 ## usethis namespace: end
 NULL

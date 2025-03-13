@@ -12,24 +12,33 @@ Language: en-US
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
 Imports:
+    climateR,
     data.table,
     dplyr,
     fs,
     glue,
     LandR,
-    terra
+    purrr,
+    terra,
+    tidyr,
+    zonal
 Suggests:
     knitr,
     map,
     rmarkdown,
+    sf,
     SpaDES.core,
+    SpaDES.tools,
     spelling,
     testthat (>= 3.0.0),
     withr
 Remotes:
+    mikejohnson51/climateR,
     PredictiveEcology/LandR@development,
     PredictiveEcology/map@development,
-    PredictiveEcology/SpaDES.core@development
+    PredictiveEcology/SpaDES.core@development,
+    PredictiveEcology/SpaDES.tools@development,
+    mikejohnson51/zonal
 Config/testthat/edition: 3
 Config/testthat/parallel: true
 VignetteBuilder: knitr

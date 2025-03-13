@@ -42,6 +42,7 @@ prepClimateConfigFile <- function(path, ...) {
   dots$DroughtCode %||% 100 ## 15
   dots$FirstDayFire %||% 30
   dots$LastDayFire %||% 320
+  dots$AtmosphericPressure %||% 100
 
   ## based on sample file:
   ## https://github.com/LANDIS-II-Foundation/Extension-Biomass-Succession/blob/master/
@@ -64,7 +65,7 @@ prepClimateConfigFile <- function(path, ...) {
       glue::glue(">> DroughtCode              {dots$DroughtCode}"),          ## TODO: uncomment
       glue::glue(">> FirstDayFire             {dots$FirstDayFire}"),         ## TODO: uncomment
       glue::glue(">> LastDayFire              {dots$LastDayFire}"),          ## TODO: uncomment
-      ## TODO: Atmospheric Pressure
+      glue::glue(">> AtmosphericPressure      {dots$AtmosphericPressure}"),  ## TODO: uncomment
       glue::glue("") ## add blank line after each item group
     ),
     file
