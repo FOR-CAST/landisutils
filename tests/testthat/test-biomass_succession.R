@@ -8,28 +8,11 @@ testthat::test_that("Biomass Succession inputs are properly created", {
     "~/GitHub/BC_HRV/outputs",
     glue::glue("NRD_Quesnel_{fireModel}_LH_hrv_NDTBEC_{frpType}_res125")
   )
-  f1 <- file.path(d, "simOutPreamble_NRD_Quesnel.rds")
-  f2 <- file.path(d, "simOutDataPrep_NRD_Quesnel.rds")
+  f <- file.path(d, "simOutDataPrep_NRD_Quesnel.rds")
 
-  testthat::skip_if_not(file.exists(f1))
-  testthat::skip_if_not(file.exists(f1))
+  testthat::skip_if_not(file.exists(f))
 
-  sim1 <- SpaDES.core::loadSimList(f1)
-  sim2 <- SpaDES.core::loadSimList(f2)
-
-  ## fires
-  frp_erni <- sim1[["fireRegimePolys"]] ## TODO: move to separate test
-
-  ## TODO: use frp_erni to create Fire Region Parameters Table:
-  ##       --> FireRegionName is e.g., glue("FRT{polyID}")
-  ##       --> MapCode [0, 65535] is polyID
-  ##       --> Mean Size [ha] from the attributes table
-  ##       --> Min Size  [ha] from the attributes table
-  ##       --> Max Size  [ha] from the attributes table
-  ##       --> IgnitionProb [0, 1] from the attributes table?
-  ##       --> k  [int >= 0] from the attributes table?? 'fire spread age'
-
-  ## TODO: use frp_erni to create InitialFireRegionsMap (terra::rasterize)
+  sim <- SpaDES.core::loadSimList(f)
 
   ## initial communities
   cohortData <- sim2[["cohortData"]]
@@ -50,7 +33,7 @@ testthat::test_that("Biomass Succession inputs are properly created", {
   standAgeMap <- sim2[["standAgeMap"]] |> terra::crop(speciesLayers)
   sppEquiv <- sim2[["sppEquiv"]]
 
-  rm(sim1, sim2)
+  rm(sim)
 
   ## prepare landis input files ----------------------------------------------------------------
 

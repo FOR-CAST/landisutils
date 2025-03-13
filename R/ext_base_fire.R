@@ -29,7 +29,7 @@ browser()
 
   file <- file.path(path, "base_fire.txt")
   writeLines(c(
-    LandisData("Base Fire"),
+    LandisData("Base Fire"), ## TODO: should this be "Original Fire" ??? (tests & manual mismatch)
     insertTimestep(dots$Timestep),
     insertFireRegionParametersTable(dots$FireRegionParametersTable),
     insertInitialFireRegionsMap(dots$InitialFireRegionsMap),
