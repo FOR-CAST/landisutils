@@ -11,10 +11,9 @@ testthat::test_that("Biomass Succession inputs are properly created", {
   )
   f <- file.path(d, "simOutPreamble_NRD_Quesnel_.rds")
 
-  testthat::skip_if_not(all(file.exists(f1, f2)))
+  testthat::skip_if_not(file.exists(f))
 
   ## fire objects -----------------------------------------
-  testthat::skip_if_not_insalled("map")
 
   sim <- SpaDES.core::loadSimList(f)
 
