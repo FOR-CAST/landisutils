@@ -16,6 +16,21 @@ proj_nrcan_lcc <- paste("+proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95",
 proj_daymet <- paste("+proj=lcc +lat_1=25 +lat_2=60 +lat_0=42.5 +lon_0=-100",
                      "+x_0=0 +y_0=0 +ellps=WGS84 +units=m +no_defs")
 
+#' @keywords internal
+var_landis <- function(var) {
+  ## climate variable names must align with variable names in Table 1 of Climate Library manual;
+  ## they aren't case-sensitive, but matching them to table just in case.
+  ## NOTE: "Wind direction, wind speed and nitrogen deposition data are optional"
+  switch(
+    var,
+    prcp = "precip",
+    tmax = "Tmax",
+    tmin = "Tmin",
+    stop(glue::glue("unknown mapping for climate variable {var}"))
+    ## TODO: add others
+  )
+}
+
 #' Prepare Climate Data
 #'
 #' Download and prepare climate data for use with LANDIS-II simulations:
@@ -83,7 +98,7 @@ prep_daily_weather <- function(var = NULL, studyArea = NULL, id = NULL, start = 
   ## SpatRaster |> sf |> long_df |> wide_df
   df <- climateR::getDaymet(
     AOI = studyArea,
-    varname = "prcp",
+    varname = var,
     startDate = start,
     endDate = end,
     verbose = FALSE
@@ -105,7 +120,7 @@ prep_daily_weather <- function(var = NULL, studyArea = NULL, id = NULL, start = 
       values_from = "Value"
     ) |>
     dplyr::mutate(
-      Variable = "precip",
+      Variable = var_landis(var),
       .after = "Day"
     )
 
