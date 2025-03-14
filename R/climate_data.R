@@ -135,6 +135,9 @@ prep_daily_weather <- function(var = NULL, studyArea = NULL, id = NULL, start = 
       values_from = "Value"
     ) |>
     dplyr::mutate(
+      Year = as.integer(Year),
+      Month = as.integer(Month),
+      Day = as.integer(Day),
       Variable = var_landis(var),
       .after = "Day"
     )
