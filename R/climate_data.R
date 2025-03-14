@@ -23,11 +23,26 @@ var_landis <- function(var) {
   ## NOTE: "Wind direction, wind speed and nitrogen deposition data are optional"
   switch(
     var,
-    prcp = "precip",
-    tmax = "Tmax",
-    tmin = "Tmin",
+    co2 = "CO2",              ## TODO: CO2
+    ndep = "Ndep",            ## TODO: nitrogen deposition
+    ozone = "ozone",          ## TODO: ozone (O3)
+    par = "PAR",              ## TODO:
+    pet = "PET",              ## TODO: potential evapotranspiration
+    prcp = "precip",          ## DAYMET: preciptation
+    rh = "RH",                ## TODO: rel humidity
+    rmax = "maxRH",           ## TODO: max rel humidity
+    rmin = "minRH",           ## TODO: min rel humidity
+    sh = "SH",                ## TODO: specific humidity
+    srad = "SWR",             ## DAYMET shortwave radiation
+    temp = "temp",            ## TODO: mean temperature
+    tmax = "Tmax",            ## DAYMET max temperature
+    tmin = "Tmin",            ## DAYMET min temperature
+    wnddir = "windDirection", ## TODO: wind 'from' direction
+    wndspd = "windSpeed",     ## TODO: wind speed
+    wndNrt = "windNorthing",  ## TODO: wind northing
+    wndEst = "windEasting",   ## TODO: wind easting
+
     stop(glue::glue("unknown mapping for climate variable {var}"))
-    ## TODO: add others
   )
 }
 
@@ -95,7 +110,7 @@ prep_daily_weather <- function(var = NULL, studyArea = NULL, id = NULL, start = 
   ## We want a data.frame with columns:
   ##   Year  Month  Day  Variable  Eco1 Eco2 Eco3 ...
 
-  ## SpatRaster |> sf |> long_df |> wide_df
+  ## SpatRaster |> df |> long_df |> wide_df |> wide_df
   df <- climateR::getDaymet(
     AOI = studyArea,
     varname = var,
