@@ -18,9 +18,17 @@ proj_daymet <- paste("+proj=lcc +lat_1=25 +lat_2=60 +lat_0=42.5 +lon_0=-100",
 
 #' @keywords internal
 var_landis <- function(var) {
-  ## climate variable names must align with variable names in Table 1 of Climate Library manual;
+  ## Climate variable names must align with variable names in Table 1 of Climate Library manual;
   ## they aren't case-sensitive, but matching them to table just in case.
-  ## NOTE: "Wind direction, wind speed and nitrogen deposition data are optional"
+  ##
+  ## NOTE: Minimum temperature, maximum temperature, and precipitation are
+  ##       required by the climate library. The units of temperature are
+  ##       always Celsius and precipitation is always in cm.
+  ##       Other parameters are optional and include PAR (photosynthetically
+  ##       active radiation), CO2 concentration, ozone concentration, wind speed,
+  ##       wind direction, and nitrogen deposition. Wind direction must be
+  ##       expressed in terms of degrees where the wind is coming from
+  ##       (note this is opposite of the typical convention used by met stations).
   switch(
     var,
     co2 = "CO2",              ## TODO: CO2
