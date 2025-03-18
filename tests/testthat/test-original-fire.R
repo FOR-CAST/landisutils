@@ -9,13 +9,13 @@ testthat::test_that("Biomass Succession inputs are properly created", {
     "~/GitHub/BC_HRV/outputs",
     glue::glue("NRD_Quesnel_{fireModel}_LH_hrv_NDTBEC_{frpType}_res125")
   )
-  f <- file.path(d, "simOutPreamble_NRD_Quesnel_.rds")
+  f1 <- file.path(d, "simOutPreamble_NRD_Quesnel_.rds")
 
-  testthat::skip_if_not(file.exists(f))
+  testthat::skip_if_not(file.exists(f1))
 
   ## fire objects -----------------------------------------
 
-  sim <- SpaDES.core::loadSimList(f)
+  sim1 <- SpaDES.core::loadSimList(f1)
 
   frp_erni <- sim[["fireRegimePolys"]]
 
@@ -30,7 +30,7 @@ testthat::test_that("Biomass Succession inputs are properly created", {
 
   ## TODO: use frp_erni to create InitialFireRegionsMap (terra::rasterize)
 
-  rm(sim)
+  rm(sim1)
 
   ## prepare landis input files ----------------------------------------------------------------
 
