@@ -17,7 +17,8 @@
 #'   - `WindCurveTable`;
 #'
 #' @export
-BaseFireInput <- function(path, ...) {
+#' @aliases BaseFireInput
+OriginalFireInput <- function(path, ...) {
   stopifnot(
     !is.null(path)
   )
@@ -27,9 +28,9 @@ browser()
     !is.null(dots$FireRegionParametersTable)
   )
 
-  file <- file.path(path, "base_fire.txt")
+  file <- file.path(path, "original_fire.txt")
   writeLines(c(
-    LandisData("Base Fire"), ## TODO: should this be "Original Fire" ??? (tests & manual mismatch)
+    LandisData("Original Fire"),
     insertTimestep(dots$Timestep),
     insertFireRegionParametersTable(dots$FireRegionParametersTable),
     insertInitialFireRegionsMap(dots$InitialFireRegionsMap),

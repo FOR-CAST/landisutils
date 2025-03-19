@@ -10,16 +10,25 @@ testthat::test_that("Biomass Succession inputs are properly created", {
     glue::glue("NRD_Quesnel_{fireModel}_LH_hrv_NDTBEC_{frpType}_res125")
   )
   f1 <- file.path(d, "simOutPreamble_NRD_Quesnel_.rds")
+  f2 <- file.path(d, "simOutDataPrep_NRD_Quesnel.rds")
 
-  testthat::skip_if_not(file.exists(f1))
-
-  ## fire objects -----------------------------------------
+  testthat::skip_if_not(all(file.exists(f1, f2)))
 
   sim1 <- SpaDES.core::loadSimList(f1)
+  sim2 <- SpaDES.core::loadSimList(f2)
 
-  frp_erni <- sim[["fireRegimePolys"]]
+  ## initial communities
+  cohortData <- sim2[["cohortData"]]
+  pixelGroupMap <- sim2[["pixelGroupMap"]]
 
-  ## TODO: use frp_erni to create Fire Region Parameters Table:
+  ## ecoregion
+  ecoregion <- sim2[["ecoregion"]]
+  ecoregionMap <- sim2[["ecoregionMap"]]
+
+  ## fireRegimePolys
+  fireRegimePolys <- sim1[["fireRegimePolys"]]
+
+  ## TODO: use fireRegimePolys to create Fire Region Parameters Table:
   ##       --> FireRegionName is e.g., glue("FRT{polyID}")
   ##       --> MapCode [0, 65535] is polyID
   ##       --> Mean Size [ha] from the attributes table
@@ -28,15 +37,34 @@ testthat::test_that("Biomass Succession inputs are properly created", {
   ##       --> IgnitionProb [0, 1] from the attributes table?
   ##       --> k  [int >= 0] from the attributes table?? 'fire spread age'
 
-  ## TODO: use frp_erni to create InitialFireRegionsMap (terra::rasterize)
+  ## other
+  minRelativeB <- sim2[["minRelativeB"]]
+  species <- sim2[["species"]]
+  speciesEcoregion <- sim2[["speciesEcoregion"]]
+  sufficientLight <- sim2[["sufficientLight"]]
+
+  ## TODO: unused below:
+  speciesLayers <- sim2[["speciesLayers"]]
+  standAgeMap <- sim2[["standAgeMap"]] |> terra::crop(speciesLayers)
+  studyArea <- sim1[["studyArea"]]
+  sppEquiv <- sim2[["sppEquiv"]]
 
   rm(sim1)
+  rm(sim2)
 
   ## prepare landis input files ----------------------------------------------------------------
 
   tmp_pth <- withr::local_tempdir("test_Base_Fire_")
 
   ## TODO
+
+  ifrm_file <- file.path(tmp_pth, "FireRegions.tif")
+  InitialFireRegionsMap <- terra::rasterize(
+    fireRegimePolys,
+    standAgeMap,
+    field = "FRT",
+    filename = ifrm_file
+  )
 
   bf_file <- BaseFireInput(
     path = tmp_path,
@@ -46,7 +74,7 @@ testthat::test_that("Biomass Succession inputs are properly created", {
     FireRegionParametersTable = TODO,
     FireDamageTable = TODO,
     FuelCurveTable = TODO,
-    InitialFireRegionsMap = TODO,
+    InitialFireRegionsMap = ifrm_file,
     LogFile = TODO,
     MapNames = TODO,
     SummaryLogFile = TODO,
