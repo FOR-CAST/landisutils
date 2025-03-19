@@ -63,6 +63,8 @@ testthat::test_that("Biomass Succession inputs are properly created", {
 
   write.csv(daily_weather, clim_file)
 
+  testthat::expect_true(file.exists(clim_file))
+
   cc_file <- prepClimateConfigFile(
     path = tmp_pth,
     ClimateTimeSeries = "Daily_RandomYears",
@@ -70,15 +72,10 @@ testthat::test_that("Biomass Succession inputs are properly created", {
     SpinUpClimateTimeSeries = "Daily_RandomYears",
     SpinUpClimateFile = basename(clim_file),
     GenerateClimateOutputFiles = "yes",
-    UsingFireClimate = "",
-    FineFuelMoistureCode = "",
-    DuffMoistureCode = "",
-    DroughtCode = "",
-    FirstDayFire = "",
-    LastDayFire = ""
-  ) ## TODO
+    UsingFireClimate = "no" ## TODO: allow 'yes' (need springstart/winterstart)
+  )
 
-  testthat::expect_true(all(file.exists(cc_file)))
+  testthat::expect_true(file.exists(cc_file))
 
   erp_df <- prepEcoregionParameters() ## TODO
 

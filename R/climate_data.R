@@ -118,7 +118,7 @@ prep_daily_weather <- function(var = NULL, studyArea = NULL, id = NULL, start = 
   ## We want a data.frame with columns:
   ##   Year  Month  Day  Variable  Eco1 Eco2 Eco3 ...
 
-  ## SpatRaster |> df |> long_df |> wide_df |> wide_df
+  ## SpatRaster |> df |> long_df |> wide_df
   df <- climateR::getDaymet(
     AOI = studyArea,
     varname = var,
@@ -137,6 +137,10 @@ prep_daily_weather <- function(var = NULL, studyArea = NULL, id = NULL, start = 
       names_prefix = "mean.",
       names_sep = "(-|_)",
       values_to = "Value"
+    ) |>
+    dplyr::mutate(
+      ## convert prcp from mm to cm
+      Value = dplyr::case_when(var == "prcp" ~ Value / 10, .default = Value)
     ) |>
     tidyr::pivot_wider(
       names_from = id,

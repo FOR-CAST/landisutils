@@ -27,6 +27,7 @@ landisutilsHeader <- function() {
 LandisData <- function(x) {
   c(
     landisutilsHeader(),
-    glue::glue("LandisData  \"{x}\"")
+    glue::glue("LandisData  \"{x}\""),
+    glue::glue("")
   )
 }

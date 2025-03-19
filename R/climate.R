@@ -20,7 +20,7 @@
 #' @export
 #'
 prepClimateConfigFile <- function(path, ...) {
-  dots <= list(...)
+  dots <- list(...)
 
   allowedTimeSeries <- c(
     "Daily_AverageAllYears", "Daily_RandomYears", "Daily_SequencedYears",
@@ -34,15 +34,15 @@ prepClimateConfigFile <- function(path, ...) {
     dots$SpinUpClimateTimeSeries %in% allowedTimeSeries
   )
 
-  dots$GenerateClimateOutputFiles %||% "yes"
-  dots$UsingFireClimate %||% "no"
+  dots$GenerateClimateOutputFiles <- dots$GenerateClimateOutputFiles %||% "yes"
+  dots$UsingFireClimate <- dots$UsingFireClimate %||% "no"
 
-  dots$FineFuelMoistureCode %||% 100 ## 85
-  dots$DuffMoistureCode %||% 100  ## 6
-  dots$DroughtCode %||% 100 ## 15
-  dots$FirstDayFire %||% 30
-  dots$LastDayFire %||% 320
-  dots$AtmosphericPressure %||% 100
+  dots$FineFuelMoistureCode <- dots$FineFuelMoistureCode %||% 100 ## 85
+  dots$DuffMoistureCode <- dots$DuffMoistureCode %||% 100 ## 6
+  dots$DroughtCode <- dots$DroughtCode %||% 100 ## 15
+  dots$FirstDayFire <- dots$FirstDayFire %||% 30
+  dots$LastDayFire <- dots$LastDayFire %||% 320
+  dots$AtmosphericPressure <- dots$AtmosphericPressure %||% 100
 
   ## based on sample file:
   ## https://github.com/LANDIS-II-Foundation/Extension-Biomass-Succession/blob/master/
