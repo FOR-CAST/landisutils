@@ -8,11 +8,14 @@ testthat::test_that("Biomass Succession inputs are properly created", {
     "~/GitHub/BC_HRV/outputs",
     glue::glue("NRD_Quesnel_{fireModel}_LH_hrv_NDTBEC_{frpType}_res125")
   )
-  f <- file.path(d, "simOutDataPrep_NRD_Quesnel.rds")
 
-  testthat::skip_if_not(file.exists(f))
+  f1 <- file.path(d, "simOutPreamble_NRD_Quesnel_.rds")
+  f2 <- file.path(d, "simOutDataPrep_NRD_Quesnel.rds")
 
-  sim <- SpaDES.core::loadSimList(f)
+  testthat::skip_if_not(all(file.exists(f1, f2)))
+
+  sim1 <- SpaDES.core::loadSimList(f1)
+  sim2 <- SpaDES.core::loadSimList(f2)
 
   ## initial communities
   cohortData <- sim2[["cohortData"]]
@@ -21,6 +24,9 @@ testthat::test_that("Biomass Succession inputs are properly created", {
   ## ecoregion
   ecoregion <- sim2[["ecoregion"]]
   ecoregionMap <- sim2[["ecoregionMap"]]
+
+  ## fireRegimePolys
+  fireRegimePolys <- sim1[["fireRegimePolys"]]
 
   ## other
   minRelativeB <- sim2[["minRelativeB"]]
@@ -31,15 +37,46 @@ testthat::test_that("Biomass Succession inputs are properly created", {
   ## TODO: unused below:
   speciesLayers <- sim2[["speciesLayers"]]
   standAgeMap <- sim2[["standAgeMap"]] |> terra::crop(speciesLayers)
+  studyArea <- sim1[["studyArea"]]
   sppEquiv <- sim2[["sppEquiv"]]
 
-  rm(sim)
+  rm(sim1)
+  rm(sim2)
 
   ## prepare landis input files ----------------------------------------------------------------
 
   tmp_pth <- withr::local_tempdir("test_Biomass_Succession_")
 
-  cc_file <- prepClimateConfigFile() ## TODO
+  ## climate data
+  clim_file <- file.path(tmp_pth, "climate-data-daily.csv")
+  clim_vars <- c("prcp", "tmax", "tmin")
+
+  daily_weather <- purrr::map(
+    .x = clim_vars,
+    .f = prep_daily_weather,
+    studyArea = fireRegimePolys,
+    id = "FRT",
+    start = "2011-01-01",
+    end = "2015-12-31"
+  ) |>
+    purrr::list_rbind()
+
+  write.csv(daily_weather, clim_file)
+
+  cc_file <- prepClimateConfigFile(
+    path = tmp_pth,
+    ClimateTimeSeries = "Daily_RandomYears",
+    ClimateFile = basename(clim_file),
+    SpinUpClimateTimeSeries = "Daily_RandomYears",
+    SpinUpClimateFile = basename(clim_file),
+    GenerateClimateOutputFiles = "yes",
+    UsingFireClimate = "",
+    FineFuelMoistureCode = "",
+    DuffMoistureCode = "",
+    DroughtCode = "",
+    FirstDayFire = "",
+    LastDayFire = ""
+  ) ## TODO
 
   testthat::expect_true(all(file.exists(cc_file)))
 
