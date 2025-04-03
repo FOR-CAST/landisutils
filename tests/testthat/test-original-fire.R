@@ -66,7 +66,7 @@ testthat::test_that("Biomass Succession inputs are properly created", {
     filename = ifrm_file
   )
 
-  bf_file <- BaseFireInput(
+  bf_file <- OriginalFireInput(
     path = tmp_path,
 
     ## TODO: these should be the prepped objects/filenames
