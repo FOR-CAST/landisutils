@@ -207,13 +207,13 @@ insertSufficientLight <- function(df) {
 #'
 #' @export
 prepEcoregionParameters <- function(df) {
-  browser() ## TODO
-
   df <- df |>
+    dplyr::filter(active == "yes") |>
     dplyr::mutate(
-      Ecoregions = ecoregionGroup,
-      AET = AET, ## TODO
-      .keep = "used"
+      Ecoregions = as.character(ecoregionGroup),
+      AET = 600, ## TODO: need values from data
+      active = NULL,
+      ecoregionGroup = NULL
     )
 
   return(df)
@@ -221,14 +221,18 @@ prepEcoregionParameters <- function(df) {
 
 #' Specify `EcoregionParameters` table
 #'
-#' @param files
+#' @param df
 #'
 #' @template return_insert
 #'
 #' @export
-insertEcoregionParameters <- function(files) {
-  browser() ## TODO
+insertEcoregionParameters <- function(df) {
   c(
+    glue::glue("EcoregionParameters"),
+    glue::glue(">>    AET (mm)"),
+    apply(df, 1, function(x) {
+      glue::glue_collapse(x, sep = "  ")
+    }),
     glue::glue("") ## add blank line after each item group
   )
 }
@@ -282,13 +286,12 @@ insertSpeciesEcoregionDataFile <- function(file) {
 #'
 #' @export
 prepFireReductionParameters <- function(df = NULL) {
-  browser() ## TODO
-
   if (is.null(df)) {
     df <- data.table(
       FireSeverity = 1L:5L,
-      WoodReduction = c(), ## [0, 1]
-      LitterReduction = c() ## [0, 1]
+      ## TODO: need WoodReduction and LitterReduction from data
+      WoodReduction = c(0.00, 0.00, 0.00, 0.00, 0.00), ## [0, 1]
+      LitterReduction = c(0.00, 0.25, 0.50, 0.75, 1.00) ## [0, 1]
     )
   } else {
     df <- as.data.table(df)
@@ -313,8 +316,13 @@ prepFireReductionParameters <- function(df = NULL) {
 #'
 #' @export
 insertFireReductionParameters <- function(df) {
-  browser() ## TODO
   c(
+    glue::glue("FireReductionParameters"),
+    glue::glue(">>  Severity    WoodLitter    Litter"),
+    glue::glue(">>  Fire        Reduction     Reduction"),
+    apply(df, 1, function(x) {
+      glue::glue_collapse(x, sep = "  ")
+    }),
     glue::glue("") ## add blank line after each item group
   )
 }
@@ -327,22 +335,20 @@ insertFireReductionParameters <- function(df) {
 #'
 #' @export
 prepHarvestReductionParameters <- function(df = NULL) {
-  browser() ## TODO
-
   if (is.null(df)) {
+    ## TODO: need defaults from data rather than landis test file
     df <- data.table(
-      PrescriptionName = c(), ## TODO
-      DeadWoodReduction = c(),
-      DeadLitterReduction = c(),
-      CohortWoodRemoval = c(),
-      CohortLeafRemoval = c()
+      PrescriptionName = c("MaxAgeClearcut", "PatchCutting"),
+      DeadWoodReduction = c(0.5, 1.0),
+      DeadLitterReduction = c(0.15, 1.0),
+      CohortWoodRemoval = c(0.8, 1.0),
+      CohortLeafRemoval = c(0.0, 0.0)
     )
   } else {
     df <- as.data.table(df)
   }
 
   ## enforce typing and bounds
-  df[, FireSeverity := as.integer(FireSeverity)]
   stopifnot(
     all(df[["DeadWoodReduction"]] >= 0.0),
     all(df[["DeadWoodReduction"]] <= 1.0),
@@ -365,8 +371,13 @@ prepHarvestReductionParameters <- function(df = NULL) {
 #'
 #' @export
 insertHarvestReductionParameters <- function(df) {
-  browser() ## TODO
   c(
+    glue::glue("HarvestReductionParameters"),
+    glue::glue(">>      Name    DeadWood    DeadLitter    Cohort        Cohort"),
+    glue::glue(">>              Reduction   Reduction     WoodRemoval   LeafRemoval"),
+    apply(df, 1, function(x) {
+      glue::glue_collapse(x, sep = "      ")
+    }),
     glue::glue("") ## add blank line after each item group
   )
 }

@@ -56,32 +56,35 @@ simplifyCohorts <- function(cohortData, pixelGroupMap, ageBin = 20) {
 #' @export
 #' @rdname prepInitialCommunities
 prepInitialCommunities <- function(cohortData, pixelGroupMap, path) {
-  stopifnot(is(pixelGroupMap, "SpatRaster"))
-
   .checkPath(path)
 
-  initialCommunities <- data.table::copy(cohortData)
-  initialCommunities[, MapCode := as.integer(pixelGroup)]
-  initialCommunities[, CohortAge := as.integer(age)]
-  initialCommunities[, CohortBiomass := as.integer(B)]
-  initialCommunities[, SpeciesName := as.character(speciesCode)]
+  if (!is.null(cohortData) && is(cohortData, "data.table") &&
+      !is.null(pixelGroupMap) && is(pixelGroupMap, "SpatRaster")) {
+    initialCommunities <- data.table::copy(cohortData)
+    initialCommunities[, MapCode := as.integer(pixelGroup)]
+    initialCommunities[, CohortAge := as.integer(age)]
+    initialCommunities[, CohortBiomass := as.integer(B)]
+    initialCommunities[, SpeciesName := as.character(speciesCode)]
 
-  cols2keep <- c("MapCode", "SpeciesName", "CohortAge", "CohortBiomass")
-  initialCommunities <- initialCommunities[, cols2keep, with = FALSE]
-  initialCommunities <- unique(initialCommunities)
-  setkeyv(initialCommunities, cols2keep[1:3])
-  initialCommunities <- list(
-    data.table(MapCode = 0L, SpeciesName = NA_character_, CohortAge = 0L, CohortBiomass = 0L),
-    initialCommunities
-  ) |>
-    rbindlist()
+    cols2keep <- c("MapCode", "SpeciesName", "CohortAge", "CohortBiomass")
+    initialCommunities <- initialCommunities[, cols2keep, with = FALSE]
+    initialCommunities <- unique(initialCommunities)
+    setkeyv(initialCommunities, cols2keep[1:3])
+    initialCommunities <- list(
+      data.table(MapCode = 0L, SpeciesName = NA_character_, CohortAge = 0L, CohortBiomass = 0L),
+      initialCommunities
+    ) |>
+      rbindlist()
+
+    initialCommunitiesMap <- terra::deepcopy(pixelGroupMap)
+  } else {
+    stop("")
+  }
 
   stopifnot(
     all(initialCommunities[["MapCode"]] >= 0L),
     all(initialCommunities[["MapCode"]] <= 65535L)
   )
-
-  initialCommunitiesMap <- terra::deepcopy(pixelGroupMap)
 
   ## write files
   initialCommunitiesMapFile <- file.path(path, "initial-communities.tif")

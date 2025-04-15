@@ -45,6 +45,7 @@ testthat::test_that("Biomass Succession inputs are properly created", {
 
   ## prepare landis input files ----------------------------------------------------------------
 
+  # pkgload::load_all("packages/landisutils")
   tmp_pth <- withr::local_tempdir("test_Biomass_Succession_")
 
   ## climate data
@@ -77,11 +78,12 @@ testthat::test_that("Biomass Succession inputs are properly created", {
 
   testthat::expect_true(file.exists(cc_file))
 
-  erp_df <- prepEcoregionParameters() ## TODO
+  erp_df <- prepEcoregionParameters(ecoregion) ## TODO: AET from data
 
-  frp_df <- prepFireReductionParameters() ## TODO
+  ## TODO: need WoodReduction and LitterReduction from data
+  frp_df <- prepFireReductionParameters(NULL) ## NULL uses dummy defaults
 
-  hrp_df <- prepHarvestReductionParameters() ## TODO
+  hrp_df <- prepHarvestReductionParameters(NULL) ## ## NULL uses dummy defaults
 
   ic_objs <- simplifyCohorts(cohortData, pixelGroupMap, ageBin = 20) ## TODO: fix!
 
@@ -107,8 +109,6 @@ testthat::test_that("Biomass Succession inputs are properly created", {
 
   bse_file <- BiomassSuccessionInput(
     path = tmp_path,
-
-    ## TODO: these should be the prepped objects/filenames
     CalibrateMode = FALSE,
     ClimateConfigFile = cc_file,
     EcoregionParameters = erp_df,

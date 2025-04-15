@@ -35,6 +35,42 @@ plot(studyAreaBC["FRT"])
 
 ## Historical daily weather
 
+### BioSIM
+
+```{r get-biosim-data}
+climvars <- c(
+  ## BioSIM::getModelHelp("ClimaticEx_Daily")
+  "Prcp", "SRad", "RelH", "Tair", "Tmax", "Tmin", "WndD", "WndS",
+  
+  ## BioSIM::getModelHelp("Potential_Evapotranspiration_Daily")
+  ## BioSIM::getModelHelp("Potential_Evapotranspiration_Ex_Daily")
+  "PET"
+)
+
+## TODO: use Prcp / 10 (must be in cm);
+## TODO: convert WndS from km/h to m/s;
+## TODO: verify wind direction is the FROM Direction;
+
+BioSIM::generateWeather(
+  modelNames = c("ClimaticEx_Daily", "Potential_Evapotranspiration_Daily"),
+  fromYr = 2018,
+  toYr = 2019,
+  id = ,      ## TODO: e.g., 1:length(longDeg)
+  latDeg = ,  ## TODO: extract points from gridded polygon
+  longDeg = , ## TODO: extract points from gridded polygon
+  elevM = rep(NA, length(longDeg)),
+  rep = 1,
+  repModel = 1,
+  rcp = "RCP45",      ## shouldn't matter for historical, but FRV to use SSPs not RCPs;
+  climModel = "RCM4", ## shouldn't matter for historical, but FRV to use SSPs not RCPs;
+  additionalParms = NULL
+)
+## TODO: gridded values need to be summarized by ecolocation; i.e., `zonal`
+```
+
+
+### Daymet
+
 ```{r, get-daymet-data}
 climvars <- c("prcp", "tmax", "tmin")
 
