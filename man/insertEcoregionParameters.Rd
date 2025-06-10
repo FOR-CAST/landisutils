@@ -4,10 +4,10 @@
 \alias{insertEcoregionParameters}
 \title{Specify \code{EcoregionParameters} table}
 \usage{
-insertEcoregionParameters(files)
+insertEcoregionParameters(df)
 }
 \arguments{
-\item{files}{}
+\item{df}{}
 }
 \value{
 Character string(s) to write to the suitable LANDIS-II input file.

@@ -44,6 +44,10 @@ prepClimateConfigFile <- function(path, ...) {
   dots$LastDayFire <- dots$LastDayFire %||% 320
   dots$AtmosphericPressure <- dots$AtmosphericPressure %||% 100
 
+  ## ensure *relative* file paths inserted into config files
+  dots$ClimateFile <- fs::path_rel(dots$ClimateFile, path)
+  dots$SpinUpClimateFile <- fs::path_rel(dots$SpinUpClimateFile, path)
+
   ## based on sample file:
   ## https://github.com/LANDIS-II-Foundation/Extension-Biomass-Succession/blob/master/
   ##   testings/CoreV8.0-BiomassSuccession7.0/biomass-succession_ClimateGenerator.txt
@@ -70,6 +74,37 @@ prepClimateConfigFile <- function(path, ...) {
     ),
     file
   )
+
+  return(file)
+}
+
+#' Specify `ClimateConfigFile`
+#'
+#' @template param_file
+#'
+#' @template return_insert
+#'
+#' @export
+insertClimateConfigFile <- function(file) {
+  c(
+    glue::glue("ClimateConfigFile    \"{file}\""),
+    glue::glue("") ## add blank line after each item group
+  )
+}
+
+#' Write LANDIS-II Climate Input File to disk
+#'
+#' Simple wrapper around [utils::write.csv()].
+#'
+#' @param df data.frame corresponding to Climate Input Data table
+#'
+#' @template param_file
+#'
+#' @template return_file
+#'
+#' @export
+writeClimateData <- function(df, file) {
+  write.csv(df, file, quote = FALSE, row.names = FALSE)
 
   return(file)
 }

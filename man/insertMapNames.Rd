@@ -2,9 +2,9 @@
 % Please edit documentation in R/ext_original_fire.R
 \name{insertMapNames}
 \alias{insertMapNames}
-\title{Specify Base Fire \code{MapNames}}
+\title{Specify Original Fire \code{MapNames}}
 \usage{
-insertMapNames(path = "fire")
+insertMapNames(path)
 }
 \arguments{
 \item{path}{Character. Path specifying a directory to use for the scenario runs.}
@@ -13,5 +13,5 @@ insertMapNames(path = "fire")
 Character string(s) to write to the suitable LANDIS-II input file.
 }
 \description{
-Specify Base Fire \code{MapNames}
+Specify Original Fire \code{MapNames}
 }

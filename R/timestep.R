@@ -7,5 +7,8 @@
 insertTimestep <- function(t = NULL) {
   t %||% 1L
 
-  glue::glue("TimeStep    {t}")
+  c(
+    glue::glue("Timestep    {t}"),
+    glue::glue("") ## add blank line after each item group)
+  )
 }

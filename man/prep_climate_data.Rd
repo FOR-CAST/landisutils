@@ -2,9 +2,18 @@
 % Please edit documentation in R/climate_data.R
 \name{prep_daily_weather}
 \alias{prep_daily_weather}
+\alias{prep_monthly_weather}
 \title{Prepare Climate Data}
 \usage{
 prep_daily_weather(
+  var = NULL,
+  studyArea = NULL,
+  id = NULL,
+  start = NULL,
+  end = NULL
+)
+
+prep_monthly_weather(
   var = NULL,
   studyArea = NULL,
   id = NULL,

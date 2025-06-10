@@ -7,7 +7,7 @@
 insertInitialFireRegionsMap(file)
 }
 \arguments{
-\item{file}{}
+\item{files}{character, specifying the path to the file.}
 }
 \value{
 Character string(s) to write to the suitable LANDIS-II input file.

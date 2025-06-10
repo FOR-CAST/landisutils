@@ -2,16 +2,16 @@
 % Please edit documentation in R/ext_original_fire.R
 \name{insertLogFile}
 \alias{insertLogFile}
-\title{Specify Base Fire \code{LogFile}}
+\title{Specify Original Fire \code{LogFile}}
 \usage{
-insertLogFile(file = "fire/log.csv")
+insertLogFile(file = "original-fire/log.csv")
 }
 \arguments{
-\item{file}{}
+\item{files}{character, specifying the path to the file.}
 }
 \value{
 Character string(s) to write to the suitable LANDIS-II input file.
 }
 \description{
-Specify Base Fire \code{LogFile}
+Specify Original Fire \code{LogFile}
 }

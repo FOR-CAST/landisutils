@@ -2,7 +2,7 @@
 % Please edit documentation in R/ext_biomass_succession.R
 \name{BiomassSuccessionInput}
 \alias{BiomassSuccessionInput}
-\title{Create  Succession Input File}
+\title{Create Biomass Succession Input File}
 \usage{
 BiomassSuccessionInput(path, ...)
 }

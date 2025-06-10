@@ -31,12 +31,14 @@ var_landis <- function(var) {
   ##       (note this is opposite of the typical convention used by met stations).
   switch(
     var,
+    aet = "AET",              ## TerraClim AET
     co2 = "CO2",              ## TODO: CO2
     ndep = "Ndep",            ## TODO: nitrogen deposition
     ozone = "ozone",          ## TODO: ozone (O3)
     par = "PAR",              ## TODO:
     pet = "PET",              ## TODO: potential evapotranspiration
     prcp = "precip",          ## DAYMET: preciptation
+    ppt = "precip",           ## TerraClim: preciptation
     rh = "RH",                ## TODO: rel humidity
     rmax = "maxRH",           ## TODO: max rel humidity
     rmin = "minRH",           ## TODO: min rel humidity
@@ -46,7 +48,7 @@ var_landis <- function(var) {
     tmax = "Tmax",            ## DAYMET max temperature
     tmin = "Tmin",            ## DAYMET min temperature
     wnddir = "windDirection", ## TODO: wind 'from' direction
-    wndspd = "windSpeed",     ## TODO: wind speed
+    ws = "windSpeed",         ## TerraClim wind speed
     wndNrt = "windNorthing",  ## TODO: wind northing
     wndEst = "windEasting",   ## TODO: wind easting
 
@@ -152,6 +154,59 @@ prep_daily_weather <- function(var = NULL, studyArea = NULL, id = NULL, start = 
       Day = as.integer(Day),
       Variable = var_landis(var),
       .after = "Day"
+    )
+
+  df
+}
+
+#' @export
+#' @rdname prep_climate_data
+prep_monthly_weather <- function(var = NULL, studyArea = NULL, id = NULL, start = NULL, end = NULL) {
+  stopifnot(
+    !is.null(var),
+    !is.null(studyArea),
+    !is.null(id),
+    !is.null(start),
+    !is.null(end)
+  )
+
+  ## We want a data.frame with columns:
+  ##   Year  Month  Variable  Eco1 Eco2 Eco3 ...
+
+  ## SpatRaster |> df |> long_df |> wide_df
+  df <- climateR::getTerraClim(
+    AOI = studyArea,
+    varname = var,
+    startDate = start,
+    endDate = end,
+    verbose = FALSE
+  ) |>
+    zonal::execute_zonal(
+      geom = studyArea,
+      ID = id,
+      join = FALSE # TRUE joins geometries, keeping as sf object
+    ) |>
+    tidyr::pivot_longer(
+      cols = starts_with("mean"),
+      names_to = c(NA, "Year", "Month", "Day", NA),
+      names_prefix = "mean.",
+      names_sep = "(-|_)",
+      values_to = "Value"
+    ) |>
+    dplyr::mutate(
+      ## convert ppt from mm to cm
+      Value = dplyr::case_when(var == "ppt" ~ Value / 10, .default = Value)
+    ) |>
+    tidyr::pivot_wider(
+      names_from = id,
+      values_from = "Value"
+    ) |>
+    dplyr::mutate(
+      Year = as.integer(Year),
+      Month = as.integer(Month),
+      Day = NULL,
+      Variable = var_landis(var),
+      .after = "Month"
     )
 
   df

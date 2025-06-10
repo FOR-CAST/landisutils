@@ -2,7 +2,7 @@
 % Please edit documentation in R/ext_original_fire.R
 \name{insertFireDamageTable}
 \alias{insertFireDamageTable}
-\title{Specify Base Fire \code{FireDamageTable}}
+\title{Specify Original Fire \code{FireDamageTable}}
 \usage{
 insertFireDamageTable(df)
 }
@@ -13,5 +13,5 @@ insertFireDamageTable(df)
 Character string(s) to write to the suitable LANDIS-II input file.
 }
 \description{
-Specify Base Fire \code{FireDamageTable}
+Specify Original Fire \code{FireDamageTable}
 }

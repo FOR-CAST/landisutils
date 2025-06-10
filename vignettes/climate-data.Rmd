@@ -37,7 +37,7 @@ plot(studyAreaBC["FRT"])
 
 ### BioSIM
 
-```{r get-biosim-data}
+```{r get-biosim-data, eval = FALSE}
 climvars <- c(
   ## BioSIM::getModelHelp("ClimaticEx_Daily")
   "Prcp", "SRad", "RelH", "Tair", "Tmax", "Tmin", "WndD", "WndS",
@@ -78,13 +78,41 @@ daily_weather <- purrr::map(
   .x = climvars,
   .f = prep_daily_weather,
   studyArea = studyAreaBC,
-  id = "FRT",
+  id = "FRT", ## TODO: do this for ecoregions too
   start = "2018-01-01",
   end = "2019-12-31"
 ) |>
   purrr::list_rbind()
 
 head(daily_weather)
+```
+
+### Terra Climate Data
+
+```{r, get-terraclim-data}
+climvars <- c(
+  "aet",
+  # "def", "PDSI", "pet",
+  "ppt",
+  # "q", "soil",
+  "srad",
+  # "swe",
+  "tmax", "tmin",
+  # "vap", "vpd",
+  "ws"
+)
+
+monthly_weather <- purrr::map(
+  .x = climvars,
+  .f = prep_monthly_weather,
+  studyArea = studyAreaBC,
+  id = "FRT",
+  start = "2018-01-01",
+  end = "2019-12-31"
+) |>
+  purrr::list_rbind()
+
+head(monthly_weather)
 ```
 
 ## Climate projections

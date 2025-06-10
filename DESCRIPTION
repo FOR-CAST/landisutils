@@ -26,6 +26,7 @@ Suggests:
     knitr,
     map,
     rmarkdown,
+    scfmutils,
     sf,
     SpaDES.core,
     SpaDES.tools,
@@ -36,6 +37,7 @@ Remotes:
     mikejohnson51/climateR,
     PredictiveEcology/LandR@development,
     PredictiveEcology/map@development,
+    PredictiveEcology/scfmutils@development,
     PredictiveEcology/SpaDES.core@development,
     PredictiveEcology/SpaDES.tools@development,
     mikejohnson51/zonal

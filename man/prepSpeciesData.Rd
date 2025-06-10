@@ -2,12 +2,21 @@
 % Please edit documentation in R/species.R
 \name{prepSpeciesData}
 \alias{prepSpeciesData}
+\alias{prepSpecies_CSV_File}
+\alias{prepSpeciesInputFile}
 \title{Species Data File}
 \usage{
-prepSpeciesData(df = NULL, path = NULL)
+prepSpeciesData(df = NULL, path = NULL, type = NULL)
 }
 \arguments{
 \item{df}{data.frame corresponding to the species data table}
+
+\item{path}{Character. Path specifying a directory to use for the scenario runs.}
+
+\item{type}{character, corresponding to one fo the following types:
+- "core": generates core species data (\code{.txt}) file;
+- "fire": generates \code{.csv} version for use with fire extensions;
+- "succession": generates \code{.csv} version for use with succession extensions;}
 }
 \value{
 Character string(s) specifying suitable LANDIS-II input file(s),

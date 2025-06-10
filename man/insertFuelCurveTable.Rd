@@ -2,7 +2,7 @@
 % Please edit documentation in R/ext_original_fire.R
 \name{insertFuelCurveTable}
 \alias{insertFuelCurveTable}
-\title{Specify Base Fire \code{FuelCurveTable}}
+\title{Specify Original Fire \code{FuelCurveTable}}
 \usage{
 insertFuelCurveTable(df)
 }
@@ -13,5 +13,5 @@ insertFuelCurveTable(df)
 Character string(s) to write to the suitable LANDIS-II input file.
 }
 \description{
-Specify Base Fire \code{FuelCurveTable}
+Specify Original Fire \code{FuelCurveTable}
 }

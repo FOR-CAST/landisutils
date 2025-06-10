@@ -7,7 +7,8 @@
 insertInitialCommunities(files)
 }
 \arguments{
-\item{files}{}
+\item{files}{character, specifying the paths to the initial communities
+and initial communities map files.}
 }
 \value{
 Character string(s) to write to the suitable LANDIS-II input file.

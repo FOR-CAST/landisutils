@@ -1,20 +1,21 @@
-#' Create Base Fire Input File
+#' Create Original Fire Input File
 #'
-#' Follows the Base Fire User Guide.
+#' Follows the Original Fire User Guide.
 #'
 #' @template param_path
 #'
 #' @param ... arguments passed to other functions:
-#'   - `DynamicFireRegionsTable`  (optional);
+#'   - `DynamicFireRegionsTable` (optional);
 #'   - `FireRegionParametersTable`;
 #'   - `FireDamageTable`;
 #'   - `FuelCurveTable`;
 #'   - `InitialFireRegionsMap`;
 #'   - `LogFile`;
 #'   - `MapNames`;
+#'   - `Species_CSV_File`;
 #'   - `SummaryLogFile`;
 #'   - `Timestep`;
-#'   - `WindCurveTable`;
+#'   - `WindCurveTable` (optional);
 #'
 #' @export
 #' @aliases BaseFireInput
@@ -22,28 +23,76 @@ OriginalFireInput <- function(path, ...) {
   stopifnot(
     !is.null(path)
   )
-browser()
+
   dots <- list(...)
   stopifnot(
-    !is.null(dots$FireRegionParametersTable)
+    !is.null(dots$FireRegionParametersTable),
+    !is.null(dots$InitialFireRegionsMap),
+    !is.null(dots$LogFile),
+    !is.null(dots$Species_CSV_File),
+    !is.null(dots$SummaryLogFile)
   )
 
-  file <- file.path(path, "original_fire.txt")
+  ## ensure *relative* file paths inserted into config files
+  dots$InitialFireRegionsMap <- fs::path_rel(dots$InitialFireRegionsMap, path)
+  dots$LogFile <- fs::path_rel(dots$LogFile, path)
+  dots$Species_CSV_File <- fs::path_rel(dots$Species_CSV_File, path)
+  dots$SummaryLogFile <- fs::path_rel(dots$SummaryLogFile, path)
+
+  file <- file.path(path, "original-fire.txt")
   writeLines(c(
     LandisData("Original Fire"),
     insertTimestep(dots$Timestep),
+    insertSpecies_CSV_File(dots$Species_CSV_File),
     insertFireRegionParametersTable(dots$FireRegionParametersTable),
     insertInitialFireRegionsMap(dots$InitialFireRegionsMap),
     insertDynamicFireRegionsTable(dots$DynamicFireRegionsTable),
     insertFuelCurveTable(dots$FuelCurveTable),
     insertWindCurveTable(dots$WindCurveTable),
     insertFireDamageTable(dots$FireDamageTable),
-    insertMapNames(dots$MapNames),
+    insertMapNames(path),
     insertLogFile(dots$LogFile),
     insertSummaryLogFile(dots$SummaryLogFile)
   ), file)
 
   return(file)
+}
+
+#' Specify Original Fire Extension `Species_CSV_File`
+#'
+#' @template param_file
+#'
+#' @template return_insert
+#'
+#' @export
+insertSpecies_CSV_File <- function(file) {
+  c(
+    glue::glue("Species_CSV_File    \"{file}\""),
+    glue::glue("") ## add blank line after each item group
+  )
+}
+
+#' Prepare Original Fire Extension `FireRegionParameters` Table
+#'
+#' @param sf `sf` polygon object
+#'
+#' @returns data.frame
+#'
+#' @export
+prepFireRegionParametersTable <- function(sf) {
+  sf::st_drop_geometry(sf) |>
+    dplyr::mutate(
+      FireRegionName = glue::glue("FRT_{FRT}"), ## TODO: use 1st col, not hardcoded 'FRT'
+      MapCode = PolyID,
+      MeanSize = xBar * cellSize,
+      MinSize = cellSize, ## always one pixel?
+      MaxSize = emfs_ha,
+      IgnitionProb = pIgnition,
+      k = round(1.0 / (empiricalBurnRate))
+    ) |>
+    dplyr::select(
+      FireRegionName, MapCode, MeanSize, MinSize, MaxSize, IgnitionProb, k
+    )
 }
 
 #' Specify Fire Region Parameters Table
@@ -54,19 +103,46 @@ browser()
 #'
 #' @export
 insertFireRegionParametersTable <- function(df) {
-  browser()
   c(
     glue::glue(">> Fire Region Parameters"),
     glue::glue(">> "),
     glue::glue(">> Region  Map    Mean  Min   Max   Ignition  Fire"),
     glue::glue(">> Name    Code   Size  Size  Size  Prob      k"),
     glue::glue(">> -----------------------------------------------"),
-    glue::glue(""), ## TODO
+    apply(df, 1, function(x) {
+      glue::glue_collapse(x, sep = "    ")
+    }),
     glue::glue("") ## add blank line after each item group
   )
 }
 
-#' Create Base Fire `InitialFireRegionsMap`
+#' Specify Dynamic Fire Regions Table
+#'
+#' @param df data.frame corresponding to Dynamic Fire Region Table
+#'
+#' @template return_insert
+#'
+#' @export
+insertDynamicFireRegionsTable <- function(df = NULL) {
+  if (is.null(df)) {
+    df <- data.frame(Year = integer(0), FileName = character(0))
+  }
+
+  c(
+    if (is.null(df)) {
+      glue::glue(">> DynamicFireRegionTable << optional")
+    } else {
+      glue::glue("DynamicFireRegionTable << optional")
+    },
+    glue::glue(">> Year    FileName"),
+    apply(df, 1, function(x) {
+      glue::glue_collapse(x, sep = "    ")
+    }),
+    glue::glue("") ## add blank line after each item group
+  )
+}
+
+#' Create Original Fire `InitialFireRegionsMap`
 #'
 #' @param r `SpatRaster` corresponding to initial fire regions map
 #'
@@ -74,14 +150,14 @@ insertFireRegionParametersTable <- function(df) {
 #'
 #' @export
 prepInitialFireRegionsMap <- function(r, file = "fire-regions-map.tif") {
-  terra::writeRaster(r, file, overwrite = TRUE)
+  terra::writeRaster(r, file, datatype = "INT2U", overwrite = TRUE)
 
   return(file)
 }
 
 #' Specify `InitialFireRegionsMap` file
 #'
-#' @param file
+#' @template param_file
 #'
 #' @template return_insert
 #'
@@ -93,7 +169,7 @@ insertInitialFireRegionsMap <- function(file) {
   )
 }
 
-#' Specify Base Fire `DynamicFireRegionTable`
+#' Specify Original Fire `DynamicFireRegionTable`
 #'
 #' @param df data.frame corresponding to `DynamicFireRegionTable` (optional)
 #'
@@ -101,7 +177,6 @@ insertInitialFireRegionsMap <- function(file) {
 #'
 #' @export
 insertDynamicFireRegionTable <- function(df = NULL) {
-  browser() ## TODO
   if (is.null(df)) {
     c(
       glue::glue(">> DynamicFireRegionTable"),
@@ -115,13 +190,15 @@ insertDynamicFireRegionTable <- function(df = NULL) {
       glue::glue("DynamicFireRegionTable"),
       glue::glue(">> Year   Filename"),
       glue::glue(">> -------------------------------"),
-      glue::glue(""), ## TODO
+      apply(df, 1, function(x) {
+        glue::glue_collapse(x, sep = "    ")
+      }),
       glue::glue("") ## add blank line after each item group
     )
   }
 }
 
-#' Specify Base Fire `FuelCurveTable`
+#' Specify Original Fire `FuelCurveTable`
 #'
 #' @param df data.frame
 #'
@@ -129,35 +206,39 @@ insertDynamicFireRegionTable <- function(df = NULL) {
 #'
 #' @export
 insertFuelCurveTable <- function(df) {
-  browser() ## TODO
   c(
     glue::glue("FuelCurveTable"),
-    glue::glue(">> Ecoregion    S5  S4  S3  S2  S1"),
-    glue::glue(">> -------------------------------"),
-    glue::glue(""), ## TODO
+    glue::glue(">> Fireregion    S1  S2  S3  S4  S5"),
+    glue::glue(">> --------------------------------"),
+    apply(df, 1, function(x) {
+      glue::glue_collapse(x, sep = "    ")
+    }),
     glue::glue("") ## add blank line after each item group
   )
 }
 
-#' Specify Base Fire `WindCurveTable`
+#' Specify Original Fire `WindCurveTable`
 #'
-#' @param df data.frame
+#' @param df data.frame or NULL
 #'
 #' @template return_insert
 #'
 #' @export
 insertWindCurveTable <- function(df) {
-  browser() ## TODO
   c(
     glue::glue("WindCurveTable"),
     glue::glue(">> Ecoregion    S5  S4  S3  S2  S1"),
     glue::glue(">> -------------------------------"),
-    glue::glue(""), ## TODO
+    if (!is.null(df)) {
+      apply(df, 1, function(x) {
+        glue::glue_collapse(x, sep = "  ")
+      })
+    },
     glue::glue("") ## add blank line after each item group
   )
 }
 
-#' Specify Base Fire `FireDamageTable`
+#' Specify Original Fire `FireDamageTable`
 #'
 #' @param df data.frame
 #'
@@ -165,47 +246,59 @@ insertWindCurveTable <- function(df) {
 #'
 #' @export
 insertFireDamageTable <- function(df) {
-  browser() ## TODO
   c(
     glue::glue("FireDamageTable"),
     glue::glue(">> Cohort Age      FireSeverity - "),
     glue::glue(">> % of longevity  FireTolerance"),
     glue::glue(">> --------------  ---------------"),
-    glue::glue(""), ## TODO
+    apply(df, 1, function(x) {
+      glue::glue_collapse(x, sep = "%      ")
+    }),
     glue::glue("") ## add blank line after each item group
   )
 }
 
-#' Specify Base Fire `MapNames`
+#' Specify Original Fire `MapNames`
 #'
 #' @template param_path
 #'
 #' @template return_insert
 #'
 #' @export
-insertMapNames <- function(path = "fire") {
+insertMapNames <- function(path) {
+  path <- fs::path_rel(file.path(path, "original-fire"), path)
+
   ## NOTE: careful using glue() here; need literal {timestep}, so use {{timestep}}
   glue::glue("MapNames    \"{path}/severity-{{timestep}}.tif\"")
 }
 
-#' Specify Base Fire `LogFile`
+#' Specify Original Fire `LogFile`
 #'
-#' @param file
+#' @template param_file
 #'
 #' @template return_insert
 #'
 #' @export
-insertLogFile <- function(file = "fire/log.csv") {
+insertLogFile <- function(file = "original-fire/log.csv") {
   glue::glue("LogFile    \"{file}\"")
 }
 
-#' Specify Base Fire `SummaryLogFile`
+#' Specify Original Fire `SummaryLogFile`
 #'
-#' @param file
+#' @template param_file
 #'
 #' @template return_insert
 #'
 #' @export
-insertSummaryLogFile <- function(file = "fire/summary-log.csv") {
+insertSummaryLogFile <- function(file = "original-fire/summary-log.csv") {
   glue::glue("SummaryLogFile    \"{file}\"")
+}
+
+#' Calibrate Original Fire
+#'
+#' @param TODO
+#'
+#' @export
+calibrate_fire <- function() {
+  ## TODO
 }

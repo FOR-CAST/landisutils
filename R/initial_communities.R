@@ -23,7 +23,6 @@ collapseSpp <- function(x) {
 #'
 #' @export
 simplifyCohorts <- function(cohortData, pixelGroupMap, ageBin = 20) {
-  browser()
   ## TODO: revisit this simplification (ideally simplification done upstream in B_bDP)
   cd <- data.table::copy(cohortData)
   cd[, community := lapply(.SD, collapseSpp), by = pixelGroup, .SDcols = "speciesCode"]
@@ -36,10 +35,11 @@ simplifyCohorts <- function(cohortData, pixelGroupMap, ageBin = 20) {
     all(cd[["newPixelGroup"]] <= 65535L)
   )
 
+  ## TODO: reclassification is very slow
   pgm <- terra::deepcopy(pixelGroupMap) |>
     terra::classify(unique(cd[, .(pixelGroup, newPixelGroup)]))
 
-  set(cd, NULL, c("community"), NULL)
+  set(cd, NULL, c("age", "B", "community", "pixelGroup"), NULL)
   setnames(cd, c("newAge", "newB", "newPixelGroup"), c("age", "B", "pixelGroup"))
 
   return(list(cd, pgm))
@@ -58,28 +58,28 @@ simplifyCohorts <- function(cohortData, pixelGroupMap, ageBin = 20) {
 prepInitialCommunities <- function(cohortData, pixelGroupMap, path) {
   .checkPath(path)
 
-  if (!is.null(cohortData) && is(cohortData, "data.table") &&
-      !is.null(pixelGroupMap) && is(pixelGroupMap, "SpatRaster")) {
-    initialCommunities <- data.table::copy(cohortData)
-    initialCommunities[, MapCode := as.integer(pixelGroup)]
-    initialCommunities[, CohortAge := as.integer(age)]
-    initialCommunities[, CohortBiomass := as.integer(B)]
-    initialCommunities[, SpeciesName := as.character(speciesCode)]
+  stopifnot(
+    !is.null(cohortData) && is(cohortData, "data.table") &&
+      !is.null(pixelGroupMap) && is(pixelGroupMap, "SpatRaster")
+  )
 
-    cols2keep <- c("MapCode", "SpeciesName", "CohortAge", "CohortBiomass")
-    initialCommunities <- initialCommunities[, cols2keep, with = FALSE]
-    initialCommunities <- unique(initialCommunities)
-    setkeyv(initialCommunities, cols2keep[1:3])
-    initialCommunities <- list(
-      data.table(MapCode = 0L, SpeciesName = NA_character_, CohortAge = 0L, CohortBiomass = 0L),
-      initialCommunities
-    ) |>
-      rbindlist()
+  initialCommunities <- data.table::copy(cohortData)
+  initialCommunities[, MapCode := as.integer(pixelGroup)]
+  initialCommunities[, CohortAge := as.integer(age)]
+  initialCommunities[, CohortBiomass := as.integer(B)]
+  initialCommunities[, SpeciesName := as.character(speciesCode)]
 
-    initialCommunitiesMap <- terra::deepcopy(pixelGroupMap)
-  } else {
-    stop("")
-  }
+  cols2keep <- c("MapCode", "SpeciesName", "CohortAge", "CohortBiomass")
+  initialCommunities <- initialCommunities[, cols2keep, with = FALSE]
+  initialCommunities <- unique(initialCommunities)
+  setkeyv(initialCommunities, cols2keep[1:3])
+  initialCommunities <- list(
+    data.table(MapCode = 0L, SpeciesName = "NA", CohortAge = 0L, CohortBiomass = 0L),
+    initialCommunities
+  ) |>
+    rbindlist()
+
+  initialCommunitiesMap <- terra::deepcopy(pixelGroupMap) |> terra::as.int()
 
   stopifnot(
     all(initialCommunities[["MapCode"]] >= 0L),
@@ -88,17 +88,25 @@ prepInitialCommunities <- function(cohortData, pixelGroupMap, path) {
 
   ## write files
   initialCommunitiesMapFile <- file.path(path, "initial-communities.tif")
-  terra::writeRaster(initialCommunitiesMap, initialCommunitiesMapFile, overwrite = TRUE)
+  terra::writeRaster(
+    initialCommunitiesMap,
+    initialCommunitiesMapFile,
+    overwrite = TRUE,
+    # datatype = "INT2U", ## corresponds best to 65535 values; but LANDIS doesn't like it?
+    datatype = "INT2S", ## this works, but limits mapcodes to 32767
+    NAflag = 0L
+  )
 
   initialCommunitiesFile <- file.path(path, "initial-communities.csv")
   fwrite(initialCommunities, initialCommunitiesFile)
 
-  return(c(initialCommunities, initialCommunitiesMap))
+  return(c(initialCommunitiesFile, initialCommunitiesMapFile))
 }
 
 #' Specify `InitialCommunities` and `InitialCommunitiesMap` Files
 #'
-#' @param files
+#' @param files character, specifying the paths to the initial communities
+#'              and initial communities map files.
 #'
 #' @template return_insert
 #'

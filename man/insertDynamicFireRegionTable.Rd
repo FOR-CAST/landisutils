@@ -2,7 +2,7 @@
 % Please edit documentation in R/ext_original_fire.R
 \name{insertDynamicFireRegionTable}
 \alias{insertDynamicFireRegionTable}
-\title{Specify Base Fire \code{DynamicFireRegionTable}}
+\title{Specify Original Fire \code{DynamicFireRegionTable}}
 \usage{
 insertDynamicFireRegionTable(df = NULL)
 }
@@ -13,5 +13,5 @@ insertDynamicFireRegionTable(df = NULL)
 Character string(s) to write to the suitable LANDIS-II input file.
 }
 \description{
-Specify Base Fire \code{DynamicFireRegionTable}
+Specify Original Fire \code{DynamicFireRegionTable}
 }

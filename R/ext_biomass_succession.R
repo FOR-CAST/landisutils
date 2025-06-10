@@ -1,4 +1,4 @@
-#' Create  Succession Input File
+#' Create Biomass Succession Input File
 #'
 #' Follows the  Biomass Succession User Guide.
 #'
@@ -29,6 +29,12 @@ BiomassSuccessionInput <- function(path, ...) {
     !is.null(dots$FireReductionParameters)
   )
 
+  ## ensure *relative* file paths inserted into config files
+  dots$ClimateConfigFile <- fs::path_rel(dots$ClimateConfigFile, path)
+  dots$InitialCommunitiesFiles <- fs::path_rel(dots$InitialCommunitiesFiles, path)
+  dots$SpeciesDataFile <- fs::path_rel(dots$SpeciesDataFile, path)
+  dots$SpeciesEcoregionDataFile <- fs::path_rel(dots$SpeciesEcoregionDataFile, path)
+
   file <- file.path(path, "biomass_succession.txt")
   writeLines(c(
     LandisData("Biomass Succession"),
@@ -39,8 +45,8 @@ BiomassSuccessionInput <- function(path, ...) {
     insertCalibrateMode(dots$CalibrateMode),
     insertMinRelativeBiomass(dots$MinRelativeBiomass),
     insertSufficientLight(dots$SufficientLight),
-    insertSpeciesDataFile(dots$SpeciesDataFile),
-    insertEcoregionParameters(dots$EcoregionParametersFiles),
+    insertSpeciesDataFile(dots$SpeciesDataFile, core = FALSE),
+    insertEcoregionParameters(dots$EcoregionParameters),
     insertSpeciesEcoregionDataFile(dots$SpeciesEcoregionDataFile),
     insertFireReductionParameters(dots$FireReductionParameters), ## TODO
     insertHarvestReductionParameters(dots$HarvestReductionParameters) ## TODO
@@ -100,12 +106,20 @@ insertCalibrateMode <- function(cal_mode = FALSE) {
 #'
 #' @export
 prepMinRelativeBiomass <- function(df = NULL) {
-  browser() ## TODO: don't use by ecoregionGroup but by ecoregion!
-  if (colnames(df) == c("ecoregionGroup", "X1", "X2", "X3", "X4", "X5")) {
-    df <- t(df)
+  stopifnot(!is.null(df))
+
+  if (identical(colnames(df), c("ecoregionGroup", "X1", "X2", "X3", "X4", "X5"))) {
+    erg <- as.character(df$ecoregionGroup)
+    mrb <- apply(df[, -1], 2, function(x) {
+      ## values are percents; the `%` symbol is required by LANDIS-II
+      val <- x * 100
+      stopifnot(val >= 0, val <= 100)
+      paste0(val, "%")
+    })
+    out <- cbind(erg, mrb) |> t() |> data.frame()
   }
 
-  return(df)
+  return(out)
 }
 
 #' Specify Biomass Succession Extension `MinRelativeBiomass` Table
@@ -131,31 +145,31 @@ insertMinRelativeBiomass <- function(df = NULL) {
   #        5 95% 80%
 
   c(
-    glue::glue(">> MinRelativeBiomass"),
+    glue::glue("MinRelativeBiomass"),
     glue::glue(">> Shade Class    Ecoregions"),
     glue::glue(">> -----------    ------------------------"),
     paste0(
-      "   1              ",
-      glue::glue("{df[1, ]}") |> glue::glue_collapse(sep = "  ") ## TODO: is the '%' needed?
+      "                  ",
+      glue::glue("{df[1, ]}") |> glue::glue_collapse(sep = "  ")
     ),
     paste0(
-      "   2              ",
+      "   1              ",
       glue::glue("{df[2, ]}") |> glue::glue_collapse(sep = "  ")
     ),
     paste0(
-      "   3              ",
+      "   2              ",
       glue::glue("{df[3, ]}") |> glue::glue_collapse(sep = "  ")
     ),
     paste0(
-      "   4              ",
+      "   3              ",
       glue::glue("{df[4, ]}") |> glue::glue_collapse(sep = "  ")
     ),
     paste0(
-      "   5              ",
+      "   4              ",
       glue::glue("{df[5, ]}") |> glue::glue_collapse(sep = "  ")
     ),
     paste0(
-      "   6              ",
+      "   5              ",
       glue::glue("{df[6, ]}") |> glue::glue_collapse(sep = "  ")
     ),
     glue::glue("") ## add blank line after each item group
@@ -173,7 +187,7 @@ insertSufficientLight <- function(df) {
   c(
     glue::glue("SufficientLight"),
     glue::glue(">> Shade Class  Probability by Actual Shade"),
-    glue::glue(">> -----------  ---------------------------"),
+    glue::glue(">> -----------  ----------------------------------"),
     glue::glue(">>              0     1     2     3     4     5"),
     paste0(
       "   1            ",
@@ -207,13 +221,18 @@ insertSufficientLight <- function(df) {
 #'
 #' @export
 prepEcoregionParameters <- function(df) {
-  df <- df |>
-    dplyr::filter(active == "yes") |>
-    dplyr::mutate(
-      Ecoregions = as.character(ecoregionGroup),
-      AET = 600, ## TODO: need values from data
-      active = NULL,
-      ecoregionGroup = NULL
+  ## sum by year, then take the mean annual total (as integer)
+  df <- dplyr::group_by(df, Year) |>
+    dplyr::summarise_if(is.numeric, sum) |>
+    dplyr::mutate(Month = NULL) |>
+    dplyr::ungroup() |>
+    dplyr::summarise_all(mean) |>
+    round(0) |>
+    dplyr::mutate(Year = NULL) |>
+    tidyr::pivot_longer(
+      cols = everything(),
+      names_to = "Ecoregions",
+      values_to = "AET"
     )
 
   return(df)
@@ -248,25 +267,31 @@ insertEcoregionParameters <- function(df) {
 prepSpeciesEcoregionDataFile <- function(df, path) {
   df <- df |>
     dplyr::mutate(
-      Year = 0,
+      ecoregionGroup = as.character(ecoregionGroup),
+      ProbMortality = 0.0, ## TODO: this is missing???
+      year = as.integer(year)
+    ) |>
+    dplyr::relocate(
+      ## re-order columns while renaming them
+      Year = year,
       EcoregionName = ecoregionGroup,
       SpeciesCode = speciesCode,
       ProbEstablish = establishprob,
-      ProbMortality = 0.0, ## TODO: this is missing???
+      ProbMortality,
       ANPPmax = maxANPP,
-      BiomassMax = maxB,
-      .keep = "used"
-    )
+      BiomassMax = maxB
+    ) |>
+    na.omit()
 
   file <- file.path(path, "species-ecoregion.csv") ## TODO
-  write.csv(df, file)
+  write.csv(df, file, row.names = FALSE)
 
   return(file)
 }
 
 #' Specify `SpeciesEcoregionData` File
 #'
-#' @param file
+#' @template param_file
 #'
 #' @template return_insert
 #'

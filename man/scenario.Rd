@@ -20,8 +20,7 @@ scenario(name = NULL, extensions = NULL, path = NULL, ...)
 \item \code{Duration} Numeric. Number of years to run the simulation;
 \item \code{EcoregionsFiles} List of length 2 containing character file paths (TODO);
 \item \code{RandomNumberSeed} Integer. Seed used to initialize the LANDIS-II random number generator;
-\item \code{SpeciesDataFile} Character. (TODO);
-\item 
+\item \code{SpeciesInputFile} Character. (TODO);
 }}
 }
 \value{

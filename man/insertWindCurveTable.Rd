@@ -2,16 +2,16 @@
 % Please edit documentation in R/ext_original_fire.R
 \name{insertWindCurveTable}
 \alias{insertWindCurveTable}
-\title{Specify Base Fire \code{WindCurveTable}}
+\title{Specify Original Fire \code{WindCurveTable}}
 \usage{
 insertWindCurveTable(df)
 }
 \arguments{
-\item{df}{data.frame}
+\item{df}{data.frame or NULL}
 }
 \value{
 Character string(s) to write to the suitable LANDIS-II input file.
 }
 \description{
-Specify Base Fire \code{WindCurveTable}
+Specify Original Fire \code{WindCurveTable}
 }

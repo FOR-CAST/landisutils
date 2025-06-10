@@ -3,7 +3,7 @@
 \name{OriginalFireInput}
 \alias{OriginalFireInput}
 \alias{BaseFireInput}
-\title{Create Base Fire Input File}
+\title{Create Original Fire Input File}
 \usage{
 OriginalFireInput(path, ...)
 }
@@ -12,18 +12,19 @@ OriginalFireInput(path, ...)
 
 \item{...}{arguments passed to other functions:
 \itemize{
-\item \code{DynamicFireRegionsTable}  (optional);
+\item \code{DynamicFireRegionsTable} (optional);
 \item \code{FireRegionParametersTable};
 \item \code{FireDamageTable};
 \item \code{FuelCurveTable};
 \item \code{InitialFireRegionsMap};
 \item \code{LogFile};
 \item \code{MapNames};
+\item \code{Species_CSV_File};
 \item \code{SummaryLogFile};
 \item \code{Timestep};
-\item \code{WindCurveTable};
+\item \code{WindCurveTable} (optional);
 }}
 }
 \description{
-Follows the Base Fire User Guide.
+Follows the Original Fire User Guide.
 }

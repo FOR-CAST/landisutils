@@ -1,15 +1,16 @@
 testthat::test_that("Biomass Succession inputs are properly created", {
+  testthat::skip_if_not_installed("map")
   testthat::skip_if_not_installed("SpaDES.core")
   testthat::skip_if_not_installed("withr")
 
-  fireModel <- "scfm" # "landis"
-  frpType <- "FRT" # "ECODISTRICT"
+  fireModel <- "landis"
+  frpType <- "FRT"
   d <- file.path(
     "~/GitHub/BC_HRV/outputs",
     glue::glue("NRD_Quesnel_{fireModel}_LH_hrv_NDTBEC_{frpType}_res125")
   )
 
-  f1 <- file.path(d, "simOutPreamble_NRD_Quesnel_.rds")
+  f1 <- file.path(d, "simOutPreamble_NRD_Quesnel.rds")
   f2 <- file.path(d, "simOutDataPrep_NRD_Quesnel.rds")
 
   testthat::skip_if_not(all(file.exists(f1, f2)))
@@ -24,9 +25,12 @@ testthat::test_that("Biomass Succession inputs are properly created", {
   ## ecoregion
   ecoregion <- sim2[["ecoregion"]]
   ecoregionMap <- sim2[["ecoregionMap"]]
+  ecoregionPolys <- terra::as.polygons(ecoregionMap) |>
+    sf::st_as_sf()
+  ecoregionPolys$ecoregion <- paste0(ecoregionPolys$ecoregion, "_81") ## append lcc code
 
   ## fireRegimePolys
-  fireRegimePolys <- sim1[["fireRegimePolys"]]
+  fireRegimePolys <- sim2[["fireRegimePolys"]]
 
   ## other
   minRelativeB <- sim2[["minRelativeB"]]
@@ -34,35 +38,28 @@ testthat::test_that("Biomass Succession inputs are properly created", {
   speciesEcoregion <- sim2[["speciesEcoregion"]]
   sufficientLight <- sim2[["sufficientLight"]]
 
-  ## TODO: unused below:
-  speciesLayers <- sim2[["speciesLayers"]]
-  standAgeMap <- sim2[["standAgeMap"]] |> terra::crop(speciesLayers)
-  studyArea <- sim1[["studyArea"]]
-  sppEquiv <- sim2[["sppEquiv"]]
-
   rm(sim1)
   rm(sim2)
 
   ## prepare landis input files ----------------------------------------------------------------
-
-  # pkgload::load_all("packages/landisutils")
   tmp_pth <- withr::local_tempdir("test_Biomass_Succession_")
 
   ## climate data
   clim_file <- file.path(tmp_pth, "climate-data-daily.csv")
   clim_vars <- c("prcp", "tmax", "tmin")
+  clim_years <- 2011:2012 ## availability is 1980 to last-year
 
   daily_weather <- purrr::map(
     .x = clim_vars,
     .f = prep_daily_weather,
-    studyArea = fireRegimePolys,
-    id = "FRT",
-    start = "2011-01-01",
-    end = "2015-12-31"
+    studyArea = ecoregionPolys,
+    id = "ecoregion",
+    start = glue::glue("{head(clim_years, 1)}-01-01"),
+    end = glue::glue("{tail(clim_years, 1)}-12-31")
   ) |>
     purrr::list_rbind()
 
-  write.csv(daily_weather, clim_file)
+  writeClimateData(daily_weather, clim_file)
 
   testthat::expect_true(file.exists(clim_file))
 
@@ -78,14 +75,24 @@ testthat::test_that("Biomass Succession inputs are properly created", {
 
   testthat::expect_true(file.exists(cc_file))
 
-  erp_df <- prepEcoregionParameters(ecoregion) ## TODO: AET from data
+  aet_df <- purrr::map(
+    .x = "aet",
+    .f = prep_monthly_weather,
+    studyArea = ecoregionPolys,
+    id = "ecoregion",
+    start = glue::glue("{head(clim_years, 1)}-01-01"),
+    end = glue::glue("{tail(clim_years, 1)}-12-31")
+  ) |>
+    purrr::list_rbind() |>
+    dplyr::filter(Year <= tail(clim_years, 1)) ## match end year
 
-  ## TODO: need WoodReduction and LitterReduction from data
+  erp_df <- prepEcoregionParameters(aet_df)
+
   frp_df <- prepFireReductionParameters(NULL) ## NULL uses dummy defaults
 
   hrp_df <- prepHarvestReductionParameters(NULL) ## ## NULL uses dummy defaults
 
-  ic_objs <- simplifyCohorts(cohortData, pixelGroupMap, ageBin = 20) ## TODO: fix!
+  ic_objs <- simplifyCohorts(cohortData, pixelGroupMap, ageBin = 20)
 
   ic_files <- prepInitialCommunities(
     cohortData = ic_objs[[1]],
@@ -95,9 +102,9 @@ testthat::test_that("Biomass Succession inputs are properly created", {
 
   testthat::expect_true(all(file.exists(ic_files)))
 
-  mrb_df <- prepMinRelativeBiomass(minRelativeB) ## TODO
+  mrb_df <- prepMinRelativeBiomass(minRelativeB)
 
-  spp_file <- prepSpeciesData(species, tmp_pth) ## TODO
+  spp_file <- prepSpeciesData(species, tmp_pth, type = "succession")
 
   testthat::expect_true(file.exists(spp_file))
 
@@ -105,10 +112,10 @@ testthat::test_that("Biomass Succession inputs are properly created", {
 
   testthat::expect_true(all(file.exists(spperd_file)))
 
-  sfl_df <- sufficientLight ## TODO
+  sfl_df <- sufficientLight
 
   bse_file <- BiomassSuccessionInput(
-    path = tmp_path,
+    path = tmp_pth,
     CalibrateMode = FALSE,
     ClimateConfigFile = cc_file,
     EcoregionParameters = erp_df,
@@ -133,9 +140,19 @@ testthat::test_that("Biomass Succession inputs are properly created", {
 
   testthat::expect_true(all(file.exists(er_files)))
 
+  core_spp_file <- prepSpeciesData(species, tmp_pth, type = "core")
+
+  testthat::expect_true(file.exists(core_spp_file))
+
+  scenario_name <- paste0(
+    "scenario_",
+    strsplit(basename(d), "_")[[1]][1:2] |> paste0(collapse = "_")
+  )
   scenario_file <- scenario(
-    name = "test_biomass_succession",
-    extensions = list(succession = "Biomass Succession"),
+    name = scenario_name,
+    extensions = list(
+      succession = c("Biomass Succession" = bse_file)
+    ),
     path = tmp_pth,
 
     ## additional arguments
@@ -144,15 +161,19 @@ testthat::test_that("Biomass Succession inputs are properly created", {
     Duration = 20,
     EcoregionsFiles = er_files,
     RandomNumberSeed = NULL, ## optional
-    SpeciesDataFile = spp_file
+    SpeciesInputFile = core_spp_file
   )
 
   testthat::expect_true(file.exists(scenario_file))
 
-  ## run the landis scenario -------------------------------------------------------------------
+  rep_files <- replicate(scenario_file, reps = 3)
 
+  testthat::expect_true(all(file.exists(rep_files)))
+
+  ## run the landis scenario -------------------------------------------------------------------
+  testthat::skip_if_not(length(landis_find()) == 1)
   ## TODO
-  landis(scenario_file)
+  landis_run(scenario_file)
 
   withr::deferred_run()
 })

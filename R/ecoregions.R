@@ -24,7 +24,7 @@ prepEcoregionsFiles <- function(ecoregion, ecoregionMap, path = NULL) {
   stopifnot(er_range[1] >= 0, er_range[2] <= 65535)
 
   ecoregionsMapFile <- file.path(path, "ecoregions.tif")
-  terra::writeRaster(ecoregionMap, ecoregionsMapFile, overwrite = TRUE)
+  terra::writeRaster(ecoregionMap, ecoregionsMapFile, overwrite = TRUE) ## TODO: datatype = "INT2U"?
 
   ecoregionsTable <- as.data.frame(ecoregion) |>
     dplyr::rename(Active = active) |>
@@ -57,7 +57,7 @@ prepEcoregionsFiles <- function(ecoregion, ecoregionMap, path = NULL) {
 
 #' Specify `Ecoregions` and `EcoregionsMap` Files
 #'
-#' @param files
+#' @param files character, specifying the paths to the ecoregions and ecoregions map files.
 #'
 #' @template return_insert
 #'

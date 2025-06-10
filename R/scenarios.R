@@ -12,8 +12,7 @@
 #'   - `Duration` Numeric. Number of years to run the simulation;
 #'   - `EcoregionsFiles` List of length 2 containing character file paths (TODO);
 #'   - `RandomNumberSeed` Integer. Seed used to initialize the LANDIS-II random number generator;
-#'   - `SpeciesDataFile` Character. (TODO);
-#'   -
+#'   - `SpeciesInputFile` Character. (TODO);
 #'
 #' @template return_file
 #'
@@ -34,8 +33,8 @@ scenario <- function(name = NULL, extensions = NULL, path = NULL, ...) {
     !is.null(dots$EcoregionsFiles), length(dots$EcoregionsFiles) == 2,
     all(is.character(dots$EcoregionsFiles)),
 
-    !is.null(dots$SpeciesDataFile), length(dots$SpeciesDataFile) == 1,
-    is.character(dots$SpeciesDataFile)
+    !is.null(dots$SpeciesInputFile), length(dots$SpeciesInputFile) == 1,
+    is.character(dots$SpeciesInputFile)
   )
   path <- .checkPath(path)
 
@@ -52,11 +51,22 @@ scenario <- function(name = NULL, extensions = NULL, path = NULL, ...) {
     )
   }
 
+  ## ensure *relative* file paths inserted into config files
+  dots$SpeciesInputFile <- fs::path_rel(dots$SpeciesInputFile, path)
+  dots$EcoregionsFiles <- fs::path_rel(dots$EcoregionsFiles, path)
+  extensions <- lapply(extensions, function(exts) {
+    lapply(exts, function(ext) {
+      ext_file <- fs::path_rel(ext, path)
+      names(ext_file) <- names(ext)
+      ext_file
+    })
+  })
+
   file <- file.path(path, glue::glue("{name}.txt"))
   writeLines(c(
     LandisData("Scenario"),
-    insertDuration(duration),
-    insertSpeciesDataFile(dots$SpeciesDataFile),
+    insertDuration(dots$Duration),
+    insertSpeciesDataFile(dots$SpeciesInputFile, core = TRUE),
     insertEcoregionsFiles(dots$EcoregionsFiles),
     insertCellLength(dots$CellLength), ## TODO: get this from data
     insertSuccessionExtensions(extensions$succession),
@@ -65,6 +75,36 @@ scenario <- function(name = NULL, extensions = NULL, path = NULL, ...) {
     insertOtherExtensions(extensions$other),
     insertRandomNumberSeed(dots$RandomNumberSeed)
   ), file)
+
+  return(file)
+}
+
+#' Specify Scenario `CellLength`
+#'
+#' @param cell_length integer specifying the length of a cell's edge in the ecoregions map
+#'
+#' @template return_insert
+#'
+#' @export
+insertCellLength <- function(cell_length) {
+  c(
+    glue::glue("CellLength {cell_length}"),
+    glue::glue("") ## add blank line after each item group
+  )
+}
+
+#' Specify Scenario Duration
+#'
+#' @param duration integer specifying the number of years of simulation
+#'
+#' @template return_insert
+#'
+#' @export
+insertDuration <- function(duration) {
+  c(
+    glue::glue("Duration {duration}"),
+    glue::glue("") ## add blank line after each item group
+  )
 }
 
 #' Specify Scenario Extensions Tables
@@ -195,4 +235,29 @@ insertRandomNumberSeed <- function(seed) {
       glue::glue("") ## add blank line after each item group
     )
   }
+}
+
+#' Replicate a LANDIS-II scenario
+#'
+#' @template param_file
+#'
+#' @param reps integer, number of replicates to generate
+#'
+#' @return TODO
+#'
+#' @export
+#'
+replicate <- function(file = NULL, reps = NULL) {
+  stopifnot(
+    !is.null(file),
+    !is.null(reps)
+  )
+
+  ## TODO:
+  ## 1. readLines the scenario "seed" file
+  ## 2. for all_reps in 1:reps replace outputPath with outputPath/repID
+  ## 3. copy all inputs?
+  ## 4. profit
+
+  return(all_files)
 }

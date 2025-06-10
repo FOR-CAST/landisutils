@@ -2,7 +2,7 @@
 % Please edit documentation in R/ext_original_fire.R
 \name{prepInitialFireRegionsMap}
 \alias{prepInitialFireRegionsMap}
-\title{Create Base Fire \code{InitialFireRegionsMap}}
+\title{Create Original Fire \code{InitialFireRegionsMap}}
 \usage{
 prepInitialFireRegionsMap(r, file = "fire-regions-map.tif")
 }
@@ -14,5 +14,5 @@ Character string(s) specifying suitable LANDIS-II input file(s),
 created as a side effect of the function.
 }
 \description{
-Create Base Fire \code{InitialFireRegionsMap}
+Create Original Fire \code{InitialFireRegionsMap}
 }

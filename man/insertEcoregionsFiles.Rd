@@ -7,7 +7,7 @@
 insertEcoregionsFiles(files)
 }
 \arguments{
-\item{files}{}
+\item{files}{character, specifying the paths to the ecoregions and ecoregions map files.}
 }
 \value{
 Character string(s) to write to the suitable LANDIS-II input file.
