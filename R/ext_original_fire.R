@@ -150,7 +150,14 @@ insertDynamicFireRegionsTable <- function(df = NULL) {
 #'
 #' @export
 prepInitialFireRegionsMap <- function(r, file = "fire-regions-map.tif") {
-  terra::writeRaster(r, file, datatype = "INT2U", overwrite = TRUE)
+  terra::writeRaster(
+    r,
+    file,
+    overwrite = TRUE,
+    # datatype = "INT2U", ## corresponds best to 65535 values; but LANDIS doesn't like it?
+    datatype = "INT2S", ## this works, but limits mapcodes to 32767
+    NAflag = 0L
+  )
 
   return(file)
 }
