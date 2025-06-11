@@ -7,7 +7,7 @@
 prepInitialCommunities(cohortData, pixelGroupMap, path)
 }
 \arguments{
-\item{cohortData}{A \code{data.table} containing cohort information (see LandR)}
+\item{cohortData}{A \code{data.table} containing cohort information (see \pkg{LandR})}
 
 \item{pixelGroupMap}{A \code{SpatRaster} identifying the locations of the pixel groups in \code{cohortData}}
 }

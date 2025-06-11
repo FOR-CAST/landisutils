@@ -47,7 +47,7 @@ simplifyCohorts <- function(cohortData, pixelGroupMap, ageBin = 20) {
 
 #' Create `InitialCommunities` and `InitialCommunitiesMap` Files
 #'
-#' @param cohortData A `data.table` containing cohort information (see LandR)
+#' @param cohortData A `data.table` containing cohort information (see \pkg{LandR})
 #'
 #' @param pixelGroupMap A `SpatRaster` identifying the locations of the pixel groups in `cohortData`
 #'

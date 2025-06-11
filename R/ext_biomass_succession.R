@@ -35,7 +35,7 @@ BiomassSuccessionInput <- function(path, ...) {
   dots$SpeciesDataFile <- fs::path_rel(dots$SpeciesDataFile, path)
   dots$SpeciesEcoregionDataFile <- fs::path_rel(dots$SpeciesEcoregionDataFile, path)
 
-  file <- file.path(path, "biomass_succession.txt")
+  file <- file.path(path, "biomass-succession.txt")
   writeLines(c(
     LandisData("Biomass Succession"),
     insertTimestep(dots$Timestep),
