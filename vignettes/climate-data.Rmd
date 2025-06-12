@@ -27,11 +27,6 @@ knitr::opts_chunk$set(
 
 ```{r setup}
 library(landisutils)
-
-clim_years <- 2018:2019 ## availability is 1980 to last-year
-
-clim_data_path <- file.path(tempdir(), "climate_data")
-dir.create(clim_data_path)
 ```
 
 ## Define a 'study area' or 'area of interest'
@@ -51,7 +46,14 @@ ecoregionPolys <- suppressWarnings({
 plot(ecoregionPolys["PolyID"])
 ```
 
-## Historical daily weather
+## Historical weather data
+
+```{r setup-climate}
+clim_years <- 2018:2019 ## availability is 1980 to last year
+
+clim_data_path <- file.path(tempdir(), "climate_data")
+dir.create(clim_data_path)
+```
 
 ### BioSIM
 

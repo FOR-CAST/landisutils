@@ -19,7 +19,7 @@ testthat::test_that("Climate inputs are properly created", {
   tmp_pth <- withr::local_tempdir("test_climate_")
 
   ## climate data
-  clim_years <- 2011:2012 ## availability is 1980 to last-year
+  clim_years <- 2011:2012 ## availability is 1980 to last year
 
   ## Daymet
   clim_vars <- c("prcp", "tmax", "tmin")
