@@ -30,8 +30,8 @@ library(landisutils)
 
 clim_years <- 2018:2019 ## availability is 1980 to last-year
 
-tmp_path <- file.path(tempdir(), "climate_data") |>
-  .checkPath()
+clim_data_path <- file.path(tempdir(), "climate_data")
+dir.create(clim_data_path)
 ```
 
 ## Define a 'study area' or 'area of interest'
@@ -98,7 +98,7 @@ daily_weather <- purrr::map(
 
 head(daily_weather)
 
-clim_file <- file.path(tmp_pth, "climate-data-daily.csv")
+clim_file <- file.path(clim_data_path, "climate-data-daily.csv")
 writeClimateData(daily_weather, clim_file)
 ```
 
@@ -122,7 +122,7 @@ monthly_weather <- purrr::map(
 
 head(monthly_weather)
 
-clim_file <- file.path(tmp_pth, "climate-data-monthly.csv")
+clim_file <- file.path(clim_data_path, "climate-data-monthly.csv")
 writeClimateData(monthly_weather, clim_file)
 ```
 
@@ -130,10 +130,10 @@ We can also use this recipe to get monthly AET data to prepare the `EcoregionPar
 
 ```{r, get-terraclim-aet}
 aet_df <- purrr::map(
-    .x = "aet",
-    .f = prep_monthly_weather,
-    studyArea = ecoregionPolys,
-    id = "PolyID",
+  .x = "aet",
+  .f = prep_monthly_weather,
+  studyArea = ecoregionPolys,
+  id = "PolyID",
   start = glue::glue("{head(clim_years, 1)}-01-01"),
   end = glue::glue("{tail(clim_years, 1)}-12-31")
 ) |>
