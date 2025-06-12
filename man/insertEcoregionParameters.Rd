@@ -7,7 +7,7 @@
 insertEcoregionParameters(df)
 }
 \arguments{
-\item{df}{}
+\item{df}{data.frame}
 }
 \value{
 Character string(s) to write to the suitable LANDIS-II input file.

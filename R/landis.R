@@ -20,9 +20,9 @@ landis_find <- function() {
 
 #' Run a LANDIS-II simulation from the R session
 #'
-#' @param scenario_file
+#' @param scenario_file character, specifying path to scenario file.
 #'
-#' @param landis_console Character. Path to LANDIS-II console executable.
+#' @param landis_console character, specifying path to LANDIS-II console executable.
 #'
 #' @returns List of output files produced by the LANDIS-II simulation run.
 #'

@@ -6,9 +6,6 @@
 \usage{
 calibrate_fire()
 }
-\arguments{
-\item{TODO}{}
-}
 \description{
 Calibrate Original Fire
 }

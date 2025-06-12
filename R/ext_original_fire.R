@@ -90,9 +90,9 @@ prepFireRegionParametersTable <- function(sf) {
       IgnitionProb = pIgnition,
       k = round(1.0 / (empiricalBurnRate))
     ) |>
-    dplyr::select(
+    dplyr::select(all_of(
       FireRegionName, MapCode, MeanSize, MinSize, MaxSize, IgnitionProb, k
-    )
+    ))
 }
 
 #' Specify Fire Region Parameters Table
@@ -302,8 +302,6 @@ insertSummaryLogFile <- function(file = "original-fire/summary-log.csv") {
 }
 
 #' Calibrate Original Fire
-#'
-#' @param TODO
 #'
 #' @export
 calibrate_fire <- function() {

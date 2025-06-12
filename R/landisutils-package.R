@@ -1,5 +1,25 @@
+utils::globalVariables(c(
+  ".", "active", "age", "all_files", "Area", "as.data.table", "B", "cellSize", "CohortAge",
+  "CohortBiomass", "community", "Day", "ecoregionGroup", "emfs_ha", "empiricalBurnRate",
+  "establishprob", "everything", "FireRegionName", "FireSeverity", "firetolerance",
+  "FireTolerance", "growthcurve", "GrowthCurve", "growthCurveSource", "hardsoft",
+  "IgnitionProb", "inflationFactor", "k", "leafLignin", "LeafLignin", "leaflongevity",
+  "LeafLongevity", "longevity", "Longevity", "mANPPproportion", "MapCode", "maxANPP",
+  "maxB", "MaxSize", "MeanSize", "MinSize", "Month", "MortalityCurve", "mortalityshape",
+  "newAge", "newB", "newPixelGroup", "pIgnition", "pixelGroup",
+  "PolyID", "postfireregen", "PostFireRegen", "ProbMortality", "resproutage_max",
+  "resproutage_min", "resproutprob", "SeedDispDistEff", "SeedDispDistMax",
+  "seeddistance_eff", "seeddistance_max", "sexualmature", "SexualMaturity",
+  "shadetolerance", "ShadeTolerance", "species", "speciesCode", "SpeciesCode",
+  "SpeciesName", "SproutAgeMax", "SproutAgeMin", "starts_with", "Value", "VegReprodProb",
+  "wooddecayrate", "WoodDecayRate", "xBar", "year", "Year"
+))
+
 #' @keywords internal
 "_PACKAGE"
+
+#' @import methods
+NULL
 
 ## usethis namespace: start
 #' @importFrom climateR getDaymet
@@ -21,6 +41,7 @@
 #' @importFrom data.table setcolorder
 #' @importFrom data.table setkeyv
 #' @importFrom data.table setnames
+#' @importFrom dplyr all_of
 #' @importFrom dplyr mutate
 #' @importFrom fs dir_create
 #' @importFrom fs dir_exists
@@ -32,6 +53,7 @@
 #' @importFrom LandR standAgeMapGenerator
 #' @importFrom purrr list_rbind
 #' @importFrom purrr map
+#' @importFrom stats na.omit
 #' @importFrom terra names
 #' @importFrom terra nlyr
 #' @importFrom terra rast
@@ -41,6 +63,8 @@
 #' @importFrom terra writeRaster
 #' @importFrom tidyr pivot_longer
 #' @importFrom tidyr pivot_wider
+#' @importFrom utils packageVersion
+#' @importFrom utils write.csv
 #' @importFrom zonal execute_zonal
 ## usethis namespace: end
 NULL

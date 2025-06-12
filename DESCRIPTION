@@ -18,9 +18,12 @@ Imports:
     fs,
     glue,
     LandR,
+    methods,
     purrr,
+    stats,
     terra,
     tidyr,
+    utils,
     zonal
 Suggests:
     bcdata,

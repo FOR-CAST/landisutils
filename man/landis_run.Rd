@@ -7,9 +7,9 @@
 landis_run(scenario_file = NULL, landis_console = NULL)
 }
 \arguments{
-\item{scenario_file}{}
+\item{scenario_file}{character, specifying path to scenario file.}
 
-\item{landis_console}{Character. Path to LANDIS-II console executable.}
+\item{landis_console}{character, specifying path to LANDIS-II console executable.}
 }
 \value{
 List of output files produced by the LANDIS-II simulation run.

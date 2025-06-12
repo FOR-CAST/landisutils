@@ -240,7 +240,7 @@ prepEcoregionParameters <- function(df) {
 
 #' Specify `EcoregionParameters` table
 #'
-#' @param df
+#' @param df data.frame
 #'
 #' @template return_insert
 #'
