@@ -161,3 +161,9 @@ See <https://mikejohnson51.github.io/climateR/articles/intro.html#climate-projec
 ```{r, get-maca-data}
 ## TODO
 ```
+
+<!-- cleanup -->
+
+```{r cleanup, include = FALSE}
+unlink(clim_data_path, recursive = TRUE)
+```
