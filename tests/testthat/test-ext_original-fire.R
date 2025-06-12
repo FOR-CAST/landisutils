@@ -7,10 +7,10 @@ testthat::test_that("Original Fire (and Biomass Succession) inputs are properly 
   frpType <- "FRT"
   d <- file.path(
     "~/GitHub/BC_HRV/outputs",
-    glue::glue("NRD_Quesnel_{fireModel}_LH_hrv_NDTBEC_{frpType}_res125")
+    glue::glue("Chine_{fireModel}_LH_hrv_NDTBEC_{frpType}_res125")
   )
-  f1 <- file.path(d, "simOutPreamble_NRD_Quesnel.rds")
-  f2 <- file.path(d, "simOutDataPrep_NRD_Quesnel.rds")
+  f1 <- file.path(d, "simOutPreamble_Chine.rds")
+  f2 <- file.path(d, "simOutDataPrep_Chine.rds")
 
   testthat::skip_if_not(all(file.exists(f1, f2)))
 
