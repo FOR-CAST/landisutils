@@ -137,7 +137,7 @@ testthat::test_that("Original Fire (and Biomass Succession) inputs are properly 
   testthat::expect_true(all(file.exists(rep_files)))
 
   ## run the landis scenario -------------------------------------------------------------------
-  testthat::skip_if_not(length(landis_find()) == 1)
+  testthat::skip_if_not(nzchar(landis_find()))
   ## TODO
   landis_run(scenario_file)
 
