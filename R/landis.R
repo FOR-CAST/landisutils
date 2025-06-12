@@ -2,17 +2,20 @@
 #'
 #' @returns Character vector. File path(s), if found, to any LANDIS-II executables.
 #'
+#' To ensure this function can find your LANDIS-II installation, please ensure that the
+#' `LANDIS_CONSOLE` environment variable is set and accessible by in R
+#'  (e.g., `Sys.getenv("LANDIS_CONSOLE")` should return a non-empty value).
+#'
 #' @export
 landis_find <- function() {
-  browser()
   ## just search the typical places
-  landis_console <- system("echo $LANDIS_CONSOLE", intern = TRUE)
+  landis_console <- Sys.getenv("LANDIS_CONSOLE")
   if (nzchar(landis_console)) {
     landis_console <- list.files("/opt", "Landis[.]Console[.]dll$", full.names = TRUE, recursive = TRUE) |>
       grep(x = _, pattern = "/build/Release/", value = TRUE)
   }
-  ## TODO: should we run this check on load/attach, and store the path for subsequent retrieval?
-  landis_console
+
+  return(landis_console)
 }
 
 #' Run a LANDIS-II simulation from the R session
