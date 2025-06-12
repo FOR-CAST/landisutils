@@ -23,6 +23,7 @@ Imports:
     tidyr,
     zonal
 Suggests:
+    bcdata,
     knitr,
     map,
     rmarkdown,

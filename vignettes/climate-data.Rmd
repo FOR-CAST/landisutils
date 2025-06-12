@@ -5,32 +5,45 @@ vignette: >
   %\VignetteIndexEntry{Preparing Climate Data for Use With LANDIS-II}
   %\VignetteEncoding{UTF-8}
   %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteDepends{bcdata,scfmutils,SpaDES.tools,terra}
 editor_options: 
   chunk_output_type: console
 ---
 
 ```{r, include = FALSE}
+## package list should match %\VignetteDepends above!
+VignetteDepends <- c("bcdata", "scfmutils", "SpaDES.tools", "terra")
+all_pkgs_avail <- vapply(VignetteDepends, function(pkg) {
+  require(pkg, character.only = TRUE, quietly = TRUE)
+}, logical(1)) |>
+  all()
+
 knitr::opts_chunk$set(
   collapse = TRUE,
-  comment = "#>"
+  comment = "#>",
+  eval = all_pkgs_avail
 )
 ```
 
 ```{r setup}
 library(landisutils)
+
+clim_years <- 2018:2019 ## availability is 1980 to last-year
+
+tmp_path <- file.path(tempdir(), "climate_data") |>
+  .checkPath()
 ```
 
 ## Define a 'study area' or 'area of interest'
 
 ```{r, study-area}
-studyAreaBC <- terra::vect(cbind(-122.14, 52.14), crs = "epsg:4326") |>
+ecoregionPolys <- terra::vect(cbind(-122.14, 52.14), crs = "epsg:4326") |>
   terra::project(paste("+proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95",
                        "+x_0=0 +y_0=0 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0")) |>
   SpaDES.tools::randomStudyArea(seed = 60, size = 1e10) |>
-  scfmutils::prepInputsFireRegimePolys(studyArea = _, type = "FRT")
-## TODO: subsetType = "intersects"
+  scfmutils::prepInputsFireRegimePolys(studyArea = _, type = "BECNDT")
 
-plot(studyAreaBC["FRT"])
+plot(ecoregionPolys["PolyID"])
 ```
 
 ## Historical daily weather
@@ -53,8 +66,8 @@ climvars <- c(
 
 BioSIM::generateWeather(
   modelNames = c("ClimaticEx_Daily", "Potential_Evapotranspiration_Daily"),
-  fromYr = 2018,
-  toYr = 2019,
+  fromYr = head(clim_years, 1),
+  toYr = tail(clim_years, 1),
   id = ,      ## TODO: e.g., 1:length(longDeg)
   latDeg = ,  ## TODO: extract points from gridded polygon
   longDeg = , ## TODO: extract points from gridded polygon
@@ -68,8 +81,7 @@ BioSIM::generateWeather(
 ## TODO: gridded values need to be summarized by ecolocation; i.e., `zonal`
 ```
 
-
-### Daymet
+### Daily Climate Data (Daymet)
 
 ```{r, get-daymet-data}
 climvars <- c("prcp", "tmax", "tmin")
@@ -77,42 +89,62 @@ climvars <- c("prcp", "tmax", "tmin")
 daily_weather <- purrr::map(
   .x = climvars,
   .f = prep_daily_weather,
-  studyArea = studyAreaBC,
-  id = "FRT", ## TODO: do this for ecoregions too
-  start = "2018-01-01",
-  end = "2019-12-31"
+  studyArea = ecoregionPolys,
+  id = "PolyID",
+  start = glue::glue("{head(clim_years, 1)}-01-01"),
+  end = glue::glue("{tail(clim_years, 1)}-12-31")
 ) |>
   purrr::list_rbind()
 
 head(daily_weather)
+
+clim_file <- file.path(tmp_pth, "climate-data-daily.csv")
+writeClimateData(daily_weather, clim_file)
 ```
 
-### Terra Climate Data
+### Monthly Climate Data (TerraClim)
+
+As above, we can get monthly data using the following recipe:
 
 ```{r, get-terraclim-data}
-climvars <- c(
-  "aet",
-  # "def", "PDSI", "pet",
-  "ppt",
-  # "q", "soil",
-  "srad",
-  # "swe",
-  "tmax", "tmin",
-  # "vap", "vpd",
-  "ws"
-)
+climvars <- c("ppt", "tmax", "tmin")
 
 monthly_weather <- purrr::map(
   .x = climvars,
   .f = prep_monthly_weather,
-  studyArea = studyAreaBC,
-  id = "FRT",
-  start = "2018-01-01",
-  end = "2019-12-31"
+  studyArea = ecoregionPolys,
+  id = "PolyID",
+  start = glue::glue("{head(clim_years, 1)}-01-01"),
+  end = glue::glue("{tail(clim_years, 1)}-12-31")
 ) |>
-  purrr::list_rbind()
+  purrr::list_rbind() |>
+  dplyr::filter(Year <= tail(clim_years, 1)) ## match end year
 
 head(monthly_weather)
+
+clim_file <- file.path(tmp_pth, "climate-data-monthly.csv")
+writeClimateData(monthly_weather, clim_file)
+```
+
+We can also use this recipe to get monthly AET data to prepare the `EcoregionParameters` table:
+
+```{r, get-terraclim-aet}
+aet_df <- purrr::map(
+    .x = "aet",
+    .f = prep_monthly_weather,
+    studyArea = ecoregionPolys,
+    id = "PolyID",
+  start = glue::glue("{head(clim_years, 1)}-01-01"),
+  end = glue::glue("{tail(clim_years, 1)}-12-31")
+) |>
+  purrr::list_rbind() |>
+  dplyr::filter(Year <= tail(clim_years, 1)) ## match end year
+
+head(aet_df)
+
+erp_df <- prepEcoregionParameters(aet_df)
+
+head(erp_df)
 ```
 
 ## Climate projections
