@@ -6,15 +6,15 @@ testthat::test_that("Original Fire (and Biomass Succession) inputs are properly 
   d_proj <- file.path("~/GitHub/BC_HRV")
   d_ins <- file.path(d_proj, "inputs")
   d_outs <- file.path(d_proj, "outputs")
-  d_runs <- file.path(d, "Chine_landis_LH_hrv_NDTBEC_FRT_res125")
+  d_runs <- file.path(d_outs, "Chine_landis_LH_hrv_NDTBEC_FRT_res125")
 
   ## sim files use relative path to inputs and outputs,
   ## so make sure it points to right place e.g., during tests
   if (!dir.exists("inputs")) {
-    file.symlink(d, d_ins)
+    file.symlink(d_ins, "inputs")
   }
   if (!dir.exists("outputs")) {
-    file.symlink(d, d_outs)
+    file.symlink(d_outs, "outputs")
   }
 
   f1 <- file.path(d, "simOutPreamble_Chine.rds")
