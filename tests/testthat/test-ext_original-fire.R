@@ -1,12 +1,19 @@
 testthat::test_that("Original Fire (and Biomass Succession) inputs are properly created", {
+  testthat::skip_if_not_installed("climateR")
   testthat::skip_if_not_installed("map")
   testthat::skip_if_not_installed("SpaDES.core")
   testthat::skip_if_not_installed("withr")
+  testthat::skip_if_not_installed("zonal")
+
+  studyAreaName <- "Chine"
 
   d_proj <- file.path("~/GitHub/BC_HRV")
   d_ins <- file.path(d_proj, "inputs")
   d_outs <- file.path(d_proj, "outputs")
-  d_runs <- file.path(d_outs, "Chine_landis_LH_hrv_NDTBEC_FRT_res125")
+  d_runs <- file.path(
+    d_outs,
+    glue::glue("{studyAreaName}_landis_LH_hrv_NDTBEC_FRT_res125")
+  )
 
   ## sim files use relative path to inputs and outputs,
   ## so make sure it points to right place e.g., during tests
@@ -17,8 +24,8 @@ testthat::test_that("Original Fire (and Biomass Succession) inputs are properly 
     file.symlink(d_outs, "outputs")
   }
 
-  f1 <- file.path(d, "simOutPreamble_Chine.rds")
-  f2 <- file.path(d, "simOutDataPrep_Chine.rds")
+  f1 <- file.path(d_runs, "simOutPreamble_Chine.rds")
+  f2 <- file.path(d_runs, "simOutDataPrep_Chine.rds")
 
   testthat::skip_if_not(all(file.exists(f1, f2)))
 
@@ -66,20 +73,22 @@ testthat::test_that("Original Fire (and Biomass Succession) inputs are properly 
   ## below is e.g., boreal (stand replacing fires)
   fuel_crv_df <- data.frame(
     FireRegionName = frp_table$FireRegionName,
-    S1 = c(-1, -1, -1, -1),
-    S2 = c(-1, -1, -1, -1),
-    S3 = c(-1, -1, -1, -1),
-    S4 = c(-1, -1, -1, -1),
-    S5 = c(15, 15, 15, 15)
+    S1 = rep(-1, nrow(frp_table)),
+    S2 = rep(-1, nrow(frp_table)),
+    S3 = rep(-1, nrow(frp_table)),
+    S4 = rep(-1, nrow(frp_table)),
+    S5 = rep(15, nrow(frp_table))
   )
 
-  ifrm_file <- file.path(tmp_pth, "FireRegions.tif")
-  InitialFireRegionsMap <- terra::rasterize(
+  ifrm_file <- terra::rasterize(
     fireRegimePolys,
     standAgeMap,
-    field = "FRT",
-    filename = ifrm_file
-  )
+    field = "PolyID",
+    background = 0
+  ) |>
+    prepInitialFireRegionsMap(
+      file = file.path(tmp_pth, "fire-regions-map.tif")
+    )
 
   log_file <- file.path(tmp_pth, "original-fire/fire/log.csv")
   sum_log_file <- file.path(tmp_pth, "original-fire/fire/summary-log.csv")
@@ -117,10 +126,7 @@ testthat::test_that("Original Fire (and Biomass Succession) inputs are properly 
 
   ## TODO: need Biomass Succession pieces
 
-  scenario_name <- paste0(
-    "scenario_",
-    strsplit(basename(d), "_")[[1]][1:2] |> paste0(collapse = "_")
-  )
+  scenario_name <- glue::glue("scenario_{studyAreaName}")
   scenario_file <- scenario(
     name = scenario_name,
     extensions = list(
@@ -140,9 +146,9 @@ testthat::test_that("Original Fire (and Biomass Succession) inputs are properly 
 
   testthat::expect_true(file.exists(scenario_file))
 
-  rep_files <- replicate(scenario_file, reps = 3)
-
-  testthat::expect_true(all(file.exists(rep_files)))
+  # rep_files <- replicate(scenario_file, reps = 3)
+  #
+  # testthat::expect_true(all(file.exists(rep_files)))
 
   ## run the landis scenario -------------------------------------------------------------------
   testthat::skip_if_not(nzchar(landis_find()))

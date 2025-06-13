@@ -6,3 +6,4 @@
 ^outputs$
 ^man-roxygen$
 ^LICENSE\.md$
+^data-raw$

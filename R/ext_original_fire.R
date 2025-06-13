@@ -90,7 +90,19 @@ prepFireRegionParametersTable <- function(sf) {
       IgnitionProb = pIgnition,
       k = round(1.0 / (empiricalBurnRate))
     ) |>
-    dplyr::select(FireRegionName, MapCode, MeanSize, MinSize, MaxSize, IgnitionProb, k)
+    dplyr::select(FireRegionName, MapCode, MeanSize, MinSize, MaxSize, IgnitionProb, k) |>
+    dplyr::bind_rows(
+      ## must include values for mapcode 0 (i.e., the NAs)
+      data.frame(
+        FireRegionName = "FRT_0", ## TODO: use 1st col, not hardcoded 'FRT'
+        MapCode = 0,
+        MeanSize = 0,
+        MinSize = 0, ## always one pixel?
+        MaxSize = 0,
+        IgnitionProb = 0,
+        k = 0
+      )
+    )
 }
 
 #' Specify Fire Region Parameters Table

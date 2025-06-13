@@ -167,7 +167,7 @@ prep_daily_weather <- function(var = NULL, studyArea = NULL, id = NULL, start = 
       join = FALSE # TRUE joins geometries, keeping as sf object
     ) |>
     tidyr::pivot_longer(
-      cols = starts_with("mean"),
+      cols = all_of(starts_with("mean")),
       names_to = c(NA, "Year", "Month", "Day", NA, NA),
       names_prefix = "mean.",
       names_sep = "(-|_)",
@@ -225,7 +225,7 @@ prep_monthly_weather <- function(var = NULL, studyArea = NULL, id = NULL, start 
       join = FALSE # TRUE joins geometries, keeping as sf object
     ) |>
     tidyr::pivot_longer(
-      cols = starts_with("mean"),
+      cols = all_of(starts_with("mean")),
       names_to = c(NA, "Year", "Month", "Day", NA),
       names_prefix = "mean.",
       names_sep = "(-|_)",

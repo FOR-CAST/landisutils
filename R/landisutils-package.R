@@ -40,6 +40,7 @@ NULL
 #' @importFrom data.table setcolorder
 #' @importFrom data.table setkeyv
 #' @importFrom data.table setnames
+#' @importFrom dplyr all_of
 #' @importFrom dplyr mutate
 #' @importFrom fs dir_create
 #' @importFrom fs dir_exists

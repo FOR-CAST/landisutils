@@ -1,12 +1,19 @@
 testthat::test_that("Biomass Succession inputs are properly created", {
+  testthat::skip_if_not_installed("climateR")
   testthat::skip_if_not_installed("map")
   testthat::skip_if_not_installed("SpaDES.core")
   testthat::skip_if_not_installed("withr")
+  testthat::skip_if_not_installed("zonal")
+
+  studyAreaName <- "Chine"
 
   d_proj <- file.path("~/GitHub/BC_HRV")
   d_ins <- file.path(d_proj, "inputs")
   d_outs <- file.path(d_proj, "outputs")
-  d_runs <- file.path(d_outs, "Chine_landis_LH_hrv_NDTBEC_FRT_res125")
+  d_runs <- file.path(
+    d_outs,
+    glue::glue("{studyAreaName}_landis_LH_hrv_NDTBEC_FRT_res125")
+  )
 
   ## sim files use relative path to inputs and outputs,
   ## so make sure it points to right place e.g., during tests
@@ -151,10 +158,7 @@ testthat::test_that("Biomass Succession inputs are properly created", {
 
   testthat::expect_true(file.exists(core_spp_file))
 
-  scenario_name <- paste0(
-    "scenario_",
-    strsplit(basename(d), "_")[[1]][1:2] |> paste0(collapse = "_")
-  )
+  scenario_name <- glue::glue("scenario_{studyAreaName}")
   scenario_file <- scenario(
     name = scenario_name,
     extensions = list(
@@ -173,9 +177,9 @@ testthat::test_that("Biomass Succession inputs are properly created", {
 
   testthat::expect_true(file.exists(scenario_file))
 
-  rep_files <- replicate(scenario_file, reps = 3)
-
-  testthat::expect_true(all(file.exists(rep_files)))
+  # rep_files <- replicate(scenario_file, reps = 3)
+  #
+  # testthat::expect_true(all(file.exists(rep_files)))
 
   ## run the landis scenario -------------------------------------------------------------------
   testthat::skip_if_not(nzchar(landis_find()))

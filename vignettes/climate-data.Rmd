@@ -5,14 +5,16 @@ vignette: >
   %\VignetteIndexEntry{Preparing Climate Data for Use With LANDIS-II}
   %\VignetteEncoding{UTF-8}
   %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteDepends{bcdata,scfmutils,SpaDES.tools,terra}
+  %\VignetteDepends{bcdata,climateR,scfmutils,SpaDES.tools,terra,zonal}
 editor_options: 
   chunk_output_type: console
 ---
 
 ```{r, include = FALSE}
-## package list should match %\VignetteDepends above!
-VignetteDepends <- c("bcdata", "scfmutils", "SpaDES.tools", "terra")
+VignetteDepends <- c(
+  ## package list should match %\VignetteDepends above!
+  "bcdata", "climateR", "scfmutils", "SpaDES.tools", "terra", "zonal"
+)
 all_pkgs_avail <- vapply(VignetteDepends, function(pkg) {
   require(pkg, character.only = TRUE, quietly = TRUE)
 }, logical(1)) |>
@@ -32,16 +34,8 @@ library(landisutils)
 ## Define a 'study area' or 'area of interest'
 
 ```{r, study-area}
-studyAreaBC <- terra::vect(cbind(-122.14, 52.14), crs = "epsg:4326") |>
-    terra::project(paste("+proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95",
-                         "+x_0=0 +y_0=0 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0")) |>
-    SpaDES.tools::randomStudyArea(seed = 60, size = 1e10)
-
-## we can safely ignore the following warnings:
-## "attribute variables are assumed to be spatially constant throughout all geometries"
-ecoregionPolys <- suppressWarnings({
-  scfmutils::prepInputsFireRegimePolys(studyArea = studyAreaBC, type = "BECNDT")
-})
+## random study area in BC using BEC zones as ecoregions
+ecoregionPolys <- landisutils::test_ecoregionPolys
 
 plot(ecoregionPolys["PolyID"])
 ```
@@ -91,10 +85,10 @@ BioSIM::generateWeather(
 ### Daily Climate Data (Daymet)
 
 ```{r, get-daymet-data}
-climvars <- c("prcp", "tmax", "tmin")
+climvars_daily <- c("prcp", "tmax", "tmin")
 
 daily_weather <- purrr::map(
-  .x = climvars,
+  .x = climvars_daily,
   .f = prep_daily_weather,
   studyArea = ecoregionPolys,
   id = "PolyID",
@@ -114,10 +108,10 @@ writeClimateData(daily_weather, clim_file)
 As above, we can get monthly data using the following recipe:
 
 ```{r, get-terraclim-data}
-climvars <- c("ppt", "tmax", "tmin")
+climvars_monthly <- c("ppt", "tmax", "tmin")
 
 monthly_weather <- purrr::map(
-  .x = climvars,
+  .x = climvars_monthly,
   .f = prep_monthly_weather,
   studyArea = ecoregionPolys,
   id = "PolyID",
