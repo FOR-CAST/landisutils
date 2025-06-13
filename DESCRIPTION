@@ -12,7 +12,6 @@ Language: en-US
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
 Imports:
-    climateR,
     data.table,
     dplyr,
     fs,
@@ -23,10 +22,10 @@ Imports:
     stats,
     terra,
     tidyr,
-    utils,
-    zonal
+    utils
 Suggests:
     bcdata,
+    climateR,
     knitr,
     map,
     rmarkdown,
@@ -36,7 +35,8 @@ Suggests:
     SpaDES.tools,
     spelling,
     testthat (>= 3.0.0),
-    withr
+    withr,
+    zonal
 Remotes:
     mikejohnson51/climateR,
     PredictiveEcology/LandR@development,

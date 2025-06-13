@@ -22,7 +22,6 @@ utils::globalVariables(c(
 NULL
 
 ## usethis namespace: start
-#' @importFrom climateR getDaymet
 #' @importFrom data.table :=
 #' @importFrom data.table .BY
 #' @importFrom data.table .EACHI
@@ -64,6 +63,5 @@ NULL
 #' @importFrom tidyr pivot_wider
 #' @importFrom utils packageVersion
 #' @importFrom utils write.csv
-#' @importFrom zonal execute_zonal
 ## usethis namespace: end
 NULL

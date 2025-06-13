@@ -84,55 +84,64 @@ var_landis <- function(var) {
 #' @returns `tbl_df`
 #'
 #' @examples
-#' ## define study area
-#' ## use BEC zones in random study area in BC
-#' studyAreaBC <- terra::vect(cbind(-122.14, 52.14), crs = "epsg:4326") |>
-#'   terra::project(paste("+proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95",
-#'     "+x_0=0 +y_0=0 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0")) |>
-#'   SpaDES.tools::randomStudyArea(seed = 60, size = 1e10)
+#' if (requireNamespace("bcdata", quietly = TRUE) &&
+#'   requireNamespace("climateR", quietly = TRUE) &&
+#'   requireNamespace("scfmutils", quietly = TRUE) &&
+#'   requireNamespace("zonal", quietly = TRUE)) {
+#'   ## define study area
+#'   ## use BEC zones in random study area in BC
+#'   studyAreaBC <- terra::vect(cbind(-122.14, 52.14), crs = "epsg:4326") |>
+#'     terra::project(paste("+proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95",
+#'       "+x_0=0 +y_0=0 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0")) |>
+#'     SpaDES.tools::randomStudyArea(seed = 60, size = 1e10)
 #'
-#' ## we can safely ignore the following warnings:
-#' ## "attribute variables are assumed to be spatially constant throughout all geometries"
-#' ecoregionPolys <- suppressWarnings({
-#'   scfmutils::prepInputsFireRegimePolys(studyArea = studyAreaBC, type = "BECNDT")
-#' })
+#'   ## we can safely ignore the following warnings:
+#'   ## "attribute variables are assumed to be spatially constant throughout all geometries"
+#'   ecoregionPolys <- suppressWarnings({
+#'     scfmutils::prepInputsFireRegimePolys(studyArea = studyAreaBC, type = "BECNDT")
+#'   })
 #'
-#' if (interactive()) plot(frpFRT["PolyID"])
+#'   if (interactive()) plot(frpFRT["PolyID"])
 #'
-#' clim_years <- 2011:2012 ## availability is 1980 to last year
+#'   clim_years <- 2011:2012 ## availability is 1980 to last year
 #'
-#' ## get historic daily weather data from Daymet
-#' daily_climvars <- c("prcp", "tmax", "tmin")
-#' daily_weather <- purrr::map(
-#'   .x = daily_climvars,
-#'   .f = prep_daily_weather,
-#'   studyArea = ecoregionPolys,
-#'   id = "PolyID",
-#'   start = glue::glue("{head(clim_years, 1)}-01-01"),
-#'   end = glue::glue("{tail(clim_years, 1)}-12-31")
-#' ) |>
-#'   purrr::list_rbind()
+#'   ## get historic daily weather data from Daymet
+#'   daily_climvars <- c("prcp", "tmax", "tmin")
+#'   daily_weather <- purrr::map(
+#'     .x = daily_climvars,
+#'     .f = prep_daily_weather,
+#'     studyArea = ecoregionPolys,
+#'     id = "PolyID",
+#'     start = glue::glue("{head(clim_years, 1)}-01-01"),
+#'     end = glue::glue("{tail(clim_years, 1)}-12-31")
+#'   ) |>
+#'     purrr::list_rbind()
 #'
-#' head(daily_weather)
+#'   head(daily_weather)
 #'
-#' ## get historic monthly weather from TerraClim
-#' monthly_climvars <- c("ppt", "tmax", "tmin")
-#' monthly_weather <- purrr::map(
-#'   .x = monthly_climvars,
-#'   .f = prep_monthly_weather,
-#'   studyArea = ecoregionPolys,
-#'   id = "PolyID",
-#'   start = glue::glue("{head(clim_years, 1)}-01-01"),
-#'   end = glue::glue("{tail(clim_years, 1)}-12-31")
-#' ) |>
-#'   purrr::list_rbind() |>
-#'   dplyr::filter(Year <= tail(clim_years, 1)) ## match end year
+#'   ## get historic monthly weather from TerraClim
+#'   monthly_climvars <- c("ppt", "tmax", "tmin")
+#'   monthly_weather <- purrr::map(
+#'     .x = monthly_climvars,
+#'     .f = prep_monthly_weather,
+#'     studyArea = ecoregionPolys,
+#'     id = "PolyID",
+#'     start = glue::glue("{head(clim_years, 1)}-01-01"),
+#'     end = glue::glue("{tail(clim_years, 1)}-12-31")
+#'   ) |>
+#'     purrr::list_rbind() |>
+#'     dplyr::filter(Year <= tail(clim_years, 1)) ## match end year
 #'
-#' head(monthly_weather)
-#'
+#'   head(monthly_weather)
+#' }
 #' @export
 #' @rdname prep_climate_data
 prep_daily_weather <- function(var = NULL, studyArea = NULL, id = NULL, start = NULL, end = NULL) {
+  stopifnot(
+    requireNamespace("climateR", quietly = TRUE),
+    requireNamespace("zonal", quietly = TRUE)
+  )
+
   stopifnot(
     !is.null(var),
     !is.null(studyArea),
@@ -186,6 +195,11 @@ prep_daily_weather <- function(var = NULL, studyArea = NULL, id = NULL, start = 
 #' @export
 #' @rdname prep_climate_data
 prep_monthly_weather <- function(var = NULL, studyArea = NULL, id = NULL, start = NULL, end = NULL) {
+  stopifnot(
+    requireNamespace("climateR", quietly = TRUE),
+    requireNamespace("zonal", quietly = TRUE)
+  )
+
   stopifnot(
     !is.null(var),
     !is.null(studyArea),

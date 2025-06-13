@@ -1,13 +1,15 @@
 testthat::test_that("Climate inputs are properly created", {
   testthat::skip_if_not_installed("bcdata")
+  testthat::skip_if_not_installed("climateR")
   testthat::skip_if_not_installed("SpaDES.tools")
   testthat::skip_if_not_installed("scfmutils")
   testthat::skip_if_not_installed("withr")
+  testthat::skip_if_not_installed("zonal")
 
   ## use BEC zones in random study area in BC
   studyAreaBC <- terra::vect(cbind(-122.14, 52.14), crs = "epsg:4326") |>
     terra::project(paste("+proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95",
-                         "+x_0=0 +y_0=0 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0")) |>
+      "+x_0=0 +y_0=0 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0")) |>
     SpaDES.tools::randomStudyArea(seed = 60, size = 1e10)
 
   ## we can safely ignore the following warnings:
