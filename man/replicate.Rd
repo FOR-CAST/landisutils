@@ -7,9 +7,9 @@
 replicate(file = NULL, reps = NULL)
 }
 \arguments{
-\item{reps}{integer, number of replicates to generate}
+\item{file}{character, specifying the path to the file.}
 
-\item{files}{character, specifying the path to the file.}
+\item{reps}{integer, number of replicates to generate}
 }
 \value{
 TODO

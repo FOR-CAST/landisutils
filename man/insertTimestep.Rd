@@ -6,6 +6,9 @@
 \usage{
 insertTimestep(t = NULL)
 }
+\arguments{
+\item{t}{integer, corresponding to \code{Timestep} (years).}
+}
 \value{
 Character string(s) to write to the suitable LANDIS-II input file.
 }

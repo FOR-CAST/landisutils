@@ -1,5 +1,7 @@
 #' Specify Extension `Timestep`
 #'
+#' @param t integer, corresponding to `Timestep` (years).
+#'
 #' @template return_insert
 #'
 #' @export

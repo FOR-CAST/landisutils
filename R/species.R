@@ -4,7 +4,7 @@
 #'
 #' @template param_path
 #'
-#' @param type character, corresponding to one fo the following types:
+#' @param type character, corresponding to one of the following types:
 #'             - "core": generates core species data (`.txt`) file;
 #'             - "fire": generates `.csv` version for use with fire extensions;
 #'             - "succession": generates `.csv` version for use with succession extensions;
@@ -22,10 +22,10 @@ prepSpeciesData <- function(df = NULL, path = NULL, type = NULL) {
   path <- .checkPath(path)
 
   SpeciesData <- df |>
-    dplyr::select(all_of(
+    dplyr::select(
       ## drop these columns
       !c(Area, hardsoft, speciesCode, mANPPproportion, inflationFactor, growthCurveSource)
-    )) |>
+    ) |>
     dplyr::rename(
       SpeciesCode = species,
 
@@ -55,10 +55,10 @@ prepSpeciesData <- function(df = NULL, path = NULL, type = NULL) {
 
   if (type == "core") {
     SpeciesData <- SpeciesData |>
-      dplyr::select(all_of(
+      dplyr::select(
         SpeciesCode, Longevity, SexualMaturity, SeedDispDistEff, SeedDispDistMax,
         VegReprodProb, SproutAgeMin, SproutAgeMax, PostFireRegen
-      ))
+      )
     file <- file.path(path, "species-core.txt")
     writeLines(c(
       LandisData("Species"),
@@ -72,15 +72,15 @@ prepSpeciesData <- function(df = NULL, path = NULL, type = NULL) {
     file)
   } else if (type == "fire") {
     SpeciesData <- SpeciesData |>
-      dplyr::select(all_of(SpeciesCode, FireTolerance))
+      dplyr::select(SpeciesCode, FireTolerance)
     file <- file.path(path, "species-original-fire.csv")
     write.csv(SpeciesData, file, row.names = FALSE)
   } else if (type == "succession") {
     SpeciesData <- SpeciesData |>
-      dplyr::select(all_of(
+      dplyr::select(
         SpeciesCode, LeafLongevity, WoodDecayRate, MortalityCurve,
         GrowthCurve, LeafLignin, ShadeTolerance, FireTolerance
-      ))
+      )
     file <- file.path(path, "species.csv")
     write.csv(SpeciesData, file, row.names = FALSE)
   }

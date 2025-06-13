@@ -10,6 +10,8 @@ prepInitialCommunities(cohortData, pixelGroupMap, path)
 \item{cohortData}{A \code{data.table} containing cohort information (see \pkg{LandR})}
 
 \item{pixelGroupMap}{A \code{SpatRaster} identifying the locations of the pixel groups in \code{cohortData}}
+
+\item{path}{Character. Path specifying a directory to use for the scenario runs.}
 }
 \value{
 Character string(s) specifying suitable LANDIS-II input file(s),

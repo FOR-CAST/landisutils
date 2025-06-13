@@ -7,10 +7,10 @@
 insertSpeciesDataFile(file, core = NULL)
 }
 \arguments{
+\item{file}{character, specifying the path to the file.}
+
 \item{core}{logical, indicating whether to insert species input data file (\code{Species} if \code{TRUE}),
 or \code{SpeciesDataFile} (if \code{FALSE}) for use with succession extensions.}
-
-\item{files}{character, specifying the path to the file.}
 }
 \value{
 Character string(s) to write to the suitable LANDIS-II input file.

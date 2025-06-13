@@ -16,6 +16,7 @@
 #'
 #' @examples
 #' OutputBiomassInputFile <- OutputBiomassInput(
+#'   path = tempdir(),
 #'   Timestep = 10,
 #'   MakeTable = "yes",
 #'   Species = "all",
@@ -152,6 +153,8 @@ OutputCohortStatsInput <- function(path, ...) {
     !is.null(path)
   )
 
+  dots <- list(...)
+
   species_stats <- c("MAX", "MIN", "AVG", "MED", "SD")
   site_stats <- c("MAX", "MIN", "AVG", "MED", "SD", "RICH", "EVEN", "COUNT")
   site_species_stats <- c("RICH")
@@ -160,7 +163,6 @@ OutputCohortStatsInput <- function(path, ...) {
   dots$SiteAgeStats$stats <- toupper(dots$SiteAgeStats$stats) %||% site_stats
   dots$SiteSpeciesStats$stats <- toupper(dots$SiteSpeciesStats$stats) %||% site_species_stats
 
-  dots <- list(...)
   stopifnot(
     !is.null(dots$Timestep),
     all(dots$SpeciesAgeStats$stats %in% species_stats),

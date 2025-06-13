@@ -90,9 +90,7 @@ prepFireRegionParametersTable <- function(sf) {
       IgnitionProb = pIgnition,
       k = round(1.0 / (empiricalBurnRate))
     ) |>
-    dplyr::select(all_of(
-      FireRegionName, MapCode, MeanSize, MinSize, MaxSize, IgnitionProb, k
-    ))
+    dplyr::select(FireRegionName, MapCode, MeanSize, MinSize, MaxSize, IgnitionProb, k)
 }
 
 #' Specify Fire Region Parameters Table

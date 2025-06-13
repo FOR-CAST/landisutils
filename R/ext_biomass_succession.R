@@ -260,6 +260,8 @@ insertEcoregionParameters <- function(df) {
 #'
 #' @param df data.frame
 #'
+#' @template param_path
+#'
 #' @template return_file
 #'
 #' @export

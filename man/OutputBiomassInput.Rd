@@ -28,6 +28,7 @@ Create Biomass Output Extension Input File
 }
 \examples{
 OutputBiomassInputFile <- OutputBiomassInput(
+  path = tempdir(),
   Timestep = 10,
   MakeTable = "yes",
   Species = "all",

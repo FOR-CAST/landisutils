@@ -3,12 +3,20 @@ testthat::test_that("Original Fire (and Biomass Succession) inputs are properly 
   testthat::skip_if_not_installed("SpaDES.core")
   testthat::skip_if_not_installed("withr")
 
-  fireModel <- "landis"
-  frpType <- "FRT"
-  d <- file.path(
-    "~/GitHub/BC_HRV/outputs",
-    glue::glue("Chine_{fireModel}_LH_hrv_NDTBEC_{frpType}_res125")
-  )
+  d_proj <- file.path("~/GitHub/BC_HRV")
+  d_ins <- file.path(d_proj, "inputs")
+  d_outs <- file.path(d_proj, "outputs")
+  d_runs <- file.path(d, "Chine_landis_LH_hrv_NDTBEC_FRT_res125")
+
+  ## sim files use relative path to inputs and outputs,
+  ## so make sure it points to right place e.g., during tests
+  if (!dir.exists("inputs")) {
+    file.symlink(d, d_ins)
+  }
+  if (!dir.exists("outputs")) {
+    file.symlink(d, d_outs)
+  }
+
   f1 <- file.path(d, "simOutPreamble_Chine.rds")
   f2 <- file.path(d, "simOutDataPrep_Chine.rds")
 

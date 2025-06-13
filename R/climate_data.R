@@ -5,7 +5,7 @@
 #' @export
 #' @rdname proj_forest_data
 proj_nrcan_lcc <- paste("+proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95",
-                        "+x_0=0 +y_0=0 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0")
+  "+x_0=0 +y_0=0 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0")
 
 #' PROJ4 strings for climate data
 #'
@@ -14,7 +14,7 @@ proj_nrcan_lcc <- paste("+proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95",
 #' @export
 #' @rdname proj_climate_data
 proj_daymet <- paste("+proj=lcc +lat_1=25 +lat_2=60 +lat_0=42.5 +lon_0=-100",
-                     "+x_0=0 +y_0=0 +ellps=WGS84 +units=m +no_defs")
+  "+x_0=0 +y_0=0 +ellps=WGS84 +units=m +no_defs")
 
 #' @keywords internal
 var_landis <- function(var) {
@@ -85,26 +85,50 @@ var_landis <- function(var) {
 #'
 #' @examples
 #' ## define study area
+#' ## use BEC zones in random study area in BC
 #' studyAreaBC <- terra::vect(cbind(-122.14, 52.14), crs = "epsg:4326") |>
-#'   terra::project(proj_nrcan_lcc) |>
-#'   SpaDES.tools::randomStudyArea(seed = 60, size = 1e10) |>
-#'   scfmutils::prepInputsFireRegimePolys(studyArea = _, type = "FRT")
+#'   terra::project(paste("+proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95",
+#'     "+x_0=0 +y_0=0 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0")) |>
+#'   SpaDES.tools::randomStudyArea(seed = 60, size = 1e10)
 #'
-#' if (interactive()) plot(frpFRT["FRT"])
+#' ## we can safely ignore the following warnings:
+#' ## "attribute variables are assumed to be spatially constant throughout all geometries"
+#' ecoregionPolys <- suppressWarnings({
+#'   scfmutils::prepInputsFireRegimePolys(studyArea = studyAreaBC, type = "BECNDT")
+#' })
 #'
-#' ## get historic daily weather data
+#' if (interactive()) plot(frpFRT["PolyID"])
+#'
+#' clim_years <- 2011:2012 ## availability is 1980 to last year
+#'
+#' ## get historic daily weather data from Daymet
 #' daily_climvars <- c("prcp", "tmax", "tmin")
 #' daily_weather <- purrr::map(
-#'   .x = daily_climvars,
+#'   .x = clim_vars,
 #'   .f = prep_daily_weather,
-#'   studyArea = studyAreaBC,
-#'   id = "FRT",
-#'   start = "2018-01-01",
-#'   end = "2019-12-31"
+#'   studyArea = ecoregionPolys,
+#'   id = "PolyID",
+#'   start = glue::glue("{head(clim_years, 1)}-01-01"),
+#'   end = glue::glue("{tail(clim_years, 1)}-12-31")
 #' ) |>
 #'   purrr::list_rbind()
 #'
 #' head(daily_weather)
+#'
+#' ## get historic monthly weather from TerraClim
+#' monthly_climvars <- c("ppt", "tmax", "tmin")
+#' monthly_weather <- purrr::map(
+#'   .x = climvars,
+#'   .f = prep_monthly_weather,
+#'   studyArea = ecoregionPolys,
+#'   id = "PolyID",
+#'   start = glue::glue("{head(clim_years, 1)}-01-01"),
+#'   end = glue::glue("{tail(clim_years, 1)}-12-31")
+#' ) |>
+#'   purrr::list_rbind() |>
+#'   dplyr::filter(Year <= tail(clim_years, 1)) ## match end year
+#'
+#' head(monthly_weather)
 #'
 #' @export
 #' @rdname prep_climate_data

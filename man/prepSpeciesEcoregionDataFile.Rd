@@ -8,6 +8,8 @@ prepSpeciesEcoregionDataFile(df, path)
 }
 \arguments{
 \item{df}{data.frame}
+
+\item{path}{Character. Path specifying a directory to use for the scenario runs.}
 }
 \value{
 Character string(s) specifying suitable LANDIS-II input file(s),

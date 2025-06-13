@@ -13,7 +13,7 @@ prepSpeciesData(df = NULL, path = NULL, type = NULL)
 
 \item{path}{Character. Path specifying a directory to use for the scenario runs.}
 
-\item{type}{character, corresponding to one fo the following types:
+\item{type}{character, corresponding to one of the following types:
 - "core": generates core species data (\code{.txt}) file;
 - "fire": generates \code{.csv} version for use with fire extensions;
 - "succession": generates \code{.csv} version for use with succession extensions;}

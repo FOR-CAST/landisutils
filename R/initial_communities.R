@@ -51,6 +51,8 @@ simplifyCohorts <- function(cohortData, pixelGroupMap, ageBin = 20) {
 #'
 #' @param pixelGroupMap A `SpatRaster` identifying the locations of the pixel groups in `cohortData`
 #'
+#' @template param_path
+#'
 #' @template return_file
 #'
 #' @export

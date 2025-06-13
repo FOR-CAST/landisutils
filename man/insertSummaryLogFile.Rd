@@ -7,7 +7,7 @@
 insertSummaryLogFile(file = "original-fire/summary-log.csv")
 }
 \arguments{
-\item{files}{character, specifying the path to the file.}
+\item{file}{character, specifying the path to the file.}
 }
 \value{
 Character string(s) to write to the suitable LANDIS-II input file.
