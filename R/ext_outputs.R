@@ -132,21 +132,21 @@ OutputBiomassAgeInput <- function(path, ...) {
 #' @export
 #'
 #' @examples
-#' CohortStatsInputFile <- OutputCohortStatsInput(
-#'   path = tempdir(),
-#'   Timestep = 10,
-#'   ## MapNames defaults cannot be changed at this time
-#'   SpeciesAgeStats = c(
-#'     species = c(),
-#'     stats = c()
-#'   ),
-#'   SiteAgeStats = c(
-#'     stats = c()
-#'   ),
-#'   SiteSpeciesStats = c(
-#'     stats = c()
-#'   )
-#' )
+#' # CohortStatsInputFile <- OutputCohortStatsInput(
+#' #   path = tempdir(),
+#' #   Timestep = 10,
+#' #   ## MapNames defaults cannot be changed at this time
+#' #   SpeciesAgeStats = c(
+#' #     species = c(),
+#' #     stats = c()
+#' #   ),
+#' #   SiteAgeStats = c(
+#' #     stats = c()
+#' #   ),
+#' #   SiteSpeciesStats = c(
+#' #     stats = c()
+#' #   )
+#' # )
 #'
 OutputCohortStatsInput <- function(path, ...) {
   stopifnot(

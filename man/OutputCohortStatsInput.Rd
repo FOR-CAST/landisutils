@@ -25,20 +25,20 @@ created as a side effect of the function.
 Create Max Species Age Extension Input File
 }
 \examples{
-CohortStatsInputFile <- OutputCohortStatsInput(
-  path = tempdir(),
-  Timestep = 10,
-  ## MapNames defaults cannot be changed at this time
-  SpeciesAgeStats = c(
-    species = c(),
-    stats = c()
-  ),
-  SiteAgeStats = c(
-    stats = c()
-  ),
-  SiteSpeciesStats = c(
-    stats = c()
-  )
-)
+# CohortStatsInputFile <- OutputCohortStatsInput(
+#   path = tempdir(),
+#   Timestep = 10,
+#   ## MapNames defaults cannot be changed at this time
+#   SpeciesAgeStats = c(
+#     species = c(),
+#     stats = c()
+#   ),
+#   SiteAgeStats = c(
+#     stats = c()
+#   ),
+#   SiteSpeciesStats = c(
+#     stats = c()
+#   )
+# )
 
 }

@@ -144,6 +144,8 @@ insertDynamicFireRegionsTable <- function(df = NULL) {
 #'
 #' @param r `SpatRaster` corresponding to initial fire regions map
 #'
+#' @template param_file
+#'
 #' @template return_file
 #'
 #' @export
