@@ -77,7 +77,7 @@ clim_years <- 2011:2012 ## availability is 1980 to last year
 ## get historic daily weather data from Daymet
 daily_climvars <- c("prcp", "tmax", "tmin")
 daily_weather <- purrr::map(
-  .x = clim_vars,
+  .x = daily_climvars,
   .f = prep_daily_weather,
   studyArea = ecoregionPolys,
   id = "PolyID",
@@ -91,7 +91,7 @@ head(daily_weather)
 ## get historic monthly weather from TerraClim
 monthly_climvars <- c("ppt", "tmax", "tmin")
 monthly_weather <- purrr::map(
-  .x = climvars,
+  .x = monthly_climvars,
   .f = prep_monthly_weather,
   studyArea = ecoregionPolys,
   id = "PolyID",

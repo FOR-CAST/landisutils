@@ -104,7 +104,7 @@ var_landis <- function(var) {
 #' ## get historic daily weather data from Daymet
 #' daily_climvars <- c("prcp", "tmax", "tmin")
 #' daily_weather <- purrr::map(
-#'   .x = clim_vars,
+#'   .x = daily_climvars,
 #'   .f = prep_daily_weather,
 #'   studyArea = ecoregionPolys,
 #'   id = "PolyID",
@@ -118,7 +118,7 @@ var_landis <- function(var) {
 #' ## get historic monthly weather from TerraClim
 #' monthly_climvars <- c("ppt", "tmax", "tmin")
 #' monthly_weather <- purrr::map(
-#'   .x = climvars,
+#'   .x = monthly_climvars,
 #'   .f = prep_monthly_weather,
 #'   studyArea = ecoregionPolys,
 #'   id = "PolyID",
