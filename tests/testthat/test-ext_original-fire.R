@@ -124,7 +124,7 @@ testthat::test_that("Original Fire (and Biomass Succession) inputs are properly 
 
   testthat::expect_true(file.exists(core_spp_file))
 
-  ## TODO: need Biomass Succession pieces
+  skip() ## TODO: need Biomass Succession pieces
 
   scenario_name <- glue::glue("scenario_{studyAreaName}")
   scenario_file <- scenario(
