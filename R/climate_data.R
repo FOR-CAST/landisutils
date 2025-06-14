@@ -167,7 +167,7 @@ prep_daily_weather <- function(var = NULL, studyArea = NULL, id = NULL, start = 
       join = FALSE # TRUE joins geometries, keeping as sf object
     ) |>
     tidyr::pivot_longer(
-      cols = all_of(starts_with("mean")),
+      cols = starts_with("mean"),
       names_to = c(NA, "Year", "Month", "Day", NA, NA),
       names_prefix = "mean.",
       names_sep = "(-|_)",
@@ -178,7 +178,7 @@ prep_daily_weather <- function(var = NULL, studyArea = NULL, id = NULL, start = 
       Value = dplyr::case_when(var == "prcp" ~ Value / 10, .default = Value)
     ) |>
     tidyr::pivot_wider(
-      names_from = id,
+      names_from = all_of(id),
       values_from = "Value"
     ) |>
     dplyr::mutate(
@@ -225,7 +225,7 @@ prep_monthly_weather <- function(var = NULL, studyArea = NULL, id = NULL, start 
       join = FALSE # TRUE joins geometries, keeping as sf object
     ) |>
     tidyr::pivot_longer(
-      cols = all_of(starts_with("mean")),
+      cols = starts_with("mean"),
       names_to = c(NA, "Year", "Month", "Day", NA),
       names_prefix = "mean.",
       names_sep = "(-|_)",
@@ -236,7 +236,7 @@ prep_monthly_weather <- function(var = NULL, studyArea = NULL, id = NULL, start 
       Value = dplyr::case_when(var == "ppt" ~ Value / 10, .default = Value)
     ) |>
     tidyr::pivot_wider(
-      names_from = id,
+      names_from = all_of(id),
       values_from = "Value"
     ) |>
     dplyr::mutate(
