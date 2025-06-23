@@ -1,3 +1,9 @@
+.climateCachePath <- function() {
+  defaultCacheDir <- tools::R_user_dir("landisutils", "cache")
+
+  getOption("landisutils.cache.path", defaultCacheDir)
+}
+
 #' PROJ4 strings for forest data
 #'
 #' Projection information for the forest data sources used by this package.
@@ -70,8 +76,19 @@ var_landis <- function(var) {
 #' Daymet variables: `dayl`, `prcp`, `srad`, `swe`, `tmax`, `tmin`, `vp`.
 #' Use [prep_daily_weather()] for Daymet weather data.
 #'
+#' @section Historical monthly weather:
+#' Terra Climate provides monthly North American weather 1980-present
+#' (<https://www.climatologylab.org/terraclimate.html>).
+#' TerraClim variables: `aet`, `def`, `PDSI`, `pet`, `ppt`, `q`, `soil`, `srad`, `swe`,
+#' `tmax`, `tmin`, `vap`, `vpd`, `ws`.
+#' Use [prep_monthly_weather()] for TerraClim weather data.
+#'
 #' @section Climate projections:
 #' TODO
+#'
+#' @section Caching:
+#' Caching is enabled by default, with the cache location configurable by setting the
+#' `landisutils.cache.path` option.
 #'
 #' @param var character specifying the climate variable.
 #'
@@ -79,27 +96,15 @@ var_landis <- function(var) {
 #'
 #' @param id character specifying the name of the column/field to use for zonal summaries.
 #'
-#' @param start,end character specifying the start and end dates as `"YYYY-M-DD"`.
+#' @param start,end integer specifying the start and end years.
 #'
 #' @returns `tbl_df`
 #'
 #' @examples
-#' if (requireNamespace("bcdata", quietly = TRUE) &&
-#'   requireNamespace("climateR", quietly = TRUE) &&
-#'   requireNamespace("scfmutils", quietly = TRUE) &&
+#' if (requireNamespace("climateR", quietly = TRUE) &&
 #'   requireNamespace("zonal", quietly = TRUE)) {
-#'   ## define study area
 #'   ## use BEC zones in random study area in BC
-#'   studyAreaBC <- terra::vect(cbind(-122.14, 52.14), crs = "epsg:4326") |>
-#'     terra::project(paste("+proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95",
-#'       "+x_0=0 +y_0=0 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0")) |>
-#'     SpaDES.tools::randomStudyArea(seed = 60, size = 1e10)
-#'
-#'   ## we can safely ignore the following warnings:
-#'   ## "attribute variables are assumed to be spatially constant throughout all geometries"
-#'   ecoregionPolys <- suppressWarnings({
-#'     scfmutils::prepInputsFireRegimePolys(studyArea = studyAreaBC, type = "BECNDT")
-#'   })
+#'   ecoregionPolys <- landisutils::test_ecoregionPolys
 #'
 #'   if (interactive()) plot(frpFRT["PolyID"])
 #'
@@ -112,8 +117,8 @@ var_landis <- function(var) {
 #'     .f = prep_daily_weather,
 #'     studyArea = ecoregionPolys,
 #'     id = "PolyID",
-#'     start = glue::glue("{head(clim_years, 1)}-01-01"),
-#'     end = glue::glue("{tail(clim_years, 1)}-12-31")
+#'     start = head(clim_years, 1),
+#'     end = tail(clim_years, 1)
 #'   ) |>
 #'     purrr::list_rbind()
 #'
@@ -126,8 +131,8 @@ var_landis <- function(var) {
 #'     .f = prep_monthly_weather,
 #'     studyArea = ecoregionPolys,
 #'     id = "PolyID",
-#'     start = glue::glue("{head(clim_years, 1)}-01-01"),
-#'     end = glue::glue("{tail(clim_years, 1)}-12-31")
+#'     start = head(clim_years, 1),
+#'     end = tail(clim_years, 1)
 #'   ) |>
 #'     purrr::list_rbind() |>
 #'     dplyr::filter(Year <= tail(clim_years, 1)) ## match end year
@@ -139,6 +144,7 @@ var_landis <- function(var) {
 prep_daily_weather <- function(var = NULL, studyArea = NULL, id = NULL, start = NULL, end = NULL) {
   stopifnot(
     requireNamespace("climateR", quietly = TRUE),
+    requireNamespace("reproducible", quietly = TRUE),
     requireNamespace("zonal", quietly = TRUE)
   )
 
@@ -157,10 +163,13 @@ prep_daily_weather <- function(var = NULL, studyArea = NULL, id = NULL, start = 
   df <- climateR::getDaymet(
     AOI = studyArea,
     varname = var,
-    startDate = start,
-    endDate = end,
+    startDate = glue::glue("{start}-01-01"),
+    endDate = glue::glue("{end}-12-31"),
     verbose = FALSE
   ) |>
+    reproducible::Cache(
+      cachePath = .climateCachePath()
+    ) |>
     zonal::execute_zonal(
       geom = studyArea,
       ID = id,
@@ -187,6 +196,9 @@ prep_daily_weather <- function(var = NULL, studyArea = NULL, id = NULL, start = 
       Day = as.integer(Day),
       Variable = var_landis(var),
       .after = "Day"
+    ) |>
+    reproducible::Cache(
+      cachePath = .climateCachePath()
     )
 
   df
@@ -197,6 +209,7 @@ prep_daily_weather <- function(var = NULL, studyArea = NULL, id = NULL, start = 
 prep_monthly_weather <- function(var = NULL, studyArea = NULL, id = NULL, start = NULL, end = NULL) {
   stopifnot(
     requireNamespace("climateR", quietly = TRUE),
+    requireNamespace("reproducible", quietly = TRUE),
     requireNamespace("zonal", quietly = TRUE)
   )
 
@@ -215,10 +228,13 @@ prep_monthly_weather <- function(var = NULL, studyArea = NULL, id = NULL, start 
   df <- climateR::getTerraClim(
     AOI = studyArea,
     varname = var,
-    startDate = start,
-    endDate = end,
+    startDate = glue::glue("{start}-01-01"),
+    endDate = glue::glue("{end}-12-31"),
     verbose = FALSE
   ) |>
+    reproducible::Cache(
+      cachePath = .climateCachePath()
+    ) |>
     zonal::execute_zonal(
       geom = studyArea,
       ID = id,
@@ -245,6 +261,9 @@ prep_monthly_weather <- function(var = NULL, studyArea = NULL, id = NULL, start 
       Day = NULL,
       Variable = var_landis(var),
       .after = "Month"
+    ) |>
+    reproducible::Cache(
+      cachePath = .climateCachePath()
     )
 
   df

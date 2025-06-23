@@ -22,7 +22,7 @@ utils::globalVariables(c(
 NULL
 
 ## usethis namespace: start
-#' @importFrom data.table :=
+#' @importFrom LandR standAgeMapGenerator
 #' @importFrom data.table .BY
 #' @importFrom data.table .EACHI
 #' @importFrom data.table .GRP
@@ -30,6 +30,7 @@ NULL
 #' @importFrom data.table .N
 #' @importFrom data.table .NGRP
 #' @importFrom data.table .SD
+#' @importFrom data.table :=
 #' @importFrom data.table between
 #' @importFrom data.table copy
 #' @importFrom data.table data.table
@@ -49,7 +50,6 @@ NULL
 #' @importFrom fs path_norm
 #' @importFrom glue glue
 #' @importFrom glue glue_collapse
-#' @importFrom LandR standAgeMapGenerator
 #' @importFrom purrr list_rbind
 #' @importFrom purrr map
 #' @importFrom stats na.omit
@@ -62,7 +62,9 @@ NULL
 #' @importFrom terra writeRaster
 #' @importFrom tidyr pivot_longer
 #' @importFrom tidyr pivot_wider
+#' @importFrom utils head
 #' @importFrom utils packageVersion
+#' @importFrom utils tail
 #' @importFrom utils write.csv
 ## usethis namespace: end
 NULL

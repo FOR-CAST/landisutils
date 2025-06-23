@@ -1,6 +1,6 @@
 Package: landisutils
 Title: Utilities for running LANDIS-II simulations
-Version: 0.0.1
+Version: 0.0.1.9000
 Authors@R: 
     person(c("Alex", "M"), "Chubaty", email = "achubaty@for-cast.ca", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0001-7146-8135"))
@@ -9,8 +9,12 @@ Description: Tools and utilities for preparing data for and running 'LANDIS-II' 
 License: GPL (>= 3)
 Encoding: UTF-8
 Language: en-US
+LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
+VignetteBuilder: knitr
+Depends: 
+    R (>= 4.2)
 Imports:
     data.table,
     dplyr,
@@ -28,6 +32,7 @@ Suggests:
     climateR,
     knitr,
     map,
+    reproducible,
     rmarkdown,
     scfmutils,
     sf,
@@ -47,7 +52,3 @@ Remotes:
     mikejohnson51/zonal
 Config/testthat/edition: 3
 Config/testthat/parallel: true
-VignetteBuilder: knitr
-Depends: 
-    R (>= 3.5)
-LazyData: true

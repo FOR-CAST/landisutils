@@ -9,4 +9,8 @@
 library(testthat)
 library(landisutils)
 
+withr::local_options(list(
+  landisutils.cache.path = withr::local_tempdir("cache_")
+))
+
 test_check("landisutils")

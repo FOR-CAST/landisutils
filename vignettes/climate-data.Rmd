@@ -5,7 +5,7 @@ vignette: >
   %\VignetteIndexEntry{Preparing Climate Data for Use With LANDIS-II}
   %\VignetteEncoding{UTF-8}
   %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteDepends{bcdata,climateR,scfmutils,SpaDES.tools,terra,zonal}
+  %\VignetteDepends{climateR,reproducible,terra,withr,zonal}
 editor_options: 
   chunk_output_type: console
 ---
@@ -13,7 +13,7 @@ editor_options:
 ```{r, include = FALSE}
 VignetteDepends <- c(
   ## package list should match %\VignetteDepends above!
-  "bcdata", "climateR", "scfmutils", "SpaDES.tools", "terra", "zonal"
+  "climateR", "reproducible", "terra", "withr", "zonal"
 )
 all_pkgs_avail <- vapply(VignetteDepends, function(pkg) {
   require(pkg, character.only = TRUE, quietly = TRUE)
@@ -45,8 +45,7 @@ plot(ecoregionPolys["PolyID"])
 ```{r setup-climate}
 clim_years <- 2018:2019 ## availability is 1980 to last year
 
-clim_data_path <- file.path(tempdir(), "climate_data")
-dir.create(clim_data_path)
+clim_data_path <- withr::local_tempdir("climate_data_")
 ```
 
 ### BioSIM
@@ -92,8 +91,8 @@ daily_weather <- purrr::map(
   .f = prep_daily_weather,
   studyArea = ecoregionPolys,
   id = "PolyID",
-  start = glue::glue("{head(clim_years, 1)}-01-01"),
-  end = glue::glue("{tail(clim_years, 1)}-12-31")
+  start = head(clim_years, 1),
+  end = tail(clim_years, 1)
 ) |>
   purrr::list_rbind()
 
@@ -115,8 +114,8 @@ monthly_weather <- purrr::map(
   .f = prep_monthly_weather,
   studyArea = ecoregionPolys,
   id = "PolyID",
-  start = glue::glue("{head(clim_years, 1)}-01-01"),
-  end = glue::glue("{tail(clim_years, 1)}-12-31")
+  start = head(clim_years, 1),
+  end = tail(clim_years, 1)
 ) |>
   purrr::list_rbind() |>
   dplyr::filter(Year <= tail(clim_years, 1)) ## match end year
@@ -135,8 +134,8 @@ aet_df <- purrr::map(
   .f = prep_monthly_weather,
   studyArea = ecoregionPolys,
   id = "PolyID",
-  start = glue::glue("{head(clim_years, 1)}-01-01"),
-  end = glue::glue("{tail(clim_years, 1)}-12-31")
+  start = head(clim_years, 1),
+  end = tail(clim_years, 1)
 ) |>
   purrr::list_rbind() |>
   dplyr::filter(Year <= tail(clim_years, 1)) ## match end year
@@ -159,5 +158,5 @@ See <https://mikejohnson51.github.io/climateR/articles/intro.html#climate-projec
 <!-- cleanup -->
 
 ```{r cleanup, include = FALSE}
-unlink(clim_data_path, recursive = TRUE)
+withr::deferred_run()
 ```

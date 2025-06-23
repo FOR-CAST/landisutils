@@ -19,8 +19,8 @@ testthat::test_that("Climate inputs are properly created", {
     .f = prep_daily_weather,
     studyArea = ecoregionPolys,
     id = "PolyID",
-    start = glue::glue("{head(clim_years, 1)}-01-01"),
-    end = glue::glue("{tail(clim_years, 1)}-12-31")
+    start = head(clim_years, 1),
+    end = tail(clim_years, 1)
   ) |>
     purrr::list_rbind()
 
@@ -35,8 +35,8 @@ testthat::test_that("Climate inputs are properly created", {
     .f = prep_monthly_weather,
     studyArea = ecoregionPolys,
     id = "PolyID",
-    start = glue::glue("{head(clim_years, 1)}-01-01"),
-    end = glue::glue("{tail(clim_years, 1)}-12-31")
+    start = head(clim_years, 1),
+    end = tail(clim_years, 1)
   ) |>
     purrr::list_rbind() |>
     dplyr::filter(Year <= tail(clim_years, 1)) ## match end year
@@ -49,8 +49,8 @@ testthat::test_that("Climate inputs are properly created", {
     .f = prep_monthly_weather,
     studyArea = ecoregionPolys,
     id = "PolyID",
-    start = glue::glue("{head(clim_years, 1)}-01-01"),
-    end = glue::glue("{tail(clim_years, 1)}-12-31")
+    start = head(clim_years, 1),
+    end = tail(clim_years, 1)
   ) |>
     purrr::list_rbind() |>
     dplyr::filter(Year <= tail(clim_years, 1)) ## match end year
@@ -58,4 +58,6 @@ testthat::test_that("Climate inputs are properly created", {
   writeClimateData(monthly_weather, clim_file)
 
   testthat::expect_true(file.exists(clim_file))
+
+  withr::deferred_run()
 })

@@ -28,7 +28,7 @@ prep_monthly_weather(
 
 \item{id}{character specifying the name of the column/field to use for zonal summaries.}
 
-\item{start, end}{character specifying the start and end dates as \code{"YYYY-M-DD"}.}
+\item{start, end}{integer specifying the start and end years.}
 }
 \value{
 \code{tbl_df}
@@ -51,28 +51,31 @@ Daymet variables: \code{dayl}, \code{prcp}, \code{srad}, \code{swe}, \code{tmax}
 Use \code{\link[=prep_daily_weather]{prep_daily_weather()}} for Daymet weather data.
 }
 
+\section{Historical monthly weather}{
+
+Terra Climate provides monthly North American weather 1980-present
+(\url{https://www.climatologylab.org/terraclimate.html}).
+TerraClim variables: \code{aet}, \code{def}, \code{PDSI}, \code{pet}, \code{ppt}, \code{q}, \code{soil}, \code{srad}, \code{swe},
+\code{tmax}, \code{tmin}, \code{vap}, \code{vpd}, \code{ws}.
+Use \code{\link[=prep_monthly_weather]{prep_monthly_weather()}} for TerraClim weather data.
+}
+
 \section{Climate projections}{
 
 TODO
 }
 
-\examples{
-if (requireNamespace("bcdata", quietly = TRUE) &&
-  requireNamespace("climateR", quietly = TRUE) &&
-  requireNamespace("scfmutils", quietly = TRUE) &&
-  requireNamespace("zonal", quietly = TRUE)) {
-  ## define study area
-  ## use BEC zones in random study area in BC
-  studyAreaBC <- terra::vect(cbind(-122.14, 52.14), crs = "epsg:4326") |>
-    terra::project(paste("+proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95",
-      "+x_0=0 +y_0=0 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0")) |>
-    SpaDES.tools::randomStudyArea(seed = 60, size = 1e10)
+\section{Caching}{
 
-  ## we can safely ignore the following warnings:
-  ## "attribute variables are assumed to be spatially constant throughout all geometries"
-  ecoregionPolys <- suppressWarnings({
-    scfmutils::prepInputsFireRegimePolys(studyArea = studyAreaBC, type = "BECNDT")
-  })
+Caching is enabled by default, with the cache location configurable by setting the
+\code{landisutils.cache.path} option.
+}
+
+\examples{
+if (requireNamespace("climateR", quietly = TRUE) &&
+  requireNamespace("zonal", quietly = TRUE)) {
+  ## use BEC zones in random study area in BC
+  ecoregionPolys <- landisutils::test_ecoregionPolys
 
   if (interactive()) plot(frpFRT["PolyID"])
 
@@ -85,8 +88,8 @@ if (requireNamespace("bcdata", quietly = TRUE) &&
     .f = prep_daily_weather,
     studyArea = ecoregionPolys,
     id = "PolyID",
-    start = glue::glue("{head(clim_years, 1)}-01-01"),
-    end = glue::glue("{tail(clim_years, 1)}-12-31")
+    start = head(clim_years, 1),
+    end = tail(clim_years, 1)
   ) |>
     purrr::list_rbind()
 
@@ -99,8 +102,8 @@ if (requireNamespace("bcdata", quietly = TRUE) &&
     .f = prep_monthly_weather,
     studyArea = ecoregionPolys,
     id = "PolyID",
-    start = glue::glue("{head(clim_years, 1)}-01-01"),
-    end = glue::glue("{tail(clim_years, 1)}-12-31")
+    start = head(clim_years, 1),
+    end = tail(clim_years, 1)
   ) |>
     purrr::list_rbind() |>
     dplyr::filter(Year <= tail(clim_years, 1)) ## match end year
