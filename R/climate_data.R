@@ -74,10 +74,6 @@ var_landis <- function(var) {
     endDate = glue::glue("{year}-12-31"),
     verbose = FALSE
   ) |>
-    reproducible::Cache(
-      cachePath = .climateCachePath(),
-      userTags = c(var, year)
-    ) |>
     zonal::execute_zonal(
       geom = studyArea,
       ID = id,
@@ -107,7 +103,8 @@ var_landis <- function(var) {
       .after = "Day"
     ) |>
     reproducible::Cache(
-      cachePath = .climateCachePath()
+      cachePath = .climateCachePath(),
+      userTags = c(var, year)
     )
 }
 
@@ -260,7 +257,8 @@ prep_daily_weather <- function(vars = NULL, years = NULL, studyArea = NULL, id =
       .after = "Month"
     ) |>
     reproducible::Cache(
-      cachePath = .climateCachePath()
+      cachePath = .climateCachePath(),
+      userTags = c(var, year)
     )
 }
 
