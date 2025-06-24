@@ -50,8 +50,6 @@ NULL
 #' @importFrom fs path_norm
 #' @importFrom glue glue
 #' @importFrom glue glue_collapse
-#' @importFrom purrr list_rbind
-#' @importFrom purrr map
 #' @importFrom stats na.omit
 #' @importFrom terra names
 #' @importFrom terra nlyr

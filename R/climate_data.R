@@ -109,7 +109,7 @@ var_landis <- function(var) {
 }
 
 .prep_daily_weather_var <- function(var, years, studyArea, id) {
-  purrr::map(
+  furrr::future_map(
     .x = years,
     .f = .prep_daily_weather_year,
     var = var,
@@ -194,6 +194,8 @@ var_landis <- function(var) {
 prep_daily_weather <- function(vars = NULL, years = NULL, studyArea = NULL, id = NULL) {
   stopifnot(
     requireNamespace("climateR", quietly = TRUE),
+    requireNamespace("furrr", quietly = TRUE),
+    requireNamespace("purrr", quietly = TRUE),
     requireNamespace("reproducible", quietly = TRUE),
     requireNamespace("zonal", quietly = TRUE)
   )
@@ -263,7 +265,7 @@ prep_daily_weather <- function(vars = NULL, years = NULL, studyArea = NULL, id =
 }
 
 .prep_monthly_weather_var <- function(var, years, studyArea, id) {
-  purrr::map(
+  furrr::future_map(
     .x = years,
     .f = .prep_monthly_weather_year,
     var = var,
@@ -278,6 +280,8 @@ prep_daily_weather <- function(vars = NULL, years = NULL, studyArea = NULL, id =
 prep_monthly_weather <- function(vars = NULL, years = NULL, studyArea = NULL, id = NULL) {
   stopifnot(
     requireNamespace("climateR", quietly = TRUE),
+    requireNamespace("furrr", quietly = TRUE),
+    requireNamespace("purrr", quietly = TRUE),
     requireNamespace("reproducible", quietly = TRUE),
     requireNamespace("zonal", quietly = TRUE)
   )
