@@ -111,9 +111,9 @@ var_landis <- function(var) {
     )
 }
 
-.prep_daily_weather_var <- function(var, studyArea, id, start, end) {
+.prep_daily_weather_var <- function(var, years, studyArea, id) {
   purrr::map(
-    .x = start:end,
+    .x = years,
     .f = .prep_daily_weather_year,
     var = var,
     studyArea = studyArea,
@@ -202,7 +202,7 @@ prep_daily_weather <- function(vars = NULL, years = NULL, studyArea = NULL, id =
   )
 
   stopifnot(
-    !is.null(var),
+    !is.null(vars),
     !is.null(studyArea),
     !is.null(id),
     !is.null(years)
@@ -211,10 +211,9 @@ prep_daily_weather <- function(vars = NULL, years = NULL, studyArea = NULL, id =
   df <- purrr::map(
     .x = vars,
     .f = .prep_daily_weather_var,
+    years = years,
     studyArea = studyArea,
-    id = id,
-    start = head(years, 1),
-    end = tail(years, 1)
+    id = id
   ) |>
     purrr::list_rbind()
 
@@ -265,9 +264,9 @@ prep_daily_weather <- function(vars = NULL, years = NULL, studyArea = NULL, id =
     )
 }
 
-.prep_monthly_weather_var <- function(var, studyArea, id, start, end) {
+.prep_monthly_weather_var <- function(var, years, studyArea, id) {
   purrr::map(
-    .x = start:end,
+    .x = years,
     .f = .prep_monthly_weather_year,
     var = var,
     studyArea = studyArea,
@@ -286,7 +285,7 @@ prep_monthly_weather <- function(vars = NULL, years = NULL, studyArea = NULL, id
   )
 
   stopifnot(
-    !is.null(var),
+    !is.null(vars),
     !is.null(studyArea),
     !is.null(id),
     !is.null(years)
@@ -295,13 +294,12 @@ prep_monthly_weather <- function(vars = NULL, years = NULL, studyArea = NULL, id
   df <- purrr::map(
     .x = vars,
     .f = .prep_monthly_weather_var,
+    years = years,
     studyArea = studyArea,
-    id = id,
-    start = head(years, 1),
-    end = tail(years, 1)
+    id = id
   ) |>
     purrr::list_rbind() |>
-    dplyr::filter(Year <= tail(clim_years, 1)) ## match end year
+    dplyr::filter(Year <= tail(years, 1)) ## match end year
 
   df
 }
