@@ -14,15 +14,12 @@ testthat::test_that("Climate inputs are properly created", {
   ## Daymet
   clim_vars <- c("prcp", "tmax", "tmin")
 
-  daily_weather <- purrr::map(
-    .x = clim_vars,
-    .f = prep_daily_weather,
+  daily_weather <- prep_daily_weather(
+    vars = clim_vars,
+    years = clim_years,
     studyArea = ecoregionPolys,
-    id = "PolyID",
-    start = head(clim_years, 1),
-    end = tail(clim_years, 1)
-  ) |>
-    purrr::list_rbind()
+    id = "PolyID"
+  )
 
   clim_file <- file.path(tmp_pth, "climate-data-daily.csv")
   writeClimateData(daily_weather, clim_file)
@@ -30,30 +27,22 @@ testthat::test_that("Climate inputs are properly created", {
   testthat::expect_true(file.exists(clim_file))
 
   ## Terra Climate
-  aet_df <- purrr::map(
-    .x = "aet",
-    .f = prep_monthly_weather,
+  aet_df <- prep_monthly_weather(
+    vars = "aet",
+    years = clim_years,
     studyArea = ecoregionPolys,
-    id = "PolyID",
-    start = head(clim_years, 1),
-    end = tail(clim_years, 1)
-  ) |>
-    purrr::list_rbind() |>
-    dplyr::filter(Year <= tail(clim_years, 1)) ## match end year
+    id = "PolyID"
+  )
 
   clim_file <- file.path(tmp_pth, "climate-data-monthly.csv")
   climvars <- c("ppt", "tmax", "tmin")
 
-  monthly_weather <- purrr::map(
-    .x = climvars,
-    .f = prep_monthly_weather,
+  monthly_weather <- prep_monthly_weather(
+    vars = climvars,
+    years = clim_years,
     studyArea = ecoregionPolys,
-    id = "PolyID",
-    start = head(clim_years, 1),
-    end = tail(clim_years, 1)
-  ) |>
-    purrr::list_rbind() |>
-    dplyr::filter(Year <= tail(clim_years, 1)) ## match end year
+    id = "PolyID"
+  )
 
   writeClimateData(monthly_weather, clim_file)
 

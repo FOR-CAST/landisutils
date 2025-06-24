@@ -5,30 +5,18 @@
 \alias{prep_monthly_weather}
 \title{Prepare Climate Data}
 \usage{
-prep_daily_weather(
-  var = NULL,
-  studyArea = NULL,
-  id = NULL,
-  start = NULL,
-  end = NULL
-)
+prep_daily_weather(vars = NULL, years = NULL, studyArea = NULL, id = NULL)
 
-prep_monthly_weather(
-  var = NULL,
-  studyArea = NULL,
-  id = NULL,
-  start = NULL,
-  end = NULL
-)
+prep_monthly_weather(vars = NULL, years = NULL, studyArea = NULL, id = NULL)
 }
 \arguments{
-\item{var}{character specifying the climate variable.}
+\item{vars}{character specifying the climate variables.}
+
+\item{years}{integer vector specifying the years.}
 
 \item{studyArea}{\code{sf} polygons object delineating e.g., ecoregions or fire zones.}
 
 \item{id}{character specifying the name of the column/field to use for zonal summaries.}
-
-\item{start, end}{integer specifying the start and end years.}
 }
 \value{
 \code{tbl_df}
@@ -83,30 +71,23 @@ if (requireNamespace("climateR", quietly = TRUE) &&
 
   ## get historic daily weather data from Daymet
   daily_climvars <- c("prcp", "tmax", "tmin")
-  daily_weather <- purrr::map(
-    .x = daily_climvars,
-    .f = prep_daily_weather,
+  daily_weather <- prep_daily_weather(
+    vars = daily_climvars,
+    years = clim_years,
     studyArea = ecoregionPolys,
-    id = "PolyID",
-    start = head(clim_years, 1),
-    end = tail(clim_years, 1)
-  ) |>
-    purrr::list_rbind()
+    id = "PolyID"
+  )
 
   head(daily_weather)
 
   ## get historic monthly weather from TerraClim
   monthly_climvars <- c("ppt", "tmax", "tmin")
-  monthly_weather <- purrr::map(
-    .x = monthly_climvars,
-    .f = prep_monthly_weather,
+  monthly_weather <- prep_monthly_weather(
+    vars = monthly_climvars,
+    years = clim_years,
     studyArea = ecoregionPolys,
-    id = "PolyID",
-    start = head(clim_years, 1),
-    end = tail(clim_years, 1)
-  ) |>
-    purrr::list_rbind() |>
-    dplyr::filter(Year <= tail(clim_years, 1)) ## match end year
+    id = "PolyID"
+  )
 
   head(monthly_weather)
 }

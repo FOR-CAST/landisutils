@@ -86,15 +86,12 @@ BioSIM::generateWeather(
 ```{r, get-daymet-data}
 climvars_daily <- c("prcp", "tmax", "tmin")
 
-daily_weather <- purrr::map(
-  .x = climvars_daily,
-  .f = prep_daily_weather,
+daily_weather <- prep_daily_weather(
+  vars = climvars_daily,
+  years = clim_years,
   studyArea = ecoregionPolys,
-  id = "PolyID",
-  start = head(clim_years, 1),
-  end = tail(clim_years, 1)
-) |>
-  purrr::list_rbind()
+  id = "PolyID"
+)
 
 head(daily_weather)
 
@@ -109,16 +106,12 @@ As above, we can get monthly data using the following recipe:
 ```{r, get-terraclim-data}
 climvars_monthly <- c("ppt", "tmax", "tmin")
 
-monthly_weather <- purrr::map(
-  .x = climvars_monthly,
-  .f = prep_monthly_weather,
+monthly_weather <- prep_monthly_weather(
+  vars = climvars_monthly,
+  years = clim_years,
   studyArea = ecoregionPolys,
-  id = "PolyID",
-  start = head(clim_years, 1),
-  end = tail(clim_years, 1)
-) |>
-  purrr::list_rbind() |>
-  dplyr::filter(Year <= tail(clim_years, 1)) ## match end year
+  id = "PolyID"
+)
 
 head(monthly_weather)
 
@@ -129,16 +122,12 @@ writeClimateData(monthly_weather, clim_file)
 We can also use this recipe to get monthly AET data to prepare the `EcoregionParameters` table:
 
 ```{r, get-terraclim-aet}
-aet_df <- purrr::map(
-  .x = "aet",
-  .f = prep_monthly_weather,
+aet_df <- prep_monthly_weather(
+  vars = "aet",
+  years = clim_years,
   studyArea = ecoregionPolys,
-  id = "PolyID",
-  start = head(clim_years, 1),
-  end = tail(clim_years, 1)
-) |>
-  purrr::list_rbind() |>
-  dplyr::filter(Year <= tail(clim_years, 1)) ## match end year
+  id = "PolyID"
+)
 
 head(aet_df)
 

@@ -62,6 +62,66 @@ var_landis <- function(var) {
   )
 }
 
+.prep_daily_weather_year <- function(year, var, studyArea, id) {
+  ## We want a data.frame with columns:
+  ##   Year  Month  Variable  Eco1 Eco2 Eco3 ...
+
+  ## SpatRaster |> df |> long_df |> wide_df
+  climateR::getDaymet(
+    AOI = studyArea,
+    varname = var,
+    startDate = glue::glue("{year}-01-01"),
+    endDate = glue::glue("{year}-12-31"),
+    verbose = FALSE
+  ) |>
+    reproducible::Cache(
+      cachePath = .climateCachePath(),
+      userTags = c(var, year)
+    ) |>
+    zonal::execute_zonal(
+      geom = studyArea,
+      ID = id,
+      fun = "mean",
+      join = FALSE # TRUE joins geometries, keeping as sf object
+    ) |>
+    tidyr::pivot_longer(
+      cols = starts_with("mean"),
+      names_to = c(NA, "Year", "Month", "Day", NA, NA),
+      names_prefix = "mean.",
+      names_sep = "(-|_)",
+      values_to = "Value"
+    ) |>
+    dplyr::mutate(
+      ## convert prcp from mm to cm
+      Value = dplyr::case_when(var == "prcp" ~ Value / 10, .default = Value)
+    ) |>
+    tidyr::pivot_wider(
+      names_from = all_of(id),
+      values_from = "Value"
+    ) |>
+    dplyr::mutate(
+      Year = as.integer(Year),
+      Month = as.integer(Month),
+      Day = as.integer(Day),
+      Variable = var_landis(var),
+      .after = "Day"
+    ) |>
+    reproducible::Cache(
+      cachePath = .climateCachePath()
+    )
+}
+
+.prep_daily_weather_var <- function(var, studyArea, id, start, end) {
+  purrr::map(
+    .x = start:end,
+    .f = .prep_daily_weather_year,
+    var = var,
+    studyArea = studyArea,
+    id = id
+  ) |>
+    purrr::list_rbind()
+}
+
 #' Prepare Climate Data
 #'
 #' Download and prepare climate data for use with LANDIS-II simulations:
@@ -90,13 +150,13 @@ var_landis <- function(var) {
 #' Caching is enabled by default, with the cache location configurable by setting the
 #' `landisutils.cache.path` option.
 #'
-#' @param var character specifying the climate variable.
+#' @param vars character specifying the climate variables.
 #'
 #' @param studyArea `sf` polygons object delineating e.g., ecoregions or fire zones.
 #'
 #' @param id character specifying the name of the column/field to use for zonal summaries.
 #'
-#' @param start,end integer specifying the start and end years.
+#' @param years integer vector specifying the years.
 #'
 #' @returns `tbl_df`
 #'
@@ -112,36 +172,29 @@ var_landis <- function(var) {
 #'
 #'   ## get historic daily weather data from Daymet
 #'   daily_climvars <- c("prcp", "tmax", "tmin")
-#'   daily_weather <- purrr::map(
-#'     .x = daily_climvars,
-#'     .f = prep_daily_weather,
+#'   daily_weather <- prep_daily_weather(
+#'     vars = daily_climvars,
+#'     years = clim_years,
 #'     studyArea = ecoregionPolys,
-#'     id = "PolyID",
-#'     start = head(clim_years, 1),
-#'     end = tail(clim_years, 1)
-#'   ) |>
-#'     purrr::list_rbind()
+#'     id = "PolyID"
+#'   )
 #'
 #'   head(daily_weather)
 #'
 #'   ## get historic monthly weather from TerraClim
 #'   monthly_climvars <- c("ppt", "tmax", "tmin")
-#'   monthly_weather <- purrr::map(
-#'     .x = monthly_climvars,
-#'     .f = prep_monthly_weather,
+#'   monthly_weather <- prep_monthly_weather(
+#'     vars = monthly_climvars,
+#'     years = clim_years,
 #'     studyArea = ecoregionPolys,
-#'     id = "PolyID",
-#'     start = head(clim_years, 1),
-#'     end = tail(clim_years, 1)
-#'   ) |>
-#'     purrr::list_rbind() |>
-#'     dplyr::filter(Year <= tail(clim_years, 1)) ## match end year
+#'     id = "PolyID"
+#'   )
 #'
 #'   head(monthly_weather)
 #' }
 #' @export
 #' @rdname prep_climate_data
-prep_daily_weather <- function(var = NULL, studyArea = NULL, id = NULL, start = NULL, end = NULL) {
+prep_daily_weather <- function(vars = NULL, years = NULL, studyArea = NULL, id = NULL) {
   stopifnot(
     requireNamespace("climateR", quietly = TRUE),
     requireNamespace("reproducible", quietly = TRUE),
@@ -152,89 +205,34 @@ prep_daily_weather <- function(var = NULL, studyArea = NULL, id = NULL, start = 
     !is.null(var),
     !is.null(studyArea),
     !is.null(id),
-    !is.null(start),
-    !is.null(end)
+    !is.null(years)
   )
 
-  ## We want a data.frame with columns:
-  ##   Year  Month  Day  Variable  Eco1 Eco2 Eco3 ...
-
-  ## SpatRaster |> df |> long_df |> wide_df
-  df <- climateR::getDaymet(
-    AOI = studyArea,
-    varname = var,
-    startDate = glue::glue("{start}-01-01"),
-    endDate = glue::glue("{end}-12-31"),
-    verbose = FALSE
+  df <- purrr::map(
+    .x = vars,
+    .f = .prep_daily_weather_var,
+    studyArea = studyArea,
+    id = id,
+    start = head(years, 1),
+    end = tail(years, 1)
   ) |>
-    reproducible::Cache(
-      cachePath = .climateCachePath()
-    ) |>
-    zonal::execute_zonal(
-      geom = studyArea,
-      ID = id,
-      join = FALSE # TRUE joins geometries, keeping as sf object
-    ) |>
-    tidyr::pivot_longer(
-      cols = starts_with("mean"),
-      names_to = c(NA, "Year", "Month", "Day", NA, NA),
-      names_prefix = "mean.",
-      names_sep = "(-|_)",
-      values_to = "Value"
-    ) |>
-    dplyr::mutate(
-      ## convert prcp from mm to cm
-      Value = dplyr::case_when(var == "prcp" ~ Value / 10, .default = Value)
-    ) |>
-    tidyr::pivot_wider(
-      names_from = all_of(id),
-      values_from = "Value"
-    ) |>
-    dplyr::mutate(
-      Year = as.integer(Year),
-      Month = as.integer(Month),
-      Day = as.integer(Day),
-      Variable = var_landis(var),
-      .after = "Day"
-    ) |>
-    reproducible::Cache(
-      cachePath = .climateCachePath()
-    )
+    purrr::list_rbind()
 
   df
 }
 
-#' @export
-#' @rdname prep_climate_data
-prep_monthly_weather <- function(var = NULL, studyArea = NULL, id = NULL, start = NULL, end = NULL) {
-  stopifnot(
-    requireNamespace("climateR", quietly = TRUE),
-    requireNamespace("reproducible", quietly = TRUE),
-    requireNamespace("zonal", quietly = TRUE)
-  )
-
-  stopifnot(
-    !is.null(var),
-    !is.null(studyArea),
-    !is.null(id),
-    !is.null(start),
-    !is.null(end)
-  )
-
+.prep_monthly_weather_year <- function(year, var, studyArea, id) {
   ## We want a data.frame with columns:
   ##   Year  Month  Variable  Eco1 Eco2 Eco3 ...
 
   ## SpatRaster |> df |> long_df |> wide_df
-  df <- climateR::getTerraClim(
+  climateR::getTerraClim(
     AOI = studyArea,
     varname = var,
-    startDate = glue::glue("{start}-01-01"),
-    endDate = glue::glue("{end}-12-31"),
+    startDate = glue::glue("{year}-01-01"),
+    endDate = glue::glue("{year}-12-31"),
     verbose = FALSE
   ) |>
-    reproducible::Cache(
-      cachePath = .climateCachePath()
-    ) |>
     zonal::execute_zonal(
       geom = studyArea,
       ID = id,
@@ -265,6 +263,45 @@ prep_monthly_weather <- function(var = NULL, studyArea = NULL, id = NULL, start 
     reproducible::Cache(
       cachePath = .climateCachePath()
     )
+}
+
+.prep_monthly_weather_var <- function(var, studyArea, id, start, end) {
+  purrr::map(
+    .x = start:end,
+    .f = .prep_monthly_weather_year,
+    var = var,
+    studyArea = studyArea,
+    id = id
+  ) |>
+    purrr::list_rbind()
+}
+
+#' @export
+#' @rdname prep_climate_data
+prep_monthly_weather <- function(vars = NULL, years = NULL, studyArea = NULL, id = NULL) {
+  stopifnot(
+    requireNamespace("climateR", quietly = TRUE),
+    requireNamespace("reproducible", quietly = TRUE),
+    requireNamespace("zonal", quietly = TRUE)
+  )
+
+  stopifnot(
+    !is.null(var),
+    !is.null(studyArea),
+    !is.null(id),
+    !is.null(years)
+  )
+
+  df <- purrr::map(
+    .x = vars,
+    .f = .prep_monthly_weather_var,
+    studyArea = studyArea,
+    id = id,
+    start = head(years, 1),
+    end = tail(years, 1)
+  ) |>
+    purrr::list_rbind() |>
+    dplyr::filter(Year <= tail(clim_years, 1)) ## match end year
 
   df
 }
