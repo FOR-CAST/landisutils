@@ -63,15 +63,12 @@ testthat::test_that("Biomass Succession inputs are properly created", {
   clim_vars <- c("prcp", "tmax", "tmin")
   clim_years <- 2011:2012 ## availability is 1980 to last-year
 
-  daily_weather <- purrr::map(
-    .x = clim_vars,
-    .f = prep_daily_weather,
+  daily_weather <- prep_daily_weather(
+    vars = clim_vars,
+    years = clim_years,
     studyArea = ecoregionPolys,
-    id = "ecoregion",
-    start = head(clim_years, 1),
-    end = tail(clim_years, 1)
-  ) |>
-    purrr::list_rbind()
+    id = "ecoregion"
+  )
 
   writeClimateData(daily_weather, clim_file)
 
@@ -89,16 +86,12 @@ testthat::test_that("Biomass Succession inputs are properly created", {
 
   testthat::expect_true(file.exists(cc_file))
 
-  aet_df <- purrr::map(
-    .x = "aet",
-    .f = prep_monthly_weather,
+  aet_df <- prep_monthly_weather(
+    vars = "aet",
+    years = clim_years,
     studyArea = ecoregionPolys,
-    id = "ecoregion",
-    start = head(clim_years, 1),
-    end = tail(clim_years, 1)
-  ) |>
-    purrr::list_rbind() |>
-    dplyr::filter(Year <= tail(clim_years, 1)) ## match end year
+    id = "ecoregion"
+  )
 
   erp_df <- prepEcoregionParameters(aet_df)
 
