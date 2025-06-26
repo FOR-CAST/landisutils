@@ -4,16 +4,21 @@
 \alias{landis_run}
 \title{Run a LANDIS-II simulation from the R session}
 \usage{
-landis_run(scenario_file = NULL, landis_console = NULL)
+landis_run(scenario = NULL, landis_console = NULL)
 }
 \arguments{
-\item{scenario_file}{character, specifying path to scenario file.}
+\item{scenario}{\code{LandisScenario} object}
 
 \item{landis_console}{character, specifying path to LANDIS-II console executable.}
 }
 \value{
-List of output files produced by the LANDIS-II simulation run.
+\pkg{callr} background R process
 }
 \description{
-Run a LANDIS-II simulation from the R session
+Run
+}
+\seealso{
+\itemize{
+\item \url{https://callr.r-lib.org/index.html#background-r-processes}
+}
 }

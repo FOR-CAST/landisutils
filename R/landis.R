@@ -15,38 +15,48 @@ landis_find <- function() {
       grep(x = _, pattern = "/build/Release/", value = TRUE)
   }
 
-  return(landis_console)
+  return(landis_console[1])
 }
 
 #' Run a LANDIS-II simulation from the R session
 #'
-#' @param scenario_file character, specifying path to scenario file.
+#' Run
+#'
+#' @param scenario `LandisScenario` object
 #'
 #' @param landis_console character, specifying path to LANDIS-II console executable.
 #'
-#' @returns List of output files produced by the LANDIS-II simulation run.
+#' @returns \pkg{callr} background R process
+#'
+#' @seealso
+#' - <https://callr.r-lib.org/index.html#background-r-processes>
 #'
 #' @export
-landis_run <- function(scenario_file = NULL, landis_console = NULL) {
+landis_run <- function(scenario = NULL, landis_console = NULL) {
+  landis_console %||% landis_find()
+
   stopifnot(
-    !is.null(scenario_file), file.exists(scenario_file)
+    !is(scenario, "LandisScenario")
   )
 
-  scenario_dir <- dirname(scenario_file)
-
-  landis_console %||% landis_find() ## TODO: if multiple found, select the first one? or error?
+  scenario_path <- scenario$path
+  scenario_file <- scenario$files[1]
 
   message(glue::glue("Starting LANDIS-II run ({Sys.time()})"))
 
-  landis_result <- withr::local_dir(
-    system2(
-      Sys.which("dotnet"),
-      glue::glue("{landis_console} {scenario_file}"),
-      wait = TRUE
-    )
+  landis_process <- callr::r_bg(
+    func = function(scenario_file, scenario_path, landis_console) {
+      withr::with_dir(
+        scenario_path,
+        system2(
+          Sys.which("dotnet"),
+          glue::glue("{landis_console} {scenario_file}"),
+          wait = TRUE
+        )
+      )
+    },
+    args = list(scenario_file, scenario_path, landis_console)
   )
 
-  output_files <- fs::dir_ls(scenario_dir) ## TODO: only look in the output directories? omit inputs
-
-  return(output_files)
+  return(landis_process)
 }

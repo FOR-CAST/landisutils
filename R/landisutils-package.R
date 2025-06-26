@@ -22,6 +22,7 @@ utils::globalVariables(c(
 NULL
 
 ## usethis namespace: start
+#' @importFrom callr r_bg
 #' @importFrom data.table :=
 #' @importFrom data.table .BY
 #' @importFrom data.table .EACHI
