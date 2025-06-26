@@ -56,7 +56,7 @@ testthat::test_that("Biomass Succession inputs are properly created", {
     UsingFireClimate = "no" ## TODO: allow 'yes' (need springstart/winterstart)
   )
 
-  testthat::expect_true(all(file.exists(cc$files)))
+  testthat::expect_true(all(file.exists(file.path(cc$path, cc$files))))
 
   aet_df <- prep_monthly_weather(
     vars = "aet",
@@ -96,7 +96,7 @@ testthat::test_that("Biomass Succession inputs are properly created", {
   ext_bs <- BiomassSuccessionInput(
     path = tmp_pth,
     CalibrateMode = FALSE,
-    ClimateConfigFile = cc$files[1],
+    ClimateConfigFile = file.path(cc$path, cc$files[1]),
     EcoregionParameters = erp_df,
     FireReductionParameters = frp_df,
     HarvestReductionParameters = hrp_df,
