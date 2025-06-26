@@ -1,8 +1,26 @@
+.exts_by_type <- function(extlist, type) {
+  lapply(extlist, function(ext) {
+    if (ext$type %in% type) ext$name else NULL
+  }) |>
+    unlist() |>
+    as.list()
+}
+
+.exts_files_by_type <- function(extlist, type) {
+  lapply(extlist, function(ext) {
+    if (ext$type %in% type) ext$files[1] else NULL
+  }) |>
+    unlist() |>
+    as.list()
+}
+
 #' Create LANDIS-II scenario files
 #'
 #' @param name Character. Label to use as a filename and label for this scenario.
 #'
-#' @param extensions Named list of `r paste(.extTypes, collapse = " , ")` extensions.
+#' @param extensions list of `LandisExtensions`.
+#'
+#' @param climate_config `LandisClimateConfig` object.
 #'
 #' @template param_path
 #'
@@ -17,13 +35,15 @@
 #' @template return_file
 #'
 #' @export
-scenario <- function(name = NULL, extensions = NULL, path = NULL, ...) {
+scenario <- function(name = NULL, extensions = NULL, climate_config = NULL, path = NULL, ...) {
   dots <- list(...)
 
   stopifnot(
     !is.null(name), length(name) == 1, is.character(name),
 
-    !is.null(extensions), is.list(extensions), all(names(extensions) %in% .extTypes),
+    !is.null(extensions), is.list(extensions),
+
+    !is.null(climate_config), is(climate_config, "LandisClimateConfig"),
 
     !is.null(path), length(path) == 1, is.character(path),
 
@@ -54,13 +74,16 @@ scenario <- function(name = NULL, extensions = NULL, path = NULL, ...) {
   ## ensure *relative* file paths inserted into config files
   dots$SpeciesInputFile <- fs::path_rel(dots$SpeciesInputFile, path)
   dots$EcoregionsFiles <- fs::path_rel(dots$EcoregionsFiles, path)
-  extensions <- lapply(extensions, function(exts) {
-    lapply(exts, function(ext) {
-      ext_file <- fs::path_rel(ext, path)
-      names(ext_file) <- names(ext)
-      ext_file
-    })
-  })
+
+  ## extract extensions by type, and pass each as `list(<ext_name> = <ext_file>)`
+  succession_exts <- .exts_files_by_type(extensions, "succession")
+  names(succession_exts) <- .exts_by_type(extensions, "succession")
+
+  disturbance_exts <- .exts_files_by_type(extensions, "disturbance")
+  names(disturbance_exts) <- .exts_by_type(extensions, "disturbance")
+
+  other_exts <- .exts_files_by_type(extensions, "other")
+  names(other_exts) <- .exts_by_type(extensions, "other")
 
   file <- file.path(path, glue::glue("{name}.txt"))
   writeLines(c(
@@ -69,14 +92,24 @@ scenario <- function(name = NULL, extensions = NULL, path = NULL, ...) {
     insertSpeciesDataFile(dots$SpeciesInputFile, core = TRUE),
     insertEcoregionsFiles(dots$EcoregionsFiles),
     insertCellLength(dots$CellLength), ## TODO: get this from data
-    insertSuccessionExtensions(extensions$succession),
-    insertDisturbanceExtensions(extensions$disturbance),
+    insertSuccessionExtensions(succession_exts),
+    insertDisturbanceExtensions(disturbance_exts),
     insertDisturbancesRandomOrder(dots$DisturbancesRandomOrder),
-    insertOtherExtensions(extensions$other),
+    insertOtherExtensions(other_exts),
     insertRandomNumberSeed(dots$RandomNumberSeed)
   ), file)
 
-  return(file)
+  scenario <- LandisScenario$new(
+    path = path,
+    extensions = extensions
+  )
+  scenario$add_file(basename(file))
+  scenario$add_file(climate_config$files)
+  scenario$add_file(dots$EcoregionsFiles)
+  scenario$add_file(dots$SpeciesInputFile)
+  scenario$add_file(scenario$list_files(full.names = FALSE)) ## extensions' files
+
+  return(scenario)
 }
 
 #' Specify Scenario `CellLength`
@@ -123,7 +156,7 @@ insertDuration <- function(duration) {
 #' list(
 #'   "Base Fire" = "base-fire.txt",
 #'   "Base Harvest" = "base-harvest.txt"
-#'  ) |>
+#' ) |>
 #'   insertDisturbanceExtensions()
 #'
 #' list(
@@ -235,29 +268,4 @@ insertRandomNumberSeed <- function(seed) {
       glue::glue("") ## add blank line after each item group
     )
   }
-}
-
-#' Replicate a LANDIS-II scenario
-#'
-#' @template param_file
-#'
-#' @param reps integer, number of replicates to generate
-#'
-#' @return TODO
-#'
-#' @export
-#'
-replicate <- function(file = NULL, reps = NULL) {
-  stopifnot(
-    !is.null(file),
-    !is.null(reps)
-  )
-
-  ## TODO:
-  ## 1. readLines the scenario "seed" file
-  ## 2. for all_reps in 1:reps replace outputPath with outputPath/repID
-  ## 3. copy all inputs?
-  ## 4. profit
-
-  return(all_files)
 }

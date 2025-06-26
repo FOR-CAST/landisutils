@@ -4,12 +4,20 @@
 \alias{scenario}
 \title{Create LANDIS-II scenario files}
 \usage{
-scenario(name = NULL, extensions = NULL, path = NULL, ...)
+scenario(
+  name = NULL,
+  extensions = NULL,
+  climate_config = NULL,
+  path = NULL,
+  ...
+)
 }
 \arguments{
 \item{name}{Character. Label to use as a filename and label for this scenario.}
 
-\item{extensions}{Named list of succession , disturbance , other extensions.}
+\item{extensions}{list of \code{LandisExtensions}.}
+
+\item{climate_config}{\code{LandisClimateConfig} object.}
 
 \item{path}{Character. Path specifying a directory to use for the scenario runs.}
 

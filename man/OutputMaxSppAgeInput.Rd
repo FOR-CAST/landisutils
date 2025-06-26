@@ -24,7 +24,7 @@ created as a side effect of the function.
 Create Max Species Age Extension Input File
 }
 \examples{
-MaxSppAgeInputFile <- OutputBiomassAgeInput(
+MaxSppAgeInput <- OutputBiomassAgeInput(
   path = tempdir(),
   Timestep = 10,
   ## MapNames defaults cannot be changed at this time

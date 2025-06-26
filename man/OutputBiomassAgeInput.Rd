@@ -24,7 +24,7 @@ created as a side effect of the function.
 Create Biomass Output by Age Extension Input File
 }
 \examples{
-BiomassAgeInputFile <- OutputBiomassAgeInput(
+BiomassAgeInput <- OutputBiomassAgeInput(
   path = tempdir(),
   Timestep = 10,
   ## MapNames defaults cannot be changed at this time

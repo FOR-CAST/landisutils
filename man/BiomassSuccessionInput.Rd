@@ -25,6 +25,9 @@ BiomassSuccessionInput(path, ...)
 \item \code{Timestep};
 }}
 }
+\value{
+\code{LandisExtension} object
+}
 \description{
 Follows the  Biomass Succession User Guide.
 }

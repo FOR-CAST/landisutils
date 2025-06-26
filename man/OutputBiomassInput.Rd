@@ -27,7 +27,7 @@ created as a side effect of the function.
 Create Biomass Output Extension Input File
 }
 \examples{
-OutputBiomassInputFile <- OutputBiomassInput(
+OutputBiomassInput <- OutputBiomassInput(
   path = tempdir(),
   Timestep = 10,
   MakeTable = "yes",

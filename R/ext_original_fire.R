@@ -55,7 +55,16 @@ OriginalFireInput <- function(path, ...) {
     insertSummaryLogFile(dots$SummaryLogFile)
   ), file)
 
-  return(file)
+  ext <- LandisExtension$new(
+    name = "Original Fire",
+    type = "disturbance",
+    path = path
+  )
+  ext$add_file(basename(file))
+  ext$add_file(dots$InitialFireRegionsMap)
+  ext$add_file(dots$Species_CSV_File)
+
+  return(ext)
 }
 
 #' Specify Original Fire Extension `Species_CSV_File`

@@ -15,7 +15,7 @@
 #' @export
 #'
 #' @examples
-#' OutputBiomassInputFile <- OutputBiomassInput(
+#' OutputBiomassInput <- OutputBiomassInput(
 #'   path = tempdir(),
 #'   Timestep = 10,
 #'   MakeTable = "yes",
@@ -59,7 +59,14 @@ OutputBiomassInput <- function(path, ...) {
     glue::glue("MapNames  \"outputs/biomass/biomass-{{pool}}-{{timestep}}.tif\"")
   ), file)
 
-  return(file)
+  ext <- LandisExtension$new(
+    name = "Output Biomass",
+    type = "other",
+    path = path
+  )
+  ext$add_file(basename(file))
+
+  return(ext)
 }
 
 #' Create Biomass Output by Age Extension Input File
@@ -76,7 +83,7 @@ OutputBiomassInput <- function(path, ...) {
 #' @export
 #'
 #' @examples
-#' BiomassAgeInputFile <- OutputBiomassAgeInput(
+#' BiomassAgeInput <- OutputBiomassAgeInput(
 #'   path = tempdir(),
 #'   Timestep = 10,
 #'   ## MapNames defaults cannot be changed at this time
@@ -114,7 +121,14 @@ OutputBiomassAgeInput <- function(path, ...) {
     glue::glue("Species {paste(dots$Species, sep = '\n         ')}")
   ), file)
 
-  return(file)
+  ext <- LandisExtension$new(
+    name = "Output Biomass-by-Age",
+    type = "other",
+    path = path
+  )
+  ext$add_file(basename(file))
+
+  return(ext)
 }
 
 #' Create Max Species Age Extension Input File
@@ -132,7 +146,7 @@ OutputBiomassAgeInput <- function(path, ...) {
 #' @export
 #'
 #' @examples
-#' # CohortStatsInputFile <- OutputCohortStatsInput(
+#' # CohortStatsInput <- OutputCohortStatsInput(
 #' #   path = tempdir(),
 #' #   Timestep = 10,
 #' #   ## MapNames defaults cannot be changed at this time
@@ -197,7 +211,14 @@ OutputCohortStatsInput <- function(path, ...) {
     })
   ), file)
 
-  return(file)
+  ext <- LandisExtension$new(
+    name = "Output Cohort Statistics",
+    type = "other",
+    path = path
+  )
+  ext$add_file(basename(file))
+
+  return(ext)
 }
 
 #' Create Max Species Age Extension Input File
@@ -214,7 +235,7 @@ OutputCohortStatsInput <- function(path, ...) {
 #' @export
 #'
 #' @examples
-#' MaxSppAgeInputFile <- OutputBiomassAgeInput(
+#' MaxSppAgeInput <- OutputBiomassAgeInput(
 #'   path = tempdir(),
 #'   Timestep = 10,
 #'   ## MapNames defaults cannot be changed at this time
@@ -242,5 +263,12 @@ OutputMaxSppAgeInput <- function(path, ...) {
     glue::glue("Species {paste(dots$Species, sep = '\n         ')}")
   ), file)
 
-  return(file)
+  ext <- LandisExtension$new(
+    name = "Output Max Species Age",
+    type = "other",
+    path = path
+  )
+  ext$add_file(basename(file))
+
+  return(ext)
 }

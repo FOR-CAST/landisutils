@@ -29,7 +29,7 @@ list("Biomass Succession" = "biomass-succession.txt") |>
 list(
   "Base Fire" = "base-fire.txt",
   "Base Harvest" = "base-harvest.txt"
- ) |>
+) |>
   insertDisturbanceExtensions()
 
 list(

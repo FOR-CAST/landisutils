@@ -15,7 +15,7 @@
 #' - `FirstDayFire`;
 #' - `LastDayFire`;
 #'
-#' @template return_file
+#' @return `LandisClimateConfig` object
 #'
 #' @export
 #'
@@ -75,7 +75,12 @@ prepClimateConfigFile <- function(path, ...) {
     file
   )
 
-  return(file)
+  cc <- LandisClimateConfig$new(path = path)
+  cc$add_file(basename(file))
+  cc$add_file(dots$ClimateFile)
+  cc$add_file(dots$SpinUpClimateFile)
+
+  return(cc)
 }
 
 #' Specify `ClimateConfigFile`

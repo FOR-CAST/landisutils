@@ -18,6 +18,8 @@
 #'   - `SufficientLight`;
 #'   - `Timestep`;
 #'
+#' @return `LandisExtension` object
+#'
 #' @export
 BiomassSuccessionInput <- function(path, ...) {
   stopifnot(
@@ -52,7 +54,18 @@ BiomassSuccessionInput <- function(path, ...) {
     insertHarvestReductionParameters(dots$HarvestReductionParameters) ## TODO
   ), file)
 
-  return(file)
+  ext <- LandisExtension$new(
+    name = "Biomass Succession",
+    type = "succession",
+    path = path
+  )
+  ext$add_file(basename(file))
+  ext$add_file(dots$ClimateConfigFile)
+  ext$add_file(dots$InitialCommunitiesFiles)
+  ext$add_file(dots$SpeciesDataFile)
+  ext$add_file(dots$SpeciesEcoregionDataFile)
+
+  return(ext)
 }
 
 #' Specify  Biomass Succession Extension `SeedingAlgorithm`

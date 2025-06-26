@@ -43,12 +43,13 @@ NULL
 #' @importFrom dplyr all_of
 #' @importFrom dplyr mutate
 #' @importFrom fs dir_create
-#' @importFrom fs dir_exists
-#' @importFrom fs dir_ls
-#' @importFrom fs file_exists
+#' @importFrom fs path_abs
 #' @importFrom fs path_norm
+#' @importFrom fs path_rel
+#' @importFrom fs path_tidy
 #' @importFrom glue glue
 #' @importFrom glue glue_collapse
+#' @importFrom R6 R6Class
 #' @importFrom stats na.omit
 #' @importFrom terra names
 #' @importFrom terra nlyr

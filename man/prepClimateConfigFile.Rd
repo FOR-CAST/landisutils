@@ -25,8 +25,7 @@ prepClimateConfigFile(path, ...)
 }}
 }
 \value{
-Character string(s) specifying suitable LANDIS-II input file(s),
-created as a side effect of the function.
+\code{LandisClimateConfig} object
 }
 \description{
 Create \code{ClimateConfigFile}

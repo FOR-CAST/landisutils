@@ -1,12 +1,8 @@
 #' @keywords internal
 .checkPath <- function(path) {
-  path <- fs::path_norm(path)
+  path <- fs::path_norm(path) |> fs::dir_create()
 
-  if (!fs::dir_exists(path)) {
-    fs::dir_create(path)
-  }
-
-  path
+  return(path)
 }
 
 #' @keywords internal

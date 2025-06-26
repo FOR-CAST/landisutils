@@ -36,6 +36,7 @@ testthat::test_that("Biomass Succession inputs are properly created", {
   clim_vars <- c("prcp", "tmax", "tmin")
   clim_years <- 2011:2012 ## availability is 1980 to 2023
 
+  ## TODO: set future plan for test
   daily_weather <- prep_daily_weather(
     vars = clim_vars,
     years = clim_years,
@@ -47,12 +48,12 @@ testthat::test_that("Biomass Succession inputs are properly created", {
 
   testthat::expect_true(file.exists(clim_file))
 
-  cc_file <- prepClimateConfigFile(
+  cc <- prepClimateConfigFile(
     path = tmp_pth,
     ClimateTimeSeries = "Daily_RandomYears",
-    ClimateFile = basename(clim_file),
+    ClimateFile = clim_file,
     SpinUpClimateTimeSeries = "Daily_RandomYears",
-    SpinUpClimateFile = basename(clim_file),
+    SpinUpClimateFile = clim_file,
     GenerateClimateOutputFiles = "yes",
     UsingFireClimate = "no" ## TODO: allow 'yes' (need springstart/winterstart)
   )
@@ -94,10 +95,10 @@ testthat::test_that("Biomass Succession inputs are properly created", {
 
   sfl_df <- sufficientLight
 
-  bse_file <- BiomassSuccessionInput(
+  ext_bs <- BiomassSuccessionInput(
     path = tmp_pth,
     CalibrateMode = FALSE,
-    ClimateConfigFile = cc_file,
+    ClimateConfigFile = cc$files[1],
     EcoregionParameters = erp_df,
     FireReductionParameters = frp_df,
     HarvestReductionParameters = hrp_df,
@@ -125,12 +126,11 @@ testthat::test_that("Biomass Succession inputs are properly created", {
   testthat::expect_true(file.exists(core_spp_file))
 
   scenario_name <- glue::glue("scenario_{studyAreaName}")
-  scenario_file <- scenario(
+  scenario <- scenario(
     name = scenario_name,
-    extensions = list(
-      succession = c("Biomass Succession" = bse_file)
-    ),
+    extensions = list(ext_bs),
     path = tmp_pth,
+    climate_config = cc,
 
     ## additional arguments
     CellLength = terra::res(ecoregionMap)[1],
@@ -141,11 +141,19 @@ testthat::test_that("Biomass Succession inputs are properly created", {
     SpeciesInputFile = core_spp_file
   )
 
-  testthat::expect_true(file.exists(scenario_file))
+  testthat::expect_true(all(file.exists(file.path(scenario$path, scenario$files))))
 
-  # rep_files <- replicate(scenario_file, reps = 3)
-  #
-  # testthat::expect_true(all(file.exists(rep_files)))
+  scenario$replicate(n = 3)
+
+  testthat::expect_true(dir.exists(scenario$path))
+  testthat::expect_true(dir.exists(paste0(scenario$path, "_rep01")))
+  testthat::expect_true(dir.exists(paste0(scenario$path, "_rep02")))
+  testthat::expect_true(dir.exists(paste0(scenario$path, "_rep03")))
+
+  scenario$replicate(n = 1)
+
+  testthat::expect_true(dir.exists(paste0(scenario$path, "_rep04")))
+  testthat::expect_true(all(file.exists(file.path(paste0(scenario$path, "_rep04"), scenario$files))))
 
   ## run the landis scenario -------------------------------------------------------------------
   testthat::skip_if_not(nzchar(landis_find()))

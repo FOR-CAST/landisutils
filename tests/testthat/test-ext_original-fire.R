@@ -62,7 +62,7 @@ testthat::test_that("Original Fire (and Biomass Succession) inputs are properly 
   log_file <- file.path(tmp_pth, "original-fire/fire/log.csv")
   sum_log_file <- file.path(tmp_pth, "original-fire/fire/summary-log.csv")
 
-  of_file <- OriginalFireInput(
+  ext_of <- OriginalFireInput(
     path = tmp_pth,
 
     DynamicFireRegionsTable = NULL,
@@ -77,52 +77,7 @@ testthat::test_that("Original Fire (and Biomass Succession) inputs are properly 
     WindCurveTable = NULL
   )
 
-  testthat::expect_true(file.exists(of_file))
-
-  ## prepare landis scenario file --------------------------------------------------------------
-
-  er_files <- prepEcoregionsFiles(
-    ecoregion = ecoregion,
-    ecoregionMap = ecoregionMap,
-    path = tmp_pth
-  )
-
-  testthat::expect_true(all(file.exists(er_files)))
-
-  core_spp_file <- prepSpeciesData(species, tmp_pth, type = "core")
-
-  testthat::expect_true(file.exists(core_spp_file))
-
-  skip() ## TODO: need Biomass Succession pieces
-
-  scenario_name <- glue::glue("scenario_{studyAreaName}")
-  scenario_file <- scenario(
-    name = scenario_name,
-    extensions = list(
-      succession = c("Biomass Succession" = bse_file),
-      disturbance = c("Original Fire" = of_file)
-    ),
-    path = tmp_pth,
-
-    ## additional arguments
-    CellLength = terra::res(ecoregionMap)[1],
-    DisturbancesRandomOrder = FALSE,
-    Duration = 20, ## TODO: longer sims for production runs; get sim times from simList
-    EcoregionsFiles = er_files,
-    RandomNumberSeed = NULL, ## optional
-    SpeciesInputFile = core_spp_file
-  )
-
-  testthat::expect_true(file.exists(scenario_file))
-
-  # rep_files <- replicate(scenario_file, reps = 3)
-  #
-  # testthat::expect_true(all(file.exists(rep_files)))
-
-  ## run the landis scenario -------------------------------------------------------------------
-  testthat::skip_if_not(nzchar(landis_find()))
-  ## TODO
-  landis_run(scenario_file)
+  testthat::expect_true(all(file.exists(file.path(tmp_pth, ext_of$files))))
 
   withr::deferred_run()
 })
