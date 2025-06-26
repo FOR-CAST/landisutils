@@ -5,7 +5,7 @@
 * change arguments `start` and `end` in `prep_*_weather()` to be integer years;
 * use `R6` classes to track simulation input files;
 * implemented scenario replication (#3);
-* run landis in background process via `callr`;
+* run LANDIS-II in background process via `callr`;
 
 # landisutils 0.0.1
 
