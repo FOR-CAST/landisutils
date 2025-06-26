@@ -1,59 +1,32 @@
 testthat::test_that("Biomass Succession inputs are properly created", {
   testthat::skip_if_not_installed("climateR")
-  testthat::skip_if_not_installed("map")
-  testthat::skip_if_not_installed("SpaDES.core")
+  testthat::skip_if_not_installed("future")
+  testthat::skip_if_not_installed("furrr")
+  testthat::skip_if_not_installed("purrr")
   testthat::skip_if_not_installed("withr")
   testthat::skip_if_not_installed("zonal")
 
   studyAreaName <- "Chine"
 
-  d_proj <- file.path("~/GitHub/BC_HRV")
-  d_ins <- file.path(d_proj, "inputs")
-  d_outs <- file.path(d_proj, "outputs")
-  d_runs <- file.path(
-    d_outs,
-    glue::glue("{studyAreaName}_landis_LH_hrv_NDTBEC_FRT_res125")
-  )
-
-  ## sim files use relative path to inputs and outputs,
-  ## so make sure it points to right place e.g., during tests
-  if (!dir.exists("inputs")) {
-    file.symlink(d_ins, "inputs")
-  }
-  if (!dir.exists("outputs")) {
-    file.symlink(d_outs, "outputs")
-  }
-
-  f1 <- file.path(d_runs, "simOutPreamble_Chine.rds")
-  f2 <- file.path(d_runs, "simOutDataPrep_Chine.rds")
-
-  testthat::skip_if_not(all(file.exists(f1, f2)))
-
-  sim1 <- SpaDES.core::loadSimList(f1)
-  sim2 <- SpaDES.core::loadSimList(f2)
-
   ## initial communities
-  cohortData <- sim2[["cohortData"]]
-  pixelGroupMap <- sim2[["pixelGroupMap"]]
+  cohortData <- landisutils::Chine_cohortData
+  pixelGroupMap <- terra::unwrap(landisutils::Chine_pixelGroupMap)
 
   ## ecoregion
-  ecoregion <- sim2[["ecoregion"]]
-  ecoregionMap <- sim2[["ecoregionMap"]]
-  ecoregionPolys <- terra::as.polygons(ecoregionMap) |>
-    sf::st_as_sf()
-  ecoregionPolys$ecoregion <- paste0(ecoregionPolys$ecoregion, "_81") ## append lcc code
+  ecoregion <- landisutils::Chine_ecoregion
+  ecoregionMap <- terra::unwrap(landisutils::Chine_ecoregionMap)
+  ecoregionPolys <- landisutils::Chine_ecoregionPolys
 
   ## fireRegimePolys
-  fireRegimePolys <- sim2[["fireRegimePolys"]]
+  fireRegimePolys <- landisutils::Chine_fireRegimePolys
 
   ## other
-  minRelativeB <- sim2[["minRelativeB"]]
-  species <- sim2[["species"]]
-  speciesEcoregion <- sim2[["speciesEcoregion"]]
-  sufficientLight <- sim2[["sufficientLight"]]
-
-  rm(sim1)
-  rm(sim2)
+  minRelativeB <- landisutils::Chine_minRelativeB
+  species <- landisutils::Chine_species
+  speciesEcoregion <- landisutils::Chine_speciesEcoregion
+  speciesLayers <- terra::unwrap(landisutils::Chine_speciesLayers)
+  standAgeMap <- terra::unwrap(landisutils::Chine_standAgeMap)
+  sufficientLight <- landisutils::Chine_sufficientLight
 
   ## prepare landis input files ----------------------------------------------------------------
   tmp_pth <- withr::local_tempdir("test_Biomass_Succession_")
@@ -61,7 +34,7 @@ testthat::test_that("Biomass Succession inputs are properly created", {
   ## climate data
   clim_file <- file.path(tmp_pth, "climate-data-daily.csv")
   clim_vars <- c("prcp", "tmax", "tmin")
-  clim_years <- 2011:2012 ## availability is 1980 to last-year
+  clim_years <- 2011:2012 ## availability is 1980 to 2023
 
   daily_weather <- prep_daily_weather(
     vars = clim_vars,

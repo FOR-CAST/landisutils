@@ -5,7 +5,7 @@
 \alias{test_ecoregionPolys}
 \title{Test ecoregion polygons}
 \format{
-\subsection{\code{studyAreaBC}}{
+\subsection{\code{test_ecoregionPolys}}{
 
 A \code{SpatVector} with 1 polygons geometry and 1 attribute (\code{field})
 }

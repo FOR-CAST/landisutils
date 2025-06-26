@@ -22,7 +22,7 @@ utils::globalVariables(c(
 NULL
 
 ## usethis namespace: start
-#' @importFrom LandR standAgeMapGenerator
+#' @importFrom data.table :=
 #' @importFrom data.table .BY
 #' @importFrom data.table .EACHI
 #' @importFrom data.table .GRP
@@ -30,7 +30,6 @@ NULL
 #' @importFrom data.table .N
 #' @importFrom data.table .NGRP
 #' @importFrom data.table .SD
-#' @importFrom data.table :=
 #' @importFrom data.table between
 #' @importFrom data.table copy
 #' @importFrom data.table data.table
