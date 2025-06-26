@@ -16,6 +16,7 @@ VignetteBuilder: knitr
 Depends: 
     R (>= 4.2)
 Imports:
+    callr,
     data.table,
     dplyr,
     fs,
