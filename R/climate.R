@@ -19,7 +19,7 @@
 #'
 #' @export
 #'
-prepClimateConfigFile <- function(path, ...) {
+prepClimateConfig <- function(path, ...) {
   dots <- list(...)
 
   allowedTimeSeries <- c(

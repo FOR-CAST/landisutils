@@ -46,9 +46,7 @@ testthat::test_that("Biomass Succession inputs are properly created", {
 
   writeClimateData(daily_weather, clim_file)
 
-  testthat::expect_true(file.exists(clim_file))
-
-  cc <- prepClimateConfigFile(
+  cc <- prepClimateConfig(
     path = tmp_pth,
     ClimateTimeSeries = "Daily_RandomYears",
     ClimateFile = clim_file,
@@ -58,7 +56,7 @@ testthat::test_that("Biomass Succession inputs are properly created", {
     UsingFireClimate = "no" ## TODO: allow 'yes' (need springstart/winterstart)
   )
 
-  testthat::expect_true(file.exists(cc_file))
+  testthat::expect_true(all(file.exists(cc$files)))
 
   aet_df <- prep_monthly_weather(
     vars = "aet",
