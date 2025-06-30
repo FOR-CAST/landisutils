@@ -42,6 +42,8 @@ landis_run <- function(scenario = NULL, landis_console = NULL) {
   scenario_path <- scenario$path
   scenario_file <- scenario$files[1]
 
+  log_path <- file.path(scenario_path, "log") |> fs::dir_create()
+
   message(glue::glue("Starting LANDIS-II run ({Sys.time()})"))
 
   landis_process <- callr::r_bg(
@@ -55,7 +57,10 @@ landis_run <- function(scenario = NULL, landis_console = NULL) {
         )
       )
     },
-    args = list(scenario_file, scenario_path, landis_console)
+    args = list(scenario_file, scenario_path, landis_console),
+    stdout = file.path(log_path, "callr_stdout.log") |> fs::path_rel(),
+    stderr = file.path(log_path, "callr_stderr.log") |> fs::path_rel(),
+    supervise = TRUE
   )
 
   return(landis_process)
