@@ -20,33 +20,28 @@ landis_find <- function() {
 
 #' Run a LANDIS-II simulation from the R session
 #'
-#' Run
-#'
 #' @param scenario `LandisScenario` object
+#'
+#' @param rep integer, replicate id
 #'
 #' @param landis_console character, specifying path to LANDIS-II console executable.
 #'
 #' @returns \pkg{callr} background R process
 #'
+#' @note Users should call `landis_run()` (which wraps `landis_process`) rather than calling
+#' `landis_process` directly.
+#'
 #' @seealso
 #' - <https://callr.r-lib.org/index.html#background-r-processes>
 #'
 #' @export
-landis_run <- function(scenario = NULL, landis_console = NULL) {
-  landis_console %||% landis_find()
-
-  stopifnot(
-    !is(scenario, "LandisScenario")
-  )
-
-  scenario_path <- scenario$path
-  scenario_file <- scenario$files[1]
+#' @rdname landis_run
+landis_process <- function(scenario_file, scenario_path, landis_console) {
+  message(glue::glue("Starting LANDIS-II run ({Sys.time()})"))
 
   log_path <- file.path(scenario_path, "log") |> fs::dir_create()
 
-  message(glue::glue("Starting LANDIS-II run ({Sys.time()})"))
-
-  landis_process <- callr::r_bg(
+  callr::r_bg(
     func = function(scenario_file, scenario_path, landis_console) {
       withr::with_dir(
         scenario_path,
@@ -62,6 +57,24 @@ landis_run <- function(scenario = NULL, landis_console = NULL) {
     stderr = file.path(log_path, "callr_stderr.log") |> fs::path_rel(),
     supervise = TRUE
   )
+}
 
-  return(landis_process)
+#' @export
+#' @rdname landis_run
+landis_run <- function(scenario = NULL, rep = NULL, landis_console = NULL) {
+  landis_console %||% landis_find()
+
+  stopifnot(
+    !is(scenario, "LandisScenario")
+  )
+
+  if (is.null(rep)) {
+    scenario_path <- scenario$path
+    scenario_file <- scenario$files[1]
+  } else {
+    scenario_path <- sprintf("%s_rep%02d", scenario$path, rep)
+    scenario_file <- scenario$files[1]
+  }
+
+  landis_process(scenario_file, scenario_path, landis_console)
 }
