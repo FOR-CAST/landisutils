@@ -10,6 +10,10 @@ landis_process(scenario_file, scenario_path, landis_console)
 landis_run(scenario = NULL, rep = NULL, landis_console = NULL)
 }
 \arguments{
+\item{scenario_file}{character specifying the filename of a scenario file}
+
+\item{scenario_path}{character specifying the path to the directory containing the scenario file}
+
 \item{landis_console}{character, specifying path to LANDIS-II console executable.}
 
 \item{scenario}{\code{LandisScenario} object}

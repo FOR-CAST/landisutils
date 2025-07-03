@@ -20,9 +20,9 @@ landis_find <- function() {
 
 #' Run a LANDIS-II simulation from the R session
 #'
-#' @param scenario `LandisScenario` object
+#' @param scenario_file character specifying the filename of a scenario file
 #'
-#' @param rep integer, replicate id
+#' @param scenario_path character specifying the path to the directory containing the scenario file
 #'
 #' @param landis_console character, specifying path to LANDIS-II console executable.
 #'
@@ -59,6 +59,10 @@ landis_process <- function(scenario_file, scenario_path, landis_console) {
   )
 }
 
+#' @param scenario `LandisScenario` object
+#'
+#' @param rep integer, replicate id
+#'
 #' @export
 #' @rdname landis_run
 landis_run <- function(scenario = NULL, rep = NULL, landis_console = NULL) {
