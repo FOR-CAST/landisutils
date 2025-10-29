@@ -22,14 +22,10 @@
 #'
 #' @export
 BiomassSuccessionInput <- function(path, ...) {
-  stopifnot(
-    !is.null(path)
-  )
+  stopifnot(!is.null(path))
 
   dots <- list(...)
-  stopifnot(
-    !is.null(dots$FireReductionParameters)
-  )
+  stopifnot(!is.null(dots$FireReductionParameters))
 
   ## ensure *relative* file paths inserted into config files
   dots$ClimateConfigFile <- fs::path_rel(dots$ClimateConfigFile, path)
@@ -38,27 +34,26 @@ BiomassSuccessionInput <- function(path, ...) {
   dots$SpeciesEcoregionDataFile <- fs::path_rel(dots$SpeciesEcoregionDataFile, path)
 
   file <- file.path(path, "biomass-succession.txt")
-  writeLines(c(
-    LandisData("Biomass Succession"),
-    insertTimestep(dots$Timestep),
-    insertSeedingAlgorithm(dots$SeedingAlgorithm),
-    insertInitialCommunities(dots$InitialCommunitiesFiles),
-    insertClimateConfigFile(dots$ClimateConfigFile),
-    insertCalibrateMode(dots$CalibrateMode),
-    insertMinRelativeBiomass(dots$MinRelativeBiomass),
-    insertSufficientLight(dots$SufficientLight),
-    insertSpeciesDataFile(dots$SpeciesDataFile, core = FALSE),
-    insertEcoregionParameters(dots$EcoregionParameters),
-    insertSpeciesEcoregionDataFile(dots$SpeciesEcoregionDataFile),
-    insertFireReductionParameters(dots$FireReductionParameters), ## TODO
-    insertHarvestReductionParameters(dots$HarvestReductionParameters) ## TODO
-  ), file)
-
-  ext <- LandisExtension$new(
-    name = "Biomass Succession",
-    type = "succession",
-    path = path
+  writeLines(
+    c(
+      LandisData("Biomass Succession"),
+      insertTimestep(dots$Timestep),
+      insertSeedingAlgorithm(dots$SeedingAlgorithm),
+      insertInitialCommunities(dots$InitialCommunitiesFiles),
+      insertClimateConfigFile(dots$ClimateConfigFile),
+      insertCalibrateMode(dots$CalibrateMode),
+      insertMinRelativeBiomass(dots$MinRelativeBiomass),
+      insertSufficientLight(dots$SufficientLight),
+      insertSpeciesDataFile(dots$SpeciesDataFile, core = FALSE),
+      insertEcoregionParameters(dots$EcoregionParameters),
+      insertSpeciesEcoregionDataFile(dots$SpeciesEcoregionDataFile),
+      insertFireReductionParameters(dots$FireReductionParameters), ## TODO
+      insertHarvestReductionParameters(dots$HarvestReductionParameters) ## TODO
+    ),
+    file
   )
+
+  ext <- LandisExtension$new(name = "Biomass Succession", type = "succession", path = path)
   ext$add_file(basename(file))
   ext$add_file(dots$ClimateConfigFile)
   ext$add_file(dots$InitialCommunitiesFiles)
@@ -161,30 +156,12 @@ insertMinRelativeBiomass <- function(df = NULL) {
     glue::glue("MinRelativeBiomass"),
     glue::glue(">> Shade Class    Ecoregions"),
     glue::glue(">> -----------    ------------------------"),
-    paste0(
-      "                  ",
-      glue::glue("{df[1, ]}") |> glue::glue_collapse(sep = "  ")
-    ),
-    paste0(
-      "   1              ",
-      glue::glue("{df[2, ]}") |> glue::glue_collapse(sep = "  ")
-    ),
-    paste0(
-      "   2              ",
-      glue::glue("{df[3, ]}") |> glue::glue_collapse(sep = "  ")
-    ),
-    paste0(
-      "   3              ",
-      glue::glue("{df[4, ]}") |> glue::glue_collapse(sep = "  ")
-    ),
-    paste0(
-      "   4              ",
-      glue::glue("{df[5, ]}") |> glue::glue_collapse(sep = "  ")
-    ),
-    paste0(
-      "   5              ",
-      glue::glue("{df[6, ]}") |> glue::glue_collapse(sep = "  ")
-    ),
+    paste0("                  ", glue::glue("{df[1, ]}") |> glue::glue_collapse(sep = "  ")),
+    paste0("   1              ", glue::glue("{df[2, ]}") |> glue::glue_collapse(sep = "  ")),
+    paste0("   2              ", glue::glue("{df[3, ]}") |> glue::glue_collapse(sep = "  ")),
+    paste0("   3              ", glue::glue("{df[4, ]}") |> glue::glue_collapse(sep = "  ")),
+    paste0("   4              ", glue::glue("{df[5, ]}") |> glue::glue_collapse(sep = "  ")),
+    paste0("   5              ", glue::glue("{df[6, ]}") |> glue::glue_collapse(sep = "  ")),
     glue::glue("") ## add blank line after each item group
   )
 }
@@ -242,11 +219,7 @@ prepEcoregionParameters <- function(df) {
     dplyr::summarise_all(mean) |>
     round(0) |>
     dplyr::mutate(Year = NULL) |>
-    tidyr::pivot_longer(
-      cols = everything(),
-      names_to = "Ecoregions",
-      values_to = "AET"
-    )
+    tidyr::pivot_longer(cols = everything(), names_to = "Ecoregions", values_to = "AET")
 
   return(df)
 }
@@ -278,7 +251,6 @@ insertEcoregionParameters <- function(df) {
 #' @template return_file
 #'
 #' @export
-#'
 prepSpeciesEcoregionDataFile <- function(df, path) {
   df <- df |>
     dplyr::mutate(

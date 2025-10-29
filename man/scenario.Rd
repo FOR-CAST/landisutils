@@ -15,20 +15,20 @@ scenario(
 \arguments{
 \item{name}{Character. Label to use as a filename and label for this scenario.}
 
-\item{extensions}{list of \code{LandisExtensions}.}
+\item{extensions}{List of \link{LandisExtension} objects.}
 
-\item{climate_config}{\code{LandisClimateConfig} object.}
+\item{climate_config}{\link{LandisClimateConfig} object.}
 
 \item{path}{Character. Path specifying a directory to use for the scenario runs.}
 
-\item{...}{arguments passed to other functions:
+\item{...}{Arguments passed to other functions:
 \itemize{
 \item \code{CellLength} Numeric. Size of ecoregion raster cells (in $m$);
 \item \code{DisturbancesRandomOrder} Logical. Should disturbances be applied in a random order?
 \item \code{Duration} Numeric. Number of years to run the simulation;
-\item \code{EcoregionsFiles} List of length 2 containing character file paths (TODO);
+\item \code{EcoregionsFiles} List of length 2 containing character file paths;
 \item \code{RandomNumberSeed} Integer. Seed used to initialize the LANDIS-II random number generator;
-\item \code{SpeciesInputFile} Character. (TODO);
+\item \code{SpeciesInputFile} Character. Path to input file;
 }}
 }
 \value{

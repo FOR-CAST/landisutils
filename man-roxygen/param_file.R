@@ -1,1 +1,1 @@
-#' @param file character, specifying the path to the file.
+#' @param file Character, specifying the path to the file.

@@ -9,7 +9,7 @@ prepInitialFireRegionsMap(r, file = "fire-regions-map.tif")
 \arguments{
 \item{r}{\code{SpatRaster} corresponding to initial fire regions map}
 
-\item{file}{character, specifying the path to the file.}
+\item{file}{Character, specifying the path to the file.}
 }
 \value{
 Character string(s) specifying suitable LANDIS-II input file(s),

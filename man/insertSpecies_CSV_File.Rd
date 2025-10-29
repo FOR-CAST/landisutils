@@ -7,7 +7,7 @@
 insertSpecies_CSV_File(file)
 }
 \arguments{
-\item{file}{character, specifying the path to the file.}
+\item{file}{Character, specifying the path to the file.}
 }
 \value{
 Character string(s) to write to the suitable LANDIS-II input file.

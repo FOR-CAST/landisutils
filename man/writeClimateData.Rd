@@ -9,7 +9,7 @@ writeClimateData(df, file)
 \arguments{
 \item{df}{data.frame corresponding to Climate Input Data table}
 
-\item{file}{character, specifying the path to the file.}
+\item{file}{Character, specifying the path to the file.}
 }
 \value{
 Character string(s) specifying suitable LANDIS-II input file(s),

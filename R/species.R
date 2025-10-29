@@ -14,11 +14,7 @@
 #' @aliases prepSpecies_CSV_File prepSpeciesInputFile
 #' @export
 prepSpeciesData <- function(df = NULL, path = NULL, type = NULL) {
-  stopifnot(
-    !is.null(df),
-    !is.null(path),
-    !is.null(type), type %in% c("core", "fire", "succession")
-  )
+  stopifnot(!is.null(df), !is.null(path), !is.null(type), type %in% c("core", "fire", "succession"))
   path <- .checkPath(path)
 
   SpeciesData <- df |>
@@ -46,7 +42,7 @@ prepSpeciesData <- function(df = NULL, path = NULL, type = NULL) {
       GrowthCurve = growthcurve,
       LeafLignin = leafLignin,
       ShadeTolerance = shadetolerance,
-      FireTolerance = firetolerance    ## also used for fire
+      FireTolerance = firetolerance ## also used for fire
     ) |>
     dplyr::mutate(
       ShadeTolerance = as.integer(ShadeTolerance),
@@ -56,30 +52,44 @@ prepSpeciesData <- function(df = NULL, path = NULL, type = NULL) {
   if (type == "core") {
     SpeciesData <- SpeciesData |>
       dplyr::select(
-        SpeciesCode, Longevity, SexualMaturity, SeedDispDistEff, SeedDispDistMax,
-        VegReprodProb, SproutAgeMin, SproutAgeMax, PostFireRegen
+        SpeciesCode,
+        Longevity,
+        SexualMaturity,
+        SeedDispDistEff,
+        SeedDispDistMax,
+        VegReprodProb,
+        SproutAgeMin,
+        SproutAgeMax,
+        PostFireRegen
       )
     file <- file.path(path, "species-core.txt")
-    writeLines(c(
-      LandisData("Species"),
-      glue::glue(">> {glue::glue_collapse(colnames(SpeciesData), sep = '  ')}"),
-      glue::glue(">> {glue::glue_collapse(rep('----------  ', ncol(SpeciesData)))}"),
-      apply(SpeciesData, MARGIN = 1, FUN = function(x) {
-        glue::glue("   {x}") |> glue::glue_collapse(sep = "   ")
-      }),
-      glue::glue("")
-    ),
-    file)
+    writeLines(
+      c(
+        LandisData("Species"),
+        glue::glue(">> {glue::glue_collapse(colnames(SpeciesData), sep = '  ')}"),
+        glue::glue(">> {glue::glue_collapse(rep('----------  ', ncol(SpeciesData)))}"),
+        apply(SpeciesData, MARGIN = 1, FUN = function(x) {
+          glue::glue("   {x}") |> glue::glue_collapse(sep = "   ")
+        }),
+        glue::glue("")
+      ),
+      file
+    )
   } else if (type == "fire") {
-    SpeciesData <- SpeciesData |>
-      dplyr::select(SpeciesCode, FireTolerance)
+    SpeciesData <- SpeciesData |> dplyr::select(SpeciesCode, FireTolerance)
     file <- file.path(path, "species-original-fire.csv")
     write.csv(SpeciesData, file, row.names = FALSE)
   } else if (type == "succession") {
     SpeciesData <- SpeciesData |>
       dplyr::select(
-        SpeciesCode, LeafLongevity, WoodDecayRate, MortalityCurve,
-        GrowthCurve, LeafLignin, ShadeTolerance, FireTolerance
+        SpeciesCode,
+        LeafLongevity,
+        WoodDecayRate,
+        MortalityCurve,
+        GrowthCurve,
+        LeafLignin,
+        ShadeTolerance,
+        FireTolerance
       )
     file <- file.path(path, "species.csv")
     write.csv(SpeciesData, file, row.names = FALSE)
@@ -102,14 +112,8 @@ insertSpeciesDataFile <- function(file, core = NULL) {
   stopifnot(!is.null(core))
 
   if (isTRUE(core)) {
-    c(
-      glue::glue("Species    \"{file}\""),
-      glue::glue("") ## add blank line after each item group
-    )
+    insertFile("Species", file)
   } else {
-    c(
-      glue::glue("SpeciesDataFile    \"{file}\""),
-      glue::glue("") ## add blank line after each item group
-    )
+    insertFile("SpeciesDataFile", file)
   }
 }

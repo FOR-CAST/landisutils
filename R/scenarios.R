@@ -18,19 +18,19 @@
 #'
 #' @param name Character. Label to use as a filename and label for this scenario.
 #'
-#' @param extensions list of `LandisExtensions`.
+#' @param extensions List of [LandisExtension] objects.
 #'
-#' @param climate_config `LandisClimateConfig` object.
+#' @param climate_config [LandisClimateConfig] object.
 #'
 #' @template param_path
 #'
-#' @param ... arguments passed to other functions:
+#' @param ... Arguments passed to other functions:
 #'   - `CellLength` Numeric. Size of ecoregion raster cells (in $m$);
 #'   - `DisturbancesRandomOrder` Logical. Should disturbances be applied in a random order?
 #'   - `Duration` Numeric. Number of years to run the simulation;
-#'   - `EcoregionsFiles` List of length 2 containing character file paths (TODO);
+#'   - `EcoregionsFiles` List of length 2 containing character file paths;
 #'   - `RandomNumberSeed` Integer. Seed used to initialize the LANDIS-II random number generator;
-#'   - `SpeciesInputFile` Character. (TODO);
+#'   - `SpeciesInputFile` Character. Path to input file;
 #'
 #' @template return_file
 #'
@@ -39,21 +39,31 @@ scenario <- function(name = NULL, extensions = NULL, climate_config = NULL, path
   dots <- list(...)
 
   stopifnot(
-    !is.null(name), length(name) == 1, is.character(name),
+    !is.null(name),
+    length(name) == 1,
+    is.character(name),
 
-    !is.null(extensions), is.list(extensions),
+    !is.null(extensions),
+    is.list(extensions),
 
-    !is.null(climate_config), is(climate_config, "LandisClimateConfig"),
+    !is.null(climate_config),
+    is(climate_config, "LandisClimateConfig"),
 
-    !is.null(path), length(path) == 1, is.character(path),
+    !is.null(path),
+    length(path) == 1,
+    is.character(path),
 
     ## mandatory dots params
-    !is.null(dots$Duration), length(dots$Duration) == 1, is.numeric(dots$Duration),
+    !is.null(dots$Duration),
+    length(dots$Duration) == 1,
+    is.numeric(dots$Duration),
 
-    !is.null(dots$EcoregionsFiles), length(dots$EcoregionsFiles) == 2,
+    !is.null(dots$EcoregionsFiles),
+    length(dots$EcoregionsFiles) == 2,
     all(is.character(dots$EcoregionsFiles)),
 
-    !is.null(dots$SpeciesInputFile), length(dots$SpeciesInputFile) == 1,
+    !is.null(dots$SpeciesInputFile),
+    length(dots$SpeciesInputFile) == 1,
     is.character(dots$SpeciesInputFile)
   )
   path <- .checkPath(path)
@@ -61,14 +71,14 @@ scenario <- function(name = NULL, extensions = NULL, climate_config = NULL, path
   ## optional dots params
   if (!is.null(dots$RandomNumberSeed)) {
     stopifnot(
-      length(dots$RandomNumberSeed) == 1, is.numeric(dots$RandomNumberSeed), dots$RandomNumberSeed > 0
+      length(dots$RandomNumberSeed) == 1,
+      is.numeric(dots$RandomNumberSeed),
+      dots$RandomNumberSeed > 0
     )
   }
 
   if (!is.null(dots$CellLength)) {
-    stopifnot(
-      length(dots$CellLength) == 1, is.numeric(dots$CellLength), dots$CellLength > 0
-    )
+    stopifnot(length(dots$CellLength) == 1, is.numeric(dots$CellLength), dots$CellLength > 0)
   }
 
   ## ensure *relative* file paths inserted into config files
@@ -86,23 +96,23 @@ scenario <- function(name = NULL, extensions = NULL, climate_config = NULL, path
   names(other_exts) <- .exts_by_type(extensions, "other")
 
   file <- file.path(path, glue::glue("{name}.txt"))
-  writeLines(c(
-    LandisData("Scenario"),
-    insertDuration(dots$Duration),
-    insertSpeciesDataFile(dots$SpeciesInputFile, core = TRUE),
-    insertEcoregionsFiles(dots$EcoregionsFiles),
-    insertCellLength(dots$CellLength), ## TODO: get this from data
-    insertSuccessionExtensions(succession_exts),
-    insertDisturbanceExtensions(disturbance_exts),
-    insertDisturbancesRandomOrder(dots$DisturbancesRandomOrder),
-    insertOtherExtensions(other_exts),
-    insertRandomNumberSeed(dots$RandomNumberSeed)
-  ), file)
-
-  scenario <- LandisScenario$new(
-    path = path,
-    extensions = extensions
+  writeLines(
+    c(
+      LandisData("Scenario"),
+      insertDuration(dots$Duration),
+      insertSpeciesDataFile(dots$SpeciesInputFile, core = TRUE),
+      insertEcoregionsFiles(dots$EcoregionsFiles),
+      insertCellLength(dots$CellLength), ## TODO: get this from data
+      insertSuccessionExtensions(succession_exts),
+      insertDisturbanceExtensions(disturbance_exts),
+      insertDisturbancesRandomOrder(dots$DisturbancesRandomOrder),
+      insertOtherExtensions(other_exts),
+      insertRandomNumberSeed(dots$RandomNumberSeed)
+    ),
+    file
   )
+
+  scenario <- LandisScenario$new(path = path, extensions = extensions)
   scenario$add_file(basename(file))
   scenario$add_file(climate_config$files)
   scenario$add_file(dots$EcoregionsFiles)
@@ -120,10 +130,7 @@ scenario <- function(name = NULL, extensions = NULL, climate_config = NULL, path
 #'
 #' @export
 insertCellLength <- function(cell_length) {
-  c(
-    glue::glue("CellLength {cell_length}"),
-    glue::glue("") ## add blank line after each item group
-  )
+  insertValue("CellLength", cell_length)
 }
 
 #' Specify Scenario Duration
@@ -134,10 +141,7 @@ insertCellLength <- function(cell_length) {
 #'
 #' @export
 insertDuration <- function(duration) {
-  c(
-    glue::glue("Duration {duration}"),
-    glue::glue("") ## add blank line after each item group
-  )
+  insertValue("Duration", duration)
 }
 
 #' Specify Scenario Extensions Tables
@@ -169,7 +173,8 @@ insertDuration <- function(duration) {
 #' @rdname insertExtensions
 insertSuccessionExtensions <- function(exts = NULL) {
   stopifnot(
-    !is.null(exts), !is.null(names(exts)),
+    !is.null(exts),
+    !is.null(names(exts)),
     length(exts) == 1 ## can only use one succession extension
   )
 

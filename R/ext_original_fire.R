@@ -20,9 +20,7 @@
 #' @export
 #' @aliases BaseFireInput
 OriginalFireInput <- function(path, ...) {
-  stopifnot(
-    !is.null(path)
-  )
+  stopifnot(!is.null(path))
 
   dots <- list(...)
   stopifnot(
@@ -40,26 +38,25 @@ OriginalFireInput <- function(path, ...) {
   dots$SummaryLogFile <- fs::path_rel(dots$SummaryLogFile, path)
 
   file <- file.path(path, "original-fire.txt")
-  writeLines(c(
-    LandisData("Original Fire"),
-    insertTimestep(dots$Timestep),
-    insertSpecies_CSV_File(dots$Species_CSV_File),
-    insertFireRegionParametersTable(dots$FireRegionParametersTable),
-    insertInitialFireRegionsMap(dots$InitialFireRegionsMap),
-    insertDynamicFireRegionsTable(dots$DynamicFireRegionsTable),
-    insertFuelCurveTable(dots$FuelCurveTable),
-    insertWindCurveTable(dots$WindCurveTable),
-    insertFireDamageTable(dots$FireDamageTable),
-    insertMapNames(path),
-    insertLogFile(dots$LogFile),
-    insertSummaryLogFile(dots$SummaryLogFile)
-  ), file)
-
-  ext <- LandisExtension$new(
-    name = "Original Fire",
-    type = "disturbance",
-    path = path
+  writeLines(
+    c(
+      LandisData("Original Fire"),
+      insertTimestep(dots$Timestep),
+      insertSpecies_CSV_File(dots$Species_CSV_File),
+      insertFireRegionParametersTable(dots$FireRegionParametersTable),
+      insertInitialFireRegionsMap(dots$InitialFireRegionsMap),
+      insertDynamicFireRegionsTable(dots$DynamicFireRegionsTable),
+      insertFuelCurveTable(dots$FuelCurveTable),
+      insertWindCurveTable(dots$WindCurveTable),
+      insertFireDamageTable(dots$FireDamageTable),
+      insertMapNames(path),
+      insertLogFile(dots$LogFile),
+      insertSummaryLogFile(dots$SummaryLogFile)
+    ),
+    file
   )
+
+  ext <- LandisExtension$new(name = "Original Fire", type = "disturbance", path = path)
   ext$add_file(basename(file))
   ext$add_file(dots$InitialFireRegionsMap)
   ext$add_file(dots$Species_CSV_File)
@@ -75,10 +72,7 @@ OriginalFireInput <- function(path, ...) {
 #'
 #' @export
 insertSpecies_CSV_File <- function(file) {
-  c(
-    glue::glue("Species_CSV_File    \"{file}\""),
-    glue::glue("") ## add blank line after each item group
-  )
+  insertFile("Species_CSV_File", file)
 }
 
 #' Prepare Original Fire Extension `FireRegionParameters` Table
@@ -135,32 +129,6 @@ insertFireRegionParametersTable <- function(df) {
   )
 }
 
-#' Specify Dynamic Fire Regions Table
-#'
-#' @param df data.frame corresponding to Dynamic Fire Region Table
-#'
-#' @template return_insert
-#'
-#' @export
-insertDynamicFireRegionsTable <- function(df = NULL) {
-  if (is.null(df)) {
-    df <- data.frame(Year = integer(0), FileName = character(0))
-  }
-
-  c(
-    if (is.null(df)) {
-      glue::glue(">> DynamicFireRegionTable << optional")
-    } else {
-      glue::glue("DynamicFireRegionTable << optional")
-    },
-    glue::glue(">> Year    FileName"),
-    apply(df, 1, function(x) {
-      glue::glue_collapse(x, sep = "    ")
-    }),
-    glue::glue("") ## add blank line after each item group
-  )
-}
-
 #' Create Original Fire `InitialFireRegionsMap`
 #'
 #' @param r `SpatRaster` corresponding to initial fire regions map
@@ -191,39 +159,7 @@ prepInitialFireRegionsMap <- function(r, file = "fire-regions-map.tif") {
 #'
 #' @export
 insertInitialFireRegionsMap <- function(file) {
-  c(
-    glue::glue("InitialFireRegionsMap    \"{file}\""),
-    glue::glue("") ## add blank line after each item group
-  )
-}
-
-#' Specify Original Fire `DynamicFireRegionTable`
-#'
-#' @param df data.frame corresponding to `DynamicFireRegionTable` (optional)
-#'
-#' @template return_insert
-#'
-#' @export
-insertDynamicFireRegionTable <- function(df = NULL) {
-  if (is.null(df)) {
-    c(
-      glue::glue(">> DynamicFireRegionTable"),
-      glue::glue(">> Year   Filename"),
-      glue::glue(">> -------------------------------"),
-      glue::glue(">> "),
-      glue::glue("") ## add blank line after each item group
-    )
-  } else {
-    c(
-      glue::glue("DynamicFireRegionTable"),
-      glue::glue(">> Year   Filename"),
-      glue::glue(">> -------------------------------"),
-      apply(df, 1, function(x) {
-        glue::glue_collapse(x, sep = "    ")
-      }),
-      glue::glue("") ## add blank line after each item group
-    )
-  }
+  insertFile("InitialFireRegionsMap", file)
 }
 
 #' Specify Original Fire `FuelCurveTable`
@@ -264,62 +200,6 @@ insertWindCurveTable <- function(df) {
     },
     glue::glue("") ## add blank line after each item group
   )
-}
-
-#' Specify Original Fire `FireDamageTable`
-#'
-#' @param df data.frame
-#'
-#' @template return_insert
-#'
-#' @export
-insertFireDamageTable <- function(df) {
-  c(
-    glue::glue("FireDamageTable"),
-    glue::glue(">> Cohort Age      FireSeverity - "),
-    glue::glue(">> % of longevity  FireTolerance"),
-    glue::glue(">> --------------  ---------------"),
-    apply(df, 1, function(x) {
-      glue::glue_collapse(x, sep = "%      ")
-    }),
-    glue::glue("") ## add blank line after each item group
-  )
-}
-
-#' Specify Original Fire `MapNames`
-#'
-#' @template param_path
-#'
-#' @template return_insert
-#'
-#' @export
-insertMapNames <- function(path) {
-  path <- fs::path_rel(file.path(path, "original-fire"), path)
-
-  ## NOTE: careful using glue() here; need literal {timestep}, so use {{timestep}}
-  glue::glue("MapNames    \"{path}/severity-{{timestep}}.tif\"")
-}
-
-#' Specify Original Fire `LogFile`
-#'
-#' @template param_file
-#'
-#' @template return_insert
-#'
-#' @export
-insertLogFile <- function(file = "original-fire/log.csv") {
-  glue::glue("LogFile    \"{file}\"")
-}
-
-#' Specify Original Fire `SummaryLogFile`
-#'
-#' @template param_file
-#'
-#' @template return_insert
-#'
-#' @export
-insertSummaryLogFile <- function(file = "original-fire/summary-log.csv") {
-  glue::glue("SummaryLogFile    \"{file}\"")
 }
 
 #' Calibrate Original Fire
