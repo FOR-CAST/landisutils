@@ -8,3 +8,5 @@
 ^man-roxygen$
 ^LICENSE\.md$
 ^data-raw$
+^[.]?air[.]toml$
+^\.vscode$
