@@ -9,7 +9,7 @@ Biomass Output by Age Extension
 Biomass Output by Age Extension
 }
 \examples{
-biomass_by_age <- OutputBiomassByAge(
+biomass_by_age <- OutputBiomassByAge$new(
   path = tempdir(),
   Timestep = 10,
   MapNames = NULL, # use default

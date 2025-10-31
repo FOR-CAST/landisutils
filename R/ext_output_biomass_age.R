@@ -6,7 +6,7 @@
 #' @export
 #'
 #' @examples
-#' biomass_by_age <- OutputBiomassByAge(
+#' biomass_by_age <- OutputBiomassByAge$new(
 #'   path = tempdir(),
 #'   Timestep = 10,
 #'   MapNames = NULL, # use default
@@ -46,7 +46,7 @@ OutputBiomassByAge <- R6Class(
 
     #' @description Write extension inputs to disk
     write = function() {
-      stopifnot(!is.null(dots$Species), !is.null(dots$Timestep))
+      stopifnot(!is.null(self$Species), !is.null(self$Timestep))
 
       ## NOTE: Species list needs to be provided such that we produce e.g.:
       ## Species  pinubank ageclass1(10-40) ageclass2(15-100)
@@ -59,7 +59,7 @@ OutputBiomassByAge <- R6Class(
           insertLandisData(private$.LandisData),
           insertValue("Timestep", self$Timestep),
           insertFile("MapNames", self$MapNames),
-          glue::glue("Species {paste(dots$Species, sep = '\n         ')}")
+          glue::glue("Species {paste(self$Species, sep = '\n         ')}")
         ),
         file.path(self$path, self$files[1])
       )

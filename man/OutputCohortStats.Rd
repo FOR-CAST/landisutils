@@ -12,16 +12,9 @@ Cohort Statistics Extension
 # cohort_statistics <- OutputCohortStats$new(
 #   path = tempdir(),
 #   Timestep = 10,
-#   SpeciesAgeStats = c(
-#     species = c(),
-#     stats = c()
-#   ),
-#   SiteAgeStats = c(
-#     stats = c()
-#   ),
-#   SiteSpeciesStats = c(
-#     stats = c()
-#   )
+#   SpeciesAgeStats = list(species = c("querrub", "pinustro"), stats = c("MAX")),
+#   SiteAgeStats = list(stats = c("MAX", "MED", "SD", "RICH", "EVEN")),
+#   SiteSpeciesStats = list(stats = c("RICH"))
 # )
 #
 # cohort_satistics$write()
@@ -75,11 +68,11 @@ LANDIS-II Cohort Statistics v4 Extension User Guide
   path = NULL,
   Timestep = 10L,
   SpeciesAgeMapNames = NULL,
-  SpeciesAgeStats = NULL,
+  SpeciesAgeStats = list(species = NULL, stats = NULL),
   SiteAgeMapNames = NULL,
-  SiteAgeStats = NULL,
+  SiteAgeStats = list(stats = NULL),
   SiteSpeciesMapNames = NULL,
-  SiteSpeciesStats = NULL
+  SiteSpeciesStats = list(stats = NULL)
 )}\if{html}{\out{</div>}}
 }
 
@@ -92,15 +85,18 @@ LANDIS-II Cohort Statistics v4 Extension User Guide
 
 \item{\code{SpeciesAgeMapNames}}{Character. File pattern for writing outputs to disk.}
 
-\item{\code{SpeciesAgeStats}}{Named character vector specifying the \code{species} and \code{stats}.}
+\item{\code{SpeciesAgeStats}}{Named list specifying the \code{species} and \code{stats}
+(e.g., \code{list(species = c("querrub", "pinustro"), stats = c("MAX", "MIN"))})}
 
 \item{\code{SiteAgeMapNames}}{Character. File pattern for writing outputs to disk.}
 
-\item{\code{SiteAgeStats}}{Named character vector specifying the \code{stats}.}
+\item{\code{SiteAgeStats}}{Named list specifying the \code{stats}
+(e.g., \code{list(stats = c("MAX", "RICH"))})}
 
 \item{\code{SiteSpeciesMapNames}}{Character. File pattern for writing outputs to disk.}
 
-\item{\code{SiteSpeciesStats}}{Named character vector specifying the \code{stats}.}
+\item{\code{SiteSpeciesStats}}{Named list specifying the \code{stats}
+(e.g., \code{list(stats = c("RICH"))}).}
 }
 \if{html}{\out{</div>}}
 }

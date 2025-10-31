@@ -10,16 +10,9 @@
 #' # cohort_statistics <- OutputCohortStats$new(
 #' #   path = tempdir(),
 #' #   Timestep = 10,
-#' #   SpeciesAgeStats = c(
-#' #     species = c(),
-#' #     stats = c()
-#' #   ),
-#' #   SiteAgeStats = c(
-#' #     stats = c()
-#' #   ),
-#' #   SiteSpeciesStats = c(
-#' #     stats = c()
-#' #   )
+#' #   SpeciesAgeStats = list(species = c("querrub", "pinustro"), stats = c("MAX")),
+#' #   SiteAgeStats = list(stats = c("MAX", "MED", "SD", "RICH", "EVEN")),
+#' #   SiteSpeciesStats = list(stats = c("RICH"))
 #' # )
 #' #
 #' # cohort_satistics$write()
@@ -30,21 +23,24 @@ OutputCohortStats <- R6Class(
   public = list(
     #' @param path Character. Directory path.
     #' @param Timestep Integer.
-    #' @param SpeciesAgeStats Named character vector specifying the `species` and `stats`.
+    #' @param SpeciesAgeStats Named list specifying the `species` and `stats`
+    #'        (e.g., `list(species = c("querrub", "pinustro"), stats = c("MAX", "MIN"))`)
     #' @param SpeciesAgeMapNames Character. File pattern for writing outputs to disk.
-    #' @param SiteAgeStats Named character vector specifying the `stats`.
+    #' @param SiteAgeStats Named list specifying the `stats`
+    #'        (e.g., `list(stats = c("MAX", "RICH"))`)
     #' @param SiteAgeMapNames Character. File pattern for writing outputs to disk.
-    #' @param SiteSpeciesStats Named character vector specifying the `stats`.
+    #' @param SiteSpeciesStats Named list specifying the `stats`
+    #'        (e.g., `list(stats = c("RICH"))`).
     #' @param SiteSpeciesMapNames Character. File pattern for writing outputs to disk.
     initialize = function(
       path = NULL,
       Timestep = 10L,
       SpeciesAgeMapNames = NULL,
-      SpeciesAgeStats = NULL,
+      SpeciesAgeStats = list(species = NULL, stats = NULL),
       SiteAgeMapNames = NULL,
-      SiteAgeStats = NULL,
+      SiteAgeStats = list(stats = NULL),
       SiteSpeciesMapNames = NULL,
-      SiteSpeciesStats = NULL
+      SiteSpeciesStats = list(stats = NULL)
     ) {
       stopifnot(!is.null(path))
 
@@ -57,15 +53,24 @@ OutputCohortStats <- R6Class(
       self$files <- "output-cohort-stats.txt" ## file won't exist yet
 
       ## additional fields for this extension
-      self$SpeciesAgeStats <- SpeciesAgeStats %||% private$.species_stats
+      if (is.null(SpeciesAgeStats$stats)) {
+        SpeciesAgeStats$stats <- private$.species_stats
+      }
+      self$SpeciesAgeStats <- modifyList(self$SpeciesAgeStats, SpeciesAgeStats)
       self$SpeciesAgeMapNames <- SpeciesAgeMapNames %||%
         "outputs/cohort-stats/{{species}}-{{statistic}}-{{timestep}}.tif"
 
-      self$SiteAgeStats <- SiteAgeStats %||% private$.site_stats
+      if (is.null(SiteAgeStats$stats)) {
+        SiteAgeStats$stats <- private$.site_stats
+      }
+      self$SiteAgeStats <- modifyList(self$SiteAgeStats, SiteAgeStats)
       self$SiteAgeMapNames <- SiteAgeMapNames %||%
         "outputs/cohort-stats/age-{statistic}-{timestep}.tif"
 
-      self$SiteSpeciesStats <- SiteSpeciesStats %||% private$.site_species_stats
+      if (is.null(SiteSpeciesStats$stats)) {
+        SiteSpeciesStats$stats <- private$.site_species_stats
+      }
+      self$SiteSpeciesStats <- modifyList(self$SiteSpeciesStats, SiteSpeciesStats)
       self$SiteSpeciesMapNames <- SiteSpeciesMapNames %||%
         "outputs/cohort-stats/spp-{{statistic}}-{{timestep}}.tif"
     },
@@ -79,21 +84,18 @@ OutputCohortStats <- R6Class(
 
           glue::glue("SpeciesAgeStats"),
           insertFile("MapNames", self$SpeciesAgeMapNames),
-          lapply(self$SpeciesAgeStats, function(stat) {
-            glue::glue("{stat}    {paste(species, collapse = '  ')}")
-          }),
+          lapply(self$SpeciesAgeStats$stats, function(x) {
+            glue::glue("{x}    {paste(self$SpeciesAgeStats$species, collapse = '  ')}")
+          }) |>
+            unlist(),
 
           glue::glue("SiteAgeStats"),
           insertFile("MapNames", self$SiteAgeMapNames),
-          lapply(self$SiteAgeStats, function(stat) {
-            glue::glue("{stat}")
-          }),
+          glue::glue_collapse(self$SiteAgeStats$stats, sep = "\n"),
 
           glue::glue("SiteSpeciesStats"),
-          insertFile("MapNames", self$SiteSpeciesStats),
-          lapply(self$SiteSpeciesStats, function(stat) {
-            glue::glue("{stat}")
-          })
+          insertFile("MapNames", self$SiteSpeciesMapNames),
+          glue::glue_collapse(self$SiteSpeciesStats$stats, sep = "\n")
         ),
         file.path(self$path, self$files[1])
       )
@@ -104,11 +106,11 @@ OutputCohortStats <- R6Class(
 
   private = list(
     .SpeciesAgeMapNames = NULL,
-    .SpeciesAgeStats = NULL,
+    .SpeciesAgeStats = list(species = NULL, stats = NULL),
     .SiteAgeMapNames = NULL,
-    .SiteAgeStats = NULL,
+    .SiteAgeStats = list(stats = NULL),
     .SiteSpeciesMapNames = NULL,
-    .SiteSpeciesStats = NULL,
+    .SiteSpeciesStats = list(stats = NULL),
 
     .species_stats = c("MAX", "MIN", "AVG", "MED", "SD"),
     .site_stats = c("MAX", "MIN", "AVG", "MED", "SD", "RICH", "EVEN", "COUNT"),
@@ -121,9 +123,14 @@ OutputCohortStats <- R6Class(
       if (missing(value)) {
         private$.SpeciesAgeStats
       } else {
-        stopifnot(all(toupper(value) %in% private$.species_stats))
+        stopifnot(
+          is.list(value),
+          all(c("species", "stats") %in% names(value)),
+          all(toupper(value$stats) %in% private$.species_stats)
+        )
 
-        private$.SpeciesAgeStats <- toupper(value)
+        private$.SpeciesAgeStats$species <- value$species
+        private$.SpeciesAgeStats$stats <- toupper(value$stats)
       }
     },
 
@@ -146,9 +153,13 @@ OutputCohortStats <- R6Class(
       if (missing(value)) {
         private$.SiteAgeStats
       } else {
-        stopifnot(all(toupper(value) %in% private$.site_stats))
+        stopifnot(
+          is.list(value),
+          all(c("stats") %in% names(value)),
+          all(toupper(value$stats) %in% private$.site_stats)
+        )
 
-        private$.SiteAgeStats <- toupper(value)
+        private$.SiteAgeStats$stats <- toupper(value$stats)
       }
     },
 
@@ -170,9 +181,13 @@ OutputCohortStats <- R6Class(
       if (missing(value)) {
         private$.SiteSpeciesStats
       } else {
-        stopifnot(all(toupper(value) %in% private$.site_species_stats))
+        stopifnot(
+          is.list(value),
+          all(c("stats") %in% names(value)),
+          all(toupper(value$stats) %in% private$.site_species_stats)
+        )
 
-        private$.SiteSpeciesStats <- toupper(value)
+        private$.SiteSpeciesStats$stats <- toupper(value$stats)
       }
     },
 
