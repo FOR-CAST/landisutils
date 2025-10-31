@@ -65,7 +65,7 @@ prepSpeciesData <- function(df = NULL, path = NULL, type = NULL) {
     file <- file.path(path, "species-core.txt")
     writeLines(
       c(
-        LandisData("Species"),
+        insertLandisData("Species"),
         glue::glue(">> {glue::glue_collapse(colnames(SpeciesData), sep = '  ')}"),
         glue::glue(">> {glue::glue_collapse(rep('----------  ', ncol(SpeciesData)))}"),
         apply(SpeciesData, MARGIN = 1, FUN = function(x) {

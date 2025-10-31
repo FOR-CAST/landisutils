@@ -1,110 +1,216 @@
-#' Create Biomass Succession Input File
+#' Biomass Succession Extension
 #'
-#' Follows the  Biomass Succession User Guide.
+#' @include ext_utils.R
 #'
-#' @template param_path
-#'
-#' @param ... arguments passed to other functions:
-#'   - `CalibrateMode`;
-#'   - `ClimateConfigFile`;
-#'   - `EcoregionParametersFiles`;
-#'   - `FireReductionParameters`;
-#'   - `HarvestReductionParameters`;
-#'   - `InitialCommunitiesFiles`;
-#'   - `MinRelativeBiomass`;
-#'   - `SeedingAlgorithm`;
-#'   - `SpeciesDataFile`;
-#'   - `SpeciesEcoregionDataFile`;
-#'   - `SufficientLight`;
-#'   - `Timestep`;
-#'
-#' @return `LandisExtension` object
+#' @references LANDIS-II Biomass Succession v7 Extension User Guide
+#' <https://github.com/LANDIS-II-Foundation/Extension-Biomass-Succession/blob/master/docs/LANDIS-II%20Biomass%20Succession%20v7%20User%20Guide.pdf>
 #'
 #' @export
-BiomassSuccessionInput <- function(path, ...) {
-  stopifnot(!is.null(path))
+BiomassSuccession <- R6Class(
+  "DynamicFuels",
+  inherit = LandisExtension,
+  public = list(
+    #' @param path Character. Directory path.
+    #' @param Timestep Integer.
+    #' @param SeedingAlgorithm Character. Dispersal algorithm to use.
+    #'        One of `"WardSeedDispersal"`, `"NoDispersal"`, `"UniversalDispersal"`.
+    #' @param InitialCommunitiesFiles Character. Relative file paths.
+    #' @param ClimateConfigFile Character. Relative file path.
+    #' @param CalibrateMode Logical, or character indicating "yes" or "no".
+    #' @param MinRelativeBiomass `data.frame`.
+    #' @param SufficientLight `data.frame`.
+    #' @param SpeciesDataFile Character. Relative file path.
+    #' @param EcoregionParameters `data.frame`.
+    #' @param SpeciesEcoregionDataFile Character. Relative file path.
+    #' @param FireReductionParameters `data.frame`.
+    #' @param HarvestReductionParameters `data.frame`.
+    initialize = function(
+      SeedingAlgorithm = NULL,
+      InitialCommunitiesFiles = NULL,
+      ClimateConfigFile = NULL,
+      CalibrateMode = FALSE,
+      MinRelativeBiomass = NULL,
+      SufficientLight = NULL,
+      SpeciesDataFile = NULL,
+      EcoregionParameters = NULL,
+      SpeciesEcoregionDataFile = NULL,
+      FireReductionParameters = NULL,
+      HarvestReductionParameters = NULL
+    ) {
+      stopifnot(!is.null(path))
 
-  dots <- list(...)
-  stopifnot(!is.null(dots$FireReductionParameters))
+      ## LandisExtension fields
+      private$.LandisData <- "Biomass Succession"
+      self$Timestep <- Timestep
 
-  ## ensure *relative* file paths inserted into config files
-  dots$ClimateConfigFile <- fs::path_rel(dots$ClimateConfigFile, path)
-  dots$InitialCommunitiesFiles <- fs::path_rel(dots$InitialCommunitiesFiles, path)
-  dots$SpeciesDataFile <- fs::path_rel(dots$SpeciesDataFile, path)
-  dots$SpeciesEcoregionDataFile <- fs::path_rel(dots$SpeciesEcoregionDataFile, path)
+      self$type <- "disturbance"
+      self$path <- path
+      self$files <- "biomass-succession.txt" ## file won't exist yet
 
-  file <- file.path(path, "biomass-succession.txt")
-  writeLines(
-    c(
-      LandisData("Biomass Succession"),
-      insertTimestep(dots$Timestep),
-      insertSeedingAlgorithm(dots$SeedingAlgorithm),
-      insertInitialCommunities(dots$InitialCommunitiesFiles),
-      insertClimateConfigFile(dots$ClimateConfigFile),
-      insertCalibrateMode(dots$CalibrateMode),
-      insertMinRelativeBiomass(dots$MinRelativeBiomass),
-      insertSufficientLight(dots$SufficientLight),
-      insertSpeciesDataFile(dots$SpeciesDataFile, core = FALSE),
-      insertEcoregionParameters(dots$EcoregionParameters),
-      insertSpeciesEcoregionDataFile(dots$SpeciesEcoregionDataFile),
-      insertFireReductionParameters(dots$FireReductionParameters), ## TODO
-      insertHarvestReductionParameters(dots$HarvestReductionParameters) ## TODO
-    ),
-    file
+      ## additional fields for this extension
+      self$SeedingAlgorithm <- SeedingAlgorithm %||% "WardSeedDispersal"
+      self$InitialCommunitiesFiles <- InitialCommunitiesFiles
+      self$ClimateConfigFile <- ClimateConfigFile
+      self$CalibrateMode <- CalibrateMode
+      self$MinRelativeBiomass <- MinRelativeBiomass
+      self$SufficientLight <- SufficientLight
+      self$SpeciesDataFile <- SpeciesDataFile
+      self$EcoregionParameters <- EcoregionParameters
+      self$SpeciesEcoregionDataFile <- SpeciesEcoregionDataFile
+      self$FireReductionParameters <- FireReductionParameters
+      self$HarvestReductionParameters <- HarvestReductionParameters
+    },
+
+    #' @description Write extension inputs to disk
+    write = function() {
+      stopifnot(!is.null(self$FireReductionParameters))
+
+      writeLines(
+        c(
+          insertLandisData(private$.LandisData),
+          insertValue("Timestep", self$Timestep),
+          insertValue("SeedingAlgorithm", self$SeedingAlgorithm),
+          insertInitialCommunities(self$InitialCommunitiesFiles), ## TODO
+          insertFile("ClimateConfigFile", self$ClimateConfigFile),
+          insertValue("CalibrateMode", self$CalibrateMode),
+          insertMinRelativeBiomass(self$MinRelativeBiomass),
+          insertSufficientLight(self$SufficientLight),
+          insertSpeciesDataFile(self$SpeciesDataFile, core = FALSE),
+          insertEcoregionParameters(self$EcoregionParameters),
+          insertSpeciesEcoregionDataFile(self$SpeciesEcoregionDataFile),
+          insertFireReductionParameters(self$FireReductionParameters),
+          insertHarvestReductionParameters(self$HarvestReductionParameters)
+        ),
+        file.path(self$path, self$files[1])
+      )
+
+      ext$add_file(self$ClimateConfigFile)
+      ext$add_file(self$InitialCommunitiesFiles)
+      ext$add_file(self$SpeciesDataFile)
+      ext$add_file(self$SpeciesEcoregionDataFile)
+
+      return(invisible(self))
+    }
+  ),
+
+  private = list(
+    .SeedingAlgorithm = NULL,
+    .InitialCommunitiesFiles = NULL,
+    .ClimateConfigFile = NULL,
+    .CalibrateMode = NULL,
+    .MinRelativeBiomass = NULL,
+    .SufficientLight = NULL,
+    .SpeciesDataFile = NULL,
+    .EcoregionParameters = NULL,
+    .SpeciesEcoregionDataFile = NULL,
+    .FireReductionParameters = NULL,
+    .HarvestReductionParameters = NULL
+  ),
+
+  active = list(
+    #' @field SeedingAlgorithm Character. Dispersal algorithm to use.
+    #' One of `"WardSeedDispersal"`, `"NoDispersal"`, `"UniversalDispersal"`.
+    SeedingAlgorithm = function(value) {
+      if (missing(value)) {
+        return(private$.SeedingAlgorithm)
+      } else {
+        stopifnot(value %in% c("WardSeedDispersal", "NoDispersal", "UniversalDispersal"))
+
+        private$.SeedingAlgorithm <- value
+      }
+    },
+
+    #' @field InitialCommunitiesFiles Character. Relative file paths.
+    InitialCommunitiesFiles = function(value) {
+      if (missing(value)) {
+        return(private$.InitialCommunitiesFiles)
+      } else {
+        private$.InitialCommunitiesFiles <- .relPath(value, path)
+      }
+    },
+
+    #' @field ClimateConfigFile Character. Relative file path.
+    ClimateConfigFile = function(value) {
+      if (missing(value)) {
+        return(private$.ClimateConfigFile)
+      } else {
+        private$.ClimateConfigFile <- .relPath(value, path)
+      }
+    },
+
+    #' @field CalibrateMode Logical, or character indicating "yes" or "no".
+    CalibrateMode = function(value) {
+      if (missing(value)) {
+        return(private$.CalibrateMode)
+      } else {
+        private$.CalibrateMode <- yesno(value)
+      }
+    },
+
+    #' @field MinRelativeBiomass `data.frame`.
+    MinRelativeBiomass = function(value) {
+      if (missing(value)) {
+        return(private$.MinRelativeBiomass)
+      } else {
+        private$.MinRelativeBiomass <- value
+      }
+    },
+
+    #' @field SufficientLight `data.frame`.
+    SufficientLight = function(value) {
+      if (missing(value)) {
+        return(private$.SufficientLight)
+      } else {
+        private$.SufficientLight <- value
+      }
+    },
+
+    #' @field SpeciesDataFile Character. Relative file path.
+    SpeciesDataFile = function(value) {
+      if (missing(value)) {
+        return(private$.SpeciesDataFile)
+      } else {
+        private$.SpeciesDataFile <- .relPath(value, path)
+      }
+    },
+
+    #' @field EcoregionParameters `data.frame`.
+    EcoregionParameters = function(value) {
+      if (missing(value)) {
+        return(private$.EcoregionParameters)
+      } else {
+        private$.EcoregionParameters <- value
+      }
+    },
+
+    #' @field SpeciesEcoregionDataFile Character. Relative file path.
+    SpeciesEcoregionDataFile = function(value) {
+      if (missing(value)) {
+        return(private$.SpeciesEcoregionDataFile)
+      } else {
+        private$.SpeciesEcoregionDataFile <- .relPath(value, path)
+      }
+    },
+
+    #' @field FireReductionParameters `data.frame`.
+    FireReductionParameters = function(value) {
+      if (missing(value)) {
+        return(private$.FireReductionParameters)
+      } else {
+        private$.FireReductionParameters <- value
+      }
+    },
+
+    #' @field HarvestReductionParameters `data.frame`.
+    HarvestReductionParameters = function(value) {
+      if (missing(value)) {
+        return(private$.HarvestReductionParameters)
+      } else {
+        private$.HarvestReductionParameters <- value
+      }
+    }
   )
-
-  ext <- LandisExtension$new(name = "Biomass Succession", type = "succession", path = path)
-  ext$add_file(basename(file))
-  ext$add_file(dots$ClimateConfigFile)
-  ext$add_file(dots$InitialCommunitiesFiles)
-  ext$add_file(dots$SpeciesDataFile)
-  ext$add_file(dots$SpeciesEcoregionDataFile)
-
-  return(ext)
-}
-
-#' Specify  Biomass Succession Extension `SeedingAlgorithm`
-#'
-#' @param algo Seed dispersal algorithm to use.
-#' One of `"WardSeedDispersal"`, `"NoDispersal"`, `"UniversalDispersal"`.
-#'
-#' @template return_insert
-#'
-#' @export
-#'
-insertSeedingAlgorithm <- function(algo = NULL) {
-  allowed <- c("WardSeedDispersal", "NoDispersal", "UniversalDispersal")
-  algo <- algo %||% allowed[1]
-
-  stopifnot(algo %in% allowed)
-
-  c(
-    glue::glue("SeedingAlgorithm    {algo}"),
-    glue::glue("") ## add blank line after each item group
-  )
-}
-
-#' Specify Biomass Succession Extension `insertCalibrateMode`
-#'
-#' @param cal_mode Logical. Optional parameter.
-#'
-#' @template return_insert
-#'
-#' @export
-#'
-insertCalibrateMode <- function(cal_mode = FALSE) {
-  if (isTRUE(cal_mode)) {
-    c(
-      glue::glue("CalibrateMode    yes << optional parameter"),
-      glue::glue("") ## add blank line after each item group
-    )
-  } else {
-    c(
-      glue::glue("CalibrateMode    no << optional parameter"),
-      glue::glue("") ## add blank line after each item group
-    )
-  }
-}
+)
 
 #' Prepare Biomass Succession Extension `MinRelativeBiomass` Table
 #'
@@ -135,8 +241,6 @@ prepMinRelativeBiomass <- function(df = NULL) {
 #' @param df data.frame corresponding to `MinRelativeBiomass` table
 #'
 #' @template return_insert
-#'
-#' @export
 #'
 insertMinRelativeBiomass <- function(df = NULL) {
   stopifnot(!is.null(df), is(df, "data.frame"))
@@ -172,7 +276,6 @@ insertMinRelativeBiomass <- function(df = NULL) {
 #'
 #' @template return_insert
 #'
-#' @export
 insertSufficientLight <- function(df) {
   c(
     glue::glue("SufficientLight"),
@@ -230,7 +333,6 @@ prepEcoregionParameters <- function(df) {
 #'
 #' @template return_insert
 #'
-#' @export
 insertEcoregionParameters <- function(df) {
   c(
     glue::glue("EcoregionParameters"),
@@ -282,12 +384,8 @@ prepSpeciesEcoregionDataFile <- function(df, path) {
 #'
 #' @template return_insert
 #'
-#' @export
 insertSpeciesEcoregionDataFile <- function(file) {
-  c(
-    glue::glue("SpeciesEcoregionDataFile    \"{file}\""),
-    glue::glue("") ## add blank line after each item group
-  )
+  insertFile("SpeciesEcoregionDataFile", file)
 }
 
 #' Prepare Biomass Succession Extension `FireReductionParameters` Table
@@ -326,7 +424,6 @@ prepFireReductionParameters <- function(df = NULL) {
 #'
 #' @template return_insert
 #'
-#' @export
 insertFireReductionParameters <- function(df) {
   c(
     glue::glue("FireReductionParameters"),
@@ -381,7 +478,6 @@ prepHarvestReductionParameters <- function(df = NULL) {
 #'
 #' @template return_insert
 #'
-#' @export
 insertHarvestReductionParameters <- function(df) {
   c(
     glue::glue("HarvestReductionParameters"),

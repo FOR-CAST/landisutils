@@ -15,3 +15,4 @@ Character string(s) to write to the suitable LANDIS-II input file.
 \description{
 Specify \code{FireDamageTable} for fire extensions
 }
+\keyword{internal}

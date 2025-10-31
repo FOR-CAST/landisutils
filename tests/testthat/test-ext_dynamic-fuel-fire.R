@@ -1,7 +1,4 @@
-testthat::test_that("Original Fire (and Biomass Succession) inputs are properly created", {
-  testthat::skip_if_not_installed("climateR")
-  testthat::skip_if_not_installed("future")
-  testthat::skip_if_not_installed("furrr")
+testthat::test_that("Dynamic Fuel & Fire inputs are properly created", {
   testthat::skip_if_not_installed("purrr")
   testthat::skip_if_not_installed("withr")
   testthat::skip_if_not_installed("zonal")
@@ -28,7 +25,7 @@ testthat::test_that("Original Fire (and Biomass Succession) inputs are properly 
 
   ## prepare landis input files ----------------------------------------------------------------
 
-  tmp_pth <- withr::local_tempdir("test_Original_Fire_")
+  tmp_pth <- withr::local_tempdir("test_Dynamic_Fire_")
 
   fire_spp_csv_file <- prepSpeciesData(species, tmp_pth, type = "fire")
 
@@ -52,8 +49,8 @@ testthat::test_that("Original Fire (and Biomass Succession) inputs are properly 
   ifrm_file <- terra::rasterize(fireRegimePolys, standAgeMap, field = "PolyID", background = 0) |>
     prepInitialFireRegionsMap(file = file.path(tmp_pth, "fire-regions-map.tif"))
 
-  log_file <- file.path(tmp_pth, "fire/fire/log.csv")
-  sum_log_file <- file.path(tmp_pth, "fire/summary-log.csv")
+  log_file <- file.path(tmp_pth, "original-fire/fire/log.csv")
+  sum_log_file <- file.path(tmp_pth, "original-fire/fire/summary-log.csv")
 
   ext_of <- OriginalFire$new(
     path = tmp_pth,

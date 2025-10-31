@@ -11,7 +11,7 @@
 #'
 #' @template return_insert
 #'
-#' @export
+#' @keywords internal
 insertDynamicTable <- function(name = NULL, df = NULL) {
   if (is.null(df)) {
     df <- data.frame(Year = integer(0), FileName = character(0))
@@ -30,25 +30,13 @@ insertDynamicTable <- function(name = NULL, df = NULL) {
   )
 }
 
-#' @export
-#' @rdname insertDynamicTable
-insertDynamicEcoregionTable <- function(df = NULL) {
-  insertDynamicTable("DynamicEcoregionTable", df)
-}
-
-#' @export
-#' @rdname insertDynamicTable
-insertDynamicFireRegionsTable <- function(df = NULL) {
-  insertDynamicTable("DynamicFireRegionTable", df)
-}
-
 #' Specify `FireDamageTable` for fire extensions
 #'
 #' @param df data.frame
 #'
 #' @template return_insert
 #'
-#' @export
+#' @keywords internal
 insertFireDamageTable <- function(df = NULL) {
   if (is.null(df)) {
     df <- data.frame(
@@ -69,40 +57,25 @@ insertFireDamageTable <- function(df = NULL) {
   )
 }
 
-#' Specify Fire Severity Map Names for fire extensions
+#' Create Map Names pattern for file outputs
+#'
+#' @param type Character, specifying the output file type (e.g., 'severity').
+#'
+#' @param ext_type Character, specifying the output extension type (e.g., 'fire').
 #'
 #' @template param_path
 #'
-#' @template return_insert
+#' @returns Character, specifying filename pattern for map outputs.
 #'
 #' @export
-insertMapNames <- function(path) {
-  path <- fs::path_rel(file.path(path, "fire"), path)
+#' @examples
+#' SeverityMaps <- MapNames("severity", "fire")
+#' PctConiferMaps <- MapNames("PctConifer", "fire")
+#' PctDeadFirMaps <- MapNames("PctDeadFir", "fire")
+#'
+MapNames <- function(type, ext_type, path = ".") {
+  path <- fs::path_rel(file.path(path, ext_type), path)
 
   ## NOTE: careful using glue() here; need literal {timestep}, so use {{timestep}}
-  file <- glue::glue("{path}/severity-{{timestep}}.tif")
-
-  insertFile("MapNames", file)
-}
-
-#' Specify `LogFile` for fire extensions
-#'
-#' @template param_file
-#'
-#' @template return_insert
-#'
-#' @export
-insertLogFile <- function(file = "fire/log.csv") {
-  insertFile("LogFile", file)
-}
-
-#' Specify `SummaryLogFile` for fire extensions
-#'
-#' @template param_file
-#'
-#' @template return_insert
-#'
-#' @export
-insertSummaryLogFile <- function(file = "fire/summary-log.csv") {
-  insertFile("SummaryLogFile", file)
+  glue::glue("{path}/{type}-{{timestep}}.tif")
 }

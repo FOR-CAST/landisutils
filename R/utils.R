@@ -6,6 +6,15 @@
 }
 
 #' @keywords internal
+.relPath <- function(path, start = ".") {
+  if (is.null(path) || is.na(path)) {
+    path
+  } else {
+    fs::path_rel(path, start)
+  }
+}
+
+#' @keywords internal
 landisutilsVersion <- function() {
   packageVersion("landisutils")
 }
@@ -20,7 +29,7 @@ landisutilsHeader <- function() {
 }
 
 #' @keywords internal
-LandisData <- function(x) {
+insertLandisData <- function(x) {
   c(landisutilsHeader(), glue::glue("LandisData  \"{x}\""), glue::glue(""))
 }
 
@@ -57,4 +66,36 @@ insertFile <- function(type, file) {
   stopifnot(!file.exists(file))
 
   insertValue(type, file)
+}
+
+#' Convert logical to "yes" or "no"
+#'
+#' LANDIS-II input files use character strings "yes" and "no"
+#' instead of logical TRUE or FALSE.
+#'
+#' @param x one of `TRUE`, `FALSE`, `Y`, `N`, `yes`, `no`.
+#'
+#' @return Character "yes" or "no".
+#'
+#' @export
+yesno <- function(x) {
+  stopifnot(
+    "x must be one of TRUE, FALSE, 'Y', 'N', 'yes', or 'no'." = length(x) == 1 &&
+      !is.null(x) &&
+      !is.na(x)
+  )
+
+  if (is.character(x)) {
+    x <- tolower(x)
+
+    if (x %in% c("yes", "y")) {
+      x <- TRUE
+    } else if (x %in% c("no", "n")) {
+      x <- FALSE
+    } else {
+      stop("x must be one of TRUE, FALSE, 'Y', 'N', 'yes', or 'no'.")
+    }
+  }
+
+  ifelse(isTRUE(x), "yes", "no")
 }

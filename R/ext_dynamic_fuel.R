@@ -1,56 +1,195 @@
-#' Create Biomass Fuel System Input File
+#' Dynamic Fuel System Extension
 #'
-#' Follows the  Biomass Fuel System User Guide.
+#' @include ext_utils.R
 #'
-#' @template param_path
-#'
-#' @param ... arguments passed to other functions:
-#'   - `DeadFirMaxAge`;
-#'   - `DisturbanceConversionTable` (optional);
-#'   - `EcoregionTable` (optional);
-#'   - `FuelTypes`;
-#'   - `HardoodMaximum` (optional);
-#'   - `MapFileNames`;
-#'   - `PctConiferMapName`;
-#'   - `PctDeadFirMapName`;
-#'   - `SpeciesFuelCoefficients`;
-#'   - `Timestep`;
-#'
-#' @return `LandisExtension` object
+#' @references LANDIS-II Dynamic Fuel System Extension v4.0 User Guide
+#'   <https://github.com/LANDIS-II-Foundation/Extension-Dynamic-Biomass-Fuels/blob/master/docs/LANDIS-II%20Dynamic%20Fuel%20System%20v4.0%20User%20Guide.pdf>
 #'
 #' @export
-BiomassFuelSytemInput <- function(path, ...) {
-  stopifnot(!is.null(path))
+DynamicFuels <- R6Class(
+  "DynamicFuels",
+  inherit = LandisExtension,
+  public = list(
+    #' @param path Character. Directory path.
+    #' @param Timestep Integer.
+    #' @param SpeciesFuelCoefficients `data.frame`.
+    #' @param HardwoodMaximum Integer.
+    #' @param DeadFirMaxAge Integer. The duration of influence for the BDA extension's dead conifer index.
+    #' @param FuelTypes `data.frame`. See [prepFuelTypesTable()].
+    #' @param EcoregionTable `data.frame`.
+    #' @param DisturbanceConversionTable `data.frame`.
+    #' @param MapFileNames Character. File pattern for writing outputs to disk.
+    #' @param PctConiferMapName Character. File pattern for writing outputs to disk.
+    #' @param PctDeadFirMapName Character. File pattern for writing outputs to disk.
+    initialize = function(
+      path,
+      Timestep = 10,
+      SpeciesFuelCoefficients = NULL,
+      HardwoodMaximum = 0L,
+      DeadFirMaxAge = 15L,
+      FuelTypes = NULL,
+      EcoregionTable = data.frame(FuelType = integer(0), Ecoregion = character(0)),
+      DisturbanceConversionTable = NULL,
+      MapFileNames = NULL,
+      PctConiferMapName = NULL,
+      PctDeadFirMapName = NULL
+    ) {
+      stopifnot(!is.null(path))
 
-  dots <- list(...)
-  stopifnot(!is.null(dots$FireReductionParameters))
+      ## LandisExtension fields
+      private$.LandisData <- "Dynamic Fuels"
+      self$Timestep <- Timestep
 
-  ## ensure *relative* file paths inserted into config files
-  dots$ClimateConfigFile <- fs::path_rel(dots$ClimateConfigFile, path)
+      self$name <- "Dynamic Fuels"
+      self$type <- "disturbance"
+      self$path <- path
+      self$files <- "dynamic-fuels.txt" ## file won't exist yet
 
-  file <- file.path(path, "dynamic-fuel-system.txt")
-  writeLines(
-    c(
-      LandisData("Dynamic Fuels"),
-      insertTimestep(dots$Timestep),
-      insertSpeciesFuelCoefficients(dots$SpeciesFuelCoefficients),
-      insertHardoodMaximum(dots$HardoodMaximum),
-      insertDeadFirMaxAge(dots$DeadFirMaxAge),
-      insertFuelTypesTable(dots$FuelTypes),
-      insertEcoregionTable(dots$EcoregionTable),
-      insertDisturbanceConversionTable(dots$DisturbanceConversionTable),
-      insertMapFileNames(dots$MapFileNames),
-      insertPctConiferMapName(dots$PctConiferMapName),
-      insertPctDeadFirMapName(dots$PctDeadFirMapName)
-    ),
-    file
+      ## additional fields for this extension
+      self$SpeciesFuelCoefficients <- SpeciesFuelCoefficients
+      self$HardwoodMaximum <- HardwoodMaximum
+      self$DeadFirMaxAge <- DeadFirMaxAge
+      self$FuelTypes <- FuelTypes
+      self$EcoregionTable <- EcoregionTable
+      self$DisturbanceConversionTable <- DisturbanceConversionTable
+      self$MapFileNames <- MapFileNames %||% MapNames("FuelType", "fire", self$path)
+      self$PctConiferMapName <- PctConiferMapName %||% MapNames("PctConifer", "fire", self$path)
+      self$PctDeadFirMapName <- PctDeadFirMapName %||% MapNames("PctDeadFir", "fire", self$path)
+    },
+
+    #' @description Write extension inputs to disk
+    write = function() {
+      stopifnot(!is.null(self$FireReductionParameters))
+
+      writeLines(
+        c(
+          insertLandisData(private$.LandisData),
+          insertValue("Timestep", self$Timestep),
+          insertSpeciesFuelCoefficients(self$SpeciesFuelCoefficients),
+          insertValue("HardwoodMaximum", self$HardwoodMaximum),
+          insertDeadFirMaxAge(self$DeadFirMaxAge),
+          insertFuelTypesTable(self$FuelTypes),
+          insertEcoregionTable(self$EcoregionTable),
+          insertDisturbanceConversionTable(self$DisturbanceConversionTable),
+          insertFile("MapFileNames", self$MapFileNames),
+          insertFile("PctConiferMapName", self$PctConiferMapName),
+          insertFile("PctDeadFirMapName", self$PctDeadFirMapName)
+        ),
+        file.path(self$path, self$files[1])
+      )
+    }
+  ),
+  private = list(
+    .SpeciesFuelCoefficients = NULL,
+    .HardwoodMaximum = NULL,
+    .DeadFirMaxAge = NULL,
+    .FuelTypes = NULL,
+    .EcoregionTable = NULL,
+    .DisturbanceConversionTable = NULL,
+    .MapFileNames = NULL,
+    .PctConiferMapName = NULL,
+    .PctDeadFirMapName = NULL
+  ),
+  active = list(
+    #' @field SpeciesFuelCoefficients `data.frame`.
+    SpeciesFuelCoefficients = function(value) {
+      if (missing(value)) {
+        return(private$.SpeciesFuelCoefficients)
+      } else {
+        stopifnot(is.data.frame(value))
+        private$.SpeciesFuelCoefficients <- value
+      }
+    },
+
+    #' @field HardwoodMaximum Integer.
+    HardwoodMaximum = function(value) {
+      if (missing(value)) {
+        return(private$.HardwoodMaximum)
+      } else {
+        value <- as.integer(value)
+        stopifnot(dplyr::between(value, 0L, 100L))
+
+        private$.HardwoodMaximum <- value
+      }
+    },
+
+    #' @field DeadFirMaxAge Integer. The duration of influence for the BDA extension's dead conifer index.
+    DeadFirMaxAge = function(value) {
+      if (missing(value)) {
+        return(private$.DeadFirMaxAge)
+      } else {
+        stopifnot(value >= 0L)
+        private$.DeadFirMaxAge <- value
+      }
+    },
+
+    #' @field FuelTypes `data.frame`. See [prepFuelTypesTable()].
+    FuelTypes = function(value) {
+      if (missing(value)) {
+        return(private$.FuelTypes)
+      } else {
+        stopifnot(
+          is.data.frame(value),
+          ncol(value) == 5,
+          identical(colnames(value), c("FuelType", "BaseFuel", "AgeMin", "AgeMax", "Species"))
+        )
+
+        private$.FuelTypes <- value
+      }
+    },
+
+    #' @field EcoregionTable `data.frame`.
+    EcoregionTable = function(value) {
+      if (missing(value)) {
+        return(private$.EcoregionTable)
+      } else {
+        stopifnot(is.data.frame(value))
+        private$.EcoregionTable <- value
+      }
+    },
+
+    #' @field DisturbanceConversionTable `data.frame`.
+    DisturbanceConversionTable = function(value) {
+      if (missing(value)) {
+        return(private$.DisturbanceConversionTable)
+      } else {
+        stopifnot(
+          is.data.frame(value),
+          ncol(df) == 3,
+          identical(colnames(df), c("FuelType", "Duration", "Prescription"))
+        )
+        private$.DisturbanceConversionTable <- value
+      }
+    },
+
+    #' @field MapFileNames Character. File pattern for writing outputs to disk.
+    MapFileNames = function(value) {
+      if (missing(value)) {
+        return(private$.MapFileNames)
+      } else {
+        private$.MapFileNames <- value
+      }
+    },
+
+    #' @field PctConiferMapName Character. File pattern for writing outputs to disk.
+    PctConiferMapName = function(value) {
+      if (missing(value)) {
+        return(private$.PctConiferMapName)
+      } else {
+        private$.PctConiferMapName <- value
+      }
+    },
+
+    #' @field PctDeadFirMapName Character. File pattern for writing outputs to disk.
+    PctDeadFirMapName = function(value) {
+      if (missing(value)) {
+        return(private$.PctDeadFirMapName)
+      } else {
+        private$.PctDeadFirMapName <- value
+      }
+    }
   )
-
-  ext <- LandisExtension$new(name = "Dynamic Fuel System", type = "disturbance", path = path)
-  ext$add_file(basename(file))
-
-  return(ext)
-}
+)
 
 #' Specify Dynamic Fuel Extension's Species Fuel Coefficients
 #'
@@ -58,7 +197,6 @@ BiomassFuelSytemInput <- function(path, ...) {
 #'
 #' @template return_insert
 #'
-#' @export
 insertSpeciesFuelCoefficients <- function(df) {
   c(
     glue::glue(">> Species    Fuel"),
@@ -69,33 +207,6 @@ insertSpeciesFuelCoefficients <- function(df) {
     }),
     glue::glue("") ## add blank line after each item group
   )
-}
-
-#' Specify Dynamic Fuel Extension's Hardwood Maximum
-#'
-#' @param hwmax (optional) Integer. Percent hardwood value.
-#'
-#' @template return_insert
-#'
-#' @export
-insertHardoodMaximum <- function(hwmax = 0L) {
-  hwmax <- as.integer(hwmax)
-  stopifnot(dplyr::between(hwmax, 0L, 100L))
-
-  insertValue("HardoodMaximum", hwmax)
-}
-
-#' Specify Dynamic Fuel Extension's Dead Fir Maximum Age
-#'
-#' @param maxage Integer. The duration of influence for the BDA extension's dead conifer index.
-#'
-#' @template return_insert
-#'
-#' @export
-insertDeadFirMaxAge <- function(maxage = 15L) {
-  stopifnot(maxage >= 0L) ## TODO: use better default?
-
-  insertValue("DeadFirMaxAge", maxage)
 }
 
 #' Create Dynamic Fire Extension's Fuel Types Table
@@ -129,13 +240,7 @@ prepFuelTypesTable <- function() {
 #'
 #' @template return_insert
 #'
-#' @export
 insertFuelTypesTable <- function(df) {
-  stopifnot(
-    ncol(df) == 5,
-    identical(colnames(df), c("FuelType", "BaseFuel", "AgeMin", "AgeMax", "Species"))
-  )
-
   df <- df |>
     dplyr::mutate(AgeRange = glue::glue("{AgeMin} to {AgeMax}")) |>
     dplyr::mutate(AgeMin = NULL, AgeMax = NULL)
@@ -158,12 +263,7 @@ insertFuelTypesTable <- function(df) {
 #'
 #' @template return_insert
 #'
-#' @export
-insertEcoregionTable <- function(df = NULL) {
-  if (is.null(df)) {
-    df <- data.frame(FuelType = integer(0), Ecoregion = character(0))
-  }
-
+insertEcoregionTable <- function(df) {
   c(
     glue::glue("EcoregionTable"),
     glue::glue(">> Fuel Type    Ecoregion"),
@@ -189,15 +289,12 @@ prepDisturbanceConversionTable <- function() {
 
 #' Specify Dynamic Fuel Extension's Disturbance Conversion Table
 #'
-#' @param df data.frame corresponding to `DisturbanceConversiodfnTable`, with columns:
+#' @param df data.frame corresponding to `DisturbanceConversionTable`, with columns:
 #'   `FuelType` (int), `Duration` (int), and `Prescription` (char).
 #'
 #' @template return_insert
 #'
-#' @export
-insertDisturbanceConversionTable <- function(DisturbanceConversiodfnTable) {
-  stopifnot(ncol(df) == 3, identical(colnames(df), c("FuelType", "Duration", "Prescription")))
-
+insertDisturbanceConversionTable <- function(df) {
   c(
     glue::glue("DisturbanceConversionTable"),
     glue::glue(">> Fuel Type    Duration    Prescription"),
@@ -207,52 +304,4 @@ insertDisturbanceConversionTable <- function(DisturbanceConversiodfnTable) {
     }),
     glue::glue("") ## add blank line after each item group
   )
-}
-
-#' Specify the Dynamic Fuel Extension's Fuel Type Map Names
-#'
-#' @template param_path
-#'
-#' @template return_insert
-#'
-#' @export
-insertMapFileNames <- function(path) {
-  path <- fs::path_rel(file.path(path, "fire"), path)
-
-  ## NOTE: careful using glue() here; need literal {timestep}, so use {{timestep}}
-  file <- glue::glue("{path}/FuelType-{{timestep}}.tif")
-
-  insertFile("MapFileNames", file)
-}
-
-#' Specify the Dynamic Fuel Extension's Percent Conifer Map Name
-#'
-#' @template param_path
-#'
-#' @template return_insert
-#'
-#' @export
-insertPctConiferMapName <- function(path) {
-  path <- fs::path_rel(file.path(path, "fire"), path)
-
-  ## NOTE: careful using glue() here; need literal {timestep}, so use {{timestep}}
-  file <- glue::glue("{path}/PctConifer-{{timestep}}.tif")
-
-  insertFile("PctConiferMapName", file)
-}
-
-#' Specify the Dynamic Fuel Extension's Percent Dead Fir Map Name
-#'
-#' @template param_path
-#'
-#' @template return_insert
-#'
-#' @export
-insertPctDeadFirMapName <- function(path) {
-  path <- fs::path_rel(file.path(path, "fire"), path)
-
-  ## NOTE: careful using glue() here; need literal {timestep}, so use {{timestep}}
-  file <- glue::glue("{path}/PctDeadFir-{{timestep}}.tif")
-
-  insertFile("PctDeadFirMapName", file)
 }

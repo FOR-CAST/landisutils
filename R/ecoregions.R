@@ -10,9 +10,7 @@
 #'
 #' @export
 prepEcoregionsFiles <- function(ecoregion, ecoregionMap, path = NULL) {
-  stopifnot(
-    !is.null(path)
-  )
+  stopifnot(!is.null(path))
   path <- .checkPath(path)
 
   ## see LandR::makeEcoregionDT (maybe LandR::ecoregionProducer ??)
@@ -42,15 +40,23 @@ prepEcoregionsFiles <- function(ecoregion, ecoregionMap, path = NULL) {
     ))
 
   ecoregionsFile <- file.path(path, "ecoregions.txt")
-  writeLines(c(
-    LandisData("Ecoregions"),
-    glue::glue(">> Active  MapCode  Name      Description"),
-    glue::glue(">> ------  -------  --------  -----------------------"),
-    apply(ecoregionsTable, MARGIN = 1, FUN = function(x) {
-      glue::glue("   {x}") |> glue::glue_collapse(sep = "   ")
-    }, simplify = TRUE),
-    glue::glue("")
-  ), ecoregionsFile)
+  writeLines(
+    c(
+      insertLandisData("Ecoregions"),
+      glue::glue(">> Active  MapCode  Name      Description"),
+      glue::glue(">> ------  -------  --------  -----------------------"),
+      apply(
+        ecoregionsTable,
+        MARGIN = 1,
+        FUN = function(x) {
+          glue::glue("   {x}") |> glue::glue_collapse(sep = "   ")
+        },
+        simplify = TRUE
+      ),
+      glue::glue("")
+    ),
+    ecoregionsFile
+  )
 
   return(c(ecoregionsFile, ecoregionsMapFile))
 }

@@ -4,7 +4,7 @@
 \alias{insertEcoregionTable}
 \title{Specify Dynamic Fuel Extension's Ecoregion Table}
 \usage{
-insertEcoregionTable(df = NULL)
+insertEcoregionTable(df)
 }
 \arguments{
 \item{df}{data.frame corresponding to \code{EcoregionTable}, with columns:

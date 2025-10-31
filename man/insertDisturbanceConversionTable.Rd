@@ -4,10 +4,10 @@
 \alias{insertDisturbanceConversionTable}
 \title{Specify Dynamic Fuel Extension's Disturbance Conversion Table}
 \usage{
-insertDisturbanceConversionTable(DisturbanceConversiodfnTable)
+insertDisturbanceConversionTable(df)
 }
 \arguments{
-\item{df}{data.frame corresponding to \code{DisturbanceConversiodfnTable}, with columns:
+\item{df}{data.frame corresponding to \code{DisturbanceConversionTable}, with columns:
 \code{FuelType} (int), \code{Duration} (int), and \code{Prescription} (char).}
 }
 \value{

@@ -1,112 +1,315 @@
-#' Create Dynamic Fire System Input File
+#' Dynamic Fire System Extension
 #'
-#' Follows the Dynamic Fire System User Guide.
+#' @include ext_utils.R
 #'
-#' @template param_path
-#'
-#' @param ... arguments passed to other functions:
-#'   - `BuildUpIndex`;
-#'   - `DynamicEcoregionTable` (optional);
-#'   - `DynamicWeatherTable`;
-#'   - `EventSizeType`;
-#'   - `FireDamageTable`;
-#'   - `FireSizesTable`;
-#'   - `FuelTypeTable`;
-#'   - `GroundSlopeFile`  (optional);
-#'   - `InitialFireEcoregionsMap`;
-#'   - `InitialWeatherDatabase`;
-#'   - `LogFile`;
-#'   - `MapNames`;
-#'   - `SeasonsTable`;
-#'   - `SeverityCalibrationFactor`;
-#'   - `SummaryLogFile`;
-#'   - `UphillSlopeAzimuthMap`  (optional);
-#'   - `WeatherRandomizer` (optional).
+#' @references LANDIS-II Dynamic Fire System Extension v4 User Guide
+#'   <https://github.com/LANDIS-II-Foundation/Extension-Dynamic-Fire-System/blob/master/docs/LANDIS-II%20Dynamic%20Fire%20System%20v4%20User%20Guide.pdf>
 #'
 #' @export
-#' @aliases DynamicFireSystemInput
-DynamicFireInput <- function(path, ...) {
-  stopifnot(!is.null(path))
+DynamicFire <- R6Class(
+  "DynamicFire",
+  inherit = LandisExtension,
+  public = list(
+    #' @param path Character. Directory path.
+    #' @param Timestep Integer.
+    #' @param EventSizeType Character. One of "size_based" or "duration_based".
+    #' @param BuildUpIndex Logical, or character indicating "yes" or "no".
+    #' @param WeatherRandomizer Integer `[0, 4]`.
+    #' @param FireSizesTable `data.frame`.
+    #' @param InitialFireEcoregionsMap Character. Relative file path.
+    #' @param DynamicEcoregionTable `data.frame`.
+    #' @param GroundSlopeFile Character. Relative file path.
+    #' @param UphillSlopeAzimuthMap Character. Relative file path.
+    #' @param SeasonTable `data.frame`.
+    #' @param InitialWeatherDatabase Character. Relative file path.
+    #' @param DynamicWeatherTable `data.frame`.
+    #' @param FuelTypeTable `data.frame`.
+    #' @param SeverityCalibrationFactor `data.frame`.
+    #' @param FireDamageTable `data.frame`.
+    #' @param MapNames Character. File pattern for writing outputs to disk.
+    #' @param LogFile Character. Relative file path.
+    #' @param SummaryLogFile Character. Relative file path.
+    initialize = function(
+      path,
+      Timestep = 10,
+      EventSizeType = NULL,
+      BuildUpIndex = NULL,
+      WeatherRandomizer = NULL,
+      FireSizesTable = NULL,
+      InitialFireEcoregionsMap = NULL,
+      DynamicEcoregionTable = NULL,
+      GroundSlopeFile = NULL,
+      UphillSlopeAzimuthMap = NULL,
+      SeasonTable = NULL,
+      InitialWeatherDatabase = NULL,
+      DynamicWeatherTable = NULL,
+      FuelTypeTable = NULL,
+      SeverityCalibrationFactor = NULL,
+      FireDamageTable = NULL,
+      MapNames = NULL,
+      LogFile = "fire/log.csv",
+      SummaryLogFile = "fire/summary-log.csv"
+    ) {
+      stopifnot(!is.null(path))
 
-  dots <- list(...)
-  stopifnot(
-    !is.null(dots$BuildUpIndex),
-    !is.null(dots$DynamicWeatherTable),
-    !is.null(dots$FireDamageTable),
-    !is.null(dots$FireSizesTable),
-    !is.null(dots$FuelTypeTable),
-    !is.null(dots$InitialFireEcoregionsMap),
-    !is.null(dots$InitialWeatherDatabase),
-    !is.null(dots$LogFile),
-    !is.null(dots$SeasonsTable),
-    !is.null(dots$SeverityCalibrationFactor),
-    !is.null(dots$SummaryLogFile)
+      ## LandisExtension fields
+      private$LandisData <- "Dynamic Fire System"
+      self$Timestep <- Timestep
+
+      self$type <- "disturbance"
+      self$path <- path
+      self$files <- "dynamic-fire.txt" ## file won't exist yet
+
+      ## additional fields for this extension
+      self$Species_CSV_File <- Species_CSV_File
+      self$FireRegionParametersTable <- FireRegionParametersTable
+      self$InitialFireRegionsMap <- InitialFireRegionsMap
+      self$DynamicFireRegionsTable <- DynamicFireRegionsTable
+      self$FuelCurveTable <- FuelCurveTable
+      self$WindCurveTable <- WindCurveTable
+      self$FireDamageTable <- FireDamageTable
+      self$MapNames <- MapNames %||% MapNames("severity", "fire", self$path)
+      self$LogFile <- LogFile
+      self$SummaryLogFile <- SummaryLogFile
+    },
+
+    #' @description Write extension inputs to disk
+    write = function() {
+      stopifnot(
+        !is.null(self$BuildUpIndex),
+        !is.null(self$DynamicWeatherTable),
+        !is.null(self$FireDamageTable),
+        !is.null(self$FireSizesTable),
+        !is.null(self$FuelTypeTable),
+        !is.null(self$InitialFireEcoregionsMap),
+        !is.null(self$InitialWeatherDatabase),
+        !is.null(self$LogFile),
+        !is.null(self$SeasonTable),
+        !is.null(self$SeverityCalibrationFactor),
+        !is.null(self$SummaryLogFile)
+      )
+
+      writeLines(
+        c(
+          insertLandisData(private$.LandisData),
+          insertValue("Timestep", self$Timestep),
+          insertValue("EventSizeType", self$EventSizeType),
+          insertBuildUpIndex(self$BuildUpIndex),
+          insertValue("WeatherRandomizer", self$WeatherRandomizer),
+          insertFireSizesTable(self$FireSizesTable),
+          insertFile("InitialFireEcoregionsMap", self$InitialFireEcoregionsMap),
+          insertDynamicTable("DynamicEcoregionTable", self$DynamicEcoregionTable),
+          insertFile("GroundSlopeFile", self$GroundSlopeFile),
+          insertFile("UphillSlopeAzimuthMap", self$UphillSlopeAzimuthMap),
+          insertSeasonTable(self$SeasonTable),
+          insertFile("InitialWeatherDatabase", self$InitialWeatherDatabase),
+          insertDynamicTable("DynamicWeatherTable", self$DynamicWeatherTable),
+          insertFuelTypeTable(self$FuelTypeTable),
+          insertValue("SeverityCalibrationFactor", self$SeverityCalibrationFactor),
+          insertFireDamageTable(self$FireDamageTable),
+          insertFile("MapNames", self$MapNames),
+          insertFile("LogFile", self$LogFile),
+          insertFile("SummaryLogFile", self$SummaryLogFile)
+        ),
+        file.path(self$path, self$files[1])
+      )
+
+      self$add_file(self$GroundSlopeFile)
+      self$add_file(self$InitialFireEcoregionsMap)
+      if (!is.null(self$UphillSlopeAzimuthMap)) {
+        self$add_file(self$UphillSlopeAzimuthMap)
+      }
+
+      return(invisible(self))
+    }
+  ),
+
+  private = list(
+    .EventSizeType = NULL,
+    .BuildUpIndex = NULL,
+    .WeatherRandomizer = NULL,
+    .FireSizesTable = NULL,
+    .InitialFireEcoregionsMap = NULL,
+    .DynamicEcoregionTable = NULL,
+    .GroundSlopeFile = NULL,
+    .UphillSlopeAzimuthMap = NULL,
+    .SeasonTable = NULL,
+    .InitialWeatherDatabase = NULL,
+    .DynamicWeatherTable = NULL,
+    .FuelTypeTable = NULL,
+    .SeverityCalibrationFactor = NULL,
+    .FireDamageTable = NULL,
+    .MapNames = NULL,
+    .LogFile = NULL,
+    .SummaryLogFile = NULL
+  ),
+
+  active = list(
+    #' @field EventSizeType Character. One of "size_based" or "duration_based".
+    EventSizeType = function(value) {
+      if (missing(value)) {
+        return(private$.EventSizeType)
+      } else {
+        allowed <- c("size_based", "duration_based")
+        value <- tolower(value)
+        value <- value %||% allowed[1]
+
+        stopifnot(value %in% allowed)
+
+        private$.EventSizeType <- value
+      }
+    },
+
+    #' @field BuildUpIndex Logical, or character indicating "yes" or "no".
+    BuildUpIndex = function(value) {
+      if (missing(value)) {
+        return(private$.BuildUpIndex)
+      } else {
+        private$.BuildUpIndex <- yesno(value)
+      }
+    },
+
+    #' @field WeatherRandomizer  (Optional) Integer `[0,4]` controlling the strength of the
+    #' linkage between fire size/duration distribution and weather distribution.
+    WeatherRandomizer = function(value) {
+      if (missing(value)) {
+        return(private$.WeatherRandomizer)
+      } else {
+        value <- as.integer(value)
+        stopifnot(dplyr::between(value, 0L, 4L))
+
+        private$.WeatherRandomizer <- value
+      }
+    },
+
+    #' @field FireSizesTable `data.frame`.
+    FireSizesTable = function(value) {
+      if (missing(value)) {
+        return(private$.FireSizesTable)
+      } else {
+        private$.FireSizesTable <- value
+      }
+    },
+
+    #' @field InitialFireEcoregionsMap Character. Relative file path.
+    InitialFireEcoregionsMap = function(value) {
+      if (missing(value)) {
+        return(private$.InitialFireEcoregionsMap)
+      } else {
+        private$.InitialFireEcoregionsMap <- .relPath(value, self$path)
+      }
+    },
+
+    #' @field DynamicEcoregionTable `data.frame`.
+    DynamicEcoregionTable = function(value) {
+      if (missing(value)) {
+        return(private$.DynamicEcoregionTable)
+      } else {
+        private$.DynamicEcoregionTable <- value
+      }
+    },
+
+    #' @field GroundSlopeFile Character. Relative file path.
+    GroundSlopeFile = function(value) {
+      if (missing(value)) {
+        return(private$.GroundSlopeFile)
+      } else {
+        private$.GroundSlopeFile <- .relPath(value, self$path)
+      }
+    },
+
+    #' @field UphillSlopeAzimuthMap Character. Relative file path.
+    UphillSlopeAzimuthMap = function(value) {
+      if (missing(value)) {
+        return(private$.UphillSlopeAzimuthMap)
+      } else {
+        private$.UphillSlopeAzimuthMap <- .relPath(value, self$path)
+      }
+    },
+
+    #' @field SeasonTable `data.frame`.
+    SeasonTable = function(value) {
+      if (missing(value)) {
+        return(private$.SeasonTable)
+      } else {
+        private$.SeasonTable <- value
+      }
+    },
+
+    #' @field InitialWeatherDatabase Character. Relative file path.
+    InitialWeatherDatabase = function(value) {
+      if (missing(value)) {
+        return(private$.InitialWeatherDatabase)
+      } else {
+        private$.InitialWeatherDatabase <- .relPath(value, self$path)
+      }
+    },
+
+    #' @field DynamicWeatherTable `data.frame`.
+    DynamicWeatherTable = function(value) {
+      if (missing(value)) {
+        return(private$.DynamicWeatherTable)
+      } else {
+        private$.DynamicWeatherTable <- value
+      }
+    },
+
+    #' @field FuelTypeTable `data.frame`.
+    FuelTypeTable = function(value) {
+      if (missing(value)) {
+        return(private$.FuelTypeTable)
+      } else {
+        private$.FuelTypeTable <- value
+      }
+    },
+
+    #' @field SeverityCalibrationFactor Numeric.
+    SeverityCalibrationFactor = function(value) {
+      if (missing(value)) {
+        return(private$.SeverityCalibrationFactor)
+      } else {
+        stopifnot(is.numeric(value), value >= 0)
+        private$.SeverityCalibrationFactor <- value
+      }
+    },
+
+    #' @field FireDamageTable `data.frame`.
+    FireDamageTable = function(value) {
+      if (missing(value)) {
+        return(private$.FireDamageTable)
+      } else {
+        private$.FireDamageTable <- value
+      }
+    },
+
+    #' @field MapNames Character. File pattern for writing outputs to disk.
+    MapNames = function(value) {
+      if (missing(value)) {
+        return(private$.MapNames)
+      } else {
+        private$.MapNames <- value
+      }
+    },
+
+    #' @field LogFile Character. Relative file path.
+    LogFile = function(value) {
+      if (missing(value)) {
+        return(private$.LogFile)
+      } else {
+        private$.LogFile <- .relPath(value, self$path)
+      }
+    },
+
+    #' @field SummaryLogFile Character. Relative file path.
+    SummaryLogFile = function(value) {
+      if (missing(value)) {
+        return(private$.SummaryLogFile)
+      } else {
+        private$.SummaryLogFile <- .relPath(value, self$path)
+      }
+    }
   )
-
-  ## ensure *relative* file paths inserted into config files
-  dots$GroundSlopeFile <- fs::path_rel(dots$GroundSlopeFile, path)
-  dots$InitialFireEcoregionsMap <- fs::path_rel(dots$InitialFireEcoregionsMap, path)
-  dots$LogFile <- fs::path_rel(dots$LogFile, path)
-  dots$SummaryLogFile <- fs::path_rel(dots$SummaryLogFile, path)
-
-  file <- file.path(path, "dynamic-fire.txt")
-  writeLines(
-    c(
-      LandisData("Dynamic Fire System"),
-      insertTimestep(dots$Timestep),
-      insertEventSizeType(dots$EventSizeType),
-      insertBuildUpIndex(dots$BuildUpIndex),
-      insertWeatherRandomizer(dots$WeatherRandomizer),
-      insertFireSizesTable(dots$FireSizesTable),
-      insertInitialFireEcoregionsMap(dots$InitialFireEcoregionsMap),
-      insertDynamicEcoregionTable(dots$DynamicEcoregionTable),
-      insertGroundSlopeFile(dots$GroundSlopeFile),
-      insertUphillSlopeAzimuthMap(dots$UphillSlopeAzimuthMap),
-      insertSeasonsTable(dots$SeasonsTable),
-      insertInitialWeatherDatabase(dots$InitialWeatherDatabase),
-      insertDynamicWeatherTable(dots$DynamicWeatherTable),
-      insertFuelTypeTable(dots$FuelTypeTable),
-      insertSeverityCalibrationFactor(dots$SeverityCalibrationFactor),
-      insertFireDamageTable(dots$FireDamageTable),
-
-      ## TODO: rename or use R6 object for method encapsulation? already in use by another extension
-      insertMapNames(dots$MapNames),
-      insertLogFile(dots$LogFile),
-      insertSummaryLogFile(dots$SummaryLogFile)
-    ),
-    file
-  )
-
-  ext <- LandisExtension$new(name = "Dynamic Fire System", type = "disturbance", path = path)
-  ext$add_file(basename(file))
-  ext$add_file(dots$GroundSlopeFile)
-  ext$add_file(dots$InitialFireEcoregionsMap)
-  if (!is.null(dots$UphillSlopeAzimuthMap)) {
-    ext$add_file(dots$UphillSlopeAzimuthMap)
-  }
-
-  return(ext)
-}
-
-#' Specify Dynamic Fire Extension `EventSizeType`
-#'
-#' @param type  One of `"size_based"` or `"duration_based"`.
-#'
-#' @template return_insert
-#'
-#' @export
-insertEventSizeType <- function(type = NULL) {
-  allowed <- c("size_based", "duration_based")
-  type <- tolower(type)
-  type <- type %||% allowed[1]
-
-  stopifnot(type %in% allowed)
-
-  c(
-    glue::glue("EventSizeType    {type}"),
-    glue::glue("") ## add blank line after each item group
-  )
-}
+)
 
 #' Specify Dynamic Fire Extension `BuildUpIndex`
 #'
@@ -129,19 +332,6 @@ insertBuildUpIndex <- function(bui = FALSE) {
   }
 }
 
-#' Specify Dynamic Fire Extension `WeatherRandomizer`
-#'
-#' @param WeatherRandomizer  (Opitonal) Integer `[0,4]` controlling the strength of the linkage between fire size/duration distribution and weather distribution.
-#'
-#' @template return_insert
-#'
-#' @export
-insertWeatherRandomizer <- function(WeatherRandomizer = 0L) {
-  WeatherRandomizer <- as.integer(WeatherRandomizer)
-  stopifnot(WeatherRandomizer %in% 0L:4L)
-
-  insertValue("WeatherRandomizer", WeatherRandomizer)
-}
 
 #' Prepare Dynamic Fire Extension `FireSizes` Table
 #'
@@ -190,17 +380,6 @@ insertFireSizesTable <- function(df = NULL) {
     }),
     glue::glue("") ## add blank line after each item group
   )
-}
-
-#' Specify Dynamic Fire Extension `InitialFireEcoregionsMap`
-#'
-#' @template param_file
-#'
-#' @template return_insert
-#'
-#' @export
-insertInitialFireEcoregionsMap <- function(file = "fire_regions.tif") {
-  insertFile("InitialFireEcoregionsMap", file)
 }
 
 #' Prepare Dynamic Fire Extension `DynamicFireEcoregionTable`
@@ -291,17 +470,6 @@ prepInitialWeatherDatabase <- function(df, path) {
   return(file)
 }
 
-#' Specify the Dynamic Fire Extension's Initial Weather Database
-#'
-#' @template param_file
-#'
-#' @template return_insert
-#'
-#' @export
-insertInitialWeatherDatabase <- function(file) {
-  insertFile("InitialWeatherDatabase", file)
-}
-
 #' Prepare Dynamic Fire Extension `DynamicWeatherTable`
 #'
 #' @param year Integer vector of simulation years.
@@ -315,12 +483,6 @@ prepDynamicWeatherTable <- function(year, filename) {
   stopifnot(length(year) == length(filename))
 
   data.frame(Year = year, FileName = filename)
-}
-
-#' @export
-#' @rdname insertDynamicTable
-insertDynamicWeatherTable <- function(df = NULL) {
-  insertDynamicTable("DynamicWeatherTable", df)
 }
 
 #' Specify Dynamic Fire Extension `FuelTypeTable`
@@ -392,17 +554,4 @@ insertFuelTypeTable <- function(df = NULL) {
     }),
     glue::glue("") ## add blank line after each item group
   )
-}
-
-#' Specify `SeverityCalibrationFactor`
-#'
-#' @param scf Numeric specifying the Severity Calibration Factor
-#'
-#' @template return_insert
-#'
-#' @export
-insertSeverityCalibrationFactor <- function(scf) {
-  stopifnot(is.numeric(scf), scf >= 0)
-
-  insertValue("SeverityCalibrationFactor", scf)
 }

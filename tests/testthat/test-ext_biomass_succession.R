@@ -93,7 +93,7 @@ testthat::test_that("Biomass Succession inputs are properly created", {
 
   sfl_df <- sufficientLight
 
-  ext_bs <- BiomassSuccessionInput(
+  ext_bs <- BiomassSuccession$new(
     path = tmp_pth,
     CalibrateMode = FALSE,
     ClimateConfigFile = file.path(cc$path, cc$files[1]),
@@ -151,7 +151,10 @@ testthat::test_that("Biomass Succession inputs are properly created", {
   scenario$replicate(n = 1)
 
   testthat::expect_true(dir.exists(paste0(scenario$path, "_rep04")))
-  testthat::expect_true(all(file.exists(file.path(paste0(scenario$path, "_rep04"), scenario$files))))
+  testthat::expect_true(all(file.exists(file.path(
+    paste0(scenario$path, "_rep04"),
+    scenario$files
+  ))))
 
   ## run the landis scenario -------------------------------------------------------------------
   testthat::skip_if_not(nzchar(landis_find()))

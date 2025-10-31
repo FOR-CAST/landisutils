@@ -98,14 +98,14 @@ scenario <- function(name = NULL, extensions = NULL, climate_config = NULL, path
   file <- file.path(path, glue::glue("{name}.txt"))
   writeLines(
     c(
-      LandisData("Scenario"),
-      insertDuration(dots$Duration),
+      insertLandisData("Scenario"),
+      insertValue("Duration", dots$Duration),
       insertSpeciesDataFile(dots$SpeciesInputFile, core = TRUE),
       insertEcoregionsFiles(dots$EcoregionsFiles),
-      insertCellLength(dots$CellLength), ## TODO: get this from data
+      insertValue("CellLength", dots$CellLength), ## TODO: get this from data
       insertSuccessionExtensions(succession_exts),
       insertDisturbanceExtensions(disturbance_exts),
-      insertDisturbancesRandomOrder(dots$DisturbancesRandomOrder),
+      insertValue("DisturbancesRandomOrder", yesno(dots$DisturbancesRandomOrder)),
       insertOtherExtensions(other_exts),
       insertRandomNumberSeed(dots$RandomNumberSeed)
     ),
@@ -120,28 +120,6 @@ scenario <- function(name = NULL, extensions = NULL, climate_config = NULL, path
   scenario$add_file(scenario$list_files(full.names = FALSE)) ## extensions' files
 
   return(scenario)
-}
-
-#' Specify Scenario `CellLength`
-#'
-#' @param cell_length integer specifying the length of a cell's edge in the ecoregions map
-#'
-#' @template return_insert
-#'
-#' @export
-insertCellLength <- function(cell_length) {
-  insertValue("CellLength", cell_length)
-}
-
-#' Specify Scenario Duration
-#'
-#' @param duration integer specifying the number of years of simulation
-#'
-#' @template return_insert
-#'
-#' @export
-insertDuration <- function(duration) {
-  insertValue("Duration", duration)
 }
 
 #' Specify Scenario Extensions Tables
@@ -169,7 +147,6 @@ insertDuration <- function(duration) {
 #' ) |>
 #'   insertOtherExtensions()
 #'
-#' @export
 #' @rdname insertExtensions
 insertSuccessionExtensions <- function(exts = NULL) {
   stopifnot(
@@ -186,7 +163,6 @@ insertSuccessionExtensions <- function(exts = NULL) {
   )
 }
 
-#' @export
 #' @rdname insertExtensions
 insertDisturbanceExtensions <- function(exts = NULL) {
   if (!is.null(exts) && !is.null(names(exts))) {
@@ -208,7 +184,6 @@ insertDisturbanceExtensions <- function(exts = NULL) {
   }
 }
 
-#' @export
 #' @rdname insertExtensions
 insertOtherExtensions <- function(exts = NULL) {
   if (!is.null(exts) && !is.null(names(exts))) {
@@ -228,25 +203,6 @@ insertOtherExtensions <- function(exts = NULL) {
       glue::glue("") ## add blank line after each item group
     )
   }
-}
-
-#' Specify Scenario `DisturbanceRandomOrder`
-#'
-#' Optional, although if not specified the default is `FALSE`.
-#' (LANDIS-II runs disturbance extensions in the order specified).
-#'
-#' @param x Logical. Should disturbances be applied in a random order?
-#'
-#' @template return_file
-#'
-#' @export
-insertDisturbancesRandomOrder <- function(x) {
-  yesno <- isTRUE(x) || tolower(x) %in% c("y", "yes")
-
-  c(
-    glue::glue("DisturbancesRandomOrder    no  << optional parameter"),
-    glue::glue("") ## add blank line after each item group
-  )
 }
 
 #' Specify Scenario `RandomNumberSeed`

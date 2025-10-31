@@ -23,8 +23,12 @@ prepClimateConfig <- function(path, ...) {
   dots <- list(...)
 
   allowedTimeSeries <- c(
-    "Daily_AverageAllYears", "Daily_RandomYears", "Daily_SequencedYears",
-    "Monthly_AverageAllYears", "Monthly_RandomYears", "Monthly_SequencedYears"
+    "Daily_AverageAllYears",
+    "Daily_RandomYears",
+    "Daily_SequencedYears",
+    "Monthly_AverageAllYears",
+    "Monthly_RandomYears",
+    "Monthly_SequencedYears"
   )
 
   stopifnot(
@@ -34,8 +38,8 @@ prepClimateConfig <- function(path, ...) {
     dots$SpinUpClimateTimeSeries %in% allowedTimeSeries
   )
 
-  dots$GenerateClimateOutputFiles <- dots$GenerateClimateOutputFiles %||% "yes"
-  dots$UsingFireClimate <- dots$UsingFireClimate %||% "no"
+  dots$GenerateClimateOutputFiles <- yesno(dots$GenerateClimateOutputFiles %||% "yes")
+  dots$UsingFireClimate <- yesno(dots$UsingFireClimate %||% "no")
 
   dots$FineFuelMoistureCode <- dots$FineFuelMoistureCode %||% 100 ## 85
   dots$DuffMoistureCode <- dots$DuffMoistureCode %||% 100 ## 6
@@ -54,7 +58,7 @@ prepClimateConfig <- function(path, ...) {
   file <- file.path(path, "climate-config.txt")
   writeLines(
     c(
-      LandisData("Climate Config"),
+      insertLandisData("Climate Config"),
       glue::glue("ClimateTimeSeries           {dots$ClimateTimeSeries}"),
       glue::glue("ClimateFile                 {dots$ClimateFile}"),
       glue::glue(""),
@@ -62,14 +66,16 @@ prepClimateConfig <- function(path, ...) {
       glue::glue("SpinUpClimateFile           {dots$SpinUpClimateFile}"),
       glue::glue(""),
       glue::glue("GenerateClimateOutputFiles  {dots$GenerateClimateOutputFiles}"),
-      glue::glue("UsingFireClimate            {dots$UsingFireClimate}  << Optional parameter; default is no."),
+      glue::glue(
+        "UsingFireClimate            {dots$UsingFireClimate}  << Optional parameter; default is no."
+      ),
       glue::glue(""),
       glue::glue(">> FineFuelMoistureCode     {dots$FineFuelMoistureCode}"), ## TODO: uncomment
-      glue::glue(">> DuffMoistureCode         {dots$DuffMoistureCode}"),     ## TODO: uncomment
-      glue::glue(">> DroughtCode              {dots$DroughtCode}"),          ## TODO: uncomment
-      glue::glue(">> FirstDayFire             {dots$FirstDayFire}"),         ## TODO: uncomment
-      glue::glue(">> LastDayFire              {dots$LastDayFire}"),          ## TODO: uncomment
-      glue::glue(">> AtmosphericPressure      {dots$AtmosphericPressure}"),  ## TODO: uncomment
+      glue::glue(">> DuffMoistureCode         {dots$DuffMoistureCode}"), ## TODO: uncomment
+      glue::glue(">> DroughtCode              {dots$DroughtCode}"), ## TODO: uncomment
+      glue::glue(">> FirstDayFire             {dots$FirstDayFire}"), ## TODO: uncomment
+      glue::glue(">> LastDayFire              {dots$LastDayFire}"), ## TODO: uncomment
+      glue::glue(">> AtmosphericPressure      {dots$AtmosphericPressure}"), ## TODO: uncomment
       glue::glue("") ## add blank line after each item group
     ),
     file

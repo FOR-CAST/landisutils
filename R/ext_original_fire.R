@@ -1,79 +1,204 @@
-#' Create Original Fire Input File
+#' Original Fire Extension
 #'
-#' Follows the Original Fire User Guide.
+#' @include ext_utils.R
 #'
-#' @template param_path
-#'
-#' @param ... arguments passed to other functions:
-#'   - `DynamicFireRegionsTable` (optional);
-#'   - `FireRegionParametersTable`;
-#'   - `FireDamageTable`;
-#'   - `FuelCurveTable`;
-#'   - `InitialFireRegionsMap`;
-#'   - `LogFile`;
-#'   - `MapNames`;
-#'   - `Species_CSV_File`;
-#'   - `SummaryLogFile`;
-#'   - `Timestep`;
-#'   - `WindCurveTable` (optional);
+#' @references LANDIS-II Original Fire v5.0 Extension User Guide
+#' <https://github.com/LANDIS-II-Foundation/Extension-Base-Fire/blob/master/docs/LANDIS-II%20Original%20Fire%20v5.0%20User%20Guide.pdf>
 #'
 #' @export
-#' @aliases BaseFireInput
-OriginalFireInput <- function(path, ...) {
-  stopifnot(!is.null(path))
+OriginalFire <- R6Class(
+  "OriginalFire",
+  inherit = LandisExtension,
+  public = list(
+    #' @param path Character. Directory path.
+    #' @param Timestep Integer.
+    #' @param Species_CSV_File Character. Relative file path.
+    #' @param FireRegionParametersTable `data.frame`.
+    #' @param InitialFireRegionsMap `SpatRaster`.
+    #' @param DynamicFireRegionsTable `data.frame`.
+    #' @param FuelCurveTable `data.frame`.
+    #' @param WindCurveTable `data.frame`.
+    #' @param FireDamageTable `data.frame`.
+    #' @param MapNames Character. File pattern for writing outputs to disk.
+    #' @param LogFile Character. Relative file path.
+    #' @param SummaryLogFile Character. Relative file path.
+    initialize = function(
+      path,
+      Timestep = NULL,
+      Species_CSV_File = NULL,
+      FireRegionParametersTable = NULL,
+      InitialFireRegionsMap = NULL,
+      DynamicFireRegionsTable = NULL,
+      FuelCurveTable = NULL,
+      WindCurveTable = NULL,
+      FireDamageTable = NULL,
+      MapNames = NULL,
+      LogFile = "fire/log.csv",
+      SummaryLogFile = "fire/summary-log.csv"
+    ) {
+      stopifnot(!is.null(path))
 
-  dots <- list(...)
-  stopifnot(
-    !is.null(dots$FireRegionParametersTable),
-    !is.null(dots$InitialFireRegionsMap),
-    !is.null(dots$LogFile),
-    !is.null(dots$Species_CSV_File),
-    !is.null(dots$SummaryLogFile)
+      ## LandisExtension fields
+      private$.LandisData <- "Original Fire"
+      self$Timestep <- Timestep
+
+      self$type <- "disturbance"
+      self$path <- path
+      self$files <- "original-fire.txt" ## file won't exist yet
+
+      ## additional fields for this extension
+      self$Species_CSV_File <- Species_CSV_File
+      self$FireRegionParametersTable <- FireRegionParametersTable
+      self$InitialFireRegionsMap <- InitialFireRegionsMap
+      self$DynamicFireRegionsTable <- DynamicFireRegionsTable
+      self$FuelCurveTable <- FuelCurveTable
+      self$WindCurveTable <- WindCurveTable
+      self$FireDamageTable <- FireDamageTable
+      self$MapNames <- MapNames %||% MapNames("severity", "fire", self$path)
+      self$LogFile <- LogFile
+      self$SummaryLogFile <- SummaryLogFile
+    },
+
+    #' @description Write extension inputs to disk
+    write = function() {
+      stopifnot(
+        !is.null(self$FireRegionParametersTable),
+        !is.null(self$InitialFireRegionsMap),
+        !is.null(self$LogFile),
+        !is.null(self$Species_CSV_File),
+        !is.null(self$SummaryLogFile)
+      )
+
+      writeLines(
+        c(
+          insertLandisData(private$.LandisData),
+          insertValue("Timestep", self$Timestep),
+          insertFile("Species_CSV_File", self$Species_CSV_File),
+          insertFireRegionParametersTable(self$FireRegionParametersTable),
+          insertFile("InitialFireRegionsMap", self$InitialFireRegionsMap),
+          insertDynamicTable("DynamicFireRegionsTable", self$DynamicFireRegionsTable),
+          insertFuelCurveTable(self$FuelCurveTable),
+          insertWindCurveTable(self$WindCurveTable),
+          insertFireDamageTable(self$FireDamageTable),
+          insertFile("MapNames", self$MapNames),
+          insertFile("LogFile", self$LogFile),
+          insertFile("SummaryLogFile", self$SummaryLogFile)
+        ),
+        file.path(self$path, self$files[1])
+      )
+
+      self$add_file(self$InitialFireRegionsMap)
+      self$add_file(self$Species_CSV_File)
+
+      return(invisible(self))
+    }
+  ),
+
+  private = list(
+    .Species_CSV_File = NULL,
+    .FireRegionParametersTable = NULL,
+    .InitialFireRegionsMap = NULL,
+    .DynamicFireRegionsTable = NULL,
+    .FuelCurveTable = NULL,
+    .WindCurveTable = NULL,
+    .FireDamageTable = NULL,
+    .MapNames = NULL,
+    .LogFile = NULL,
+    .SummaryLogFile = NULL
+  ),
+
+  active = list(
+    #' @field Species_CSV_File Character. Relative file path.
+    Species_CSV_File = function(value) {
+      if (missing(value)) {
+        return(private$.Species_CSV_File)
+      } else {
+        private$.Species_CSV_File <- .relPath(value, self$path)
+      }
+    },
+
+    #' @field FireRegionParametersTable `data.frame`.
+    FireRegionParametersTable = function(value) {
+      if (missing(value)) {
+        return(private$.FireRegionParametersTable)
+      } else {
+        private$.FireRegionParametersTable <- value
+      }
+    },
+
+    #' @field InitialFireRegionsMap Character. Relative file path.
+    InitialFireRegionsMap = function(value) {
+      if (missing(value)) {
+        return(private$.InitialFireRegionsMap)
+      } else {
+        private$.InitialFireRegionsMap <- .relPath(value, self$path)
+      }
+    },
+
+    #' @field DynamicFireRegionsTable `data.frame`.
+    DynamicFireRegionsTable = function(value) {
+      if (missing(value)) {
+        return(private$.DynamicFireRegionsTable)
+      } else {
+        private$.DynamicFireRegionsTable <- value
+      }
+    },
+
+    #' @field FuelCurveTable `data.frame`.
+    FuelCurveTable = function(value) {
+      if (missing(value)) {
+        return(private$.FuelCurveTable)
+      } else {
+        private$.FuelCurveTable <- value
+      }
+    },
+
+    #' @field WindCurveTable `data.frame`.
+    WindCurveTable = function(value) {
+      if (missing(value)) {
+        return(private$.WindCurveTable)
+      } else {
+        private$.WindCurveTable <- value
+      }
+    },
+
+    #' @field FireDamageTable `data.frame`.
+    FireDamageTable = function(value) {
+      if (missing(value)) {
+        return(private$.FireDamageTable)
+      } else {
+        private$.FireDamageTable <- value
+      }
+    },
+
+    #' @field MapNames Character. File pattern for writing outputs to disk.
+    MapNames = function(value) {
+      if (missing(value)) {
+        return(private$.MapNames)
+      } else {
+        private$.MapNames <- value
+      }
+    },
+
+    #' @field LogFile Character. Relative file path.
+    LogFile = function(value) {
+      if (missing(value)) {
+        return(private$.LogFile)
+      } else {
+        private$.LogFile <- .relPath(value, self$path)
+      }
+    },
+
+    #' @field SummaryLogFile Character. Relative file path.
+    SummaryLogFile = function(value) {
+      if (missing(value)) {
+        return(private$.SummaryLogFile)
+      } else {
+        private$.SummaryLogFile <- .relPath(value, self$path)
+      }
+    }
   )
-
-  ## ensure *relative* file paths inserted into config files
-  dots$InitialFireRegionsMap <- fs::path_rel(dots$InitialFireRegionsMap, path)
-  dots$LogFile <- fs::path_rel(dots$LogFile, path)
-  dots$Species_CSV_File <- fs::path_rel(dots$Species_CSV_File, path)
-  dots$SummaryLogFile <- fs::path_rel(dots$SummaryLogFile, path)
-
-  file <- file.path(path, "original-fire.txt")
-  writeLines(
-    c(
-      LandisData("Original Fire"),
-      insertTimestep(dots$Timestep),
-      insertSpecies_CSV_File(dots$Species_CSV_File),
-      insertFireRegionParametersTable(dots$FireRegionParametersTable),
-      insertInitialFireRegionsMap(dots$InitialFireRegionsMap),
-      insertDynamicFireRegionsTable(dots$DynamicFireRegionsTable),
-      insertFuelCurveTable(dots$FuelCurveTable),
-      insertWindCurveTable(dots$WindCurveTable),
-      insertFireDamageTable(dots$FireDamageTable),
-      insertMapNames(path),
-      insertLogFile(dots$LogFile),
-      insertSummaryLogFile(dots$SummaryLogFile)
-    ),
-    file
-  )
-
-  ext <- LandisExtension$new(name = "Original Fire", type = "disturbance", path = path)
-  ext$add_file(basename(file))
-  ext$add_file(dots$InitialFireRegionsMap)
-  ext$add_file(dots$Species_CSV_File)
-
-  return(ext)
-}
-
-#' Specify Original Fire Extension `Species_CSV_File`
-#'
-#' @template param_file
-#'
-#' @template return_insert
-#'
-#' @export
-insertSpecies_CSV_File <- function(file) {
-  insertFile("Species_CSV_File", file)
-}
+)
 
 #' Prepare Original Fire Extension `FireRegionParameters` Table
 #'
@@ -114,7 +239,6 @@ prepFireRegionParametersTable <- function(sf) {
 #'
 #' @template return_insert
 #'
-#' @export
 insertFireRegionParametersTable <- function(df) {
   c(
     glue::glue(">> Fire Region Parameters"),
@@ -151,24 +275,12 @@ prepInitialFireRegionsMap <- function(r, file = "fire-regions-map.tif") {
   return(file)
 }
 
-#' Specify `InitialFireRegionsMap` file
-#'
-#' @template param_file
-#'
-#' @template return_insert
-#'
-#' @export
-insertInitialFireRegionsMap <- function(file) {
-  insertFile("InitialFireRegionsMap", file)
-}
-
 #' Specify Original Fire `FuelCurveTable`
 #'
 #' @param df data.frame
 #'
 #' @template return_insert
 #'
-#' @export
 insertFuelCurveTable <- function(df) {
   c(
     glue::glue("FuelCurveTable"),
@@ -187,7 +299,6 @@ insertFuelCurveTable <- function(df) {
 #'
 #' @template return_insert
 #'
-#' @export
 insertWindCurveTable <- function(df) {
   c(
     glue::glue("WindCurveTable"),
@@ -200,11 +311,4 @@ insertWindCurveTable <- function(df) {
     },
     glue::glue("") ## add blank line after each item group
   )
-}
-
-#' Calibrate Original Fire
-#'
-#' @export
-calibrate_fire <- function() {
-  ## TODO
 }

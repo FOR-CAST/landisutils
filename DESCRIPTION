@@ -56,3 +56,28 @@ Remotes:
     mikejohnson51/zonal
 Config/testthat/edition: 3
 Config/testthat/parallel: true
+Collate: 
+    'LandisClimateConfig.R'
+    'LandisExtension.R'
+    'LandisScenario.R'
+    'calibrate_original_fire.R'
+    'climate.R'
+    'climate_data.R'
+    'data.R'
+    'ecoregions.R'
+    'ext_utils.R'
+    'ext_biomass_succession.R'
+    'ext_dynamic_fire.R'
+    'ext_dynamic_fuel.R'
+    'ext_original_fire.R'
+    'ext_output_biomass.R'
+    'ext_output_biomass_age.R'
+    'ext_output_cohort_stats.R'
+    'ext_output_max_species_age.R'
+    'initial_communities.R'
+    'landis.R'
+    'landisutils-package.R'
+    'scenarios.R'
+    'species.R'
+    'utils.R'
+    'zzz.R'
