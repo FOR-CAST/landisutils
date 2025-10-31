@@ -52,7 +52,7 @@ testthat::test_that("Original Fire (and Biomass Succession) inputs are properly 
   ifrm_file <- terra::rasterize(fireRegimePolys, standAgeMap, field = "PolyID", background = 0) |>
     prepInitialFireRegionsMap(file = file.path(tmp_pth, "fire-regions-map.tif"))
 
-  log_file <- file.path(tmp_pth, "fire/fire/log.csv")
+  log_file <- file.path(tmp_pth, "fire/log.csv")
   sum_log_file <- file.path(tmp_pth, "fire/summary-log.csv")
 
   ext_of <- OriginalFire$new(
@@ -69,6 +69,8 @@ testthat::test_that("Original Fire (and Biomass Succession) inputs are properly 
     Timestep = 1,
     WindCurveTable = NULL
   )
+
+  ext_of$write()
 
   testthat::expect_true(all(file.exists(file.path(tmp_pth, ext_of$files))))
 
