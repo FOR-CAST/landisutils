@@ -57,6 +57,7 @@ NULL
 #' @importFrom terra nlyr
 #' @importFrom terra rast
 #' @importFrom terra res
+#' @importFrom terra terrain
 #' @importFrom terra values
 #' @importFrom terra values<-
 #' @importFrom terra writeRaster

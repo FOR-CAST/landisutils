@@ -1,4 +1,6 @@
 testthat::test_that("Dynamic Fuel & Fire inputs are properly created", {
+  skip("incomplete") ## TODO
+  testthat::skip_if_not_installed("elevatr")
   testthat::skip_if_not_installed("purrr")
   testthat::skip_if_not_installed("withr")
   testthat::skip_if_not_installed("zonal")
@@ -25,49 +27,70 @@ testthat::test_that("Dynamic Fuel & Fire inputs are properly created", {
 
   ## prepare landis input files ----------------------------------------------------------------
 
-  tmp_pth <- withr::local_tempdir("test_Dynamic_Fire_")
+  tmp_pth <- withr::local_tempdir("test_Dynamic_Fire_Fuels_")
 
-  fire_spp_csv_file <- prepSpeciesData(species, tmp_pth, type = "fire")
-
-  frp_table <- prepFireRegionParametersTable(fireRegimePolys)
-
-  fire_dmg_df <- data.frame(
-    CohortAgePercentLongevity = c(20, 50, 85, 100),
-    FireSeverityMinusFireTolerance = c(-2, -1, 0, 1)
-  )
-
-  ## below is e.g., boreal (stand replacing fires)
-  fuel_crv_df <- data.frame(
-    FireRegionName = frp_table$FireRegionName,
-    S1 = rep(-1, nrow(frp_table)),
-    S2 = rep(-1, nrow(frp_table)),
-    S3 = rep(-1, nrow(frp_table)),
-    S4 = rep(-1, nrow(frp_table)),
-    S5 = rep(15, nrow(frp_table))
-  )
+  fs_table <- prepFireSizesTable() ## TODO
 
   ifrm_file <- terra::rasterize(fireRegimePolys, standAgeMap, field = "PolyID", background = 0) |>
     prepInitialFireRegionsMap(file = file.path(tmp_pth, "fire-regions-map.tif"))
 
-  log_file <- file.path(tmp_pth, "original-fire/fire/log.csv")
-  sum_log_file <- file.path(tmp_pth, "original-fire/fire/summary-log.csv")
+  der_table <- prepDynamicEcoregionTable() ## TODO
 
-  ext_of <- OriginalFire$new(
+  gs_file <- prepGroundSlopeFile(ecoregionMap, path = tmp_pth)
+  usa_file <- prepUphillAzimuthMap(ecoregionMap, path = tmp_pth)
+
+  szn_table <- TODO ## TODO
+
+  iwdb_file <- prepInitialWeatherDatabase() ## TODO
+
+  log_file <- file.path(tmp_pth, "fire/log.csv")
+  sum_log_file <- file.path(tmp_pth, "fire/summary-log.csv")
+
+  ext_dfire <- DynamicFire$new(
     path = tmp_pth,
-
-    DynamicFireRegionsTable = NULL,
-    FireRegionParametersTable = frp_table,
-    FireDamageTable = fire_dmg_df,
-    FuelCurveTable = fuel_crv_df,
-    InitialFireRegionsMap = ifrm_file,
+    Timestep = 10,
+    EventSizeType = NULL,
+    BuildUpIndex = "yes",
+    WeatherRandomizer = 0L,
+    FireSizesTable = fs_table,
+    InitialFireEcoregionsMap = ifrm_file,
+    DynamicEcoregionTable = NULL, # not used
+    GroundSlopeFile = gs_file,
+    UphillSlopeAzimuthMap = usa_file,
+    SeasonTable = szn_table,
+    InitialWeatherDatabase = NULL,
+    DynamicWeatherTable = NULL, # not used
+    FuelTypeTable = defaultFuelTypeTable(),
+    SeverityCalibrationFactor = 1.0,
+    FireDamageTable = defaultFireDamageTable(),
+    MapNames = NULL, # use default
     LogFile = log_file,
-    Species_CSV_File = fire_spp_csv_file,
-    SummaryLogFile = sum_log_file,
-    Timestep = 1,
-    WindCurveTable = NULL
+    SummaryLogFile = sum_log_file
   )
 
+  ext_dfire$write()
+
   testthat::expect_true(all(file.exists(file.path(tmp_pth, ext_of$files))))
+
+  spp_fuel_coeffs <- data.frame(Species = c(), FuelCoefficient = c()) ## TODO
+
+  fuel_types <- data.frame() ## TODO
+
+  disturb_conv <- data.frame() ## TODO
+
+  ext_dfuel <- DynamicFuels$new(
+    path = tmp_pth,
+    Timestep = 10,
+    SpeciesFuelCoefficients = spp_fuel_coeffs,
+    HardwoodMaximum = 0L,
+    DeadFirMaxAge = 15L, ## not needed w/o BDA extension
+    FuelTypes = fuel_types,
+    EcoregionTable = data.frame(FuelType = integer(0), Ecoregion = character(0)),
+    DisturbanceConversionTable = disturb_conv,
+    MapFileNames = NULL, ## use default
+    PctConiferMapName = NULL, ## use default
+    PctDeadFirMapName = NULL ## use default
+  )
 
   withr::deferred_run()
 })

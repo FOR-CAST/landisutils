@@ -4,24 +4,14 @@
 \alias{prepFireSizesTable}
 \title{Prepare Dynamic Fire Extension \code{FireSizes} Table}
 \usage{
-prepFireSizesTable(year, filename)
-
-prepFireSizesTable(year, filename)
+prepFireSizesTable(df = NULL)
 }
 \arguments{
-\item{year}{Integer vector of simulation years}
-
-\item{filename}{Character vector of filenames corresponding to each of \code{year}.}
-
 \item{df}{data.frame corresponding to \code{FireSizes} table}
 }
 \value{
 data.frame
-
-data.frame
 }
 \description{
 Prepare Dynamic Fire Extension \code{FireSizes} Table
-
-Prepare Dynamic Fire Extension \code{DynamicFireEcoregionTable}
 }

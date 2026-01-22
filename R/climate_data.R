@@ -10,8 +10,10 @@
 #'
 #' @export
 #' @rdname proj_forest_data
-proj_nrcan_lcc <- paste("+proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95",
-  "+x_0=0 +y_0=0 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0")
+proj_nrcan_lcc <- paste(
+  "+proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95",
+  "+x_0=0 +y_0=0 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0"
+)
 
 #' PROJ4 strings for climate data
 #'
@@ -19,8 +21,10 @@ proj_nrcan_lcc <- paste("+proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95",
 #'
 #' @export
 #' @rdname proj_climate_data
-proj_daymet <- paste("+proj=lcc +lat_1=25 +lat_2=60 +lat_0=42.5 +lon_0=-100",
-  "+x_0=0 +y_0=0 +ellps=WGS84 +units=m +no_defs")
+proj_daymet <- paste(
+  "+proj=lcc +lat_1=25 +lat_2=60 +lat_0=42.5 +lon_0=-100",
+  "+x_0=0 +y_0=0 +ellps=WGS84 +units=m +no_defs"
+)
 
 #' @keywords internal
 var_landis <- function(var) {
@@ -37,26 +41,26 @@ var_landis <- function(var) {
   ##       (note this is opposite of the typical convention used by met stations).
   switch(
     var,
-    aet = "AET",              ## TerraClim AET
-    co2 = "CO2",              ## TODO: CO2
-    ndep = "Ndep",            ## TODO: nitrogen deposition
-    ozone = "ozone",          ## TODO: ozone (O3)
-    par = "PAR",              ## TODO:
-    pet = "PET",              ## TODO: potential evapotranspiration
-    prcp = "precip",          ## DAYMET: preciptation
-    ppt = "precip",           ## TerraClim: preciptation
-    rh = "RH",                ## TODO: rel humidity
-    rmax = "maxRH",           ## TODO: max rel humidity
-    rmin = "minRH",           ## TODO: min rel humidity
-    sh = "SH",                ## TODO: specific humidity
-    srad = "SWR",             ## DAYMET shortwave radiation
-    temp = "temp",            ## TODO: mean temperature
-    tmax = "Tmax",            ## DAYMET max temperature
-    tmin = "Tmin",            ## DAYMET min temperature
+    aet = "AET", ## TerraClim AET
+    co2 = "CO2", ## TODO: CO2
+    ndep = "Ndep", ## TODO: nitrogen deposition
+    ozone = "ozone", ## TODO: ozone (O3)
+    par = "PAR", ## TODO:
+    pet = "PET", ## TODO: potential evapotranspiration
+    prcp = "precip", ## DAYMET: preciptation
+    ppt = "precip", ## TerraClim: preciptation
+    rh = "RH", ## TODO: rel humidity
+    rmax = "maxRH", ## TODO: max rel humidity
+    rmin = "minRH", ## TODO: min rel humidity
+    sh = "SH", ## TODO: specific humidity
+    srad = "SWR", ## DAYMET shortwave radiation
+    temp = "temp", ## TODO: mean temperature
+    tmax = "Tmax", ## DAYMET max temperature
+    tmin = "Tmin", ## DAYMET min temperature
     wnddir = "windDirection", ## TODO: wind 'from' direction
-    ws = "windSpeed",         ## TerraClim wind speed
-    wndNrt = "windNorthing",  ## TODO: wind northing
-    wndEst = "windEasting",   ## TODO: wind easting
+    ws = "windSpeed", ## TerraClim wind speed
+    wndNrt = "windNorthing", ## TODO: wind northing
+    wndEst = "windEasting", ## TODO: wind easting
 
     stop(glue::glue("unknown mapping for climate variable {var}"))
   )
@@ -91,10 +95,7 @@ var_landis <- function(var) {
       ## convert prcp from mm to cm
       Value = dplyr::case_when(var == "prcp" ~ Value / 10, .default = Value)
     ) |>
-    tidyr::pivot_wider(
-      names_from = all_of(id),
-      values_from = "Value"
-    ) |>
+    tidyr::pivot_wider(names_from = all_of(id), values_from = "Value") |>
     dplyr::mutate(
       Year = as.integer(Year),
       Month = as.integer(Month),
@@ -102,10 +103,7 @@ var_landis <- function(var) {
       Variable = var_landis(var),
       .after = "Day"
     ) |>
-    reproducible::Cache(
-      cachePath = .climateCachePath(),
-      userTags = c(var, year)
-    )
+    reproducible::Cache(cachePath = .climateCachePath(), userTags = c(var, year))
 }
 
 .prep_daily_weather_var <- function(var, years, studyArea, id) {
@@ -200,12 +198,7 @@ prep_daily_weather <- function(vars = NULL, years = NULL, studyArea = NULL, id =
     requireNamespace("zonal", quietly = TRUE)
   )
 
-  stopifnot(
-    !is.null(vars),
-    !is.null(studyArea),
-    !is.null(id),
-    !is.null(years)
-  )
+  stopifnot(!is.null(vars), !is.null(studyArea), !is.null(id), !is.null(years))
 
   df <- purrr::map(
     .x = vars,
@@ -247,10 +240,7 @@ prep_daily_weather <- function(vars = NULL, years = NULL, studyArea = NULL, id =
       ## convert ppt from mm to cm
       Value = dplyr::case_when(var == "ppt" ~ Value / 10, .default = Value)
     ) |>
-    tidyr::pivot_wider(
-      names_from = all_of(id),
-      values_from = "Value"
-    ) |>
+    tidyr::pivot_wider(names_from = all_of(id), values_from = "Value") |>
     dplyr::mutate(
       Year = as.integer(Year),
       Month = as.integer(Month),
@@ -258,10 +248,7 @@ prep_daily_weather <- function(vars = NULL, years = NULL, studyArea = NULL, id =
       Variable = var_landis(var),
       .after = "Month"
     ) |>
-    reproducible::Cache(
-      cachePath = .climateCachePath(),
-      userTags = c(var, year)
-    )
+    reproducible::Cache(cachePath = .climateCachePath(), userTags = c(var, year))
 }
 
 .prep_monthly_weather_var <- function(var, years, studyArea, id) {
@@ -286,12 +273,7 @@ prep_monthly_weather <- function(vars = NULL, years = NULL, studyArea = NULL, id
     requireNamespace("zonal", quietly = TRUE)
   )
 
-  stopifnot(
-    !is.null(vars),
-    !is.null(studyArea),
-    !is.null(id),
-    !is.null(years)
-  )
+  stopifnot(!is.null(vars), !is.null(studyArea), !is.null(id), !is.null(years))
 
   df <- purrr::map(
     .x = vars,

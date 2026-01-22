@@ -34,20 +34,10 @@ testthat::test_that("Original Fire (and Biomass Succession) inputs are properly 
 
   frp_table <- prepFireRegionParametersTable(fireRegimePolys)
 
-  fire_dmg_df <- data.frame(
-    CohortAgePercentLongevity = c(20, 50, 85, 100),
-    FireSeverityMinusFireTolerance = c(-2, -1, 0, 1)
-  )
+  fire_dmg_df <- defaultFireDamageTable()
 
   ## below is e.g., boreal (stand replacing fires)
-  fuel_crv_df <- data.frame(
-    FireRegionName = frp_table$FireRegionName,
-    S1 = rep(-1, nrow(frp_table)),
-    S2 = rep(-1, nrow(frp_table)),
-    S3 = rep(-1, nrow(frp_table)),
-    S4 = rep(-1, nrow(frp_table)),
-    S5 = rep(15, nrow(frp_table))
-  )
+  fuel_crv_df <- defaultFuelCurveTable(frp_table)
 
   ifrm_file <- terra::rasterize(fireRegimePolys, standAgeMap, field = "PolyID", background = 0) |>
     prepInitialFireRegionsMap(file = file.path(tmp_pth, "fire-regions-map.tif"))

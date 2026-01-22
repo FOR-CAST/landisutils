@@ -4,12 +4,14 @@
 \alias{prepInitialWeatherDatabase}
 \title{Create Dynamic Fire Extension's Initial Weather Database}
 \usage{
-prepInitialWeatherDatabase(df, path)
+prepInitialWeatherDatabase(df, path, filename = "initial-weather-database.csv")
 }
 \arguments{
 \item{df}{data.frame}
 
 \item{path}{Character. Path specifying a directory to use for the scenario runs.}
+
+\item{filename}{Character specifying the output filename.}
 }
 \value{
 Character string(s) specifying suitable LANDIS-II input file(s),

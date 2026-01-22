@@ -275,6 +275,27 @@ prepInitialFireRegionsMap <- function(r, file = "fire-regions-map.tif") {
   return(file)
 }
 
+#' Create sample Fuel Curve Table
+#'
+#' @param frp `data.frame` corresponding to `FireRegionParametersTable`
+#'   (see [prepFireRegionParametersTable()]).
+#'
+#' @returns `data.frame` with 5 columns:
+#'   `FireRegimeName`, `S1`, `S2`, `S3`, `S4`, `S5`.
+#'
+#' @export
+defaultFuelCurveTable <- function(frp) {
+  n <- nrow(frp)
+  data.frame(
+    FireRegionName = frp$FireRegionName,
+    S1 = rep(-1, n),
+    S2 = rep(-1, n),
+    S3 = rep(-1, n),
+    S4 = rep(-1, n),
+    S5 = rep(15, n)
+  )
+}
+
 #' Specify Original Fire `FuelCurveTable`
 #'
 #' @param df data.frame

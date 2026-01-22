@@ -8,6 +8,32 @@ Dynamic Fire System Extension
 
 Dynamic Fire System Extension
 }
+\examples{
+dynamic_fire <- DynamicFire$new(
+  path,
+  Timestep = 10,
+  EventSizeType = NULL,
+  BuildUpIndex = NULL,
+  WeatherRandomizer = NULL,
+  FireSizesTable = NULL,
+  InitialFireEcoregionsMap = NULL,
+  DynamicEcoregionTable = NULL,
+  GroundSlopeFile = NULL,
+  UphillSlopeAzimuthMap = NULL,
+  SeasonTable = NULL,
+  InitialWeatherDatabase = NULL,
+  DynamicWeatherTable = NULL,
+  FuelTypeTable = NULL,
+  SeverityCalibrationFactor = NULL,
+  FireDamageTable = NULL,
+  MapNames = NULL, # use default
+  LogFile = NULL, # use default
+  SummaryLogFile = NULL # use default
+)
+
+dynamic_fire$write()
+
+}
 \references{
 LANDIS-II Dynamic Fire System Extension v4 User Guide
 \url{https://github.com/LANDIS-II-Foundation/Extension-Dynamic-Fire-System/blob/master/docs/LANDIS-II\%20Dynamic\%20Fire\%20System\%20v4\%20User\%20Guide.pdf}

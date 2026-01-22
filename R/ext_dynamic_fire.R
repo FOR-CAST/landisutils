@@ -6,6 +6,32 @@
 #'   <https://github.com/LANDIS-II-Foundation/Extension-Dynamic-Fire-System/blob/master/docs/LANDIS-II%20Dynamic%20Fire%20System%20v4%20User%20Guide.pdf>
 #'
 #' @export
+#'
+#' @examples
+#' dynamic_fire <- DynamicFire$new(
+#'   path,
+#'   Timestep = 10,
+#'   EventSizeType = NULL,
+#'   BuildUpIndex = NULL,
+#'   WeatherRandomizer = NULL,
+#'   FireSizesTable = NULL,
+#'   InitialFireEcoregionsMap = NULL,
+#'   DynamicEcoregionTable = NULL,
+#'   GroundSlopeFile = NULL,
+#'   UphillSlopeAzimuthMap = NULL,
+#'   SeasonTable = NULL,
+#'   InitialWeatherDatabase = NULL,
+#'   DynamicWeatherTable = NULL,
+#'   FuelTypeTable = NULL,
+#'   SeverityCalibrationFactor = NULL,
+#'   FireDamageTable = NULL,
+#'   MapNames = NULL, # use default
+#'   LogFile = NULL, # use default
+#'   SummaryLogFile = NULL # use default
+#' )
+#'
+#' dynamic_fire$write()
+#'
 DynamicFire <- R6Class(
   "DynamicFire",
   inherit = LandisExtension,
@@ -332,7 +358,6 @@ insertBuildUpIndex <- function(bui = FALSE) {
   }
 }
 
-
 #' Prepare Dynamic Fire Extension `FireSizes` Table
 #'
 #' @param df data.frame corresponding to `FireSizes` table
@@ -382,7 +407,7 @@ insertFireSizesTable <- function(df = NULL) {
   )
 }
 
-#' Prepare Dynamic Fire Extension `DynamicFireEcoregionTable`
+#' Prepare Dynamic Fire Extension `DynamicEcoregionTable`
 #'
 #' @param year Integer vector of simulation years
 #'
@@ -391,10 +416,38 @@ insertFireSizesTable <- function(df = NULL) {
 #' @returns data.frame
 #'
 #' @export
-prepFireSizesTable <- function(year, filename) {
+prepDynamicEcoregionTable <- function(year, filename) {
   stopifnot(length(year) == length(filename))
 
   data.frame(Year = year, FileName = filename)
+}
+
+#' Prepare Ground Slope and Uphill Azimuth raster files
+#'
+#' - `prepGroundSlopeFile` produces a raster of percent slope;
+#' - `prepUphillAzimuthMap` produces a raster of slope direction (degrees);
+#'
+#' @param studyArea `sf` polygon, `SpatVector` or `SpatRaster` object defining the area of interest.
+#'
+#' @template param_path
+#'
+#' @param filename Character specifying the output filename.
+#'
+#' @returns Character file path.
+#'
+#' @export
+#' @rdname prepTopographyFiles
+prepGroundSlopeFile <- function(studyArea = NULL, path = ".", filename = "ground_slope.tif") {
+  stopifnot(requireNamespace("elevatr", quietly = TRUE), !is.null(studyArea), dir.exists(path))
+
+  file <- file.path(path, filename)
+  elevatr::get_elev_raster(studyArea, z = 10) |>
+    terra::rast() |>
+    terra::terrain(v = "slope", unit = "degrees") |>
+    terra::as.int() |>
+    terra::writeRaster(file, overwrite = TRUE)
+
+  return(file)
 }
 
 #' Specify Dynamic Fire Extension `GroundSlopeFile`
@@ -406,6 +459,25 @@ prepFireSizesTable <- function(year, filename) {
 #' @export
 insertGroundSlopeFile <- function(file) {
   insertFile("GroundSlopeFile", file)
+}
+
+#' @export
+#' @rdname prepTopographyFiles
+prepUphillAzimuthMap <- function(
+  studyArea = NULL,
+  path = ".",
+  filename = "uphill_slope_azimuth.tif"
+) {
+  stopifnot(requireNamespace("elevatr", quietly = TRUE), !is.null(studyArea), dir.exists(path))
+
+  file <- file.path(path, filename)
+  elevatr::get_elev_raster(studyArea, z = 10) |>
+    terra::rast() |>
+    terra::terrain(v = "aspect", unit = "degrees") |>
+    terra::as.int() |>
+    terra::writeRaster(file, overwrite = TRUE)
+
+  return(file)
 }
 
 #' Specify Dynamic Fire Extension `UphillSlopeAzimuthMap`
@@ -457,14 +529,16 @@ insertSeasonTable <- function(df) {
 #'
 #' @template param_path
 #'
+#' @param filename Character specifying the output filename.
+#'
 #' @template return_file
 #'
 #' @export
-prepInitialWeatherDatabase <- function(df, path) {
+prepInitialWeatherDatabase <- function(df, path, filename = "initial-weather-database.csv") {
   browser() ## TODO
   df
 
-  file <- file.path(path, "initial-weather-database.csv")
+  file <- file.path(path, file)
   write.csv(df, file, row.names = FALSE)
 
   return(file)
@@ -485,13 +559,14 @@ prepDynamicWeatherTable <- function(year, filename) {
   data.frame(Year = year, FileName = filename)
 }
 
-#' Specify Dynamic Fire Extension `FuelTypeTable`
+#' Create sample Fuel Type Table
 #'
-#' @param df data.frame specifying the rate of spread parameters for each base surface type,
-#'           following the Canadian Forest Fire Behavior Prediction System (Forestry Canada, 1992).
-#'           Default values from Tables 6, 7, 8 and Appendix 1.
+#' The Fuel Type Table specifies the rate of spread parameters for each base surface type,
+#' following the Canadian Forest Fire Behavior Prediction System (Forestry Canada, 1992).
+#' Default values from Tables 6, 7, 8 and Appendix 1.
 #'
-#' @template return_insert
+#' @returns `data.frame` with columns:
+#' `r glue::glue_collapse(glue::glue("'{colnames(defaultFuelTypeTable())}'"), sep = ", ", last = " and ")`.
 #'
 #' @references
 #' Forestry Canada. 1992. Development and structure of the Canadian Forest Fire Behavior Prediction System.
@@ -507,37 +582,50 @@ prepDynamicWeatherTable <- function(year, filename) {
 #'   <https://ostrnrcan-dostrncan.canada.ca/handle/1845/247839>
 #'
 #' @export
+defaultFuelTypeTable <- function() {
+  ## NOTE: default table derived from Canadian Forest Fire Behavior Prediction System (1992):
+  ## - Table 6 (p26): rate of spread parameters (a, b, c) except for mixedwood (M classes);
+  ## - Table 7 (p34): additional rate of spread parameters (BUI, q, maxBE);
+  ## - Table 8 (p35): crown base height (CBH) for fuel types subject to crowning;
+  ## - Appendix 1 (p60): rate of spread parameters (a, b, c, q, BUI, CBH);
+  ##
+  ## NOTE: likely typo in LANDIS-II sample table for M1 CBH (used 0, but CFFBPS report uses 6);
+
+  df <- tibble::tribble(
+    ~Index , ~Base               , ~Surface , ~IgnProb , ~a  , ~b     , ~c  , ~q   , ~BUI , ~maxBE , ~CBH ,
+         1 , "Conifer"           , "C1"     , 1.0      ,  90 , 0.0649 , 4.5 , 0.90 ,   72 , 1.076  ,    2 ,
+         2 , "Conifer"           , "C2"     , 1.0      , 110 , 0.0282 , 1.5 , 0.70 ,   64 , 1.321  ,    3 ,
+         3 , "Conifer"           , "C3"     , 1.0      , 110 , 0.0444 , 3.0 , 0.75 ,   62 , 1.261  ,    8 ,
+         4 , "Conifer"           , "C4"     , 1.0      , 110 , 0.0293 , 1.5 , 0.80 ,   66 , 1.184  ,    4 ,
+         5 , "Conifer"           , "C5"     , 1.0      ,  30 , 0.0697 , 4.0 , 0.80 ,   56 , 1.220  ,   18 ,
+         6 , "ConiferPlantation" , "C6"     , 1.0      ,  30 , 0.0800 , 3.0 , 0.80 ,   62 , 1.197  ,    7 ,
+         7 , "Conifer"           , "C7"     , 1.0      ,  45 , 0.0305 , 2.0 , 0.85 ,  106 , 1.134  ,   10 ,
+         8 , "Deciduous"         , "D1"     , 0.5      ,  30 , 0.0232 , 1.6 , 0.90 ,   32 , 1.179  ,    0 ,
+         9 , "Conifer"           , "M1"     , 1.0      ,   0 , 0.0000 , 0.0 , 0.80 ,   50 , 1.250  ,    6 ,
+        10 , "Conifer"           , "M2"     , 1.0      ,   0 , 0.0000 , 0.0 , 0.80 ,   50 , 1.250  ,    6 ,
+        11 , "Conifer"           , "M3"     , 1.0      ,   0 , 0.0000 , 0.0 , 0.80 ,   50 , 1.250  ,    6 ,
+        12 , "Conifer"           , "M4"     , 1.0      ,   0 , 0.0000 , 0.0 , 0.80 ,   50 , 1.250  ,    6 ,
+        13 , "Slash"             , "S1"     , 1.0      ,  75 , 0.0297 , 1.3 , 0.75 ,   38 , 1.460  ,    0 ,
+        14 , "Slash"             , "S2"     , 1.0      ,  40 , 0.0438 , 1.7 , 0.75 ,   63 , 1.256  ,    0 ,
+        15 , "Slash"             , "S3"     , 1.0      ,  55 , 0.0829 , 3.2 , 0.75 ,   31 , 1.590  ,    0 ,
+        16 , "Open"              , "O1a"    , 1.0      , 190 , 0.0310 , 1.4 , 1.00 ,    1 , 1.000  ,    0 ,
+        17 , "Open"              , "O1b"    , 1.0      , 250 , 0.0350 , 1.7 , 1.00 ,    1 , 1.000  ,    0
+  ) |>
+    as.data.frame()
+}
+
+#' Specify Dynamic Fire Extension `FuelTypeTable`
+#'
+#' @param df `data.frame` specifying the rate of spread parameters for each base surface type,
+#'           following the Canadian Forest Fire Behavior Prediction System (Forestry Canada, 1992).
+#'           See [defaultFuelTypeTable()].
+#'
+#' @template return_insert
+#'
+#' @export
 insertFuelTypeTable <- function(df = NULL) {
   if (is.null(df)) {
-    ## NOTE: default table derived from Canadian Forest Fire Behavior Prediction System (1992):
-    ## - Table 6 (p26): rate of spread parameters (a, b, c) except for mixedwood (M classes);
-    ## - Table 7 (p34): additional rate of spread parameters (BUI, q, maxBE);
-    ## - Table 8 (p35): crown base height (CBH) for fuel types subject to crowning;
-    ## - Appendix 1 (p60): rate of spread parameters (a, b, c, q, BUI, CBH);
-    ##
-    ## NOTE: likely typo in LANDIS-II sample table for M1 CBH (used 0, but CFFBPS report uses 6);
-
-    df <- tibble::tribble(
-      ~Index , ~Base               , ~Surface , ~IgnProb , ~a  , ~b     , ~c  , ~q   , ~BUI , ~maxBE , ~CBH ,
-           1 , "Conifer"           , "C1"     , 1.0      ,  90 , 0.0649 , 4.5 , 0.90 ,   72 , 1.076  ,    2 ,
-           2 , "Conifer"           , "C2"     , 1.0      , 110 , 0.0282 , 1.5 , 0.70 ,   64 , 1.321  ,    3 ,
-           3 , "Conifer"           , "C3"     , 1.0      , 110 , 0.0444 , 3.0 , 0.75 ,   62 , 1.261  ,    8 ,
-           4 , "Conifer"           , "C4"     , 1.0      , 110 , 0.0293 , 1.5 , 0.80 ,   66 , 1.184  ,    4 ,
-           5 , "Conifer"           , "C5"     , 1.0      ,  30 , 0.0697 , 4.0 , 0.80 ,   56 , 1.220  ,   18 ,
-           6 , "ConiferPlantation" , "C6"     , 1.0      ,  30 , 0.0800 , 3.0 , 0.80 ,   62 , 1.197  ,    7 ,
-           7 , "Conifer"           , "C7"     , 1.0      ,  45 , 0.0305 , 2.0 , 0.85 ,  106 , 1.134  ,   10 ,
-           8 , "Deciduous"         , "D1"     , 0.5      ,  30 , 0.0232 , 1.6 , 0.90 ,   32 , 1.179  ,    0 ,
-           9 , "Conifer"           , "M1"     , 1.0      ,   0 , 0.0000 , 0.0 , 0.80 ,   50 , 1.250  ,    6 ,
-          10 , "Conifer"           , "M2"     , 1.0      ,   0 , 0.0000 , 0.0 , 0.80 ,   50 , 1.250  ,    6 ,
-          11 , "Conifer"           , "M3"     , 1.0      ,   0 , 0.0000 , 0.0 , 0.80 ,   50 , 1.250  ,    6 ,
-          12 , "Conifer"           , "M4"     , 1.0      ,   0 , 0.0000 , 0.0 , 0.80 ,   50 , 1.250  ,    6 ,
-          13 , "Slash"             , "S1"     , 1.0      ,  75 , 0.0297 , 1.3 , 0.75 ,   38 , 1.460  ,    0 ,
-          14 , "Slash"             , "S2"     , 1.0      ,  40 , 0.0438 , 1.7 , 0.75 ,   63 , 1.256  ,    0 ,
-          15 , "Slash"             , "S3"     , 1.0      ,  55 , 0.0829 , 3.2 , 0.75 ,   31 , 1.590  ,    0 ,
-          16 , "Open"              , "O1a"    , 1.0      , 190 , 0.0310 , 1.4 , 1.00 ,    1 , 1.000  ,    0 ,
-          17 , "Open"              , "O1b"    , 1.0      , 250 , 0.0350 , 1.7 , 1.00 ,    1 , 1.000  ,    0
-    ) |>
-      as.data.frame()
+    df <- defaultFuelTypeTable()
   }
 
   stopifnot(ncol(df) == 11)

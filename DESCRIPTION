@@ -1,6 +1,6 @@
 Package: landisutils
 Title: Utilities for running LANDIS-II simulations
-Version: 0.0.1.9007
+Version: 0.0.1.9008
 Authors@R: 
     person(c("Alex", "M"), "Chubaty", email = "achubaty@for-cast.ca", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0001-7146-8135"))
@@ -28,8 +28,10 @@ Imports:
     tidyr,
     utils
 Suggests:
+    appeears,
     bcdata,
     climateR,
+    elevatr,
     furrr,
     knitr,
     LandR,
@@ -46,6 +48,7 @@ Suggests:
     withr,
     zonal
 Remotes:
+    bluegreen-labs/appeears,
     mikejohnson51/climateR,
     PredictiveEcology/LandR@development,
     PredictiveEcology/map@development,

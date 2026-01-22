@@ -30,6 +30,19 @@ insertDynamicTable <- function(name = NULL, df = NULL) {
   )
 }
 
+#' Create sample Fire Damage Table
+#'
+#' @returns `data.frame` with 2 columns:
+#'   `CohortAgePercentLongevity` and `FireSeverityMinusFireTolerance`.
+#'
+#' @export
+defaultFireDamageTable <- function() {
+  data.frame(
+    CohortAgePercentLongevity = c(20, 50, 85, 100),
+    FireSeverityMinusFireTolerance = c(-2, -1, 0, 1)
+  )
+}
+
 #' Specify `FireDamageTable` for fire extensions
 #'
 #' @param df data.frame
@@ -39,10 +52,7 @@ insertDynamicTable <- function(name = NULL, df = NULL) {
 #' @keywords internal
 insertFireDamageTable <- function(df = NULL) {
   if (is.null(df)) {
-    df <- data.frame(
-      CohortAgePercentLongevity = c(20, 50, 85, 100),
-      FireSeverityMinusFireTolerance = c(-2, -1, 0, 1)
-    )
+    df <- defaultFireDamageTable()
   }
 
   c(
