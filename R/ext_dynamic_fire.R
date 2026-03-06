@@ -339,23 +339,16 @@ DynamicFire <- R6Class(
 
 #' Specify Dynamic Fire Extension `BuildUpIndex`
 #'
-#' @param bui  Logical, indicating whether to turn os Build Up Index.
+#' @param bui  Logical, indicating whether to turn on Build Up Index.
 #'
 #' @template return_insert
 #'
 #' @export
 insertBuildUpIndex <- function(bui = FALSE) {
-  if (isTRUE(bui)) {
-    c(
-      glue::glue("BuildUpIndex    yes"),
-      glue::glue("") ## add blank line after each item group
-    )
-  } else {
-    c(
-      glue::glue("BuildUpIndex    no"),
-      glue::glue("") ## add blank line after each item group
-    )
-  }
+  c(
+    glue::glue("BuildUpIndex    {yesno(bui)}"),
+    glue::glue("") ## add blank line after each item group
+  )
 }
 
 #' Prepare Dynamic Fire Extension `FireSizes` Table
@@ -538,7 +531,7 @@ prepInitialWeatherDatabase <- function(df, path, filename = "initial-weather-dat
   browser() ## TODO
   df
 
-  file <- file.path(path, file)
+  file <- file.path(path, filename)
   write.csv(df, file, row.names = FALSE)
 
   return(file)

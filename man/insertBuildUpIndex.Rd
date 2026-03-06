@@ -7,7 +7,7 @@
 insertBuildUpIndex(bui = FALSE)
 }
 \arguments{
-\item{bui}{Logical, indicating whether to turn os Build Up Index.}
+\item{bui}{Logical, indicating whether to turn on Build Up Index.}
 }
 \value{
 Character string(s) to write to the suitable LANDIS-II input file.

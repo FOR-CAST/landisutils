@@ -1,10 +1,14 @@
+## directories
+inputs
+inputs/
+inst/doc
+outputs
+outputs/
+
+## files
 .Rproj.user
 .Rhistory
 .RData
 .Ruserdata
-inputs
-inputs/
-inst/doc
+J4RTmpFile
 nohup.out
-outputs
-outputs/
