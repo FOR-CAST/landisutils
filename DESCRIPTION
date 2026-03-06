@@ -1,6 +1,6 @@
 Package: landisutils
 Title: Utilities for running LANDIS-II simulations
-Version: 0.0.1.9009
+Version: 0.0.1.9010
 Authors@R: 
     person(c("Alex", "M"), "Chubaty", email = "achubaty@for-cast.ca", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0001-7146-8135"))
@@ -24,6 +24,7 @@ Imports:
     methods,
     R6,
     stats,
+    stringr,
     terra,
     tidyr,
     utils
@@ -72,6 +73,7 @@ Collate:
     'ext_biomass_succession.R'
     'ext_dynamic_fire.R'
     'ext_dynamic_fuel.R'
+    'ext_forc-succession.R'
     'ext_original_fire.R'
     'ext_output_biomass.R'
     'ext_output_biomass_age.R'

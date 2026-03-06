@@ -120,7 +120,7 @@ SocialClimateFire <- R6Class(
       stopifnot(!is.null(path))
 
       ## LandisExtension fields
-      private$LandisData <- "Social Climate Fire"
+      private$.LandisData <- "Social Climate Fire"
       self$Timestep <- Timestep
 
       self$type <- "disturbance"

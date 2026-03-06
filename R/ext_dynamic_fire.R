@@ -79,7 +79,7 @@ DynamicFire <- R6Class(
       stopifnot(!is.null(path))
 
       ## LandisExtension fields
-      private$LandisData <- "Dynamic Fire System"
+      private$.LandisData <- "Dynamic Fire System"
       self$Timestep <- Timestep
 
       self$type <- "disturbance"

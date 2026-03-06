@@ -30,6 +30,15 @@ insertDynamicTable <- function(name = NULL, df = NULL) {
   )
 }
 
+#' Ensure percent symbol appended to table values
+#'
+#' @param x Character
+#'
+#' @export
+appendPercent <- function(x) {
+  ifelse(stringr::str_ends(x, stringr::fixed("%")), x, stringr::str_c(x, "%"))
+}
+
 #' Create sample Fire Damage Table
 #'
 #' @returns `data.frame` with 2 columns:

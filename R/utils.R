@@ -6,13 +6,13 @@
 }
 
 #' @keywords internal
-.relPath <- function(path, start = ".") {
+.relPath <- Vectorize(function(path, start = ".") {
   if (is.null(path) || is.na(path)) {
     path
   } else {
     fs::path_rel(path, start)
   }
-}
+})
 
 #' @keywords internal
 landisutilsVersion <- function() {

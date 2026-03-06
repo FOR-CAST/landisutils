@@ -43,6 +43,7 @@ NULL
 #' @importFrom data.table setkeyv
 #' @importFrom data.table setnames
 #' @importFrom dplyr all_of
+#' @importFrom dplyr arrange
 #' @importFrom dplyr mutate
 #' @importFrom fs dir_create
 #' @importFrom fs path_abs
@@ -53,6 +54,9 @@ NULL
 #' @importFrom glue glue_collapse
 #' @importFrom R6 R6Class
 #' @importFrom stats na.omit
+#' @importFrom stringr fixed
+#' @importFrom stringr str_c
+#' @importFrom stringr str_ends
 #' @importFrom terra names
 #' @importFrom terra nlyr
 #' @importFrom terra rast
