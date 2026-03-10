@@ -45,10 +45,14 @@ insertLandisData <- function(x) {
 insertValue <- function(type, value) {
   stopifnot(length(value) == 1)
 
-  c(
-    glue::glue("{type}    \"{value}\""),
-    glue::glue("") ## add blank line after each item group
-  )
+  if (!is.na(value)) {
+    c(
+      glue::glue("{type}    \"{value}\""),
+      glue::glue("") ## add blank line after each item group
+    )
+  } else {
+    ""
+  }
 }
 
 #' Specify an input file for an extension

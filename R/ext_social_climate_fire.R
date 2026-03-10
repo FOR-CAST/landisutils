@@ -8,13 +8,7 @@
 #' @export
 #'
 #' @examples
-#' social_climate_fire <- SocialClimateFire$new(
-#'   path,
-#'   Timestep = 1,
-#'   ## TODO
-#' )
-#'
-#' social_climate_fire$write()
+#' ## See vignette for usage examples.
 #'
 SocialClimateFire <- R6Class(
   "SocialClimateFire",
@@ -47,7 +41,7 @@ SocialClimateFire <- R6Class(
     #' @param MaximumRxWindSpeed Real. Maximum wind speed ($m/s$) for prescribed fires.
     #' @param MaximumRxFireWeatherIndex (Optional) Real. Maximum Fire Weather Index (FWI) for prescribed fires.
     #' @param MinimumRxFireWeatherIndex (Optional) Real. Minimum Fire Weather Index (FWI) for prescribed fires.
-    #' @param MaximumRxTemperture (Optional) Real. Maximum temperature for prescribed fires.
+    #' @param MaximumRxTemperature (Optional) Real. Maximum temperature for prescribed fires.
     #' @param MinimumRxRelativeHumidity (Optional) Real. Minimum relative humidity for prescribed fires.
     #' @param MaximumRXFireIntensity Integer. Maximum allowable fire intensity for prescribed fires.
     #' @param NumberRxAnnualFires Integer. Number of prescribed fires attempted per year.
@@ -98,7 +92,7 @@ SocialClimateFire <- R6Class(
       MaximumRxWindSpeed = NULL,
       MaximumRxFireWeatherIndex = NULL,
       MinimumRxFireWeatherIndex = NULL,
-      MaximumRxTemperture = NULL,
+      MaximumRxTemperature = NULL,
       MinimumRxRelativeHumidity = NULL,
       MaximumRXFireIntensity = NULL,
       NumberRxAnnualFires = NULL,
@@ -128,8 +122,8 @@ SocialClimateFire <- R6Class(
       self$files <- "social-climate-fire.txt" ## file won't exist yet
 
       ## additional fields for this extension
-      self$TimeZeroPET <- TimeZeroPET
-      self$TimeZeroCWD <- TimeZeroCWD
+      self$TimeZeroPET <- TimeZeroPET %||% NA_real_
+      self$TimeZeroCWD <- TimeZeroCWD %||% NA_real_
       self$Species_CSV_File <- Species_CSV_File
       self$AccidentalIgnitionsMap <- AccidentalIgnitionsMap
       self$DynamicAccidentalIgnitionMaps <- DynamicAccidentalIgnitionMaps
@@ -153,7 +147,7 @@ SocialClimateFire <- R6Class(
       self$MaximumRxWindSpeed <- MaximumRxWindSpeed
       self$MaximumRxFireWeatherIndex <- MaximumRxFireWeatherIndex
       self$MinimumRxFireWeatherIndex <- MinimumRxFireWeatherIndex
-      self$MaximumRxTemperture <- MaximumRxTemperture
+      self$MaximumRxTemperature <- MaximumRxTemperature
       self$MinimumRxRelativeHumidity <- MinimumRxRelativeHumidity
       self$MaximumRXFireIntensity <- MaximumRXFireIntensity
       self$NumberRxAnnualFires <- NumberRxAnnualFires
@@ -244,8 +238,8 @@ SocialClimateFire <- R6Class(
 
           insertValue("IgnitionDistribution", self$IgnitionDistribution),
 
-          insertValue("LightningIgnitionsBinomialB0", self$LightningIgnitionsBinomialB0[1]),
-          insertValue("LightningIgnitionsBinomialB1", self$LightningIgnitionsBinomialB0[2]),
+          insertValue("LightningIgnitionsBinomialB0", self$LightningIgnitionsBinomialCoeffs[1]),
+          insertValue("LightningIgnitionsBinomialB1", self$LightningIgnitionsBinomialCoeffs[2]),
           insertValue("AccidentalIgnitionsBinomialB0", self$AccidentalIgnitionsBinomialCoeffs[1]),
           insertValue("AccidentalIgnitionsBinomialB1", self$AccidentalIgnitionsBinomialCoeffs[2]),
 
@@ -255,7 +249,7 @@ SocialClimateFire <- R6Class(
           insertValue("MaximumRxWindSpeed", self$MaximumRxWindSpeed),
           insertValue("MaximumRxFireWeatherIndex", self$MaximumRxFireWeatherIndex),
           insertValue("MinimumRxFireWeatherIndex", self$MinimumRxFireWeatherIndex),
-          insertValue("MaximumRxTemperture", self$MaximumRxTemperture),
+          insertValue("MaximumRxTemperature", self$MaximumRxTemperature),
           insertValue("MinimumRxRelativeHumidity", self$MinimumRxRelativeHumidity),
           insertValue("MaximumRXFireIntensity", self$MaximumRXFireIntensity),
           insertValue("NumberRxAnnualFires", self$NumberRxAnnualFires),
@@ -292,7 +286,7 @@ SocialClimateFire <- R6Class(
 
           ## ladder fuels
           insertValue("LadderFuelMaxAge", self$LadderFuelMaxAge),
-          insertValue("LadderFuelSpeciesList", self$LadderFuelSpeciesList), ## TODO
+          insertLadderFuelSpeciesList(self$LadderFuelSpeciesList),
 
           ## suppression
           insertValue("SuppressionMaxWindSpeed", self$SuppressionMaxWindSpeed),
@@ -313,7 +307,7 @@ SocialClimateFire <- R6Class(
       self$add_file(self$GroundSlopeFile)
       self$add_file(self$UphillSlopeAzimuthMap)
       self$add_file(self$ClayMap)
-      if (!is.null(RxZonesMap) && !is.na(RxZonesMap)) {
+      if (!is.null(self$RxZonesMap) && !is.na(self$RxZonesMap)) {
         self$add_file(self$RxZonesMap)
       }
       self$add_file(self$Suppression_CSV_File)
@@ -348,7 +342,7 @@ SocialClimateFire <- R6Class(
     .MaximumRxWindSpeed = NULL,
     .MaximumRxFireWeatherIndex = NULL,
     .MinimumRxFireWeatherIndex = NULL,
-    .MaximumRxTemperture = NULL,
+    .MaximumRxTemperature = NULL,
     .MinimumRxRelativeHumidity = NULL,
     .MaximumRXFireIntensity = NULL,
     .NumberRxAnnualFires = NULL,
@@ -565,7 +559,6 @@ SocialClimateFire <- R6Class(
         return(private$.IgnitionDistribution)
       } else {
         allowed <- c("Poisson", "ZeroInflatedPoisson")
-        value <- tolower(value)
         value <- value %||% allowed[1]
 
         stopifnot(value %in% allowed)
@@ -632,12 +625,12 @@ SocialClimateFire <- R6Class(
       }
     },
 
-    #' @field MaximumRxTemperture (Optional) Real. Maximum temperature for prescribed fires.
-    MaximumRxTemperture = function(value) {
+    #' @field MaximumRxTemperature (Optional) Real. Maximum temperature for prescribed fires.
+    MaximumRxTemperature = function(value) {
       if (missing(value)) {
-        return(private$.MaximumRxTemperture)
+        return(private$.MaximumRxTemperature)
       } else {
-        private$.MaximumRxTemperture <- value %||% NA_real_
+        private$.MaximumRxTemperature <- value %||% NA_real_
       }
     },
 
@@ -722,7 +715,7 @@ SocialClimateFire <- R6Class(
       if (missing(value)) {
         return(private$.MaximumSpreadAreaCoeffs)
       } else {
-        stopifnot(length(value) == 2L)
+        stopifnot(length(value) == 3L)
 
         private$.MaximumSpreadAreaCoeffs <- value
       }
@@ -733,7 +726,7 @@ SocialClimateFire <- R6Class(
       if (missing(value)) {
         return(private$.SpreadProbabilityCoeffs)
       } else {
-        stopifnot(length(value) == 3L)
+        stopifnot(length(value) == 4L)
 
         private$.SpreadProbabilityCoeffs <- value
       }
@@ -802,7 +795,9 @@ SocialClimateFire <- R6Class(
       if (missing(value)) {
         return(private$.DeadWoodTable)
       } else {
-        if (is.null(value) || is.na(value)) {
+        if (is.data.frame(value)) {
+          stopifnot(ncol(value) == 2L)
+        } else if (is.null(value) || is.na(value)) {
           value <- data.frame(Species = character(0), Age = integer(0))
         } else {
           stopifnot(inherits(value, "data.frame"))
@@ -814,32 +809,49 @@ SocialClimateFire <- R6Class(
   )
 )
 
-#' Prepare `Suppression_CSV_File` for Social-Climate-Fire extension
+#' Prepare `Species_CSV_File` for Social-Climate-Fire extension
 #'
-#' @param df data.frame corresponding to `Suppression_CSV_File` table
+#' @param df data.frame corresponding to `Species_CSV_File` table
 #'
-#' @returns data.frame
+#' @template return_file
 #'
 #' @export
-prepSuppression_CSV_File <- function(df, path, filename = "suppression.csv") {
+prepSpecies_CSV_File <- function(df, path, filename = "species-table.csv") {
+  stopifnot(c("SpeciesCode", "AgeDBH", "MaximumBarkThickness") %in% colnames(df))
+
   file <- file.path(path, filename)
   write.csv(df, file, row.names = FALSE)
 
   return(file)
 }
 
+#' Prepare `Suppression_CSV_File` for Social-Climate-Fire extension
+#'
+#' @param df data.frame corresponding to `Suppression_CSV_File` table
+#'
+#' @template return_file
+#'
 #' @export
-#' @rdname prepSuppression_CSV_File
-emptySuppressionTable <- function(df = NULL) {
-  browser() ## TODO
-  data.frame(
-    IgnitionType = character(0), ## "Accidental", "Lightning", "Rx"
-    Mapcode = integer(0),
-    Suppress_Category_0 = integer(0),
-    FWI_Break_1 = integer(0),
-    Suppress_Category_1 = integer(0),
-    FWI_Break_2 = integer(0),
-    Suppress_Category_2 = integer(0)
+prepSuppression_CSV_File <- function(df, path, filename = "suppression.csv") {
+  stopifnot(ncol(df) == 7L, all(dplyr::pull(df, 1) %in% c("Accidental", "Lightning", "Rx")))
+
+  file <- file.path(path, filename)
+  write.csv(df, file, row.names = FALSE)
+
+  return(file)
+}
+
+#' Specify `LadderFuelSpeciesList` for Social-Climate-Fire extension
+#'
+#' @param x Character. Species names.
+#'
+#' @template return_insert
+#'
+#' @keywords internal
+insertLadderFuelSpeciesList <- function(x) {
+  c(
+    glue::glue_collapse(x, sep = "  "),
+    glue::glue("") ## add blank line after each item group
   )
 }
 
@@ -851,8 +863,10 @@ emptySuppressionTable <- function(df = NULL) {
 #'
 #' @keywords internal
 insertDeadWoodTable <- function(df = NULL) {
-  if (is.null(df)) {
-    df <- data.frame(Species = character(0), Age = integer(0))
+  if (!is.data.frame(df)) {
+    if (is.null(df) || is.na(df)) {
+      df <- data.frame(Species = character(0), Age = integer(0))
+    }
   }
 
   c(

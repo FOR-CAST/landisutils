@@ -9,13 +9,7 @@ Social-Climate-Fire Extension
 Social-Climate-Fire Extension
 }
 \examples{
-social_climate_fire <- SocialClimateFire$new(
-  path,
-  Timestep = 1,
-  ## TODO
-)
-
-social_climate_fire$write()
+## See vignette for usage examples.
 
 }
 \references{
@@ -82,7 +76,7 @@ variable social-ecological fire regimes. Ecological Modelling, 401, 85–93.
 
 \item{\code{MinimumRxFireWeatherIndex}}{(Optional) Real. Minimum Fire Weather Index (FWI) for prescribed fires.}
 
-\item{\code{MaximumRxTemperture}}{(Optional) Real. Maximum temperature for prescribed fires.}
+\item{\code{MaximumRxTemperature}}{(Optional) Real. Maximum temperature for prescribed fires.}
 
 \item{\code{MinimumRxRelativeHumidity}}{(Optional) Real. Minimum relative humidity for prescribed fires.}
 
@@ -168,7 +162,7 @@ variable social-ecological fire regimes. Ecological Modelling, 401, 85–93.
   MaximumRxWindSpeed = NULL,
   MaximumRxFireWeatherIndex = NULL,
   MinimumRxFireWeatherIndex = NULL,
-  MaximumRxTemperture = NULL,
+  MaximumRxTemperature = NULL,
   MinimumRxRelativeHumidity = NULL,
   MaximumRXFireIntensity = NULL,
   NumberRxAnnualFires = NULL,
@@ -246,7 +240,7 @@ variable social-ecological fire regimes. Ecological Modelling, 401, 85–93.
 
 \item{\code{MinimumRxFireWeatherIndex}}{(Optional) Real. Minimum Fire Weather Index (FWI) for prescribed fires.}
 
-\item{\code{MaximumRxTemperture}}{(Optional) Real. Maximum temperature for prescribed fires.}
+\item{\code{MaximumRxTemperature}}{(Optional) Real. Maximum temperature for prescribed fires.}
 
 \item{\code{MinimumRxRelativeHumidity}}{(Optional) Real. Minimum relative humidity for prescribed fires.}
 

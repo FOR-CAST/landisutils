@@ -2,18 +2,16 @@
 % Please edit documentation in R/ext_social_climate_fire.R
 \name{prepSuppression_CSV_File}
 \alias{prepSuppression_CSV_File}
-\alias{emptySuppressionTable}
 \title{Prepare \code{Suppression_CSV_File} for Social-Climate-Fire extension}
 \usage{
 prepSuppression_CSV_File(df, path, filename = "suppression.csv")
-
-emptySuppressionTable(df = NULL)
 }
 \arguments{
 \item{df}{data.frame corresponding to \code{Suppression_CSV_File} table}
 }
 \value{
-data.frame
+Character string(s) specifying suitable LANDIS-II input file(s),
+created as a side effect of the function.
 }
 \description{
 Prepare \code{Suppression_CSV_File} for Social-Climate-Fire extension

@@ -127,7 +127,7 @@ testthat::test_that("Forest Carbon Succession (ForCS) inputs are properly create
     file.path(tmp_pth, "initial-communities.txt"),
     file.path(tmp_pth, "initial-communities.gis")
   )
-  purrr::walk2(.x = c("", ""), .y = init_comm_files, .f = writeLines)
+  purrr::walk2(.x = rep("", length(init_comm_files)), .y = init_comm_files, .f = writeLines)
 
   output_tables <- data.frame(Biomass = 1, DOM_Pools = 1, Fluxes = 1, Summary = 1)
 

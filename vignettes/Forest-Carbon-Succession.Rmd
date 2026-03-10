@@ -1,8 +1,8 @@
 ---
-title: "Forest Carbon Succession (ForCS)"
+title: "Preparing Forest Carbon Succession (ForCS) Inputs"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Forest Carbon Succession (ForCS)}
+  %\VignetteIndexEntry{Preparing Forest Carbon Succession (ForCS) Inputs}
   %\VignetteEncoding{UTF-8}
   %\VignetteEngine{knitr::rmarkdown}
 editor_options: 

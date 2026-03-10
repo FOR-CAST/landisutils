@@ -1,80 +1,169 @@
 testthat::test_that("Social-Climate-Fire inputs are properly created", {
-  skip("incomplete") ## TODO
-  testthat::skip_if_not_installed("elevatr")
-  testthat::skip_if_not_installed("purrr")
-  testthat::skip_if_not_installed("withr")
-  testthat::skip_if_not_installed("zonal")
+  ## NOTE: all sample values from SCRAPPLE v3.2 test files (for LANDIS-II v7)
+  ## <https://github.com/LANDIS-II-Foundation/Extension-Social-Climate-Fire/blob/master/Testing/Core7-SCRAPPLE3.2/scrapple.txt>
 
-  ## initial communities
-  cohortData <- landisutils::Chine_cohortData
-  pixelGroupMap <- terra::unwrap(landisutils::Chine_pixelGroupMap)
+  tmp_pth <- withr::local_tempdir("example_SocialClimateFire_")
 
-  ## ecoregion
-  ecoregion <- landisutils::Chine_ecoregion
-  ecoregionMap <- terra::unwrap(landisutils::Chine_ecoregionMap)
-  ecoregionPolys <- landisutils::Chine_ecoregionPolys
+  species_table <- tibble::tribble(
+    ~SpeciesCode , ~AgeDBH , ~MaximumBarkThickness ,
+    "PinuJeff"   ,     100 ,                    10 ,
+    "PinuLamb"   ,     100 ,                    10 ,
+    "CaloDecu"   ,     100 ,                    10 ,
+    "AbieConc"   ,     100 ,                    10 ,
+    "AbieMagn"   ,     100 ,                    10 ,
+    "PinuCont"   ,     100 ,                    10 ,
+    "PinuMont"   ,     100 ,                    10 ,
+    "TsugMert"   ,     100 ,                    10 ,
+    "PinuAlbi"   ,     100 ,                    10 ,
+    "PopuTrem"   ,     100 ,                    10 ,
+    "NonnResp"   ,     100 ,                    10 ,
+    "NonnSeed"   ,     100 ,                    10 ,
+    "FixnResp"   ,     100 ,                    10 ,
+    "FixnSeed"   ,     100 ,                    10
+  )
 
-  ## fireRegimePolys
-  fireRegimePolys <- landisutils::Chine_fireRegimePolys
+  species_file <- prepSpecies_CSV_File(
+    df = species_table,
+    path = tmp_pth,
+    filename = "SCRPPLE_Spp_Table.csv"
+  )
 
-  ## other
-  minRelativeB <- landisutils::Chine_minRelativeB
-  species <- landisutils::Chine_species
-  speciesEcoregion <- landisutils::Chine_speciesEcoregion
-  speciesLayers <- terra::unwrap(landisutils::Chine_speciesLayers)
-  standAgeMap <- terra::unwrap(landisutils::Chine_standAgeMap)
-  sufficientLight <- landisutils::Chine_sufficientLight
+  ## don't need working files, they just need to exist
+  acc_ign_map <- file.path(tmp_pth, "Accidental_Ignition_Map.img")
+  ltg_ign_map <- file.path(tmp_pth, "Lightning_Ignition_Map.img")
+  rx_ign_map <- file.path(tmp_pth, "Lightning_Ignition_Map.img")
 
-  ## prepare landis input files ----------------------------------------------------------------
+  acc_supp_map <- file.path(tmp_pth, "suppress3.img")
+  ltg_supp_map <- file.path(tmp_pth, "suppress3.img")
+  rx_supp_map <- file.path(tmp_pth, "suppress3.img")
 
-  tmp_pth <- withr::local_tempdir("test_Social_Climate_Fire_")
+  gs_file <- file.path(tmp_pth, "GroundSlope.gis")
+  ua_file <- file.path(tmp_pth, "UphillSlope.gis")
+  cm_file <- file.path(tmp_pth, "random9.img")
 
-  fs_table <- prepFireSizesTable() ## TODO
+  rx_zones <- file.path(tmp_pth, "fire-zones.gis") ## optional
 
-  ifrm_file <- terra::rasterize(fireRegimePolys, standAgeMap, field = "PolyID", background = 0) |>
-    prepInitialFireRegionsMap(file = file.path(tmp_pth, "fire-regions-map.tif"))
+  ## fmt: table
+  raster_files <- c(
+    acc_ign_map  , ltg_ign_map  , rx_ign_map  ,
+    acc_supp_map , ltg_supp_map , rx_supp_map ,
+    gs_file      , ua_file      , cm_file     ,
+    rx_zones
+  )
+  purrr::walk2(.x = rep("", length(raster_files)), .y = raster_files, .f = writeLines)
 
-  der_table <- prepDynamicEcoregionTable() ## TODO
+  ltg_ign_coeffs <- c(-8.5, 0.03)
+  acc_ign_coeffs <- c(-8.5, 0.03)
 
-  gs_file <- prepGroundSlopeFile(ecoregionMap, path = tmp_pth)
-  usa_file <- prepUphillAzimuthMap(ecoregionMap, path = tmp_pth)
+  ltg_ign_zip_coeffs <- c(-8.5, 0.03)
+  acc_ign_zip_coeffs <- c(-8.5, 0.03)
 
-  szn_table <- TODO ## TODO
+  max_spread_area_coeffs <- c(10, -2.5, -2.5)
 
-  iwdb_file <- prepInitialWeatherDatabase() ## TODO
+  spread_prob_coeffs <- c(-1.79, 0.06, -0.915, 0.0126)
 
-  log_file <- file.path(tmp_pth, "fire/log.csv")
-  sum_log_file <- file.path(tmp_pth, "fire/summary-log.csv")
+  ## fmt: table
+  site_mortality_coeffs <- c(
+     0.0059     , 0.00050 , -0.000010 , -0.0002200 ,
+    -0.00000050 , 0.00000 ,  0.00000
+  )
 
-  ext_dfire <- SocialClimateFire$new(
+  cohort_mortality_coeffs <- c(-0.703, -0.9908, 0.009)
+
+  ladder_fuel_species <- c("AbieConc", "AbieMagn", "PinuJeff", "PinuCont")
+
+  suppression_table <- tibble::tribble(
+    ~IgnitionType , ~Mapcode , ~Suppress_Category_0 , ~FWI_Break_1 , ~Suppress_Category_1 , ~FWI_Break_2 , ~Suppress_Category_2 ,
+    "Accidental"  ,        1 ,                   10 ,           20 ,                   20 ,           30 ,                    0 ,
+    "Accidental"  ,        2 ,                   30 ,           20 ,                   95 ,           30 ,                   10 ,
+    "Accidental"  ,        3 ,                   95 ,           20 ,                   95 ,           30 ,                   75 ,
+    "Lightning"   ,        1 ,                   10 ,           20 ,                   20 ,           30 ,                    0 ,
+    "Lightning"   ,        2 ,                   30 ,           20 ,                   95 ,           30 ,                   10 ,
+    "Lightning"   ,        3 ,                   95 ,           20 ,                   95 ,           30 ,                   75 ,
+    "Rx"          ,        1 ,                   10 ,           20 ,                   20 ,           30 ,                    0 ,
+    "Rx"          ,        2 ,                   30 ,           20 ,                   95 ,           30 ,                   10 ,
+    "Rx"          ,        3 ,                   95 ,           20 ,                   95 ,           30 ,                   75
+  )
+
+  suppression_file <- prepSuppression_CSV_File(
+    suppression_table,
+    path = tmp_pth,
+    filename = "Example_Suppression_Input.csv"
+  )
+
+  deadwood <- tibble::tribble(
+    ~species   , ~age ,
+    "PinuJeff" ,   22 ,
+    "CaloDecu" ,   33 ,
+    "PinuCont" ,   38 ,
+    "PinuLamb" ,   27 ,
+    "AbieMagn" ,   28 ,
+    "AbieConc" ,   29
+  )
+
+  ext_social_climate_fire <- SocialClimateFire$new(
     path = tmp_pth,
     Timestep = 1,
-    ## TODO
+    TimeZeroPET = NULL, ## optional
+    TimeZeroCWD = NULL, ## optional
+    Species_CSV_File = species_file,
+
+    ## ignition maps
+    AccidentalIgnitionsMap = acc_ign_map,
+    DynamicAccidentalIgnitionMaps = NULL, ## optional
+    LightningIgnitionsMap = ltg_ign_map,
+    DynamicLightningIgnitionsMaps = NULL, ## optional
+    RxIgnitionsMap = rx_ign_map,
+    DynamicRxIgnitionsMaps = NULL, ## optional
+
+    ## suppression maps
+    AccidentalSuppressionMap = acc_supp_map,
+    LightningSuppressionMap = ltg_supp_map,
+    RxSuppressionMap = rx_supp_map,
+    DynamicAccidentalSuppressionMaps = NULL, ## optional
+
+    ## topography files
+    GroundSlopeFile = gs_file,
+    UphillSlopeAzimuthMap = ua_file,
+    ClayMap = cm_file,
+
+    ## ignition model coefficients
+    LightningIgnitionsCoeffs = ltg_ign_coeffs,
+    AccidentalIgnitionsCoeffs = acc_ign_coeffs,
+    IgnitionDistribution = "ZeroInflatedPoisson",
+    LightningIgnitionsBinomialCoeffs = ltg_ign_zip_coeffs,
+    AccidentalIgnitionsBinomialCoeffs = acc_ign_zip_coeffs,
+    MaximumFineFuels = 500.0,
+
+    ## prescribed fire burn window parameters
+    MaximumRxWindSpeed = 80.0,
+    MaximumRxFireWeatherIndex = 80.0, ## optional
+    MinimumRxFireWeatherIndex = 1.0, ## optional
+    MaximumRxTemperature = 35.0, ## optional
+    MinimumRxRelativeHumidity = 22.0, ## optional
+    MaximumRXFireIntensity = 1,
+    NumberRxAnnualFires = 10,
+    NumberRxDailyFires = 1,
+    FirstDayRxFires = 2,
+    LastDayRxFires = 300,
+    TargetRxSize = 40,
+    RxZonesMap = rx_zones, ## optional
+
+    MaximumSpreadAreaCoeffs = max_spread_area_coeffs,
+    SpreadProbabilityCoeffs = spread_prob_coeffs,
+    SiteMortalityCoeffs = site_mortality_coeffs,
+    CohortMortalityCoeffs = cohort_mortality_coeffs,
+
+    LadderFuelMaxAge = 40, ## TODO
+    LadderFuelSpeciesList = ladder_fuel_species,
+    SuppressionMaxWindSpeed = 100,
+    Suppression_CSV_File = suppression_file,
+    DeadWoodTable = deadwood
   )
 
-  ext_dfire$write()
+  ext_social_climate_fire$write()
 
-  testthat::expect_true(all(file.exists(file.path(tmp_pth, ext_of$files))))
-
-  spp_fuel_coeffs <- data.frame(Species = c(), FuelCoefficient = c()) ## TODO
-
-  fuel_types <- data.frame() ## TODO
-
-  disturb_conv <- data.frame() ## TODO
-
-  ext_dfuel <- DynamicFuels$new(
-    path = tmp_pth,
-    Timestep = 10,
-    SpeciesFuelCoefficients = spp_fuel_coeffs,
-    HardwoodMaximum = 0L,
-    DeadFirMaxAge = 15L, ## not needed w/o BDA extension
-    FuelTypes = fuel_types,
-    EcoregionTable = data.frame(FuelType = integer(0), Ecoregion = character(0)),
-    DisturbanceConversionTable = disturb_conv,
-    MapFileNames = NULL, ## use default
-    PctConiferMapName = NULL, ## use default
-    PctDeadFirMapName = NULL ## use default
-  )
+  testthat::expect_true(all(file.exists(file.path(tmp_pth, ext_social_climate_fire$files))))
 
   withr::deferred_run()
 })

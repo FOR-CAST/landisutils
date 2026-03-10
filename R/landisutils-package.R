@@ -45,6 +45,7 @@ NULL
 #' @importFrom dplyr all_of
 #' @importFrom dplyr arrange
 #' @importFrom dplyr mutate
+#' @importFrom dplyr pull
 #' @importFrom fs dir_create
 #' @importFrom fs path_abs
 #' @importFrom fs path_norm
