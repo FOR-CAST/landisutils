@@ -4,7 +4,7 @@
 \alias{prepDynamicEcoregionTable}
 \title{Prepare Dynamic Fire Extension \code{DynamicEcoregionTable}}
 \usage{
-prepDynamicEcoregionTable(year, filename)
+prepDynamicEcoregionTable(year = NULL, filename = NULL)
 }
 \arguments{
 \item{year}{Integer vector of simulation years}

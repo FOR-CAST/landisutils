@@ -9,7 +9,7 @@ Social-Climate-Fire Extension
 Social-Climate-Fire Extension
 }
 \examples{
-## See vignette for usage examples.
+## see vignette for usage examples
 
 }
 \references{

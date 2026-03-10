@@ -8,7 +8,7 @@ insertDisturbanceConversionTable(df)
 }
 \arguments{
 \item{df}{data.frame corresponding to \code{DisturbanceConversionTable}, with columns:
-\code{FuelType} (int), \code{Duration} (int), and \code{Prescription} (char).}
+\code{Fuel} (int), \code{Type} (int), \code{Duration} (int), and \code{Prescription} (char).}
 }
 \value{
 Character string(s) to write to the suitable LANDIS-II input file.

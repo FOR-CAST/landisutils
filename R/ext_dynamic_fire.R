@@ -8,29 +8,7 @@
 #' @export
 #'
 #' @examples
-#' dynamic_fire <- DynamicFire$new(
-#'   path,
-#'   Timestep = 10,
-#'   EventSizeType = NULL,
-#'   BuildUpIndex = NULL,
-#'   WeatherRandomizer = NULL,
-#'   FireSizesTable = NULL,
-#'   InitialFireEcoregionsMap = NULL,
-#'   DynamicEcoregionTable = NULL,
-#'   GroundSlopeFile = NULL,
-#'   UphillSlopeAzimuthMap = NULL,
-#'   SeasonTable = NULL,
-#'   InitialWeatherDatabase = NULL,
-#'   DynamicWeatherTable = NULL,
-#'   FuelTypeTable = NULL,
-#'   SeverityCalibrationFactor = NULL,
-#'   FireDamageTable = NULL,
-#'   MapNames = NULL, # use default
-#'   LogFile = NULL, # use default
-#'   SummaryLogFile = NULL # use default
-#' )
-#'
-#' dynamic_fire$write()
+#' ## see vignette for usage examples
 #'
 DynamicFire <- R6Class(
   "DynamicFire",
@@ -87,12 +65,19 @@ DynamicFire <- R6Class(
       self$files <- "dynamic-fire.txt" ## file won't exist yet
 
       ## additional fields for this extension
-      self$Species_CSV_File <- Species_CSV_File
-      self$FireRegionParametersTable <- FireRegionParametersTable
-      self$InitialFireRegionsMap <- InitialFireRegionsMap
-      self$DynamicFireRegionsTable <- DynamicFireRegionsTable
-      self$FuelCurveTable <- FuelCurveTable
-      self$WindCurveTable <- WindCurveTable
+      self$EventSizeType <- EventSizeType
+      self$BuildUpIndex <- BuildUpIndex
+      self$WeatherRandomizer <- WeatherRandomizer
+      self$FireSizesTable <- FireSizesTable
+      self$InitialFireEcoregionsMap <- InitialFireEcoregionsMap
+      self$DynamicEcoregionTable <- DynamicEcoregionTable
+      self$GroundSlopeFile <- GroundSlopeFile
+      self$UphillSlopeAzimuthMap <- UphillSlopeAzimuthMap
+      self$SeasonTable <- SeasonTable
+      self$InitialWeatherDatabase <- InitialWeatherDatabase
+      self$DynamicWeatherTable <- DynamicWeatherTable
+      self$FuelTypeTable <- FuelTypeTable
+      self$SeverityCalibrationFactor <- SeverityCalibrationFactor
       self$FireDamageTable <- FireDamageTable
       self$MapNames <- MapNames %||% MapNames("severity", "fire", self$path)
       self$LogFile <- LogFile
@@ -103,7 +88,6 @@ DynamicFire <- R6Class(
     write = function() {
       stopifnot(
         !is.null(self$BuildUpIndex),
-        !is.null(self$DynamicWeatherTable),
         !is.null(self$FireDamageTable),
         !is.null(self$FireSizesTable),
         !is.null(self$FuelTypeTable),
@@ -358,7 +342,7 @@ insertBuildUpIndex <- function(bui = FALSE) {
 #' @returns data.frame
 #'
 #' @export
-prepFireSizesTable <- function(df = NULL) {
+prepFireSizesTable <- function(df) {
   browser() ## TODO: build this; enforce colnames and types / ranges
   data.frame(
     EcoCode = integer(0), ## 0 <= EcoCode < 65535;
@@ -376,7 +360,7 @@ prepFireSizesTable <- function(df = NULL) {
     FallFMCHi = integer(0), ## percent
     FallHiProp = numeric(0), ## proportion
     OpenFuelIndex = integer(0), ## 1 <= OpenFuelIndex <= N_fuel_types
-    NumFires = numeric(0), ## NumFires >= 0
+    NumFires = numeric(0) ## NumFires >= 0
   )
 }
 
@@ -409,10 +393,16 @@ insertFireSizesTable <- function(df = NULL) {
 #' @returns data.frame
 #'
 #' @export
-prepDynamicEcoregionTable <- function(year, filename) {
-  stopifnot(length(year) == length(filename))
+prepDynamicEcoregionTable <- function(year = NULL, filename = NULL) {
+  if (is.null(year) && is.null(filename)) {
+    df <- data.frame(Year = integer(0), FileName = character(0))
+  } else {
+    stopifnot(length(year) == length(filename))
 
-  data.frame(Year = year, FileName = filename)
+    df <- data.frame(Year = year, FileName = filename)
+  }
+
+  return(df)
 }
 
 #' Prepare Ground Slope and Uphill Azimuth raster files
@@ -492,8 +482,9 @@ insertUphillSlopeAzimuthMap <- function(file) {
 #'
 #' @export
 insertSeasonTable <- function(df) {
+  season_table_cols <- c("Name", "LeafStatus", "PropFire", "PercentCurling", "DayLengthProp")
   stopifnot(
-    identical(colnames(df), c("Name", "LeafStatus", "PropFire", "PercentCurling", "DayLengthProp")),
+    identical(colnames(df), season_table_cols),
     nrow(df) == 3,
     identical(df[["Name"]], c("Spring", "Summer", "Fall")),
     identical(df[["LeafStatus"]], c("LeafOff", "LeafOn", "LeafOff")),
@@ -605,6 +596,8 @@ defaultFuelTypeTable <- function() {
         17 , "Open"              , "O1b"    , 1.0      , 250 , 0.0350 , 1.7 , 1.00 ,    1 , 1.000  ,    0
   ) |>
     as.data.frame()
+
+  return(df)
 }
 
 #' Specify Dynamic Fire Extension `FuelTypeTable`

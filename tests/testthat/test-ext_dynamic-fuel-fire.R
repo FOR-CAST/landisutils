@@ -1,88 +1,116 @@
 testthat::test_that("Dynamic Fuel & Fire inputs are properly created", {
+  ## NOTE: all sample values from Dynamic Fire v4.0 test files (for LANDIS-II v8)
+  ## <https://github.com/LANDIS-II-Foundation/Extension-Dynamic-Fire-System/blob/master/testings/Core8-DynamicFire4.0/dynamic-fire_SetUpFire.txt>
+
   skip("incomplete") ## TODO
-  testthat::skip_if_not_installed("elevatr")
-  testthat::skip_if_not_installed("purrr")
-  testthat::skip_if_not_installed("withr")
-  testthat::skip_if_not_installed("zonal")
 
-  ## initial communities
-  cohortData <- landisutils::Chine_cohortData
-  pixelGroupMap <- terra::unwrap(landisutils::Chine_pixelGroupMap)
+  tmp_pth <- withr::local_tempdir("test_DynamicFireFuels_")
 
-  ## ecoregion
-  ecoregion <- landisutils::Chine_ecoregion
-  ecoregionMap <- terra::unwrap(landisutils::Chine_ecoregionMap)
-  ecoregionPolys <- landisutils::Chine_ecoregionPolys
+  fire_sizes <- tibble::tribble(
+    ~EcoCode , ~EcoName , ~Mu , ~Sigma , ~Max , ~SpFMCLo , ~SpFMCHi , ~SpHiProp , ~SumFMCLo , ~SumFMCHi , ~SumHiProp , ~FallFMCLo , ~FallFMCHi , ~FallHiProp , ~OpenFuelIndex , ~NumFires ,
+           1 , "fire1"  , 4.0 , 0.1    ,   50 ,       85 ,      100 , 0.50      ,        92 ,       120 , 0.50       ,        120 ,        120 , 0.50        ,              2 , 0.5       ,
+           2 , "fire2"  , 4.5 , 0.3    ,   50 ,       85 ,      105 , 0.70      ,        94 ,       120 , 0.40       ,        120 ,        120 , 0.50        ,              2 , 0.2       ,
+           3 , "fire3"  , 5.0 , 0.5    ,   50 ,       85 ,      110 , 0.60      ,        90 ,       120 , 0.70       ,        120 ,        120 , 0.50        ,             16 , 0.1       ,
+  )
 
-  ## fireRegimePolys
-  fireRegimePolys <- landisutils::Chine_fireRegimePolys
+  dyn_ecoregion <- prepDynamicEcoregionTable() ## optional
 
-  ## other
-  minRelativeB <- landisutils::Chine_minRelativeB
-  species <- landisutils::Chine_species
-  speciesEcoregion <- landisutils::Chine_speciesEcoregion
-  speciesLayers <- terra::unwrap(landisutils::Chine_speciesLayers)
-  standAgeMap <- terra::unwrap(landisutils::Chine_standAgeMap)
-  sufficientLight <- landisutils::Chine_sufficientLight
+  season <- tibble::tribble(
+    ~Name    , ~LeafStatus , ~PropFire , ~PercentCurling , ~DayLengthProp ,
+    "Spring" , "LeafOff"   , 0.20      ,              50 , 1.0            ,
+    "Summer" , "LeafOn"    , 0.50      ,              51 , 1.0            ,
+    "Fall"   , "LeafOff"   , 0.30      ,             100 , 1.0
+  )
 
-  ## prepare landis input files ----------------------------------------------------------------
+  fuel_type <- defaultFuelTypeTable()
 
-  tmp_pth <- withr::local_tempdir("test_Dynamic_Fire_Fuels_")
+  fire_damage <- defaultFireDamageTable()
 
-  fs_table <- prepFireSizesTable() ## TODO
-
-  ifrm_file <- terra::rasterize(fireRegimePolys, standAgeMap, field = "PolyID", background = 0) |>
-    prepInitialFireRegionsMap(file = file.path(tmp_pth, "fire-regions-map.tif"))
-
-  der_table <- prepDynamicEcoregionTable() ## TODO
-
-  gs_file <- prepGroundSlopeFile(ecoregionMap, path = tmp_pth)
-  usa_file <- prepUphillAzimuthMap(ecoregionMap, path = tmp_pth)
-
-  szn_table <- TODO ## TODO
-
-  iwdb_file <- prepInitialWeatherDatabase() ## TODO
-
-  log_file <- file.path(tmp_pth, "fire/log.csv")
+  log_file <- file.path(tmp_pth, "fire/dynamic-fire-event-log.csv")
   sum_log_file <- file.path(tmp_pth, "fire/summary-log.csv")
 
-  ext_dfire <- DynamicFire$new(
+  ## these files don't need to be functional, just need to exist
+  ifrm_file <- file.path(tmp_pth, "Ecoregions.tif")
+  gs_file <- file.path(tmp_pth, "GroundSlope.tif")
+  ua_file <- file.path(tmp_pth, "UphillSlope.tif")
+  iwdb_file <- file.path(tmp_pth, "dynamic-fire_WeatherData.csv")
+
+  all_files <- c(ifrm_file, gs_file, ua_file, iwdb_file)
+  purrr::walk2(.x = rep("", length(all_files)), .y = all_files, .f = writeLines)
+
+  ## create the dynamic fire extension config object
+  ext_dyn_fire <- DynamicFire$new(
     path = tmp_pth,
     Timestep = 10,
-    EventSizeType = NULL,
+    EventSizeType = "size_based",
     BuildUpIndex = "yes",
     WeatherRandomizer = 0L,
-    FireSizesTable = fs_table,
+    FireSizesTable = fire_sizes,
     InitialFireEcoregionsMap = ifrm_file,
-    DynamicEcoregionTable = NULL, # not used
+    DynamicEcoregionTable = dyn_ecoregion, ## optional
     GroundSlopeFile = gs_file,
-    UphillSlopeAzimuthMap = usa_file,
-    SeasonTable = szn_table,
-    InitialWeatherDatabase = NULL,
-    DynamicWeatherTable = NULL, # not used
-    FuelTypeTable = defaultFuelTypeTable(),
+    UphillSlopeAzimuthMap = ua_file,
+    SeasonTable = season,
+    InitialWeatherDatabase = iwdb_file,
+    DynamicWeatherTable = NULL, ## not used
+    FuelTypeTable = fuel_type,
     SeverityCalibrationFactor = 1.0,
-    FireDamageTable = defaultFireDamageTable(),
+    FireDamageTable = fire_damage,
     MapNames = NULL, # use default
     LogFile = log_file,
     SummaryLogFile = sum_log_file
   )
 
-  ext_dfire$write()
+  ext_dyn_fire$write()
 
-  testthat::expect_true(all(file.exists(file.path(tmp_pth, ext_of$files))))
+  testthat::expect_true(all(file.exists(file.path(tmp_pth, ext_dyn_fire$files))))
 
-  spp_fuel_coeffs <- data.frame(Species = c(), FuelCoefficient = c()) ## TODO
+  ## NOTE: all sample values from Dynamic Fuels v4.0 test files (for LANDIS-II v8)
+  ## <https://github.com/LANDIS-II-Foundation/Extension-Dynamic-Fire-System/blob/master/testings/Core8-DynamicFire4.0/dynamic-fire_SetUpFuel.txt>
 
-  fuel_types <- data.frame() ## TODO
+  spp_fuel_coeffs <- tibble::tribble(
+    ~Species   , ~FuelCoefficient ,
+    "abiebals" , 1.00             ,
+    "acerrubr" , 0.50             ,
+    "acersacc" , 1.00             ,
+    "betualle" , 1.00             ,
+    "fraxamer" , 1.00             ,
+    "piceglau" , 1.00             ,
+    "pinubank" , 1.00             ,
+    "pinuresi" , 1.00             ,
+    "pinustro" , 1.00             ,
+    "poputrem" , 1.00             ,
+    "querelli" , 1.00             ,
+    "querrubr" , 1.00             ,
+    "thujocci" , 1.00             ,
+    "tiliamer" , 1.00
+  )
 
-  disturb_conv <- data.frame() ## TODO
+  fuel_types <- tibble::tribble(
+    ~FuelType , ~BaseFuel           , ~AgeMin , ~AgeMax , ~Species                                                                                                         ,
+            1 , "Conifer"           ,       0 ,     900 , list("thujocci")                                                                                                 ,
+            2 , "Conifer"           ,       0 ,     500 , list("piceglau", "abiebals")                                                                                     ,
+            3 , "Conifer"           ,      41 ,     100 , list("pinubank")                                                                                                 ,
+            4 , "Conifer"           ,       0 ,      40 , list("pinubank")                                                                                                 ,
+           16 , "Open"              ,       0 ,      20 , list("pinustro", "pinuresi")                                                                                     ,
+            5 , "Conifer"           ,      20 ,     400 , list("pinustro", "pinuresi")                                                                                     ,
+            6 , "ConiferPlantation" ,       0 ,     100 , list("piceglau", "-abiebals", "-pinubank", "-pinustro")                                                          ,
+            8 , "Deciduous"         ,       0 ,     300 , list("acerrubr", "acersacc", "betualle", "fraxamer", "poputrem", "betupapy", "querelli", "querrubr", "tiliamer")
+  )
 
-  ext_dfuel <- DynamicFuels$new(
+  disturb_conv <- tibble::tribble(
+    ~Fuel , ~Type , ~Duration       , ~Prescription    ,
+       14 ,    20 , "WindSeverity3" , "AspenClearcut"  ,
+       13 ,    20 , "WindSeverity4" , "MaxAgeClearcut" ,
+       15 ,    20 , "WindSeverity5" , ""
+  )
+
+  ## create the dynamic fuels extension config object
+  ext_dyn_fuel <- DynamicFuels$new(
     path = tmp_pth,
     Timestep = 10,
     SpeciesFuelCoefficients = spp_fuel_coeffs,
-    HardwoodMaximum = 0L,
+    HardwoodMaximum = 15L,
     DeadFirMaxAge = 15L, ## not needed w/o BDA extension
     FuelTypes = fuel_types,
     EcoregionTable = data.frame(FuelType = integer(0), Ecoregion = character(0)),
@@ -91,6 +119,10 @@ testthat::test_that("Dynamic Fuel & Fire inputs are properly created", {
     PctConiferMapName = NULL, ## use default
     PctDeadFirMapName = NULL ## use default
   )
+
+  ext_dyn_fuel$write()
+
+  testthat::expect_true(all(file.exists(file.path(tmp_pth, ext_dyn_fuel$files))))
 
   withr::deferred_run()
 })

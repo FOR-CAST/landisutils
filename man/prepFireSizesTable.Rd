@@ -4,7 +4,7 @@
 \alias{prepFireSizesTable}
 \title{Prepare Dynamic Fire Extension \code{FireSizes} Table}
 \usage{
-prepFireSizesTable(df = NULL)
+prepFireSizesTable(df)
 }
 \arguments{
 \item{df}{data.frame corresponding to \code{FireSizes} table}

@@ -40,7 +40,6 @@ DynamicFuels <- R6Class(
       private$.LandisData <- "Dynamic Fuels"
       self$Timestep <- Timestep
 
-      self$name <- "Dynamic Fuels"
       self$type <- "disturbance"
       self$path <- path
       self$files <- "dynamic-fuels.txt" ## file won't exist yet
@@ -59,15 +58,13 @@ DynamicFuels <- R6Class(
 
     #' @description Write extension inputs to disk
     write = function() {
-      stopifnot(!is.null(self$FireReductionParameters))
-
       writeLines(
         c(
           insertLandisData(private$.LandisData),
           insertValue("Timestep", self$Timestep),
           insertSpeciesFuelCoefficients(self$SpeciesFuelCoefficients),
           insertValue("HardwoodMaximum", self$HardwoodMaximum),
-          insertDeadFirMaxAge(self$DeadFirMaxAge),
+          insertValue("DeadFirMaxAge", self$DeadFirMaxAge),
           insertFuelTypesTable(self$FuelTypes),
           insertEcoregionTable(self$EcoregionTable),
           insertDisturbanceConversionTable(self$DisturbanceConversionTable),
@@ -155,8 +152,8 @@ DynamicFuels <- R6Class(
       } else {
         stopifnot(
           is.data.frame(value),
-          ncol(df) == 3,
-          identical(colnames(df), c("FuelType", "Duration", "Prescription"))
+          ncol(value) == 4,
+          identical(colnames(value), c("Fuel", "Type", "Duration", "Prescription"))
         )
         private$.DisturbanceConversionTable <- value
       }
@@ -250,7 +247,7 @@ insertFuelTypesTable <- function(df) {
     glue::glue(">> Fuel Type    Base Fuel    Age Range    Species"),
     glue::glue(">> ---------    ---------    ---------    ----------------"),
     apply(df, 1, function(x) {
-      glue::glue_collapse(x, sep = "    ")
+      paste(glue::glue_collapse(x[-4], sep = "    "), glue::glue_collapse(unlist(x[4]), sep = "  "))
     }),
     glue::glue("") ## add blank line after each item group
   )
@@ -290,15 +287,15 @@ prepDisturbanceConversionTable <- function() {
 #' Specify Dynamic Fuel Extension's Disturbance Conversion Table
 #'
 #' @param df data.frame corresponding to `DisturbanceConversionTable`, with columns:
-#'   `FuelType` (int), `Duration` (int), and `Prescription` (char).
+#'   `Fuel` (int), `Type` (int), `Duration` (int), and `Prescription` (char).
 #'
 #' @template return_insert
 #'
 insertDisturbanceConversionTable <- function(df) {
   c(
     glue::glue("DisturbanceConversionTable"),
-    glue::glue(">> Fuel Type    Duration    Prescription"),
-    glue::glue(">> ---------    --------    ------------"),
+    glue::glue(">> Fuel  Type    Duration    Prescription"),
+    glue::glue(">> ----  ---    --------    ------------"),
     apply(df, 1, function(x) {
       glue::glue_collapse(x, sep = "    ")
     }),

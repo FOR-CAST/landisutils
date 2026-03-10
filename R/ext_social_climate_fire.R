@@ -8,7 +8,7 @@
 #' @export
 #'
 #' @examples
-#' ## See vignette for usage examples.
+#' ## see vignette for usage examples
 #'
 SocialClimateFire <- R6Class(
   "SocialClimateFire",

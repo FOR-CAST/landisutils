@@ -9,29 +9,7 @@ Dynamic Fire System Extension
 Dynamic Fire System Extension
 }
 \examples{
-dynamic_fire <- DynamicFire$new(
-  path,
-  Timestep = 10,
-  EventSizeType = NULL,
-  BuildUpIndex = NULL,
-  WeatherRandomizer = NULL,
-  FireSizesTable = NULL,
-  InitialFireEcoregionsMap = NULL,
-  DynamicEcoregionTable = NULL,
-  GroundSlopeFile = NULL,
-  UphillSlopeAzimuthMap = NULL,
-  SeasonTable = NULL,
-  InitialWeatherDatabase = NULL,
-  DynamicWeatherTable = NULL,
-  FuelTypeTable = NULL,
-  SeverityCalibrationFactor = NULL,
-  FireDamageTable = NULL,
-  MapNames = NULL, # use default
-  LogFile = NULL, # use default
-  SummaryLogFile = NULL # use default
-)
-
-dynamic_fire$write()
+## see vignette for usage examples
 
 }
 \references{
