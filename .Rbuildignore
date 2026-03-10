@@ -11,3 +11,6 @@
 ^[.]?air[.]toml$
 ^\.vscode$
 ^J4RTmpFile$
+^_pkgdown\.yml$
+^docs$
+^pkgdown$

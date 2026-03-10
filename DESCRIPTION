@@ -2,17 +2,12 @@ Package: landisutils
 Title: Utilities for running LANDIS-II simulations
 Version: 0.0.1.9015
 Authors@R: 
-    person(c("Alex", "M"), "Chubaty", email = "achubaty@for-cast.ca", role = c("aut", "cre"),
+    person(c("Alex", "M"), "Chubaty", , "achubaty@for-cast.ca", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0001-7146-8135"))
-Description: Tools and utilities for preparing data for and running 'LANDIS-II' simulations,
-    and post-processing their outputs.
+Description: Tools and utilities for preparing data for and running
+    'LANDIS-II' simulations, and post-processing their outputs.
 License: GPL (>= 3)
-Encoding: UTF-8
-Language: en-US
-LazyData: true
-Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.3
-VignetteBuilder: knitr
+URL: https://for-cast.github.io/landisutils/
 Depends: 
     R (>= 4.2)
 Imports:
@@ -53,18 +48,25 @@ Suggests:
     testthat (>= 3.0.0),
     withr,
     zonal
+VignetteBuilder: 
+    knitr
 Remotes:
     bluegreen-labs/appeears,
     mikejohnson51/climateR,
+    mikejohnson51/zonal,
     PredictiveEcology/LandR@development,
     PredictiveEcology/map@development,
     PredictiveEcology/reproducible@development,
     PredictiveEcology/scfmutils@development,
     PredictiveEcology/SpaDES.core@development,
-    PredictiveEcology/SpaDES.tools@development,
-    mikejohnson51/zonal
+    PredictiveEcology/SpaDES.tools@development
 Config/testthat/edition: 3
 Config/testthat/parallel: true
+Encoding: UTF-8
+Language: en-US
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.3
 Collate: 
     'LandisClimateConfig.R'
     'LandisExtension.R'
