@@ -1,4 +1,11 @@
-## fire extensions --------------------------------------------------------------------------------
+#' Ensure percent symbol appended to table values
+#'
+#' @param x Character
+#'
+#' @export
+appendPercent <- function(x) {
+  ifelse(stringr::str_ends(x, stringr::fixed("%")), x, stringr::str_c(x, "%"))
+}
 
 #' Specify Dynamic Tables
 #'
@@ -28,15 +35,6 @@ insertDynamicTable <- function(name = NULL, df = NULL) {
     }),
     glue::glue("") ## add blank line after each item group
   )
-}
-
-#' Ensure percent symbol appended to table values
-#'
-#' @param x Character
-#'
-#' @export
-appendPercent <- function(x) {
-  ifelse(stringr::str_ends(x, stringr::fixed("%")), x, stringr::str_c(x, "%"))
 }
 
 #' Create sample Fire Damage Table

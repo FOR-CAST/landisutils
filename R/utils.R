@@ -39,20 +39,29 @@ insertLandisData <- function(x) {
 #'
 #' @param value A single parameter value of integer, numeric, or character type.
 #'
+#' @param blank_line Logical. Should a blank line be added after the line?
+#'
 #' @template return_insert
 #'
 #' @keywords internal
-insertValue <- function(type, value) {
+insertValue <- function(type, value, blank_line = TRUE) {
   stopifnot(length(value) == 1)
 
   if (!is.na(value)) {
-    c(
+    out <- ifelse(
+      is.character(value),
       glue::glue("{type}    \"{value}\""),
-      glue::glue("") ## add blank line after each item group
+      glue::glue("{type}    {format(value, digits = 8, scientific = FALSE)}")
     )
+
+    if (isTRUE(blank_line)) {
+      out <- c(out, glue::glue(""))
+    }
   } else {
-    ""
+    out <- ""
   }
+
+  out
 }
 
 #' Specify an input file for an extension

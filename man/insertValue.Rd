@@ -4,12 +4,14 @@
 \alias{insertValue}
 \title{Specify an input parameter value for an extension}
 \usage{
-insertValue(type, value)
+insertValue(type, value, blank_line = TRUE)
 }
 \arguments{
 \item{type}{Character, specifying the parameter type (i.e., the LANDIS-II name for the input).}
 
 \item{value}{A single parameter value of integer, numeric, or character type.}
+
+\item{blank_line}{Logical. Should a blank line be added after the line?}
 }
 \value{
 Character string(s) to write to the suitable LANDIS-II input file.

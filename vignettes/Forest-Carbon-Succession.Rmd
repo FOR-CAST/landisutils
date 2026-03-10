@@ -318,21 +318,25 @@ ext_forcs$write()
 ## Verify configuration files
 
 ```{r forest-carbon-succession-config}
-readLines(file.path(tmp_pth, ext_forcs$files[1]))
+readLines(file.path(tmp_pth, ext_forcs$files[1])) |>
+  cat(sep = "\n")
 ```
 
 ```{r forest-carbon-succession-climate}
-readLines(file.path(tmp_pth, ext_forcs$files[2]))
+readLines(file.path(tmp_pth, ext_forcs$files[2])) |>
+  cat(sep = "\n")
 ```
 
 *skip initial communities files*
 
 ```{r forest-carbon-succession-dist-mat}
-readLines(file.path(tmp_pth, ext_forcs$files[5]))
+readLines(file.path(tmp_pth, ext_forcs$files[5])) |>
+  cat(sep = "\n")
 ```
 
 ```{r forest-carbon-succession-snags}
-readLines(file.path(tmp_pth, ext_forcs$files[6]))
+readLines(file.path(tmp_pth, ext_forcs$files[6])) |>
+  cat(sep = "\n")
 ```
 
 ## Cleanup

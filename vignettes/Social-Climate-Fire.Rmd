@@ -196,13 +196,15 @@ ext_social_climate_fire$write()
 ## Verify configuration files
 
 ```{r social-climate-fire-config}
-# readLines(file.path(tmp_pth, ext_social_climate_fire$files[1]))
+readLines(file.path(tmp_pth, ext_social_climate_fire$files[1])) |>
+  cat(sep = "\n")
 ```
 
 *skip species table and raster files*
 
 ```{r social-climate-fire-supp}
-# readLines(file.path(tmp_pth, ext_social_climate_fire$files[10]))
+readLines(file.path(tmp_pth, ext_social_climate_fire$files[10])) |>
+  cat(sep = "\n")
 ```
 
 ## Cleanup

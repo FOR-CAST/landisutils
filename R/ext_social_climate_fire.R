@@ -231,58 +231,94 @@ SocialClimateFire <- R6Class(
           insertFile("ClayMap", self$ClayMap),
 
           ## ignition model coeffs
-          insertValue("LightningIgnitionsB0", self$LightningIgnitionsCoeffs[1]),
-          insertValue("LightningIgnitionsB1", self$LightningIgnitionsCoeffs[2]),
-          insertValue("AccidentalIgnitionsB0", self$AccidentalIgnitionsCoeffs[1]),
-          insertValue("AccidentalIgnitionsB1", self$AccidentalIgnitionsCoeffs[2]),
+          insertValue("LightningIgnitionsB0", self$LightningIgnitionsCoeffs[1], blank_line = FALSE),
+          insertValue("LightningIgnitionsB1", self$LightningIgnitionsCoeffs[2], blank_line = FALSE),
+          insertValue(
+            "AccidentalIgnitionsB0",
+            self$AccidentalIgnitionsCoeffs[1],
+            blank_line = FALSE
+          ),
+          insertValue(
+            "AccidentalIgnitionsB1",
+            self$AccidentalIgnitionsCoeffs[2],
+            blank_line = TRUE
+          ),
 
-          insertValue("IgnitionDistribution", self$IgnitionDistribution),
+          insertValue("IgnitionDistribution", self$IgnitionDistribution, blank_line = TRUE),
 
-          insertValue("LightningIgnitionsBinomialB0", self$LightningIgnitionsBinomialCoeffs[1]),
-          insertValue("LightningIgnitionsBinomialB1", self$LightningIgnitionsBinomialCoeffs[2]),
-          insertValue("AccidentalIgnitionsBinomialB0", self$AccidentalIgnitionsBinomialCoeffs[1]),
-          insertValue("AccidentalIgnitionsBinomialB1", self$AccidentalIgnitionsBinomialCoeffs[2]),
+          insertValue(
+            "LightningIgnitionsBinomialB0",
+            self$LightningIgnitionsBinomialCoeffs[1],
+            blank_line = FALSE
+          ),
+          insertValue(
+            "LightningIgnitionsBinomialB1",
+            self$LightningIgnitionsBinomialCoeffs[2],
+            blank_line = FALSE
+          ),
+          insertValue(
+            "AccidentalIgnitionsBinomialB0",
+            self$AccidentalIgnitionsBinomialCoeffs[1],
+            blank_line = FALSE
+          ),
+          insertValue(
+            "AccidentalIgnitionsBinomialB1",
+            self$AccidentalIgnitionsBinomialCoeffs[2],
+            blank_line = FALSE
+          ),
 
           insertValue("MaximumFineFuels", self$MaximumFineFuels),
 
           ## prescribed fires
-          insertValue("MaximumRxWindSpeed", self$MaximumRxWindSpeed),
-          insertValue("MaximumRxFireWeatherIndex", self$MaximumRxFireWeatherIndex),
-          insertValue("MinimumRxFireWeatherIndex", self$MinimumRxFireWeatherIndex),
-          insertValue("MaximumRxTemperature", self$MaximumRxTemperature),
-          insertValue("MinimumRxRelativeHumidity", self$MinimumRxRelativeHumidity),
-          insertValue("MaximumRXFireIntensity", self$MaximumRXFireIntensity),
-          insertValue("NumberRxAnnualFires", self$NumberRxAnnualFires),
-          insertValue("NumberRxDailyFires", self$NumberRxDailyFires),
-          insertValue("FirstDayRxFires", self$FirstDayRxFires),
-          insertValue("LastDayRxFires", self$LastDayRxFires),
-          insertValue("TargetRxSize", self$TargetRxSize),
+          insertValue("MaximumRxWindSpeed", self$MaximumRxWindSpeed, blank_line = FALSE),
+          insertValue(
+            "MaximumRxFireWeatherIndex",
+            self$MaximumRxFireWeatherIndex,
+            blank_line = FALSE
+          ),
+          insertValue(
+            "MinimumRxFireWeatherIndex",
+            self$MinimumRxFireWeatherIndex,
+            blank_line = FALSE
+          ),
+          insertValue("MaximumRxTemperature", self$MaximumRxTemperature, blank_line = FALSE),
+          insertValue(
+            "MinimumRxRelativeHumidity",
+            self$MinimumRxRelativeHumidity,
+            blank_line = FALSE
+          ),
+          insertValue("MaximumRXFireIntensity", self$MaximumRXFireIntensity, blank_line = FALSE),
+          insertValue("NumberRxAnnualFires", self$NumberRxAnnualFires, blank_line = FALSE),
+          insertValue("NumberRxDailyFires", self$NumberRxDailyFires, blank_line = FALSE),
+          insertValue("FirstDayRxFires", self$FirstDayRxFires, blank_line = FALSE),
+          insertValue("LastDayRxFires", self$LastDayRxFires, blank_line = FALSE),
+          insertValue("TargetRxSize", self$TargetRxSize, blank_line = FALSE),
           insertFile("RxZonesMap", self$RxZonesMap),
 
           ## spread area coeffs
-          insertValue("MaximumSpreadAreaB0", self$MaximumSpreadAreaCoeffs[1]),
-          insertValue("MaximumSpreadAreaB1", self$MaximumSpreadAreaCoeffs[2]),
-          insertValue("MaximumSpreadAreaB2", self$MaximumSpreadAreaCoeffs[3]),
+          insertValue("MaximumSpreadAreaB0", self$MaximumSpreadAreaCoeffs[1], blank_line = FALSE),
+          insertValue("MaximumSpreadAreaB1", self$MaximumSpreadAreaCoeffs[2], blank_line = FALSE),
+          insertValue("MaximumSpreadAreaB2", self$MaximumSpreadAreaCoeffs[3], blank_line = TRUE),
 
           ## spread probability coeffs
-          insertValue("SpreadProbabilityB0", self$SpreadProbabilityCoeffs[1]),
-          insertValue("SpreadProbabilityB1", self$SpreadProbabilityCoeffs[2]),
-          insertValue("SpreadProbabilityB2", self$SpreadProbabilityCoeffs[3]),
-          insertValue("SpreadProbabilityB3", self$SpreadProbabilityCoeffs[4]),
+          insertValue("SpreadProbabilityB0", self$SpreadProbabilityCoeffs[1], blank_line = FALSE),
+          insertValue("SpreadProbabilityB1", self$SpreadProbabilityCoeffs[2], blank_line = FALSE),
+          insertValue("SpreadProbabilityB2", self$SpreadProbabilityCoeffs[3], blank_line = FALSE),
+          insertValue("SpreadProbabilityB3", self$SpreadProbabilityCoeffs[4], blank_line = TRUE),
 
           ## site mortality coeffs
-          insertValue("SiteMortalityB0", self$SiteMortalityCoeffs[1]),
-          insertValue("SiteMortalityB1", self$SiteMortalityCoeffs[2]),
-          insertValue("SiteMortalityB2", self$SiteMortalityCoeffs[3]),
-          insertValue("SiteMortalityB3", self$SiteMortalityCoeffs[4]),
-          insertValue("SiteMortalityB4", self$SiteMortalityCoeffs[5]),
-          insertValue("SiteMortalityB5", self$SiteMortalityCoeffs[6]),
-          insertValue("SiteMortalityB6", self$SiteMortalityCoeffs[7]),
+          insertValue("SiteMortalityB0", self$SiteMortalityCoeffs[1], blank_line = FALSE),
+          insertValue("SiteMortalityB1", self$SiteMortalityCoeffs[2], blank_line = FALSE),
+          insertValue("SiteMortalityB2", self$SiteMortalityCoeffs[3], blank_line = FALSE),
+          insertValue("SiteMortalityB3", self$SiteMortalityCoeffs[4], blank_line = FALSE),
+          insertValue("SiteMortalityB4", self$SiteMortalityCoeffs[5], blank_line = FALSE),
+          insertValue("SiteMortalityB5", self$SiteMortalityCoeffs[6], blank_line = FALSE),
+          insertValue("SiteMortalityB6", self$SiteMortalityCoeffs[7], blank_line = TRUE),
 
           ## cohort mortality coeffs
-          insertValue("CohortMortalityB0", self$CohortMortalityCoeffs[1]),
-          insertValue("CohortMortalityB1", self$CohortMortalityCoeffs[2]),
-          insertValue("CohortMortalityB2", self$CohortMortalityCoeffs[3]),
+          insertValue("CohortMortalityB0", self$CohortMortalityCoeffs[1], blank_line = FALSE),
+          insertValue("CohortMortalityB1", self$CohortMortalityCoeffs[2], blank_line = FALSE),
+          insertValue("CohortMortalityB2", self$CohortMortalityCoeffs[3], blank_line = TRUE),
 
           ## ladder fuels
           insertValue("LadderFuelMaxAge", self$LadderFuelMaxAge),
@@ -850,6 +886,7 @@ prepSuppression_CSV_File <- function(df, path, filename = "suppression.csv") {
 #' @keywords internal
 insertLadderFuelSpeciesList <- function(x) {
   c(
+    glue::glue("LadderFuelSpeciesList"),
     glue::glue_collapse(x, sep = "  "),
     glue::glue("") ## add blank line after each item group
   )
