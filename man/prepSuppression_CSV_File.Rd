@@ -8,6 +8,10 @@ prepSuppression_CSV_File(df, path, filename = "suppression.csv")
 }
 \arguments{
 \item{df}{data.frame corresponding to \code{Suppression_CSV_File} table}
+
+\item{path}{Character. Path specifying a directory to use for the scenario runs.}
+
+\item{filename}{Character, specifying a filename (will be appended to \code{path}).}
 }
 \value{
 Character string(s) specifying suitable LANDIS-II input file(s),

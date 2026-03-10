@@ -12,7 +12,7 @@
 #'   MakeTable = "yes",
 #'   Species = "all",
 #'   LiveMapNames = NULL, # use default
-#'   DeadPools = "both"
+#'   DeadPools = "both",
 #'   DeadMapNames = NULL # use default
 #' )
 #'

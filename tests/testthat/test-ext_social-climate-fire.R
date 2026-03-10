@@ -22,8 +22,9 @@ testthat::test_that("Social-Climate-Fire inputs are properly created", {
     "FixnSeed"   ,     100 ,                    10
   )
 
-  species_file <- prepSpecies_CSV_File(
+  species_file <- prepSpeciesData(
     df = species_table,
+    type = "fire",
     path = tmp_pth,
     filename = "SCRPPLE_Spp_Table.csv"
   )

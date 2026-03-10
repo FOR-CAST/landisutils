@@ -1,6 +1,6 @@
 Package: landisutils
 Title: Utilities for running LANDIS-II simulations
-Version: 0.0.1.9014
+Version: 0.0.1.9015
 Authors@R: 
     person(c("Alex", "M"), "Chubaty", email = "achubaty@for-cast.ca", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0001-7146-8135"))
@@ -26,6 +26,7 @@ Imports:
     stats,
     stringr,
     terra,
+    tibble,
     tidyr,
     utils
 Suggests:
@@ -34,6 +35,9 @@ Suggests:
     climateR,
     elevatr,
     furrr,
+    future,
+    future.apply,
+    keyring,
     knitr,
     LandR,
     map,

@@ -1,3 +1,5 @@
+utils::globalVariables(c("AgeAtDeath"))
+
 #' Forest Carbon Succession (ForCS) Extension
 #'
 #' @include ext_utils.R
@@ -353,6 +355,8 @@ ForCS <- R6Class(
 #'
 #' @template param_path
 #'
+#' @template param_filename
+#'
 #' @template return_file
 #'
 #' @returns data.frame
@@ -393,6 +397,8 @@ prepClimateFile <- function(df = NULL, path, filename = "ForCS_climate.txt") {
 #' @param DisturbOtherTransferBiomass `data.frame`
 #'
 #' @template param_path
+#'
+#' @template param_filename
 #'
 #' @template return_file
 #'
@@ -464,6 +470,8 @@ prepDisturbanceMatrixFile <- function(
 #' @param df `data.frame`
 #'
 #' @template param_path
+#'
+#' @template param_filename
 #'
 #' @template return_file
 #'

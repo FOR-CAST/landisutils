@@ -213,7 +213,7 @@ insertSpeciesFuelCoefficients <- function(df) {
 #' @returns data.frame for use with [insertFuelTypesTable()]
 #'
 #' @references
-#' Natural Resources Canada. 2019. Fire Behaviour Prediction System Fuel Type Dsecriptions.
+#' Natural Resources Canada. 2019. Fire Behavior Prediction System Fuel Type Descriptions.
 #'   <https://cwfis.cfs.nrcan.gc.ca/background/fueltypes/c1>
 #'
 #' @export

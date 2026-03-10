@@ -42,7 +42,9 @@ NULL
 #' @importFrom data.table setcolorder
 #' @importFrom data.table setkeyv
 #' @importFrom data.table setnames
+#' @importFrom dplyr across
 #' @importFrom dplyr all_of
+#' @importFrom dplyr any_of
 #' @importFrom dplyr arrange
 #' @importFrom dplyr mutate
 #' @importFrom dplyr pull
@@ -66,6 +68,7 @@ NULL
 #' @importFrom terra values
 #' @importFrom terra values<-
 #' @importFrom terra writeRaster
+#' @importFrom tibble tribble
 #' @importFrom tidyr pivot_longer
 #' @importFrom tidyr pivot_wider
 #' @importFrom utils head

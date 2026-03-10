@@ -226,7 +226,7 @@ variable social-ecological fire regimes. Ecological Modelling, 401, 85–93.
 
 \item{\code{AccidentalIgnitionsCoeffs}}{Real. B0 and B1 from equation 1 (Scheller et al. 2019).}
 
-\item{\code{IgnitionDistribution}}{Character. One of "Poisson" or "ZeroInflatedPoisson".}
+\item{\code{IgnitionDistribution}}{Character. One of \code{"Poisson"} or \code{"ZeroInflatedPoisson"}.}
 
 \item{\code{LightningIgnitionsBinomialCoeffs}}{Real. Parameters $b_z_0$ and $b_z_1$ from equation 2 (Scheller et al. 2019).}
 

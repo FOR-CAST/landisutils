@@ -10,6 +10,8 @@ prepSnagFile(df = NULL, path, filename = "ForCS_snags.txt")
 \item{df}{\code{data.frame}}
 
 \item{path}{Character. Path specifying a directory to use for the scenario runs.}
+
+\item{filename}{Character, specifying a filename (will be appended to \code{path}).}
 }
 \value{
 Character string(s) specifying suitable LANDIS-II input file(s),

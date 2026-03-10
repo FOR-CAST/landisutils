@@ -147,6 +147,7 @@ scenario <- function(name = NULL, extensions = NULL, climate_config = NULL, path
 #' ) |>
 #'   insertOtherExtensions()
 #'
+#' @export
 #' @rdname insertExtensions
 insertSuccessionExtensions <- function(exts = NULL) {
   stopifnot(
@@ -163,6 +164,7 @@ insertSuccessionExtensions <- function(exts = NULL) {
   )
 }
 
+#' @export
 #' @rdname insertExtensions
 insertDisturbanceExtensions <- function(exts = NULL) {
   if (!is.null(exts) && !is.null(names(exts))) {
@@ -184,6 +186,7 @@ insertDisturbanceExtensions <- function(exts = NULL) {
   }
 }
 
+#' @export
 #' @rdname insertExtensions
 insertOtherExtensions <- function(exts = NULL) {
   if (!is.null(exts) && !is.null(names(exts))) {

@@ -63,32 +63,32 @@ Caching is enabled by default, with the cache location configurable by setting t
 if (requireNamespace("climateR", quietly = TRUE) &&
   requireNamespace("zonal", quietly = TRUE)) {
   ## use BEC zones in random study area in BC
-  ecoregionPolys <- landisutils::test_ecoregionPolys
+  # ecoregionPolys <- landisutils::test_ecoregionPolys
 
-  if (interactive()) plot(frpFRT["PolyID"])
+  # if (interactive()) plot(frpFRT["PolyID"])
 
-  clim_years <- 2011:2012 ## availability is 1980 to last year
+  # clim_years <- 2011:2012 ## availability is 1980 to last year
 
   ## get historic daily weather data from Daymet
-  daily_climvars <- c("prcp", "tmax", "tmin")
-  daily_weather <- prep_daily_weather(
-    vars = daily_climvars,
-    years = clim_years,
-    studyArea = ecoregionPolys,
-    id = "PolyID"
-  )
+  # daily_climvars <- c("prcp", "tmax", "tmin")
+  # daily_weather <- prep_daily_weather(
+  #   vars = daily_climvars,
+  #   years = clim_years,
+  #   studyArea = ecoregionPolys,
+  #   id = "PolyID"
+  # )
 
-  head(daily_weather)
+  # head(daily_weather)
 
   ## get historic monthly weather from TerraClim
-  monthly_climvars <- c("ppt", "tmax", "tmin")
-  monthly_weather <- prep_monthly_weather(
-    vars = monthly_climvars,
-    years = clim_years,
-    studyArea = ecoregionPolys,
-    id = "PolyID"
-  )
+  # monthly_climvars <- c("ppt", "tmax", "tmin")
+  # monthly_weather <- prep_monthly_weather(
+  #   vars = monthly_climvars,
+  #   years = clim_years,
+  #   studyArea = ecoregionPolys,
+  #   id = "PolyID"
+  # )
 
-  head(monthly_weather)
+  # head(monthly_weather)
 }
 }

@@ -2,52 +2,61 @@
 #'
 #' @param df data.frame corresponding to the species data table
 #'
-#' @template param_path
-#'
 #' @param type character, corresponding to one of the following types:
 #'             - "core": generates core species data (`.txt`) file;
 #'             - "fire": generates `.csv` version for use with fire extensions;
 #'             - "succession": generates `.csv` version for use with succession extensions;
 #'
+#' @template param_path
+#'
+#' @template param_filename
+#'
 #' @template return_file
 #'
 #' @aliases prepSpecies_CSV_File prepSpeciesInputFile
 #' @export
-prepSpeciesData <- function(df = NULL, path = NULL, type = NULL) {
+prepSpeciesData <- function(df = NULL, type = NULL, path = NULL, filename = NULL) {
   stopifnot(!is.null(df), !is.null(path), !is.null(type), type %in% c("core", "fire", "succession"))
   path <- .checkPath(path)
 
   SpeciesData <- df |>
     dplyr::select(
       ## drop these columns
-      !c(Area, hardsoft, speciesCode, mANPPproportion, inflationFactor, growthCurveSource)
+      -dplyr::any_of(c(
+        "Area",
+        "hardsoft",
+        "speciesCode",
+        "mANPPproportion",
+        "inflationFactor",
+        "growthCurveSource"
+      ))
     ) |>
-    dplyr::rename(
-      SpeciesCode = species,
+    dplyr::rename(dplyr::any_of(c(
+      SpeciesCode = "species",
 
       ## core parameters
-      Longevity = longevity,
-      SexualMaturity = sexualmature,
-      SeedDispDistEff = seeddistance_eff,
-      SeedDispDistMax = seeddistance_max,
-      VegReprodProb = resproutprob,
-      SproutAgeMin = resproutage_min,
-      SproutAgeMax = resproutage_max,
-      PostFireRegen = postfireregen,
+      Longevity = "longevity",
+      SexualMaturity = "sexualmature",
+      SeedDispDistEff = "seeddistance_eff",
+      SeedDispDistMax = "seeddistance_max",
+      VegReprodProb = "resproutprob",
+      SproutAgeMin = "resproutage_min",
+      SproutAgeMax = "resproutage_max",
+      PostFireRegen = "postfireregen",
 
       ## Succession parameters
-      LeafLongevity = leaflongevity,
-      WoodDecayRate = wooddecayrate,
-      MortalityCurve = mortalityshape,
-      GrowthCurve = growthcurve,
-      LeafLignin = leafLignin,
-      ShadeTolerance = shadetolerance,
-      FireTolerance = firetolerance ## also used for fire
-    ) |>
-    dplyr::mutate(
-      ShadeTolerance = as.integer(ShadeTolerance),
-      FireTolerance = as.integer(FireTolerance)
-    )
+      LeafLongevity = "leaflongevity",
+      WoodDecayRate = "wooddecayrate",
+      MortalityCurve = "mortalityshape",
+      GrowthCurve = "growthcurve",
+      LeafLignin = "leafLignin",
+      ShadeTolerance = "shadetolerance",
+      FireTolerance = "firetolerance" ## also used for fire
+    ))) |>
+    dplyr::mutate(dplyr::across(
+      dplyr::any_of(c("ShadeTolerance", "FireTolerance")),
+      .fns = as.integer
+    ))
 
   if (type == "core") {
     SpeciesData <- SpeciesData |>
@@ -62,7 +71,8 @@ prepSpeciesData <- function(df = NULL, path = NULL, type = NULL) {
         SproutAgeMax,
         PostFireRegen
       )
-    file <- file.path(path, "species-core.txt")
+    filename <- filename %||% "species-core.txt"
+    file <- file.path(path, filename)
     writeLines(
       c(
         insertLandisData("Species"),
@@ -76,8 +86,15 @@ prepSpeciesData <- function(df = NULL, path = NULL, type = NULL) {
       file
     )
   } else if (type == "fire") {
-    SpeciesData <- SpeciesData |> dplyr::select(SpeciesCode, FireTolerance)
-    file <- file.path(path, "species-original-fire.csv")
+    SpeciesData <- SpeciesData |>
+      dplyr::select(dplyr::any_of(c(
+        "SpeciesCode",
+        "FireTolerance",
+        "AgeDBH",
+        "MaximumBarkThickness"
+      )))
+    filename <- filename %||% "species-fire.csv"
+    file <- file.path(path, filename)
     write.csv(SpeciesData, file, row.names = FALSE)
   } else if (type == "succession") {
     SpeciesData <- SpeciesData |>
@@ -91,7 +108,8 @@ prepSpeciesData <- function(df = NULL, path = NULL, type = NULL) {
         ShadeTolerance,
         FireTolerance
       )
-    file <- file.path(path, "species.csv")
+    filename <- filename %||% "species.csv"
+    file <- file.path(path, filename)
     write.csv(SpeciesData, file, row.names = FALSE)
   }
 

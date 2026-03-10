@@ -6,17 +6,19 @@
 \alias{prepSpeciesInputFile}
 \title{Species Data File}
 \usage{
-prepSpeciesData(df = NULL, path = NULL, type = NULL)
+prepSpeciesData(df = NULL, type = NULL, path = NULL, filename = NULL)
 }
 \arguments{
 \item{df}{data.frame corresponding to the species data table}
-
-\item{path}{Character. Path specifying a directory to use for the scenario runs.}
 
 \item{type}{character, corresponding to one of the following types:
 - "core": generates core species data (\code{.txt}) file;
 - "fire": generates \code{.csv} version for use with fire extensions;
 - "succession": generates \code{.csv} version for use with succession extensions;}
+
+\item{path}{Character. Path specifying a directory to use for the scenario runs.}
+
+\item{filename}{Character, specifying a filename (will be appended to \code{path}).}
 }
 \value{
 Character string(s) specifying suitable LANDIS-II input file(s),

@@ -13,6 +13,6 @@ data.frame for use with \code{\link[=insertFuelTypesTable]{insertFuelTypesTable(
 Assign fuel types to one of the Canadian Fire Behavior Prediction System fuel types.
 }
 \references{
-Natural Resources Canada. 2019. Fire Behaviour Prediction System Fuel Type Dsecriptions.
+Natural Resources Canada. 2019. Fire Behavior Prediction System Fuel Type Descriptions.
 \url{https://cwfis.cfs.nrcan.gc.ca/background/fueltypes/c1}
 }

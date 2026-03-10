@@ -20,7 +20,7 @@ Forestry Canada. 1992. Development and structure of the Canadian Forest Fire Beh
 Forestry Canada, Headquarters, Fire Danger Group and Science and Sustainable Development Directorate, Ottawa.
 Information Report ST-X-3. 64 p. \url{https://ostrnrcan-dostrncan.canada.ca/handle/1845/235421}
 
-Natural Resources Canada. 2019. Fire Behaviour Prediction System Fuel Type Dsecriptions.
+Natural Resources Canada. 2019. Fire Behavior Prediction System Fuel Type Descriptions.
 \url{https://cwfis.cfs.nrcan.gc.ca/background/fueltypes/c1}
 
 Wotton, B.M.; Alexander, M.E.; Taylor, S.W. 2009. Updates and revisions to the 1992 Canadian Forest

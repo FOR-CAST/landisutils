@@ -34,7 +34,7 @@ SocialClimateFire <- R6Class(
     #' @param ClayMap Character. Relative file path.
     #' @param LightningIgnitionsCoeffs Real. Parameters B0 and B1 from equation 1 (Scheller et al. 2019).
     #' @param AccidentalIgnitionsCoeffs Real. B0 and B1 from equation 1 (Scheller et al. 2019).
-    #' @param IgnitionDistribution Character. One of "Poisson" or "ZeroInflatedPoisson".
+    #' @param IgnitionDistribution Character. One of `"Poisson"` or `"ZeroInflatedPoisson"`.
     #' @param LightningIgnitionsBinomialCoeffs Real. Parameters $b_z_0$ and $b_z_1$ from equation 2 (Scheller et al. 2019).
     #' @param AccidentalIgnitionsBinomialCoeffs Real. Parameters $b_z_0$ and $b_z_1$ from equation 2 (Scheller et al. 2019).
     #' @param MaximumFineFuels Real. Maximum amount of fine fuels ($g/m^2$).
@@ -845,25 +845,13 @@ SocialClimateFire <- R6Class(
   )
 )
 
-#' Prepare `Species_CSV_File` for Social-Climate-Fire extension
-#'
-#' @param df data.frame corresponding to `Species_CSV_File` table
-#'
-#' @template return_file
-#'
-#' @export
-prepSpecies_CSV_File <- function(df, path, filename = "species-table.csv") {
-  stopifnot(c("SpeciesCode", "AgeDBH", "MaximumBarkThickness") %in% colnames(df))
-
-  file <- file.path(path, filename)
-  write.csv(df, file, row.names = FALSE)
-
-  return(file)
-}
-
 #' Prepare `Suppression_CSV_File` for Social-Climate-Fire extension
 #'
 #' @param df data.frame corresponding to `Suppression_CSV_File` table
+#'
+#' @template param_path
+#'
+#' @template param_filename
 #'
 #' @template return_file
 #'
