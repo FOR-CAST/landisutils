@@ -27,6 +27,10 @@ One of \code{"WardSeedDispersal"}, \code{"NoDispersal"}, \code{"UniversalDispers
 
 \item{\code{CalibrateMode}}{Logical, or character indicating "yes" or "no".}
 
+\item{\code{SpinupCohorts}}{Logical, or character indicating "yes" or "no".}
+
+\item{\code{SpinupMortalityFraction}}{Real.}
+
 \item{\code{MinRelativeBiomass}}{\code{data.frame}.}
 
 \item{\code{SufficientLight}}{\code{data.frame}.}
@@ -64,10 +68,14 @@ One of \code{"WardSeedDispersal"}, \code{"NoDispersal"}, \code{"UniversalDispers
 \subsection{Method \code{new()}}{
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{BiomassSuccession$new(
+  path = NULL,
+  Timestep = 10L,
   SeedingAlgorithm = NULL,
   InitialCommunitiesFiles = NULL,
   ClimateConfigFile = NULL,
-  CalibrateMode = FALSE,
+  CalibrateMode = NULL,
+  SpinupCohorts = NULL,
+  SpinupMortalityFraction = NULL,
   MinRelativeBiomass = NULL,
   SufficientLight = NULL,
   SpeciesDataFile = NULL,
@@ -81,6 +89,10 @@ One of \code{"WardSeedDispersal"}, \code{"NoDispersal"}, \code{"UniversalDispers
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
+\item{\code{path}}{Character. Directory path.}
+
+\item{\code{Timestep}}{Integer.}
+
 \item{\code{SeedingAlgorithm}}{Character. Dispersal algorithm to use.
 One of \code{"WardSeedDispersal"}, \code{"NoDispersal"}, \code{"UniversalDispersal"}.}
 
@@ -89,6 +101,10 @@ One of \code{"WardSeedDispersal"}, \code{"NoDispersal"}, \code{"UniversalDispers
 \item{\code{ClimateConfigFile}}{Character. Relative file path.}
 
 \item{\code{CalibrateMode}}{Logical, or character indicating "yes" or "no".}
+
+\item{\code{SpinupCohorts}}{Logical, or character indicating "yes" or "no".}
+
+\item{\code{SpinupMortalityFraction}}{Real.}
 
 \item{\code{MinRelativeBiomass}}{\code{data.frame}.}
 
@@ -103,10 +119,6 @@ One of \code{"WardSeedDispersal"}, \code{"NoDispersal"}, \code{"UniversalDispers
 \item{\code{FireReductionParameters}}{\code{data.frame}.}
 
 \item{\code{HarvestReductionParameters}}{\code{data.frame}.}
-
-\item{\code{path}}{Character. Directory path.}
-
-\item{\code{Timestep}}{Integer.}
 }
 \if{html}{\out{</div>}}
 }

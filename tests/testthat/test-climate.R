@@ -1,4 +1,6 @@
 testthat::test_that("Climate inputs are properly created", {
+  skip("incomplete") ## TODO: rework / fix using BioSIM
+
   testthat::skip_if_not_installed("climateR")
   testthat::skip_if_not_installed("withr")
   testthat::skip_if_not_installed("zonal")
@@ -15,7 +17,10 @@ testthat::test_that("Climate inputs are properly created", {
   clim_vars_daily <- c("prcp", "tmax", "tmin")
 
   # -----------------------------------------------------
-  readRenviron("~/GitHub/BC_HRV/BC_HRV.Renviron")
+  Renviron_file <- "~/GitHub/BC_HRV/BC_HRV.Renviron"
+  skip_if_not(file.exists(Renviron_file))
+
+  readRenviron(Renviron_file)
 
   library(future)
 

@@ -17,6 +17,8 @@ BiomassSuccession <- R6Class(
     #' @param InitialCommunitiesFiles Character. Relative file paths.
     #' @param ClimateConfigFile Character. Relative file path.
     #' @param CalibrateMode Logical, or character indicating "yes" or "no".
+    #' @param SpinupCohorts Logical, or character indicating "yes" or "no".
+    #' @param SpinupMortalityFraction Real.
     #' @param MinRelativeBiomass `data.frame`.
     #' @param SufficientLight `data.frame`.
     #' @param SpeciesDataFile Character. Relative file path.
@@ -25,10 +27,14 @@ BiomassSuccession <- R6Class(
     #' @param FireReductionParameters `data.frame`.
     #' @param HarvestReductionParameters `data.frame`.
     initialize = function(
+      path = NULL,
+      Timestep = 10L,
       SeedingAlgorithm = NULL,
       InitialCommunitiesFiles = NULL,
       ClimateConfigFile = NULL,
-      CalibrateMode = FALSE,
+      CalibrateMode = NULL,
+      SpinupCohorts = NULL,
+      SpinupMortalityFraction = NULL,
       MinRelativeBiomass = NULL,
       SufficientLight = NULL,
       SpeciesDataFile = NULL,
@@ -51,7 +57,9 @@ BiomassSuccession <- R6Class(
       self$SeedingAlgorithm <- SeedingAlgorithm %||% "WardSeedDispersal"
       self$InitialCommunitiesFiles <- InitialCommunitiesFiles
       self$ClimateConfigFile <- ClimateConfigFile
-      self$CalibrateMode <- CalibrateMode
+      self$CalibrateMode <- CalibrateMode %||% FALSE
+      self$SpinupCohorts <- SpinupCohorts
+      self$SpinupMortalityFraction <- SpinupMortalityFraction
       self$MinRelativeBiomass <- MinRelativeBiomass
       self$SufficientLight <- SufficientLight
       self$SpeciesDataFile <- SpeciesDataFile
@@ -73,6 +81,8 @@ BiomassSuccession <- R6Class(
           insertInitialCommunities(self$InitialCommunitiesFiles), ## TODO
           insertFile("ClimateConfigFile", self$ClimateConfigFile),
           insertValue("CalibrateMode", self$CalibrateMode),
+          insertValue("SpinupCohorts", self$SpinupCohorts),
+          insertValue("SpinupMortalityFraction", self$SpinupMortalityFraction),
           insertMinRelativeBiomass(self$MinRelativeBiomass),
           insertSufficientLight(self$SufficientLight),
           insertSpeciesDataFile(self$SpeciesDataFile, core = FALSE),
@@ -84,10 +94,10 @@ BiomassSuccession <- R6Class(
         file.path(self$path, self$files[1])
       )
 
-      ext$add_file(self$ClimateConfigFile)
-      ext$add_file(self$InitialCommunitiesFiles)
-      ext$add_file(self$SpeciesDataFile)
-      ext$add_file(self$SpeciesEcoregionDataFile)
+      self$add_file(self$ClimateConfigFile)
+      self$add_file(self$InitialCommunitiesFiles)
+      self$add_file(self$SpeciesDataFile)
+      self$add_file(self$SpeciesEcoregionDataFile)
 
       return(invisible(self))
     }
@@ -98,6 +108,8 @@ BiomassSuccession <- R6Class(
     .InitialCommunitiesFiles = NULL,
     .ClimateConfigFile = NULL,
     .CalibrateMode = NULL,
+    .SpinupCohorts = NULL,
+    .SpinupMortalityFraction = NULL,
     .MinRelativeBiomass = NULL,
     .SufficientLight = NULL,
     .SpeciesDataFile = NULL,
@@ -125,7 +137,7 @@ BiomassSuccession <- R6Class(
       if (missing(value)) {
         return(private$.InitialCommunitiesFiles)
       } else {
-        private$.InitialCommunitiesFiles <- .relPath(value, path)
+        private$.InitialCommunitiesFiles <- .relPath(value, self$path)
       }
     },
 
@@ -134,7 +146,7 @@ BiomassSuccession <- R6Class(
       if (missing(value)) {
         return(private$.ClimateConfigFile)
       } else {
-        private$.ClimateConfigFile <- .relPath(value, path)
+        private$.ClimateConfigFile <- .relPath(value, self$path)
       }
     },
 
@@ -144,6 +156,25 @@ BiomassSuccession <- R6Class(
         return(private$.CalibrateMode)
       } else {
         private$.CalibrateMode <- yesno(value)
+      }
+    },
+
+    #' @field SpinupCohorts Logical, or character indicating "yes" or "no".
+    SpinupCohorts = function(value) {
+      if (missing(value)) {
+        return(private$.SpinupCohorts)
+      } else {
+        private$.SpinupCohorts <- yesno(value)
+      }
+    },
+
+    #' @field SpinupMortalityFraction Real.
+    SpinupMortalityFraction = function(value) {
+      if (missing(value)) {
+        return(private$.SpinupMortalityFraction)
+      } else {
+        stopifnot(value >= 0.0, value <= 0.5)
+        private$.SpinupMortalityFraction <- value
       }
     },
 
@@ -170,7 +201,7 @@ BiomassSuccession <- R6Class(
       if (missing(value)) {
         return(private$.SpeciesDataFile)
       } else {
-        private$.SpeciesDataFile <- .relPath(value, path)
+        private$.SpeciesDataFile <- .relPath(value, self$path)
       }
     },
 
@@ -188,7 +219,7 @@ BiomassSuccession <- R6Class(
       if (missing(value)) {
         return(private$.SpeciesEcoregionDataFile)
       } else {
-        private$.SpeciesEcoregionDataFile <- .relPath(value, path)
+        private$.SpeciesEcoregionDataFile <- .relPath(value, self$path)
       }
     },
 

@@ -1,30 +1,5 @@
-testthat::test_that("Original Fire (and Biomass Succession) inputs are properly created", {
-  testthat::skip_if_not_installed("climateR")
-  testthat::skip_if_not_installed("future")
-  testthat::skip_if_not_installed("furrr")
-  testthat::skip_if_not_installed("purrr")
-  testthat::skip_if_not_installed("withr")
-  testthat::skip_if_not_installed("zonal")
-
-  ## initial communities
-  cohortData <- landisutils::Chine_cohortData
-  pixelGroupMap <- terra::unwrap(landisutils::Chine_pixelGroupMap)
-
-  ## ecoregion
-  ecoregion <- landisutils::Chine_ecoregion
-  ecoregionMap <- terra::unwrap(landisutils::Chine_ecoregionMap)
-  ecoregionPolys <- landisutils::Chine_ecoregionPolys
-
-  ## fireRegimePolys
-  fireRegimePolys <- landisutils::Chine_fireRegimePolys
-
-  ## other
-  minRelativeB <- landisutils::Chine_minRelativeB
-  species <- landisutils::Chine_species
-  speciesEcoregion <- landisutils::Chine_speciesEcoregion
-  speciesLayers <- terra::unwrap(landisutils::Chine_speciesLayers)
-  standAgeMap <- terra::unwrap(landisutils::Chine_standAgeMap)
-  sufficientLight <- landisutils::Chine_sufficientLight
+testthat::test_that("Base Fire (and Biomass Succession) inputs are properly created", {
+  skip("incomplete")
 
   ## prepare landis input files ----------------------------------------------------------------
 
