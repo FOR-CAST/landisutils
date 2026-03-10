@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.1.9015</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.1.9016</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -101,30 +101,6 @@
 <span>  filename <span class="op">=</span> <span class="st">"SCRPPLE_Spp_Table.csv"</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="co">## don't need working files, they just need to exist</span></span>
-<span><span class="va">acc_ign_map</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">tmp_pth</span>, <span class="st">"Accidental_Ignition_Map.img"</span><span class="op">)</span></span>
-<span><span class="va">ltg_ign_map</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">tmp_pth</span>, <span class="st">"Lightning_Ignition_Map.img"</span><span class="op">)</span></span>
-<span><span class="va">rx_ign_map</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">tmp_pth</span>, <span class="st">"Lightning_Ignition_Map.img"</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">acc_supp_map</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">tmp_pth</span>, <span class="st">"suppress3.img"</span><span class="op">)</span></span>
-<span><span class="va">ltg_supp_map</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">tmp_pth</span>, <span class="st">"suppress3.img"</span><span class="op">)</span></span>
-<span><span class="va">rx_supp_map</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">tmp_pth</span>, <span class="st">"suppress3.img"</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">gs_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">tmp_pth</span>, <span class="st">"GroundSlope.gis"</span><span class="op">)</span></span>
-<span><span class="va">ua_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">tmp_pth</span>, <span class="st">"UphillSlope.gis"</span><span class="op">)</span></span>
-<span><span class="va">cm_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">tmp_pth</span>, <span class="st">"random9.img"</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">rx_zones</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">tmp_pth</span>, <span class="st">"fire-zones.gis"</span><span class="op">)</span> <span class="co">## optional</span></span>
-<span></span>
-<span><span class="co">## fmt: table</span></span>
-<span><span class="va">raster_files</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
-<span>  <span class="va">acc_ign_map</span>  , <span class="va">ltg_ign_map</span>  , <span class="va">rx_ign_map</span>  ,</span>
-<span>  <span class="va">acc_supp_map</span> , <span class="va">ltg_supp_map</span> , <span class="va">rx_supp_map</span> ,</span>
-<span>  <span class="va">gs_file</span>      , <span class="va">ua_file</span>      , <span class="va">cm_file</span>     ,</span>
-<span>  <span class="va">rx_zones</span></span>
-<span><span class="op">)</span></span>
-<span><span class="fu">purrr</span><span class="fu">::</span><span class="fu"><a href="https://purrr.tidyverse.org/reference/map2.html" class="external-link">walk2</a></span><span class="op">(</span>.x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="st">""</span>, <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">raster_files</span><span class="op">)</span><span class="op">)</span>, .y <span class="op">=</span> <span class="va">raster_files</span>, .f <span class="op">=</span> <span class="va">writeLines</span><span class="op">)</span></span>
-<span></span>
 <span><span class="va">ltg_ign_coeffs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">8.5</span>, <span class="fl">0.03</span><span class="op">)</span></span>
 <span><span class="va">acc_ign_coeffs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">8.5</span>, <span class="fl">0.03</span><span class="op">)</span></span>
 <span></span>
@@ -178,7 +154,31 @@
 <h2 id="extension-configuration">Extension configuration<a class="anchor" aria-label="anchor" href="#extension-configuration"></a>
 </h2>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co">## create the ForCS extension config object</span></span>
+<code class="sourceCode R"><span><span class="co">## don't need working files, they just need to exist</span></span>
+<span><span class="va">acc_ign_map</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">tmp_pth</span>, <span class="st">"Accidental_Ignition_Map.img"</span><span class="op">)</span></span>
+<span><span class="va">ltg_ign_map</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">tmp_pth</span>, <span class="st">"Lightning_Ignition_Map.img"</span><span class="op">)</span></span>
+<span><span class="va">rx_ign_map</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">tmp_pth</span>, <span class="st">"Lightning_Ignition_Map.img"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">acc_supp_map</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">tmp_pth</span>, <span class="st">"suppress3.img"</span><span class="op">)</span></span>
+<span><span class="va">ltg_supp_map</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">tmp_pth</span>, <span class="st">"suppress3.img"</span><span class="op">)</span></span>
+<span><span class="va">rx_supp_map</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">tmp_pth</span>, <span class="st">"suppress3.img"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">gs_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">tmp_pth</span>, <span class="st">"GroundSlope.gis"</span><span class="op">)</span></span>
+<span><span class="va">ua_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">tmp_pth</span>, <span class="st">"UphillSlope.gis"</span><span class="op">)</span></span>
+<span><span class="va">cm_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">tmp_pth</span>, <span class="st">"random9.img"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">rx_zones</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">tmp_pth</span>, <span class="st">"fire-zones.gis"</span><span class="op">)</span> <span class="co">## optional</span></span>
+<span></span>
+<span><span class="co">## fmt: table</span></span>
+<span><span class="va">raster_files</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
+<span>  <span class="va">acc_ign_map</span>  , <span class="va">ltg_ign_map</span>  , <span class="va">rx_ign_map</span>  ,</span>
+<span>  <span class="va">acc_supp_map</span> , <span class="va">ltg_supp_map</span> , <span class="va">rx_supp_map</span> ,</span>
+<span>  <span class="va">gs_file</span>      , <span class="va">ua_file</span>      , <span class="va">cm_file</span>     ,</span>
+<span>  <span class="va">rx_zones</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu">purrr</span><span class="fu">::</span><span class="fu"><a href="https://purrr.tidyverse.org/reference/map2.html" class="external-link">walk2</a></span><span class="op">(</span>.x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="st">""</span>, <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">raster_files</span><span class="op">)</span><span class="op">)</span>, .y <span class="op">=</span> <span class="va">raster_files</span>, .f <span class="op">=</span> <span class="va">writeLines</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">## create the Social-Climate-Fire extension config object</span></span>
 <span><span class="va">ext_social_climate_fire</span> <span class="op">&lt;-</span> <span class="va"><a href="../reference/SocialClimateFire.html">SocialClimateFire</a></span><span class="op">$</span><span class="fu">new</span><span class="op">(</span></span>
 <span>  path <span class="op">=</span> <span class="va">tmp_pth</span>,</span>
 <span>  Timestep <span class="op">=</span> <span class="fl">1</span>,</span>
@@ -242,7 +242,7 @@
 <span><span class="va">ext_social_climate_fire</span><span class="op">$</span><span class="va">LadderFuelSpeciesList</span></span>
 <span><span class="co">#&gt; [1] "AbieConc" "AbieMagn" "PinuJeff" "PinuCont"</span></span>
 <span></span>
-<span><span class="co">## write the ForCS extension config file</span></span>
+<span><span class="co">## write the Social-Climate-Fire extension config file</span></span>
 <span><span class="va">ext_social_climate_fire</span><span class="op">$</span><span class="fu">write</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
@@ -251,7 +251,7 @@
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/readLines.html" class="external-link">readLines</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">tmp_pth</span>, <span class="va">ext_social_climate_fire</span><span class="op">$</span><span class="va">files</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span>sep <span class="op">=</span> <span class="st">"\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; &gt;&gt; generated by `landisutils` (v0.0.1.9015) on Tue Mar 10 16:14:42 2026</span></span>
+<span><span class="co">#&gt; &gt;&gt; generated by `landisutils` (v0.0.1.9016) on Tue Mar 10 20:03:49 2026</span></span>
 <span><span class="co">#&gt; &gt;&gt; do not edit by hand; manual changes to this file may be overwritten</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; LandisData  "Social Climate Fire"</span></span>
