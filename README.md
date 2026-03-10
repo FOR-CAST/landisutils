@@ -10,6 +10,8 @@ Tools and utilities for preparing data for and running LANDIS-II simulations, an
 1. prepare data in R and convert to LANDIS-II-compatible formats;
 2. programmatically create and write LANDIS-II extension input files;
 3. programmatically create and write LANDIS-II scenario and other simulation files;
+4. extraction of data from output logs;
+5. other post-processing tools;
 
 > [!NOTE]
 > **This package is a work in progress.**
@@ -132,3 +134,7 @@ scenario(
   path = file.path("path", "to", "project")
 )
 ```
+
+## Working with simulation outputs
+
+_Coming soon!_
