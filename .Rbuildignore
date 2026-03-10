@@ -10,3 +10,4 @@
 ^data-raw$
 ^[.]?air[.]toml$
 ^\.vscode$
+^J4RTmpFile$
