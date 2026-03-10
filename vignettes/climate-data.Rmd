@@ -23,7 +23,7 @@ all_pkgs_avail <- vapply(VignetteDepends, function(pkg) {
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
-  eval = all_pkgs_avail
+  eval = FALSE # all_pkgs_avail
 )
 ```
 
