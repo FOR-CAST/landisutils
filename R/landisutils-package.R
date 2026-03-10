@@ -55,6 +55,7 @@ NULL
 #' @importFrom fs path_tidy
 #' @importFrom glue glue
 #' @importFrom glue glue_collapse
+#' @importFrom lifecycle deprecated
 #' @importFrom R6 R6Class
 #' @importFrom stats na.omit
 #' @importFrom stringr fixed
