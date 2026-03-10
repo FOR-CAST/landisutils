@@ -8,6 +8,13 @@
 \description{
 Tools and utilities for preparing data for and running 'LANDIS-II' simulations, and post-processing their outputs.
 }
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://for-cast.github.io/landisutils/}
+}
+
+}
 \author{
 \strong{Maintainer}: Alex M Chubaty \email{achubaty@for-cast.ca} (\href{https://orcid.org/0000-0001-7146-8135}{ORCID})
 
