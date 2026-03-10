@@ -1,5 +1,5 @@
 testthat::test_that("Biomass Succession inputs are properly created", {
-  ## NOTE: all sample values from Biomass Succession v7.0 test files (for LANDIS-II v8)
+  ## NOTE: all sample values from Biomass Succession v7.0/7.1 test files (for LANDIS-II v8)
   ## <https://github.com/LANDIS-II-Foundation/Extension-Biomass-Succession/blob/master/testings/CoreV8.0-BiomassSuccession7.0/biomass-succession.txt>
 
   tmp_pth <- withr::local_tempdir("test_BiomassSuccession_")
@@ -61,8 +61,8 @@ testthat::test_that("Biomass Succession inputs are properly created", {
     InitialCommunitiesFiles = init_comm_files,
     ClimateConfigFile = clim_file,
     CalibrateMode = NULL, ## optional
-    SpinupCohorts = FALSE, ## optional
-    SpinupMortalityFraction = 0.05,
+    SpinupCohorts = FALSE, ## optional; v7.1
+    SpinupMortalityFraction = 0.05, ## v7.1
     MinRelativeBiomass = min_rel_b,
     SufficientLight = suff_light,
     SpeciesDataFile = spp_file,

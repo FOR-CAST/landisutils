@@ -90,8 +90,8 @@ ext_biomass_succession <- BiomassSuccession$new(
   InitialCommunitiesFiles = init_comm_files,
   ClimateConfigFile = clim_file,
   CalibrateMode = NULL, ## optional
-  SpinupCohorts = FALSE, ## optional
-  SpinupMortalityFraction = 0.05,
+  SpinupCohorts = FALSE, ## optional; v7.1
+  SpinupMortalityFraction = 0.05, ## v7.1
   MinRelativeBiomass = min_rel_b,
   SufficientLight = suff_light,
   SpeciesDataFile = spp_file,
