@@ -405,12 +405,15 @@ prepDynamicEcoregionTable <- function(year = NULL, filename = NULL) {
   return(df)
 }
 
-#' Prepare Ground Slope and Uphill Azimuth raster files
+#' Prepare topographical raster files
 #'
-#' - `prepGroundSlopeFile` produces a raster of percent slope;
+#' - `prepGroundSlopeFile` produces a raster of slope (degrees);
 #' - `prepUphillAzimuthMap` produces a raster of slope direction (degrees);
 #'
-#' @param studyArea `sf` polygon, `SpatVector` or `SpatRaster` object defining the area of interest.
+#' @param aoi `sf` polygon, `SpatVector` or `SpatRaster` object defining the area of interest.
+#'
+#' @param type Character. One of the allowed types for `v` in [terra::terrain],
+#'             e.g., "slope" or "aspect".
 #'
 #' @template param_path
 #'
@@ -419,18 +422,45 @@ prepDynamicEcoregionTable <- function(year = NULL, filename = NULL) {
 #' @returns Character file path.
 #'
 #' @export
-#' @rdname prepTopographyFiles
-prepGroundSlopeFile <- function(studyArea = NULL, path = ".", filename = "ground_slope.tif") {
-  stopifnot(requireNamespace("elevatr", quietly = TRUE), !is.null(studyArea), dir.exists(path))
+#' @rdname prepTopographyFile
+prepTopographyFile <- function(aoi, type, path = ".", filename = NULL) {
+  ## allowed_types from `terra::terrain`
+  allowed_types <- c("slope", "aspect", "TPI", "TRI", "TRIriley", "TRIrmsd", "roughness", "flowdir")
+
+  stopifnot(
+    requireNamespace("elevatr", quietly = TRUE),
+    !is.null(aoi),
+    isTRUE(type %in% allowed_types),
+    dir.exists(path)
+  )
+
+  ## elevatr::get_elev_raster breaks with SpatVector, use sf
+  if (inherits(aoi, "SpatVector")) {
+    aoi <- sf::st_as_sf(aoi)
+  }
 
   file <- file.path(path, filename)
-  elevatr::get_elev_raster(studyArea, z = 10) |>
+
+  ## invoked for side-effect of writing raster to disk
+  elevatr::get_elev_raster(aoi, z = 10) |>
     terra::rast() |>
-    terra::terrain(v = "slope", unit = "degrees") |>
+    terra::terrain(v = type, unit = "degrees") |>
     terra::as.int() |>
     terra::writeRaster(file, overwrite = TRUE)
 
   return(file)
+}
+
+#' @export
+#' @rdname prepTopographyFile
+prepGroundSlopeFile <- function(aoi = NULL, path = ".", filename = "ground_slope.tif") {
+  prepTopographyFile(type = "slope", aoi = aoi, path = path, filename = filename)
+}
+
+#' @export
+#' @rdname prepTopographyFile
+prepUphillAzimuthMap <- function(aoi = NULL, path = ".", filename = "uphill_slope_azimuth.tif") {
+  prepTopographyFile(type = "aspect", aoi = aoi, path = path, filename = filename)
 }
 
 #' Specify Dynamic Fire Extension `GroundSlopeFile`
@@ -442,25 +472,6 @@ prepGroundSlopeFile <- function(studyArea = NULL, path = ".", filename = "ground
 #' @export
 insertGroundSlopeFile <- function(file) {
   insertFile("GroundSlopeFile", file)
-}
-
-#' @export
-#' @rdname prepTopographyFiles
-prepUphillAzimuthMap <- function(
-  studyArea = NULL,
-  path = ".",
-  filename = "uphill_slope_azimuth.tif"
-) {
-  stopifnot(requireNamespace("elevatr", quietly = TRUE), !is.null(studyArea), dir.exists(path))
-
-  file <- file.path(path, filename)
-  elevatr::get_elev_raster(studyArea, z = 10) |>
-    terra::rast() |>
-    terra::terrain(v = "aspect", unit = "degrees") |>
-    terra::as.int() |>
-    terra::writeRaster(file, overwrite = TRUE)
-
-  return(file)
 }
 
 #' Specify Dynamic Fire Extension `UphillSlopeAzimuthMap`
