@@ -490,9 +490,10 @@ scenario(
 
   Prepare `Suppression_CSV_File` for Social-Climate-Fire extension
 
-- [`prepGroundSlopeFile()`](https://for-cast.github.io/landisutils/reference/prepTopographyFiles.md)
-  [`prepUphillAzimuthMap()`](https://for-cast.github.io/landisutils/reference/prepTopographyFiles.md)
-  : Prepare Ground Slope and Uphill Azimuth raster files
+- [`prepTopographyFile()`](https://for-cast.github.io/landisutils/reference/prepTopographyFile.md)
+  [`prepGroundSlopeFile()`](https://for-cast.github.io/landisutils/reference/prepTopographyFile.md)
+  [`prepUphillAzimuthMap()`](https://for-cast.github.io/landisutils/reference/prepTopographyFile.md)
+  : Prepare topographical raster files
 
 - [`prep_daily_weather()`](https://for-cast.github.io/landisutils/reference/prep_climate_data.md)
   [`prep_monthly_weather()`](https://for-cast.github.io/landisutils/reference/prep_climate_data.md)
