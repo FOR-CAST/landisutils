@@ -188,8 +188,6 @@ ext_social_climate_fire <- SocialClimateFire$new(
   DeadWoodTable = deadwood
 )
 
-ext_social_climate_fire$LadderFuelSpeciesList
-
 ## write the Social-Climate-Fire extension config file
 ext_social_climate_fire$write()
 ```
