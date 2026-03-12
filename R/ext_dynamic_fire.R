@@ -442,9 +442,13 @@ prepTopographyFile <- function(aoi, type, path = ".", filename = NULL) {
   file <- file.path(path, filename)
 
   ## invoked for side-effect of writing raster to disk
-  elevatr::get_elev_raster(aoi, z = 10) |>
-    terra::rast() |>
-    terra::terrain(v = type, unit = "degrees") |>
+  elev <- elevatr::get_elev_raster(aoi, z = 10) |> terra::rast() |> terra::project(aoi)
+
+  if (inherits(aoi, "SpatRaster")) {
+    elev <- terra::resample(elev, aoi)
+  }
+
+  terra::terrain(elev, v = type, unit = "degrees") |>
     terra::as.int() |>
     terra::writeRaster(file, overwrite = TRUE)
 
