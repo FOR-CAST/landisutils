@@ -31,11 +31,21 @@ All sample values from Dynamic Fire v4.0 test files (for LANDIS-II v8):
 
 ```{r dynamic-fire-inputs}
 fire_sizes <- tibble::tribble(
-  ~EcoCode , ~EcoName , ~Mu , ~Sigma , ~Max , ~SpFMCLo , ~SpFMCHi , ~SpHiProp , ~SumFMCLo , ~SumFMCHi , ~SumHiProp , ~FallFMCLo , ~FallFMCHi , ~FallHiProp , ~OpenFuelIndex , ~NumFires ,
-         1 , "fire1"  , 4.0 , 0.1    ,   50 ,       85 ,      100 , 0.50      ,        92 ,       120 , 0.50       ,        120 ,        120 , 0.50        ,              2 , 0.5       ,
-         2 , "fire2"  , 4.5 , 0.3    ,   50 ,       85 ,      105 , 0.70      ,        94 ,       120 , 0.40       ,        120 ,        120 , 0.50        ,              2 , 0.2       ,
-         3 , "fire3"  , 5.0 , 0.5    ,   50 ,       85 ,      110 , 0.60      ,        90 ,       120 , 0.70       ,        120 ,        120 , 0.50        ,             16 , 0.1       ,
-)
+  ~EcoCode , ~EcoName , ~Mu , ~Sigma , ~Max ,
+         1 , "fire1"  , 4.0 , 0.1    ,   50 ,
+         2 , "fire2"  , 4.5 , 0.3    ,   50 ,
+         3 , "fire3"  , 5.0 , 0.5    ,   50 ,
+  ) |> dplyr::bind_cols(tibble::tribble(
+    ~SpFMCLo , ~SpFMCHi , ~SpHiProp , ~SumFMCLo , ~SumFMCHi , ~SumHiProp , 
+          85 ,      100 ,      0.50 ,        92 ,       120 ,       0.50 ,
+          85 ,      105 ,      0.70 ,        94 ,       120 ,       0.40 ,
+          85 ,      110 ,      0.60 ,        90 ,       120 ,       0.70
+    )) |> dplyr::bind_cols(tibble::tribble(
+     ~FallFMCLo , ~FallFMCHi , ~FallHiProp , ~OpenFuelIndex , ~NumFires ,
+            120 ,        120 ,        0.50 ,              2 , 0.5       ,
+            120 ,        120 ,        0.50 ,              2 , 0.2       ,
+            120 ,        120 ,        0.50 ,             16 , 0.1
+     ))
 
 dyn_ecoregion <- prepDynamicEcoregionTable() ## optional
 

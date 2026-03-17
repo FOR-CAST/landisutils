@@ -448,9 +448,14 @@ prepTopographyFile <- function(aoi, type, path = ".", filename = NULL) {
     elev <- terra::resample(elev, aoi)
   }
 
-  terra::terrain(elev, v = type, unit = "degrees") |>
-    terra::as.int() |>
-    terra::writeRaster(file, overwrite = TRUE)
+  terr <- terra::terrain(elev, v = type, unit = "degrees") |> terra::as.int()
+
+  if (type == "aspect") {
+    ## reverse direction, because LANDIS-II wants uphill azimuth
+    terr <- (terr + 180) %% 360
+  }
+
+  terra::writeRaster(terr, file, overwrite = TRUE)
 
   return(file)
 }
