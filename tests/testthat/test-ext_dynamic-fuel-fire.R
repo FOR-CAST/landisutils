@@ -14,10 +14,10 @@ testthat::test_that("Dynamic Fuel & Fire inputs are properly created", {
   dyn_ecoregion <- prepDynamicEcoregionTable() ## optional
 
   season <- tibble::tribble(
-    ~Name    , ~LeafStatus , ~PropFire , ~PercentCurling , ~DayLengthProp ,
-    "Spring" , "LeafOff"   , 0.20      ,              50 , 1.0            ,
-    "Summer" , "LeafOn"    , 0.50      ,              51 , 1.0            ,
-    "Fall"   , "LeafOff"   , 0.30      ,             100 , 1.0
+    ~Name    , ~LeafStatus , ~PropFire , ~PercentCuring , ~DayLengthProp ,
+    "Spring" , "LeafOff"   , 0.20      ,             50 , 1.0            ,
+    "Summer" , "LeafOn"    , 0.50      ,             51 , 1.0            ,
+    "Fall"   , "LeafOff"   , 0.30      ,            100 , 1.0
   )
 
   fuel_type <- defaultFuelTypeTable()

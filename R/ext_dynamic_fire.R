@@ -497,18 +497,18 @@ insertUphillSlopeAzimuthMap <- function(file) {
 #'
 #' @export
 insertSeasonTable <- function(df) {
-  season_table_cols <- c("Name", "LeafStatus", "PropFire", "PercentCurling", "DayLengthProp")
+  season_table_cols <- c("Name", "LeafStatus", "PropFire", "PercentCuring", "DayLengthProp")
   stopifnot(
     identical(colnames(df), season_table_cols),
     nrow(df) == 3,
     identical(df[["Name"]], c("Spring", "Summer", "Fall")),
     identical(df[["LeafStatus"]], c("LeafOff", "LeafOn", "LeafOff")),
     all(dplyr::between(df[["PropFire"]], 0.0, 1.0)),
-    all(dplyr::between(df[["PercentCurling"]], 0, 100)),
+    all(dplyr::between(df[["PercentCuring"]], 0, 100)),
     all(dplyr::between(df[["DayLengthProp"]], 0.0, 1.0))
   )
 
-  df[["PercentCurling"]] <- as.integer(df[["PercentCurling"]])
+  df[["PercentCuring"]] <- as.integer(df[["PercentCuring"]])
 
   c(
     glue::glue("SeasonTable"),
@@ -558,7 +558,7 @@ prepDynamicWeatherTable <- function(year, filename) {
   data.frame(Year = year, FileName = filename)
 }
 
-#' Create sample Fuel Type Table
+#' Create default Fuel Type Table
 #'
 #' The Fuel Type Table specifies the rate of spread parameters for each base surface type,
 #' following the Canadian Forest Fire Behavior Prediction System (Forestry Canada, 1992).

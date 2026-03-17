@@ -40,7 +40,7 @@ fire_sizes <- tibble::tribble(
 dyn_ecoregion <- prepDynamicEcoregionTable() ## optional
 
 season <- tibble::tribble(
-  ~Name    , ~LeafStatus , ~PropFire , ~PercentCurling , ~DayLengthProp ,
+  ~Name    , ~LeafStatus , ~PropFire , ~PercentCuring , ~DayLengthProp ,
   "Spring" , "LeafOff"   , 0.20      ,              50 , 1.0            ,
   "Summer" , "LeafOn"    , 0.50      ,              51 , 1.0            ,
   "Fall"   , "LeafOff"   , 0.30      ,             100 , 1.0

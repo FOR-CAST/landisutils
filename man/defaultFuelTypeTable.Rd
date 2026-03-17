@@ -2,7 +2,7 @@
 % Please edit documentation in R/ext_dynamic_fire.R
 \name{defaultFuelTypeTable}
 \alias{defaultFuelTypeTable}
-\title{Create sample Fuel Type Table}
+\title{Create default Fuel Type Table}
 \usage{
 defaultFuelTypeTable()
 }
