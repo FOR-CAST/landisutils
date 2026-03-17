@@ -1,4 +1,4 @@
-# Create sample Fuel Type Table
+# Create default Fuel Type Table
 
 The Fuel Type Table specifies the rate of spread parameters for each
 base surface type, following the Canadian Forest Fire Behavior

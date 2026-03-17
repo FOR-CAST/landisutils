@@ -63,7 +63,7 @@
   : Create sample Fuel Curve Table
 
 - [`defaultFuelTypeTable()`](https://for-cast.github.io/landisutils/reference/defaultFuelTypeTable.md)
-  : Create sample Fuel Type Table
+  : Create default Fuel Type Table
 
 - [`insertANPPTimeSeries()`](https://for-cast.github.io/landisutils/reference/insertANPPTimeSeries.md)
   :
