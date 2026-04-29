@@ -1,15 +1,20 @@
 ## directories
+.claude/
+/doc/
+docs
 inputs
 inputs/
 inst/doc
+/Meta/
 outputs
 outputs/
+/.quarto/
 
 ## files
+**/*.quarto_ipynb
 .Rproj.user
 .Rhistory
 .RData
 .Ruserdata
 J4RTmpFile
 nohup.out
-docs

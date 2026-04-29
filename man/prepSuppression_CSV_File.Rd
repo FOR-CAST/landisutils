@@ -20,3 +20,11 @@ created as a side effect of the function.
 \description{
 Prepare \code{Suppression_CSV_File} for Social-Climate-Fire extension
 }
+\seealso{
+Other Social Climate Fire helpers: 
+\code{\link{SocialClimateFire}},
+\code{\link{insertDeadWoodTable}()},
+\code{\link{insertLadderFuelSpeciesList}()},
+\code{\link{prepTopographyFile}()}
+}
+\concept{Social Climate Fire helpers}

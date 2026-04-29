@@ -1,6 +1,6 @@
 Package: landisutils
 Title: Utilities for running LANDIS-II simulations
-Version: 0.0.2
+Version: 0.0.3
 Authors@R: 
     person(c("Alex", "M"), "Chubaty", , "achubaty@for-cast.ca", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0001-7146-8135"))
@@ -67,7 +67,7 @@ Language: en-US
 LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
-Collate: 
+Collate:
     'LandisClimateConfig.R'
     'LandisExtension.R'
     'LandisScenario.R'
@@ -76,15 +76,35 @@ Collate:
     'climate_data.R'
     'ecoregions.R'
     'ext_utils.R'
+    'ext_biomass_browse.R'
+    'ext_biomass_harvest.R'
     'ext_biomass_succession.R'
+    'ext_climate_bda.R'
+    'ext_dgs_succession.R'
     'ext_dynamic_fire.R'
     'ext_dynamic_fuel.R'
+    'ext_eda.R'
     'ext_forc-succession.R'
+    'ext_forest_roads_simulation.R'
+    'ext_hurricane.R'
+    'ext_land_use_plus.R'
+    'ext_linear_wind.R'
+    'ext_magic_harvest.R'
+    'ext_necn_succession.R'
     'ext_original_fire.R'
+    'ext_original_wind.R'
     'ext_output_biomass.R'
     'ext_output_biomass_age.R'
+    'ext_output_biomass_community.R'
+    'ext_output_biomass_pnet.R'
+    'ext_output_biomass_reclass.R'
     'ext_output_cohort_stats.R'
+    'ext_output_landscape_habitat.R'
+    'ext_output_local_habitat.R'
     'ext_output_max_species_age.R'
+    'ext_output_wildlife_habitat.R'
+    'ext_pnet_succession.R'
+    'ext_root_rot.R'
     'ext_social_climate_fire.R'
     'initial_communities.R'
     'landis.R'

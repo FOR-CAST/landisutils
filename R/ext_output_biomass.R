@@ -3,6 +3,8 @@
 #' @references LANDIS-II Output Biomass v4.0 Extension User Guide
 #' <https://github.com/LANDIS-II-Foundation/Extension-Output-Biomass/blob/master/docs/LANDIS-II%20Output%20Biomass%20v4.0%20User%20Guide.pdf>
 #'
+#' @family Biomass Output helpers
+#'
 #' @export
 #'
 #' @examples

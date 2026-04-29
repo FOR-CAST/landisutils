@@ -8,7 +8,7 @@ defaultFuelTypeTable()
 }
 \value{
 \code{data.frame} with columns:
-'Index', 'Base', 'Surface', 'IgnProb', 'a', 'b', 'c', 'q', 'BUI', 'maxBE' and 'CBH'.
+\code{Index}, \code{Base}, \code{Surface}, \code{IgnProb}, \code{a}, \code{b}, \code{c}, \code{q}, \code{BUI}, \code{maxBE} and \code{CBH}.
 }
 \description{
 The Fuel Type Table specifies the rate of spread parameters for each base surface type,
@@ -28,3 +28,19 @@ Fire Behavior Prediction System. Natural Resources Canada, Canadian Forest Servi
 Great Lakes Forestry Centre, Sault Ste. Marie, Ontario. Information Report GLC-X-10. 45 p.
 \url{https://ostrnrcan-dostrncan.canada.ca/handle/1845/247839}
 }
+\seealso{
+Other Dynamic Fire helpers: 
+\code{\link{DynamicFire}},
+\code{\link{insertBuildUpIndex}()},
+\code{\link{insertFireSizesTable}()},
+\code{\link{insertFuelTypeTable}()},
+\code{\link{insertGroundSlopeFile}()},
+\code{\link{insertSeasonTable}()},
+\code{\link{insertUphillSlopeAzimuthMap}()},
+\code{\link{prepDynamicEcoregionTable}()},
+\code{\link{prepDynamicWeatherTable}()},
+\code{\link{prepFireSizesTable}()},
+\code{\link{prepInitialWeatherDatabase}()},
+\code{\link{prepTopographyFile}()}
+}
+\concept{Dynamic Fire helpers}

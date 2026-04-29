@@ -35,3 +35,28 @@ Character file path.
 \item \code{prepUphillAzimuthMap} produces a raster of slope direction (degrees);
 }
 }
+\seealso{
+Used by \link{DynamicFire} and \link{SocialClimateFire}.
+
+Other Dynamic Fire helpers: 
+\code{\link{DynamicFire}},
+\code{\link{defaultFuelTypeTable}()},
+\code{\link{insertBuildUpIndex}()},
+\code{\link{insertFireSizesTable}()},
+\code{\link{insertFuelTypeTable}()},
+\code{\link{insertGroundSlopeFile}()},
+\code{\link{insertSeasonTable}()},
+\code{\link{insertUphillSlopeAzimuthMap}()},
+\code{\link{prepDynamicEcoregionTable}()},
+\code{\link{prepDynamicWeatherTable}()},
+\code{\link{prepFireSizesTable}()},
+\code{\link{prepInitialWeatherDatabase}()}
+
+Other Social Climate Fire helpers: 
+\code{\link{SocialClimateFire}},
+\code{\link{insertDeadWoodTable}()},
+\code{\link{insertLadderFuelSpeciesList}()},
+\code{\link{prepSuppression_CSV_File}()}
+}
+\concept{Dynamic Fire helpers}
+\concept{Social Climate Fire helpers}

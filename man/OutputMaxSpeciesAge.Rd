@@ -23,6 +23,7 @@ max_species_age$write()
 LANDIS-II Output Max Species Age v4 Extension User Guide
 \url{https://github.com/LANDIS-II-Foundation/Extension-Output-Max-Species-Age/blob/master/docs/LANDIS-II\%20Output\%20Max\%20Species\%20Age\%20v4\%20User\%20Guide.pdf}
 }
+\concept{Max Species Age Output helpers}
 \section{Super class}{
 \code{\link[landisutils:LandisExtension]{landisutils::LandisExtension}} -> \code{OutputMaxSpeciesAge}
 }

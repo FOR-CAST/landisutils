@@ -119,7 +119,7 @@ clim_file <- file.path(clim_data_path, "climate-data-monthly.csv")
 writeClimateData(monthly_weather, clim_file)
 ```
 
-We can also use this recipe to get monthly AET data to prepare the `EcoregionParameters` table:
+We can also use this recipe to get monthly `AET` data to prepare the `EcoregionParameters` table:
 
 ```{r, get-terraclim-aet}
 aet_df <- prep_monthly_weather(

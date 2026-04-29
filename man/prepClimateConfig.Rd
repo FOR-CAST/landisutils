@@ -30,3 +30,8 @@ prepClimateConfig(path, ...)
 \description{
 Create \code{ClimateConfigFile}
 }
+\seealso{
+Used by succession extensions that share a top-level climate
+library: \link{BiomassSuccession}, \link{DGSSuccession}, \link{NECNSuccession},
+and (optionally) \link{PnETSuccession}.
+}

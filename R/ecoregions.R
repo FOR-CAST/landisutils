@@ -71,8 +71,8 @@ prepEcoregionsFiles <- function(ecoregion, ecoregionMap, path = NULL) {
 #' @family scenario-write
 insertEcoregionsFiles <- function(files) {
   c(
-    glue::glue("Ecoregions    \"{files[1]}\""),
-    glue::glue("EcoregionsMap    \"{files[2]}\""),
+    insertValue("Ecoregions", files[1], blank_line = FALSE),
+    insertValue("EcoregionsMap", files[2], blank_line = FALSE),
     glue::glue("") ## add blank line after each item group
   )
 }

@@ -5,6 +5,18 @@
 #' @references LANDIS-II Dynamic Fire System Extension v4 User Guide
 #'   <https://github.com/LANDIS-II-Foundation/Extension-Dynamic-Fire-System/blob/master/docs/LANDIS-II%20Dynamic%20Fire%20System%20v4%20User%20Guide.pdf>
 #'
+#' @seealso
+#' Helpers that prepare inputs for this extension:
+#' [prepFireSizesTable()],
+#' [prepDynamicEcoregionTable()],
+#' [prepTopographyFile()],
+#' [prepGroundSlopeFile()],
+#' [prepUphillAzimuthMap()],
+#' [prepInitialWeatherDatabase()],
+#' [prepDynamicWeatherTable()].
+#'
+#' @family Dynamic Fire helpers
+#'
 #' @export
 #'
 #' @examples
@@ -327,6 +339,8 @@ DynamicFire <- R6Class(
 #'
 #' @template return_insert
 #'
+#' @family Dynamic Fire helpers
+#'
 #' @export
 insertBuildUpIndex <- function(bui = FALSE) {
   c(
@@ -340,6 +354,8 @@ insertBuildUpIndex <- function(bui = FALSE) {
 #' @param df data.frame corresponding to `FireSizes` table
 #'
 #' @returns data.frame
+#'
+#' @family Dynamic Fire helpers
 #'
 #' @export
 prepFireSizesTable <- function(df) {
@@ -370,6 +386,8 @@ prepFireSizesTable <- function(df) {
 #'
 #' @template return_insert
 #'
+#' @family Dynamic Fire helpers
+#'
 #' @export
 insertFireSizesTable <- function(df = NULL) {
   c(
@@ -391,6 +409,8 @@ insertFireSizesTable <- function(df = NULL) {
 #' @param filename Character vector of filenames corresponding to each of `year`.
 #'
 #' @returns data.frame
+#'
+#' @family Dynamic Fire helpers
 #'
 #' @export
 prepDynamicEcoregionTable <- function(year = NULL, filename = NULL) {
@@ -420,6 +440,11 @@ prepDynamicEcoregionTable <- function(year = NULL, filename = NULL) {
 #' @param filename Character specifying the output filename.
 #'
 #' @returns Character file path.
+#'
+#' @seealso Used by [DynamicFire] and [SocialClimateFire].
+#'
+#' @family Dynamic Fire helpers
+#' @family Social Climate Fire helpers
 #'
 #' @export
 #' @rdname prepTopographyFile
@@ -478,6 +503,8 @@ prepUphillAzimuthMap <- function(aoi = NULL, path = ".", filename = "uphill_slop
 #'
 #' @template return_insert
 #'
+#' @family Dynamic Fire helpers
+#'
 #' @export
 insertGroundSlopeFile <- function(file) {
   insertFile("GroundSlopeFile", file)
@@ -489,6 +516,8 @@ insertGroundSlopeFile <- function(file) {
 #'
 #' @template return_insert
 #'
+#' @family Dynamic Fire helpers
+#'
 #' @export
 insertUphillSlopeAzimuthMap <- function(file) {
   insertFile("UphillSlopeAzimuthMap", file)
@@ -499,6 +528,8 @@ insertUphillSlopeAzimuthMap <- function(file) {
 #' @param df data.frame corresponding to `SeasonTable`.
 #'
 #' @template return_insert
+#'
+#' @family Dynamic Fire helpers
 #'
 #' @export
 insertSeasonTable <- function(df) {
@@ -537,6 +568,8 @@ insertSeasonTable <- function(df) {
 #'
 #' @template return_file
 #'
+#' @family Dynamic Fire helpers
+#'
 #' @export
 prepInitialWeatherDatabase <- function(df, path, filename = "initial-weather-database.csv") {
   browser() ## TODO
@@ -556,6 +589,8 @@ prepInitialWeatherDatabase <- function(df, path, filename = "initial-weather-dat
 #'
 #' @returns data.frame
 #'
+#' @family Dynamic Fire helpers
+#'
 #' @export
 prepDynamicWeatherTable <- function(year, filename) {
   stopifnot(length(year) == length(filename))
@@ -570,7 +605,7 @@ prepDynamicWeatherTable <- function(year, filename) {
 #' Default values from Tables 6, 7, 8 and Appendix 1.
 #'
 #' @returns `data.frame` with columns:
-#' `r glue::glue_collapse(glue::glue("'{colnames(defaultFuelTypeTable())}'"), sep = ", ", last = " and ")`.
+#' `r glue::glue_collapse(glue::glue("\\code{<colnames(defaultFuelTypeTable())>}", .open = "<", .close = ">"), sep = ", ", last = " and ")`.
 #'
 #' @references
 #' Forestry Canada. 1992. Development and structure of the Canadian Forest Fire Behavior Prediction System.
@@ -584,6 +619,8 @@ prepDynamicWeatherTable <- function(year, filename) {
 #'   Fire Behavior Prediction System. Natural Resources Canada, Canadian Forest Service,
 #'   Great Lakes Forestry Centre, Sault Ste. Marie, Ontario. Information Report GLC-X-10. 45 p.
 #'   <https://ostrnrcan-dostrncan.canada.ca/handle/1845/247839>
+#'
+#' @family Dynamic Fire helpers
 #'
 #' @export
 defaultFuelTypeTable <- function() {
@@ -627,6 +664,8 @@ defaultFuelTypeTable <- function() {
 #'           See [defaultFuelTypeTable()].
 #'
 #' @template return_insert
+#'
+#' @family Dynamic Fire helpers
 #'
 #' @export
 insertFuelTypeTable <- function(df = NULL) {

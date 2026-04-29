@@ -13,6 +13,10 @@
 #'
 #' @template return_file
 #'
+#' @seealso Used by succession extensions ([BiomassSuccession], [DGSSuccession],
+#'   [ForCS], [NECNSuccession]) when `type = "core"` or `"succession"`, and by
+#'   fire extensions ([OriginalFire], [SocialClimateFire]) when `type = "fire"`.
+#'
 #' @aliases prepSpecies_CSV_File prepSpeciesInputFile
 #' @export
 prepSpeciesData <- function(df = NULL, type = NULL, path = NULL, filename = NULL) {

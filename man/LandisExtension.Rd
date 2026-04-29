@@ -19,6 +19,10 @@ Keeps track of the input files created for an extension
 \section{Active bindings}{
 \if{html}{\out{<div class="r6-active-bindings">}}
 \describe{
+\item{\code{LandisData}}{Character. The extension's \code{LandisData} entry
+(e.g. \code{"Biomass Succession"}). Read-only; set by each subclass's
+\code{initialize()} via \code{private$.LandisData}.}
+
 \item{\code{Timestep}}{Integer.}
 
 \item{\code{type}}{character specifying the extension type
@@ -40,7 +44,7 @@ Keeps track of the input files created for an extension
 \subsection{Method \code{new()}}{
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{LandisExtension$new(
-  name = NULL,
+  LandisData = NULL,
   type = NA_character_,
   path = NA_character_,
   Timestep = 1L
@@ -50,7 +54,8 @@ Keeps track of the input files created for an extension
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{name}}{Character. The extension name (i.e., it's \code{LandisData} entry).}
+\item{\code{LandisData}}{Character. The extension's \code{LandisData} entry
+(e.g. \code{"Biomass Succession"}).}
 
 \item{\code{type}}{Character specifying the extension type
 (must be one of: succession, disturbance, other)}

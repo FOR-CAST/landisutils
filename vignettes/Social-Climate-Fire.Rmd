@@ -10,10 +10,7 @@ editor_options:
 ---
 
 ```{r, include = FALSE}
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>"
-)
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 ```
 
 ```{r setup}
@@ -23,6 +20,9 @@ tmp_pth <- withr::local_tempdir("example_SocialClimateFire_")
 ```
 
 ## Sample extension inputs
+
+Sample values match the upstream Core8 Social Climate Fire 4.0 test input
+(<https://github.com/LANDIS-II-Foundation/Extension-Social-Climate-Fire/blob/master/Testing/Core8-SocialClimateFire4.0/Social-Climate-Fire-Inputs.txt>).
 
 ```{r social-climate-fire-inputs}
 species_table <- tibble::tribble(
@@ -56,7 +56,7 @@ acc_ign_coeffs <- c(-8.5, 0.03)
 ltg_ign_zip_coeffs <- c(-8.5, 0.03)
 acc_ign_zip_coeffs <- c(-8.5, 0.03)
 
-max_spread_area_coeffs <- c(10, -2.5, -2.5)
+max_spread_area_coeffs <- c(100, 0.5, 0.5)
 
 spread_prob_coeffs <- c(-1.79, 0.06, -0.915, 0.0126)
 
@@ -195,15 +195,13 @@ ext_social_climate_fire$write()
 ## Verify configuration files
 
 ```{r social-climate-fire-config}
-readLines(file.path(tmp_pth, ext_social_climate_fire$files[1])) |>
-  cat(sep = "\n")
+readLines(file.path(tmp_pth, ext_social_climate_fire$files[1])) |> cat(sep = "\n")
 ```
 
 *skip species table and raster files*
 
 ```{r social-climate-fire-supp}
-readLines(file.path(tmp_pth, ext_social_climate_fire$files[10])) |>
-  cat(sep = "\n")
+readLines(file.path(tmp_pth, ext_social_climate_fire$files[10])) |> cat(sep = "\n")
 ```
 
 ## Cleanup

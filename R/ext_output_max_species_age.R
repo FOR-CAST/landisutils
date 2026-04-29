@@ -5,6 +5,8 @@
 #' @references LANDIS-II Output Max Species Age v4 Extension User Guide
 #'   <https://github.com/LANDIS-II-Foundation/Extension-Output-Max-Species-Age/blob/master/docs/LANDIS-II%20Output%20Max%20Species%20Age%20v4%20User%20Guide.pdf>
 #'
+#' @family Max Species Age Output helpers
+#'
 #' @export
 #'
 #' @examples
@@ -32,7 +34,7 @@ OutputMaxSpeciesAge <- R6Class(
       private$.LandisData <- "Output Max Species Age"
       self$Timestep <- Timestep
 
-      self$type <- "disturbance"
+      self$type <- "other"
       self$path <- path
       self$files <- "output-max-species-age.txt" ## file won't exist yet
 

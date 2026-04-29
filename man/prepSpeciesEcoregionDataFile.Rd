@@ -18,3 +18,18 @@ created as a side effect of the function.
 \description{
 Create Species Ecoregion Data File
 }
+\seealso{
+Other Biomass Succession helpers: 
+\code{\link{BiomassSuccession}},
+\code{\link{insertEcoregionParameters}()},
+\code{\link{insertFireReductionParameters}()},
+\code{\link{insertHarvestReductionParameters}()},
+\code{\link{insertMinRelativeBiomass}()},
+\code{\link{insertSpeciesEcoregionDataFile}()},
+\code{\link{insertSufficientLight}()},
+\code{\link{prepEcoregionParameters}()},
+\code{\link{prepFireReductionParameters}()},
+\code{\link{prepHarvestReductionParameters}()},
+\code{\link{prepMinRelativeBiomass}()}
+}
+\concept{Biomass Succession helpers}

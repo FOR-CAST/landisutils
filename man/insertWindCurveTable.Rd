@@ -15,3 +15,13 @@ Character string(s) to write to the suitable LANDIS-II input file.
 \description{
 Specify Original Fire \code{WindCurveTable}
 }
+\seealso{
+Other Original Fire helpers: 
+\code{\link{OriginalFire}},
+\code{\link{defaultFuelCurveTable}()},
+\code{\link{insertFireRegionParametersTable}()},
+\code{\link{insertFuelCurveTable}()},
+\code{\link{prepFireRegionParametersTable}()},
+\code{\link{prepInitialFireRegionsMap}()}
+}
+\concept{Original Fire helpers}

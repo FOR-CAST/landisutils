@@ -5,6 +5,13 @@
 #' @references LANDIS-II Original Fire v5.0 Extension User Guide
 #' <https://github.com/LANDIS-II-Foundation/Extension-Base-Fire/blob/master/docs/LANDIS-II%20Original%20Fire%20v5.0%20User%20Guide.pdf>
 #'
+#' @seealso
+#' Helpers that prepare inputs for this extension:
+#' [prepFireRegionParametersTable()],
+#' [prepInitialFireRegionsMap()].
+#'
+#' @family Original Fire helpers
+#'
 #' @export
 OriginalFire <- R6Class(
   "OriginalFire",
@@ -206,6 +213,8 @@ OriginalFire <- R6Class(
 #'
 #' @returns data.frame
 #'
+#' @family Original Fire helpers
+#'
 #' @export
 prepFireRegionParametersTable <- function(sf) {
   sf::st_drop_geometry(sf) |>
@@ -239,6 +248,9 @@ prepFireRegionParametersTable <- function(sf) {
 #'
 #' @template return_insert
 #'
+#' @family Original Fire helpers
+#'
+#' @export
 insertFireRegionParametersTable <- function(df) {
   c(
     glue::glue(">> Fire Region Parameters"),
@@ -260,6 +272,8 @@ insertFireRegionParametersTable <- function(df) {
 #' @template param_file
 #'
 #' @template return_file
+#'
+#' @family Original Fire helpers
 #'
 #' @export
 prepInitialFireRegionsMap <- function(r, file = "fire-regions-map.tif") {
@@ -283,6 +297,8 @@ prepInitialFireRegionsMap <- function(r, file = "fire-regions-map.tif") {
 #' @returns `data.frame` with 5 columns:
 #'   `FireRegimeName`, `S1`, `S2`, `S3`, `S4`, `S5`.
 #'
+#' @family Original Fire helpers
+#'
 #' @export
 defaultFuelCurveTable <- function(frp) {
   n <- nrow(frp)
@@ -302,6 +318,9 @@ defaultFuelCurveTable <- function(frp) {
 #'
 #' @template return_insert
 #'
+#' @family Original Fire helpers
+#'
+#' @export
 insertFuelCurveTable <- function(df) {
   c(
     glue::glue("FuelCurveTable"),
@@ -320,6 +339,9 @@ insertFuelCurveTable <- function(df) {
 #'
 #' @template return_insert
 #'
+#' @family Original Fire helpers
+#'
+#' @export
 insertWindCurveTable <- function(df) {
   c(
     glue::glue("WindCurveTable"),

@@ -15,3 +15,19 @@ Character string(s) to write to the suitable LANDIS-II input file.
 \description{
 Specify Fire Size Table
 }
+\seealso{
+Other Dynamic Fire helpers: 
+\code{\link{DynamicFire}},
+\code{\link{defaultFuelTypeTable}()},
+\code{\link{insertBuildUpIndex}()},
+\code{\link{insertFuelTypeTable}()},
+\code{\link{insertGroundSlopeFile}()},
+\code{\link{insertSeasonTable}()},
+\code{\link{insertUphillSlopeAzimuthMap}()},
+\code{\link{prepDynamicEcoregionTable}()},
+\code{\link{prepDynamicWeatherTable}()},
+\code{\link{prepFireSizesTable}()},
+\code{\link{prepInitialWeatherDatabase}()},
+\code{\link{prepTopographyFile}()}
+}
+\concept{Dynamic Fire helpers}

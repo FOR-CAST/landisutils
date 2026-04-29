@@ -5,6 +5,20 @@
 #' @references LANDIS-II Biomass Succession v7 Extension User Guide
 #' <https://github.com/LANDIS-II-Foundation/Extension-Biomass-Succession/blob/master/docs/LANDIS-II%20Biomass%20Succession%20v7%20User%20Guide.pdf>
 #'
+#' @seealso
+#' Helpers that prepare inputs for this extension:
+#' [prepMinRelativeBiomass()],
+#' [prepEcoregionParameters()],
+#' [prepSpeciesEcoregionDataFile()],
+#' [prepFireReductionParameters()],
+#' [prepHarvestReductionParameters()].
+#' Shared scenario inputs:
+#' [prepClimateConfig()],
+#' [prepInitialCommunities()],
+#' [prepSpeciesData()].
+#'
+#' @family Biomass Succession helpers
+#'
 #' @export
 BiomassSuccession <- R6Class(
   "DynamicFuels",
@@ -12,8 +26,7 @@ BiomassSuccession <- R6Class(
   public = list(
     #' @param path Character. Directory path.
     #' @param Timestep Integer.
-    #' @param SeedingAlgorithm Character. Dispersal algorithm to use.
-    #'        One of `"WardSeedDispersal"`, `"NoDispersal"`, `"UniversalDispersal"`.
+    #' @template param_SeedingAlgorithm
     #' @param InitialCommunitiesFiles Character. Relative file paths.
     #' @param ClimateConfigFile Character. Relative file path.
     #' @param CalibrateMode Logical, or character indicating "yes" or "no".
@@ -49,7 +62,7 @@ BiomassSuccession <- R6Class(
       private$.LandisData <- "Biomass Succession"
       self$Timestep <- Timestep
 
-      self$type <- "disturbance"
+      self$type <- "succession"
       self$path <- path
       self$files <- "biomass-succession.txt" ## file won't exist yet
 
@@ -120,14 +133,12 @@ BiomassSuccession <- R6Class(
   ),
 
   active = list(
-    #' @field SeedingAlgorithm Character. Dispersal algorithm to use.
-    #' One of `"WardSeedDispersal"`, `"NoDispersal"`, `"UniversalDispersal"`.
+    #' @template field_SeedingAlgorithm
     SeedingAlgorithm = function(value) {
       if (missing(value)) {
         return(private$.SeedingAlgorithm)
       } else {
-        stopifnot(value %in% c("WardSeedDispersal", "NoDispersal", "UniversalDispersal"))
-
+        .checkSeedingAlgorithm(value)
         private$.SeedingAlgorithm <- value
       }
     },
@@ -249,6 +260,8 @@ BiomassSuccession <- R6Class(
 #'
 #' @returns data.frame
 #'
+#' @family Biomass Succession helpers
+#'
 #' @export
 prepMinRelativeBiomass <- function(df = NULL) {
   stopifnot(!is.null(df))
@@ -273,6 +286,8 @@ prepMinRelativeBiomass <- function(df = NULL) {
 #'
 #' @template return_insert
 #'
+#' @family Biomass Succession helpers
+#'
 insertMinRelativeBiomass <- function(df = NULL) {
   stopifnot(!is.null(df), is(df, "data.frame"))
 
@@ -287,16 +302,20 @@ insertMinRelativeBiomass <- function(df = NULL) {
   #        4 60% 50%
   #        5 95% 80%
 
+  ## Drop the leading `ShadeClass` column: row 1 carries the ecoregion labels
+  ## and rows 2-6 carry the percent-biomass values per ecoregion. The shade
+  ## class label (1..5) is hard-coded as the row prefix in the output, so the
+  ## column itself must not appear in the joined values.
   c(
     glue::glue("MinRelativeBiomass"),
     glue::glue(">> Shade Class    Ecoregions"),
     glue::glue(">> -----------    ------------------------"),
-    paste0("                  ", glue::glue("{df[1, ]}") |> glue::glue_collapse(sep = "  ")),
-    paste0("   1              ", glue::glue("{df[2, ]}") |> glue::glue_collapse(sep = "  ")),
-    paste0("   2              ", glue::glue("{df[3, ]}") |> glue::glue_collapse(sep = "  ")),
-    paste0("   3              ", glue::glue("{df[4, ]}") |> glue::glue_collapse(sep = "  ")),
-    paste0("   4              ", glue::glue("{df[5, ]}") |> glue::glue_collapse(sep = "  ")),
-    paste0("   5              ", glue::glue("{df[6, ]}") |> glue::glue_collapse(sep = "  ")),
+    paste0("                  ", .collapseRow(df, 1)),
+    paste0("   1              ", .collapseRow(df, 2)),
+    paste0("   2              ", .collapseRow(df, 3)),
+    paste0("   3              ", .collapseRow(df, 4)),
+    paste0("   4              ", .collapseRow(df, 5)),
+    paste0("   5              ", .collapseRow(df, 6)),
     glue::glue("") ## add blank line after each item group
   )
 }
@@ -307,32 +326,23 @@ insertMinRelativeBiomass <- function(df = NULL) {
 #'
 #' @template return_insert
 #'
+#' @family Biomass Succession helpers
+#'
 insertSufficientLight <- function(df) {
+  ## Per-cell formatter: `vapply` walks columns one at a time, so each `x` is
+  ## a length-1 vector — safe to pass through `as.numeric()` without the
+  ## tibble-row pitfall (`format(<tibble>, ...)` would print the tibble).
+  fmt <- function(x) format(as.numeric(x), nsmall = 2)
   c(
     glue::glue("SufficientLight"),
     glue::glue(">> Shade Class  Probability by Actual Shade"),
     glue::glue(">> -----------  ----------------------------------"),
     glue::glue(">>              0     1     2     3     4     5"),
-    paste0(
-      "   1            ",
-      glue::glue("{format(df[1, -1], nsmall = 2)}") |> glue::glue_collapse(sep = "  ")
-    ),
-    paste0(
-      "   2            ",
-      glue::glue("{format(df[2, -1], nsmall = 2)}") |> glue::glue_collapse(sep = "  ")
-    ),
-    paste0(
-      "   3            ",
-      glue::glue("{format(df[3, -1], nsmall = 2)}") |> glue::glue_collapse(sep = "  ")
-    ),
-    paste0(
-      "   4            ",
-      glue::glue("{format(df[4, -1], nsmall = 2)}") |> glue::glue_collapse(sep = "  ")
-    ),
-    paste0(
-      "   5            ",
-      glue::glue("{format(df[5, -1], nsmall = 2)}") |> glue::glue_collapse(sep = "  ")
-    ),
+    paste0("   1            ", .collapseRow(df, 1, fmt = fmt)),
+    paste0("   2            ", .collapseRow(df, 2, fmt = fmt)),
+    paste0("   3            ", .collapseRow(df, 3, fmt = fmt)),
+    paste0("   4            ", .collapseRow(df, 4, fmt = fmt)),
+    paste0("   5            ", .collapseRow(df, 5, fmt = fmt)),
     glue::glue("") ## add blank line after each item group
   )
 }
@@ -342,6 +352,8 @@ insertSufficientLight <- function(df) {
 #' @param df data.frame corresponding to the ecoregion parameters table
 #'
 #' @returns data.frame
+#'
+#' @family Biomass Succession helpers
 #'
 #' @export
 prepEcoregionParameters <- function(df) {
@@ -364,6 +376,8 @@ prepEcoregionParameters <- function(df) {
 #'
 #' @template return_insert
 #'
+#' @family Biomass Succession helpers
+#'
 insertEcoregionParameters <- function(df) {
   c(
     glue::glue("EcoregionParameters"),
@@ -382,6 +396,8 @@ insertEcoregionParameters <- function(df) {
 #' @template param_path
 #'
 #' @template return_file
+#'
+#' @family Biomass Succession helpers
 #'
 #' @export
 prepSpeciesEcoregionDataFile <- function(df, path) {
@@ -415,6 +431,8 @@ prepSpeciesEcoregionDataFile <- function(df, path) {
 #'
 #' @template return_insert
 #'
+#' @family Biomass Succession helpers
+#'
 insertSpeciesEcoregionDataFile <- function(file) {
   insertFile("SpeciesEcoregionDataFile", file)
 }
@@ -424,6 +442,8 @@ insertSpeciesEcoregionDataFile <- function(file) {
 #' @param df `data.frame` with columns `FireSeverity`, `WoodReduction`, and `LitterReduction`.
 #'
 #' @returns data.frame
+#'
+#' @family Biomass Succession helpers
 #'
 #' @export
 prepFireReductionParameters <- function(df = NULL) {
@@ -455,6 +475,8 @@ prepFireReductionParameters <- function(df = NULL) {
 #'
 #' @template return_insert
 #'
+#' @family Biomass Succession helpers
+#'
 insertFireReductionParameters <- function(df) {
   c(
     glue::glue("FireReductionParameters"),
@@ -472,6 +494,8 @@ insertFireReductionParameters <- function(df) {
 #' @param df data.frame
 #'
 #' @returns data.frame
+#'
+#' @family Biomass Succession helpers
 #'
 #' @export
 prepHarvestReductionParameters <- function(df = NULL) {
@@ -508,6 +532,8 @@ prepHarvestReductionParameters <- function(df = NULL) {
 #' @param df data.frame
 #'
 #' @template return_insert
+#'
+#' @family Biomass Succession helpers
 #'
 insertHarvestReductionParameters <- function(df) {
   c(

@@ -1,0 +1,79 @@
+## Run package-generated LANDIS-II scenario files through the official
+## LANDIS-II v8 console (in an ephemeral docker container) to verify the file
+## format/syntax, beyond what `R CMD check` can validate.
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+name: landis-integration.yaml
+
+permissions: read-all
+
+jobs:
+  landis-integration:
+    runs-on: ubuntu-latest
+
+    name: LANDIS-II v8 integration
+
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      R_KEEP_PKG_SOURCE: yes
+      LANDIS_IMAGE: ghcr.io/landis-ii-foundation/landis-ii-v8-release:main
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: r-lib/actions/setup-pandoc@v2
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: 'release'
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: any::tibble
+          dependencies: '"hard"'
+
+      - name: Install landisutils
+        run: R CMD INSTALL --no-multiarch --with-keep.source .
+
+      - name: Build LANDIS-II scenarios
+        id: build
+        run: |
+          set -euo pipefail
+          mkdir -p "${RUNNER_TEMP}/landis-scenarios"
+          Rscript inst/integration-tests/build_scenarios.R \
+            "${RUNNER_TEMP}/landis-scenarios" \
+            > "${RUNNER_TEMP}/landis-scenarios.list"
+          echo "Scenarios built:"
+          cat "${RUNNER_TEMP}/landis-scenarios.list"
+
+      - name: Pull LANDIS-II Docker image
+        run: docker pull "${LANDIS_IMAGE}"
+
+      - name: Run LANDIS-II on each scenario
+        run: |
+          set -euo pipefail
+          fail=0
+          while IFS= read -r scen_path; do
+            [ -z "$scen_path" ] && continue
+            scen_name="$(basename "$scen_path")"
+            echo "::group::LANDIS-II run: ${scen_name}"
+            if ! bash inst/integration-tests/run_in_docker.sh "${scen_path}"; then
+              echo "::error::LANDIS-II run failed for scenario '${scen_name}'"
+              fail=1
+            fi
+            echo "::endgroup::"
+          done < "${RUNNER_TEMP}/landis-scenarios.list"
+          exit "$fail"
+
+      - name: Upload scenario directories
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: landis-scenarios
+          path: ${{ runner.temp }}/landis-scenarios
+          retention-days: 7

@@ -13,11 +13,37 @@ Forest Carbon Succession (ForCS) Extension
 
 }
 \references{
-LANDIS-II Social-Climate-Fire v4 User Guide
-\url{https://github.com/LANDIS-II-Foundation/Extension-Social-Climate-Fire/blob/master/docs/LANDIS-II\%20Social-Climate-Fire\%20v4\%20User\%20Guide.pdf}
-
-TODO
+LANDIS-II Forest Carbon Succession (CForC) v4.0.2 User Guide
+\url{https://github.com/LANDIS-II-Foundation/Extension-ForCS-Succession/blob/master/deploy/installer/LANDIS-II\%20CForC\%20Succession\%20v4.0.2\%20User\%20Guide\%20September\%202025.pdf}
 }
+\seealso{
+Helpers that prepare inputs for this extension:
+\code{\link[=prepClimateFile]{prepClimateFile()}},
+\code{\link[=prepDisturbanceMatrixFile]{prepDisturbanceMatrixFile()}},
+\code{\link[=prepSnagFile]{prepSnagFile()}}.
+Shared scenario inputs:
+\code{\link[=prepInitialCommunities]{prepInitialCommunities()}},
+\code{\link[=prepSpeciesData]{prepSpeciesData()}}.
+
+Other ForCS helpers: 
+\code{\link{insertANPPTimeSeries}()},
+\code{\link{insertAvailableLightBiomass}()},
+\code{\link{insertDOMPools}()},
+\code{\link{insertEcoSppDOMParameters}()},
+\code{\link{insertEstablishProbabilities}()},
+\code{\link{insertForCSMapControl}()},
+\code{\link{insertForCSProportions}()},
+\code{\link{insertLightEstablishmentTable}()},
+\code{\link{insertMaxBiomassTimeSeries}()},
+\code{\link{insertOutputTables}()},
+\code{\link{insertRootDynamics}()},
+\code{\link{insertSpeciesParameters}()},
+\code{\link{insertSpinUp}()},
+\code{\link{prepClimateFile}()},
+\code{\link{prepDisturbanceMatrixFile}()},
+\code{\link{prepSnagFile}()}
+}
+\concept{ForCS helpers}
 \section{Super class}{
 \code{\link[landisutils:LandisExtension]{landisutils::LandisExtension}} -> \code{ForC Succession}
 }
@@ -27,7 +53,7 @@ TODO
 \item{\code{SeedingAlgorithm}}{Character. Dispersal algorithm to use.
 One of \code{"WardSeedDispersal"}, \code{"NoDispersal"}, \code{"UniversalDispersal"}.}
 
-\item{\code{ClimateFile}}{Character. Relative file path.}
+\item{\code{ForCSClimateFile}}{Character. Relative file path.}
 
 \item{\code{InitialCommunitiesFiles}}{Character. Relative file paths.}
 
@@ -37,7 +63,11 @@ One of \code{"WardSeedDispersal"}, \code{"NoDispersal"}, \code{"UniversalDispers
 
 \item{\code{OutputTables}}{\code{data.frame}.}
 
-\item{\code{SoilSpinupControls}}{\code{data.frame}.}
+\item{\code{ForCSMapControl}}{\code{data.frame}.}
+
+\item{\code{MapOutputInterval}}{Integer.}
+
+\item{\code{SpinUp}}{\code{data.frame}.}
 
 \item{\code{AvailableLightBiomass}}{\code{data.frame}.}
 
@@ -85,12 +115,14 @@ One of \code{"WardSeedDispersal"}, \code{"NoDispersal"}, \code{"UniversalDispers
   path,
   Timestep = 1,
   SeedingAlgorithm = NULL,
-  ClimateFile = NULL,
+  ForCSClimateFile = NULL,
   InitialCommunitiesFiles = NULL,
   DisturbanceMatrixFile = NULL,
   SnagFile = NULL,
   OutputTables = NULL,
-  SoilSpinupControls = NULL,
+  ForCSMapControl = NULL,
+  MapOutputInterval = NULL,
+  SpinUp = NULL,
   AvailableLightBiomass = NULL,
   LightEstablishmentTable = NULL,
   SpeciesParameters = NULL,
@@ -114,23 +146,35 @@ One of \code{"WardSeedDispersal"}, \code{"NoDispersal"}, \code{"UniversalDispers
 \item{\code{SeedingAlgorithm}}{Character. Dispersal algorithm to use.
 One of \code{"WardSeedDispersal"}, \code{"NoDispersal"}, \code{"UniversalDispersal"}.}
 
-\item{\code{ClimateFile}}{Character. Relative file path.}
+\item{\code{ForCSClimateFile}}{Character. Relative file path. Mean-annual-temperature
+climate file specific to ForCS (see \code{\link[=prepClimateFile]{prepClimateFile()}}).}
 
-\item{\code{InitialCommunitiesFiles}}{Character. Relative file paths.}
+\item{\code{InitialCommunitiesFiles}}{Character. Two-element vector of relative
+file paths: the initial-communities text/CSV and the initial-communities
+raster.}
 
 \item{\code{DisturbanceMatrixFile}}{Character. Relative file path.}
 
-\item{\code{SnagFile}}{(Optional) Character. Relative file path.}
+\item{\code{SnagFile}}{(Optional) Character. Relative file path. May be \code{NULL}.}
 
-\item{\code{OutputTables}}{\code{data.frame}.}
+\item{\code{OutputTables}}{\code{data.frame} corresponding to \code{ForCSOutput} (one row,
+four columns: Biomass, DOM_Pools, Fluxes, Summary intervals).}
 
-\item{\code{SoilSpinupControls}}{\code{data.frame}.}
+\item{\code{ForCSMapControl}}{\code{data.frame} (one row, seven columns: \code{BiomassC},
+\code{SDOMC}, \code{NBP}, \code{NEP}, \code{NPP}, \code{RH}, \code{ToFPS} toggles).}
+
+\item{\code{MapOutputInterval}}{Integer. Map output interval (years).}
+
+\item{\code{SpinUp}}{\code{data.frame} (one row, four columns: On/Off Flag,
+Biomass Spin-up Flag, Tolerance \%, Max Iterations).}
 
 \item{\code{AvailableLightBiomass}}{\code{data.frame}.}
 
 \item{\code{LightEstablishmentTable}}{\code{data.frame}.}
 
-\item{\code{SpeciesParameters}}{\code{data.frame}.}
+\item{\code{SpeciesParameters}}{\code{data.frame} with 10 columns: \code{Species},
+\code{LeafLong}, \code{MortalShape}, \code{MerchMinAge}, \code{MerchCurveA}, \code{MerchCurveB},
+\code{PropNonMerchToFastAG}, \code{GrowthShape}, \code{ShadeTolerance}, \code{FireTolerance}.}
 
 \item{\code{DOMPools}}{\code{data.frame}.}
 

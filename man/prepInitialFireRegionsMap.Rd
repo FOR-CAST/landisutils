@@ -18,3 +18,13 @@ created as a side effect of the function.
 \description{
 Create Original Fire \code{InitialFireRegionsMap}
 }
+\seealso{
+Other Original Fire helpers: 
+\code{\link{OriginalFire}},
+\code{\link{defaultFuelCurveTable}()},
+\code{\link{insertFireRegionParametersTable}()},
+\code{\link{insertFuelCurveTable}()},
+\code{\link{insertWindCurveTable}()},
+\code{\link{prepFireRegionParametersTable}()}
+}
+\concept{Original Fire helpers}

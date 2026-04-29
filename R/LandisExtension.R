@@ -17,7 +17,8 @@ LandisExtension <- R6Class(
     #' (relative to `path`); the principle extension input file should be listed first.
     files = character(0),
 
-    #' @param name Character. The extension name (i.e., it's `LandisData` entry).
+    #' @param LandisData Character. The extension's `LandisData` entry
+    #' (e.g. `"Biomass Succession"`).
     #'
     #' @param type Character specifying the extension type
     #' (must be one of: `r paste(.extTypes, collapse = ", ")`)
@@ -25,10 +26,15 @@ LandisExtension <- R6Class(
     #' @param path Character specifying the (directory) path to the extension input files.
     #'
     #' @param Timestep Integer.
-    initialize = function(name = NULL, type = NA_character_, path = NA_character_, Timestep = 1L) {
-      stopifnot(!is.null(name), !is.null(path))
+    initialize = function(
+      LandisData = NULL,
+      type = NA_character_,
+      path = NA_character_,
+      Timestep = 1L
+    ) {
+      stopifnot(!is.null(LandisData), !is.null(path))
 
-      private$.LandisData <- name
+      private$.LandisData <- LandisData
       self$type <- type
       self$path <- path
     },
@@ -43,6 +49,19 @@ LandisExtension <- R6Class(
   private = list(.LandisData = NA_character_, .Timestep = NA_integer_, .type = NA_character_),
 
   active = list(
+    #' @field LandisData Character. The extension's `LandisData` entry
+    #' (e.g. `"Biomass Succession"`). Read-only; set by each subclass's
+    #' `initialize()` via `private$.LandisData`.
+    LandisData = function(value) {
+      if (!missing(value)) {
+        stop(
+          "`LandisData` is read-only; set via `private$.LandisData` in initialize()",
+          call. = FALSE
+        )
+      }
+      private$.LandisData
+    },
+
     #' @field Timestep Integer.
     Timestep = function(value) {
       if (missing(value)) {

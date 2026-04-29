@@ -5,6 +5,13 @@
 #' @references LANDIS-II Social-Climate-Fire v4 User Guide
 #'   <https://github.com/LANDIS-II-Foundation/Extension-Social-Climate-Fire/blob/master/docs/LANDIS-II%20Social-Climate-Fire%20v4%20User%20Guide.pdf>
 #'
+#' @seealso
+#' Helpers that prepare inputs for this extension:
+#' [prepGroundSlopeFile()],
+#' [prepUphillAzimuthMap()].
+#'
+#' @family Social Climate Fire helpers
+#'
 #' @export
 #'
 #' @examples
@@ -589,7 +596,7 @@ SocialClimateFire <- R6Class(
       }
     },
 
-    #' @field IgnitionDistribution Character. One of "Poisson" or "ZeroInflatedPoisson".
+    #' @field IgnitionDistribution Character. One of `"Poisson"` or `"ZeroInflatedPoisson"`.
     IgnitionDistribution = function(value) {
       if (missing(value)) {
         return(private$.IgnitionDistribution)
@@ -855,6 +862,8 @@ SocialClimateFire <- R6Class(
 #'
 #' @template return_file
 #'
+#' @family Social Climate Fire helpers
+#'
 #' @export
 prepSuppression_CSV_File <- function(df, path, filename = "suppression.csv") {
   stopifnot(ncol(df) == 7L, all(dplyr::pull(df, 1) %in% c("Accidental", "Lightning", "Rx")))
@@ -871,6 +880,8 @@ prepSuppression_CSV_File <- function(df, path, filename = "suppression.csv") {
 #'
 #' @template return_insert
 #'
+#' @family Social Climate Fire helpers
+#'
 #' @keywords internal
 insertLadderFuelSpeciesList <- function(x) {
   c(
@@ -885,6 +896,8 @@ insertLadderFuelSpeciesList <- function(x) {
 #' @param df `data.frame` with columns `Species` and `Age`.
 #'
 #' @template return_insert
+#'
+#' @family Social Climate Fire helpers
 #'
 #' @keywords internal
 insertDeadWoodTable <- function(df = NULL) {

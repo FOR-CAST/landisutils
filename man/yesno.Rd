@@ -2,17 +2,25 @@
 % Please edit documentation in R/utils.R
 \name{yesno}
 \alias{yesno}
-\title{Convert logical to "yes" or "no"}
+\alias{truefalse}
+\title{Convert logical to a LANDIS-II yes/no or true/false token}
 \usage{
 yesno(x)
+
+truefalse(x)
 }
 \arguments{
-\item{x}{one of \code{TRUE}, \code{FALSE}, \code{Y}, \code{N}, \code{yes}, \code{no}.}
+\item{x}{one of \code{TRUE}, \code{FALSE}, \code{"Y"}, \code{"N"}, \code{"yes"}, \code{"no"},
+\code{"T"}, \code{"F"}, \code{"true"}, \code{"false"} (case-insensitive).}
 }
 \value{
-Character "yes" or "no".
+\itemize{
+\item \code{yesno()}: character \code{"yes"} or \code{"no"}.
+\item \code{truefalse()}: character \code{"true"} or \code{"false"}.
+}
 }
 \description{
-LANDIS-II input files use character strings "yes" and "no"
-instead of logical TRUE or FALSE.
+LANDIS-II input files mostly use the strings \code{"yes"} and \code{"no"} for
+boolean parameters, but a few extensions (e.g. Magic Harvest's
+\code{NoHarvestReInitialization}) require \code{"true"} / \code{"false"} instead.
 }

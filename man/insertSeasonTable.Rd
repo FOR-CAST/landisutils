@@ -15,3 +15,19 @@ Character string(s) to write to the suitable LANDIS-II input file.
 \description{
 Specify Dynamic Fire Extension's Season Table
 }
+\seealso{
+Other Dynamic Fire helpers: 
+\code{\link{DynamicFire}},
+\code{\link{defaultFuelTypeTable}()},
+\code{\link{insertBuildUpIndex}()},
+\code{\link{insertFireSizesTable}()},
+\code{\link{insertFuelTypeTable}()},
+\code{\link{insertGroundSlopeFile}()},
+\code{\link{insertUphillSlopeAzimuthMap}()},
+\code{\link{prepDynamicEcoregionTable}()},
+\code{\link{prepDynamicWeatherTable}()},
+\code{\link{prepFireSizesTable}()},
+\code{\link{prepInitialWeatherDatabase}()},
+\code{\link{prepTopographyFile}()}
+}
+\concept{Dynamic Fire helpers}

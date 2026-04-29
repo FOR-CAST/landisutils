@@ -20,3 +20,19 @@ created as a side effect of the function.
 \description{
 Create Dynamic Fire Extension's Initial Weather Database
 }
+\seealso{
+Other Dynamic Fire helpers: 
+\code{\link{DynamicFire}},
+\code{\link{defaultFuelTypeTable}()},
+\code{\link{insertBuildUpIndex}()},
+\code{\link{insertFireSizesTable}()},
+\code{\link{insertFuelTypeTable}()},
+\code{\link{insertGroundSlopeFile}()},
+\code{\link{insertSeasonTable}()},
+\code{\link{insertUphillSlopeAzimuthMap}()},
+\code{\link{prepDynamicEcoregionTable}()},
+\code{\link{prepDynamicWeatherTable}()},
+\code{\link{prepFireSizesTable}()},
+\code{\link{prepTopographyFile}()}
+}
+\concept{Dynamic Fire helpers}

@@ -7,7 +7,9 @@
 insertSpeciesParameters(df)
 }
 \arguments{
-\item{df}{data.frame corresponding to \code{SpeciesParameters} table}
+\item{df}{data.frame with 10 columns: \code{Species}, \code{LeafLong}, \code{MortalShape},
+\code{MerchMinAge}, \code{MerchCurveA}, \code{MerchCurveB}, \code{PropNonMerchToFastAG},
+\code{GrowthShape}, \code{ShadeTolerance}, \code{FireTolerance}.}
 }
 \value{
 data.frame
@@ -15,3 +17,23 @@ data.frame
 \description{
 Specify \code{SpeciesParameters} for Forest Carbon Succession (ForCS) extension
 }
+\seealso{
+Other ForCS helpers: 
+\code{\link{ForCS}},
+\code{\link{insertANPPTimeSeries}()},
+\code{\link{insertAvailableLightBiomass}()},
+\code{\link{insertDOMPools}()},
+\code{\link{insertEcoSppDOMParameters}()},
+\code{\link{insertEstablishProbabilities}()},
+\code{\link{insertForCSMapControl}()},
+\code{\link{insertForCSProportions}()},
+\code{\link{insertLightEstablishmentTable}()},
+\code{\link{insertMaxBiomassTimeSeries}()},
+\code{\link{insertOutputTables}()},
+\code{\link{insertRootDynamics}()},
+\code{\link{insertSpinUp}()},
+\code{\link{prepClimateFile}()},
+\code{\link{prepDisturbanceMatrixFile}()},
+\code{\link{prepSnagFile}()}
+}
+\concept{ForCS helpers}

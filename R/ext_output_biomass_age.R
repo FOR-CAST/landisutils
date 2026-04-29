@@ -3,6 +3,8 @@
 #' @references LANDIS-II Biomass-by-Age Output v4.0 Extension User Guide
 #'   <https://github.com/LANDIS-II-Foundation/Extension-Output-Biomass-By-Age/blob/master/docs/LANDIS-II%20Biomass-by-Age%20Output%20v4.0%20User%20Guide.pdf>
 #'
+#' @family Biomass-by-Age Output helpers
+#'
 #' @export
 #'
 #' @examples

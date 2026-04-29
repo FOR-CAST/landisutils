@@ -1,3 +1,21 @@
+#' Format a vector of keyword names for inline `roxygen2` use
+#'
+#' Wraps each element in backticks (so `roxygen2` markdown renders each
+#' key as `\code{}` in the generated `.Rd`, which also keeps these
+#' identifiers out of `spelling::spell_check_package()`) and joins with
+#' `, `. Intended for inline expansion via `` `r .fmtKeys(.someKeys)` ``
+#' so users see the literal allowed values in the rendered manual rather
+#' than a reference to a non-exported internal vector.
+#'
+#' @param x Character vector of keyword names.
+#'
+#' @return A single character string.
+#'
+#' @keywords internal
+.fmtKeys <- function(x) {
+  paste(sprintf("`%s`", x), collapse = ", ")
+}
+
 #' @keywords internal
 .checkPath <- function(path) {
   path <- fs::path_norm(path) |> fs::dir_create()
@@ -6,13 +24,17 @@
 }
 
 #' @keywords internal
-.relPath <- Vectorize(function(path, start = ".") {
-  if (is.null(path) || is.na(path)) {
-    path
-  } else {
-    fs::path_rel(path, start)
+.relPath <- function(path, start = ".") {
+  if (is.null(path)) {
+    return(NULL)
   }
-})
+  vapply(
+    path,
+    function(p) if (is.na(p)) NA_character_ else fs::path_rel(p, start),
+    character(1),
+    USE.NAMES = FALSE
+  )
+}
 
 #' @keywords internal
 landisutilsVersion <- function() {
@@ -48,11 +70,17 @@ insertValue <- function(type, value, blank_line = TRUE) {
   stopifnot(length(value) == 1)
 
   if (!is.na(value)) {
-    out <- ifelse(
-      is.character(value),
-      glue::glue("{type}    \"{value}\""),
-      glue::glue("{type}    {format(value, digits = 8, scientific = FALSE)}")
-    )
+    if (is.character(value)) {
+      ## LANDIS-II's parser only accepts double-quoted strings when the value contains whitespace;
+      ## bare tokens (yes/no, enum values, paths without spaces) must be emitted unquoted.
+      if (grepl("[[:space:]]", value)) {
+        out <- glue::glue("{type}    \"{value}\"")
+      } else {
+        out <- glue::glue("{type}    {value}")
+      }
+    } else {
+      out <- glue::glue("{type}    {format(value, digits = 8, scientific = FALSE)}")
+    }
 
     if (isTRUE(blank_line)) {
       out <- c(out, glue::glue(""))
@@ -81,16 +109,21 @@ insertFile <- function(type, file) {
   insertValue(type, file)
 }
 
-#' Convert logical to "yes" or "no"
+#' Convert logical to a LANDIS-II yes/no or true/false token
 #'
-#' LANDIS-II input files use character strings "yes" and "no"
-#' instead of logical TRUE or FALSE.
+#' LANDIS-II input files mostly use the strings `"yes"` and `"no"` for
+#' boolean parameters, but a few extensions (e.g. Magic Harvest's
+#' `NoHarvestReInitialization`) require `"true"` / `"false"` instead.
 #'
-#' @param x one of `TRUE`, `FALSE`, `Y`, `N`, `yes`, `no`.
+#' @param x one of `TRUE`, `FALSE`, `"Y"`, `"N"`, `"yes"`, `"no"`,
+#'   `"T"`, `"F"`, `"true"`, `"false"` (case-insensitive).
 #'
-#' @return Character "yes" or "no".
+#' @return
+#' - `yesno()`: character `"yes"` or `"no"`.
+#' - `truefalse()`: character `"true"` or `"false"`.
 #'
 #' @export
+#' @rdname yesno
 yesno <- function(x) {
   stopifnot(
     "x must be one of TRUE, FALSE, 'Y', 'N', 'yes', or 'no'." = length(x) == 1 &&
@@ -101,14 +134,20 @@ yesno <- function(x) {
   if (is.character(x)) {
     x <- tolower(x)
 
-    if (x %in% c("yes", "y")) {
+    if (x %in% c("yes", "y", "true", "t")) {
       x <- TRUE
-    } else if (x %in% c("no", "n")) {
+    } else if (x %in% c("no", "n", "false", "f")) {
       x <- FALSE
     } else {
-      stop("x must be one of TRUE, FALSE, 'Y', 'N', 'yes', or 'no'.")
+      stop("x must be one of TRUE, FALSE, 'Y', 'N', 'yes', 'no', 'true', or 'false'.")
     }
   }
 
   ifelse(isTRUE(x), "yes", "no")
+}
+
+#' @export
+#' @rdname yesno
+truefalse <- function(x) {
+  ifelse(yesno(x) == "yes", "true", "false")
 }

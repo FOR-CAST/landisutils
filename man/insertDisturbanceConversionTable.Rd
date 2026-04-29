@@ -16,3 +16,13 @@ Character string(s) to write to the suitable LANDIS-II input file.
 \description{
 Specify Dynamic Fuel Extension's Disturbance Conversion Table
 }
+\seealso{
+Other Dynamic Fuels helpers: 
+\code{\link{DynamicFuels}},
+\code{\link{insertEcoregionTable}()},
+\code{\link{insertFuelTypesTable}()},
+\code{\link{insertSpeciesFuelCoefficients}()},
+\code{\link{prepDisturbanceConversionTable}()},
+\code{\link{prepFuelTypesTable}()}
+}
+\concept{Dynamic Fuels helpers}

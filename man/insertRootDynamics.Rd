@@ -15,3 +15,23 @@ data.frame
 \description{
 Specify \code{RootDynamics} for Forest Carbon Succession (ForCS) extension
 }
+\seealso{
+Other ForCS helpers: 
+\code{\link{ForCS}},
+\code{\link{insertANPPTimeSeries}()},
+\code{\link{insertAvailableLightBiomass}()},
+\code{\link{insertDOMPools}()},
+\code{\link{insertEcoSppDOMParameters}()},
+\code{\link{insertEstablishProbabilities}()},
+\code{\link{insertForCSMapControl}()},
+\code{\link{insertForCSProportions}()},
+\code{\link{insertLightEstablishmentTable}()},
+\code{\link{insertMaxBiomassTimeSeries}()},
+\code{\link{insertOutputTables}()},
+\code{\link{insertSpeciesParameters}()},
+\code{\link{insertSpinUp}()},
+\code{\link{prepClimateFile}()},
+\code{\link{prepDisturbanceMatrixFile}()},
+\code{\link{prepSnagFile}()}
+}
+\concept{ForCS helpers}

@@ -3,6 +3,8 @@
 #' @references LANDIS-II Cohort Statistics v4 Extension User Guide
 #' <https://github.com/LANDIS-II-Foundation/Extension-Output-Cohort-Statistics/blob/master/docs/LANDIS-II%20Cohort%20Statistics%20v4%20User%20Guide.pdf>
 #'
+#' @family Cohort Statistics Output helpers
+#'
 #' @export
 #'
 #'

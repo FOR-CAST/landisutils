@@ -27,3 +27,8 @@ created as a side effect of the function.
 \description{
 Species Data File
 }
+\seealso{
+Used by succession extensions (\link{BiomassSuccession}, \link{DGSSuccession},
+\link{ForCS}, \link{NECNSuccession}) when \code{type = "core"} or \code{"succession"}, and by
+fire extensions (\link{OriginalFire}, \link{SocialClimateFire}) when \code{type = "fire"}.
+}

@@ -20,3 +20,7 @@ created as a side effect of the function.
 \description{
 Create \code{InitialCommunities} and \code{InitialCommunitiesMap} Files
 }
+\seealso{
+Used by succession extensions: \link{BiomassSuccession}, \link{DGSSuccession},
+\link{ForCS}, \link{NECNSuccession}, and \link{PnETSuccession}.
+}

@@ -2,7 +2,7 @@
 % Please edit documentation in R/ext_forc-succession.R
 \name{prepClimateFile}
 \alias{prepClimateFile}
-\title{Prepare \code{ClimateFile} for Forest Carbon Succession (ForCS) extension}
+\title{Prepare \code{ForCSClimateFile} for Forest Carbon Succession (ForCS) extension}
 \usage{
 prepClimateFile(df = NULL, path, filename = "ForCS_climate.txt")
 }
@@ -20,5 +20,25 @@ created as a side effect of the function.
 data.frame
 }
 \description{
-Prepare \code{ClimateFile} for Forest Carbon Succession (ForCS) extension
+Prepare \code{ForCSClimateFile} for Forest Carbon Succession (ForCS) extension
 }
+\seealso{
+Other ForCS helpers: 
+\code{\link{ForCS}},
+\code{\link{insertANPPTimeSeries}()},
+\code{\link{insertAvailableLightBiomass}()},
+\code{\link{insertDOMPools}()},
+\code{\link{insertEcoSppDOMParameters}()},
+\code{\link{insertEstablishProbabilities}()},
+\code{\link{insertForCSMapControl}()},
+\code{\link{insertForCSProportions}()},
+\code{\link{insertLightEstablishmentTable}()},
+\code{\link{insertMaxBiomassTimeSeries}()},
+\code{\link{insertOutputTables}()},
+\code{\link{insertRootDynamics}()},
+\code{\link{insertSpeciesParameters}()},
+\code{\link{insertSpinUp}()},
+\code{\link{prepDisturbanceMatrixFile}()},
+\code{\link{prepSnagFile}()}
+}
+\concept{ForCS helpers}

@@ -12,6 +12,20 @@ Original Fire Extension
 LANDIS-II Original Fire v5.0 Extension User Guide
 \url{https://github.com/LANDIS-II-Foundation/Extension-Base-Fire/blob/master/docs/LANDIS-II\%20Original\%20Fire\%20v5.0\%20User\%20Guide.pdf}
 }
+\seealso{
+Helpers that prepare inputs for this extension:
+\code{\link[=prepFireRegionParametersTable]{prepFireRegionParametersTable()}},
+\code{\link[=prepInitialFireRegionsMap]{prepInitialFireRegionsMap()}}.
+
+Other Original Fire helpers: 
+\code{\link{defaultFuelCurveTable}()},
+\code{\link{insertFireRegionParametersTable}()},
+\code{\link{insertFuelCurveTable}()},
+\code{\link{insertWindCurveTable}()},
+\code{\link{prepFireRegionParametersTable}()},
+\code{\link{prepInitialFireRegionsMap}()}
+}
+\concept{Original Fire helpers}
 \section{Super class}{
 \code{\link[landisutils:LandisExtension]{landisutils::LandisExtension}} -> \code{OriginalFire}
 }

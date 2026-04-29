@@ -4,8 +4,19 @@ utils::globalVariables(c("AgeAtDeath"))
 #'
 #' @include ext_utils.R
 #'
-#' @references LANDIS-II Social-Climate-Fire v4 User Guide
-#'   <https://github.com/LANDIS-II-Foundation/Extension-Social-Climate-Fire/blob/master/docs/LANDIS-II%20Social-Climate-Fire%20v4%20User%20Guide.pdf>
+#' @references LANDIS-II Forest Carbon Succession (CForC) v4.0.2 User Guide
+#'   <https://github.com/LANDIS-II-Foundation/Extension-ForCS-Succession/blob/master/deploy/installer/LANDIS-II%20CForC%20Succession%20v4.0.2%20User%20Guide%20September%202025.pdf>
+#'
+#' @seealso
+#' Helpers that prepare inputs for this extension:
+#' [prepClimateFile()],
+#' [prepDisturbanceMatrixFile()],
+#' [prepSnagFile()].
+#' Shared scenario inputs:
+#' [prepInitialCommunities()],
+#' [prepSpeciesData()].
+#'
+#' @family ForCS helpers
 #'
 #' @export
 #'
@@ -18,17 +29,26 @@ ForCS <- R6Class(
   public = list(
     #' @param path Character. Directory path.
     #' @param Timestep Integer.
-    #' @param SeedingAlgorithm Character. Dispersal algorithm to use.
-    #'        One of `"WardSeedDispersal"`, `"NoDispersal"`, `"UniversalDispersal"`.
-    #' @param ClimateFile Character. Relative file path.
-    #' @param InitialCommunitiesFiles Character. Relative file paths.
+    #' @template param_SeedingAlgorithm
+    #' @param ForCSClimateFile Character. Relative file path. Mean-annual-temperature
+    #'   climate file specific to ForCS (see [prepClimateFile()]).
+    #' @param InitialCommunitiesFiles Character. Two-element vector of relative
+    #'   file paths: the initial-communities text/CSV and the initial-communities
+    #'   raster.
     #' @param DisturbanceMatrixFile Character. Relative file path.
-    #' @param SnagFile (Optional) Character. Relative file path.
-    #' @param OutputTables `data.frame`.
-    #' @param SoilSpinupControls `data.frame`.
+    #' @param SnagFile (Optional) Character. Relative file path. May be `NULL`.
+    #' @param OutputTables `data.frame` corresponding to `ForCSOutput` (one row,
+    #'   four columns: Biomass, DOM_Pools, Fluxes, Summary intervals).
+    #' @param ForCSMapControl `data.frame` (one row, seven columns: `BiomassC`,
+    #'   `SDOMC`, `NBP`, `NEP`, `NPP`, `RH`, `ToFPS` toggles).
+    #' @param MapOutputInterval Integer. Map output interval (years).
+    #' @param SpinUp `data.frame` (one row, four columns: On/Off Flag,
+    #'   Biomass Spin-up Flag, Tolerance %, Max Iterations).
     #' @param AvailableLightBiomass `data.frame`.
     #' @param LightEstablishmentTable `data.frame`.
-    #' @param SpeciesParameters `data.frame`.
+    #' @param SpeciesParameters `data.frame` with 10 columns: `Species`,
+    #'   `LeafLong`, `MortalShape`, `MerchMinAge`, `MerchCurveA`, `MerchCurveB`,
+    #'   `PropNonMerchToFastAG`, `GrowthShape`, `ShadeTolerance`, `FireTolerance`.
     #' @param DOMPools `data.frame`.
     #' @param EcoSppDOMParameters `data.frame`.
     #' @param ForCSProportions `data.frame`.
@@ -37,18 +57,18 @@ ForCS <- R6Class(
     #' @param EstablishProbabilities `data.frame`.
     #' @param RootDynamics `data.frame`.
     #'
-    #' @references TODO
-    #'
     initialize = function(
       path,
       Timestep = 1,
       SeedingAlgorithm = NULL,
-      ClimateFile = NULL,
+      ForCSClimateFile = NULL,
       InitialCommunitiesFiles = NULL,
       DisturbanceMatrixFile = NULL,
       SnagFile = NULL,
       OutputTables = NULL,
-      SoilSpinupControls = NULL,
+      ForCSMapControl = NULL,
+      MapOutputInterval = NULL,
+      SpinUp = NULL,
       AvailableLightBiomass = NULL,
       LightEstablishmentTable = NULL,
       SpeciesParameters = NULL,
@@ -72,12 +92,14 @@ ForCS <- R6Class(
 
       ## additional fields for this extension
       self$SeedingAlgorithm <- SeedingAlgorithm %||% "WardSeedDispersal"
-      self$ClimateFile <- ClimateFile
+      self$ForCSClimateFile <- ForCSClimateFile
       self$InitialCommunitiesFiles <- InitialCommunitiesFiles
       self$DisturbanceMatrixFile <- DisturbanceMatrixFile
       self$SnagFile <- SnagFile
       self$OutputTables <- OutputTables
-      self$SoilSpinupControls <- SoilSpinupControls
+      self$ForCSMapControl <- ForCSMapControl
+      self$MapOutputInterval <- MapOutputInterval
+      self$SpinUp <- SpinUp
       self$AvailableLightBiomass <- AvailableLightBiomass
       self$LightEstablishmentTable <- LightEstablishmentTable
       self$SpeciesParameters <- SpeciesParameters
@@ -94,12 +116,13 @@ ForCS <- R6Class(
     write = function() {
       stopifnot(
         !is.null(self$SeedingAlgorithm),
-        !is.null(self$ClimateFile),
+        !is.null(self$ForCSClimateFile),
         !is.null(self$InitialCommunitiesFiles),
         !is.null(self$DisturbanceMatrixFile),
-        !is.null(self$SnagFile),
         !is.null(self$OutputTables),
-        !is.null(self$SoilSpinupControls),
+        !is.null(self$ForCSMapControl),
+        !is.null(self$MapOutputInterval),
+        !is.null(self$SpinUp),
         !is.null(self$AvailableLightBiomass),
         !is.null(self$LightEstablishmentTable),
         !is.null(self$SpeciesParameters),
@@ -112,16 +135,25 @@ ForCS <- R6Class(
         !is.null(self$RootDynamics)
       )
 
+      snag_lines <- if (!is.null(self$SnagFile)) {
+        insertFile("SnagFile", self$SnagFile)
+      } else {
+        character(0)
+      }
+
       writeLines(
         c(
           insertLandisData(private$.LandisData),
           insertValue("Timestep", self$Timestep),
-          insertFile("ClimateFile", self$ClimateFile),
-          insertInitialCommunities(self$InitialCommunitiesFiles), ## TODO
+          insertValue("SeedingAlgorithm", self$SeedingAlgorithm),
+          insertFile("ForCSClimateFile", self$ForCSClimateFile),
+          insertInitialCommunities(self$InitialCommunitiesFiles),
           insertFile("DisturbanceMatrixFile", self$DisturbanceMatrixFile),
-          insertFile("SnagFile", self$SnagFile),
+          snag_lines,
           insertOutputTables(self$OutputTables),
-          insertSoilSpinupControls(self$SoilSpinupControls),
+          insertForCSMapControl(self$ForCSMapControl),
+          insertValue("MapOutputInterval", self$MapOutputInterval),
+          insertSpinUp(self$SpinUp),
           insertAvailableLightBiomass(self$AvailableLightBiomass),
           insertLightEstablishmentTable(self$LightEstablishmentTable),
           insertSpeciesParameters(self$SpeciesParameters),
@@ -137,10 +169,12 @@ ForCS <- R6Class(
       )
 
       ## declare files
-      self$add_file(self$ClimateFile)
+      self$add_file(self$ForCSClimateFile)
       self$add_file(self$InitialCommunitiesFiles)
       self$add_file(self$DisturbanceMatrixFile)
-      self$add_file(self$SnagFile)
+      if (!is.null(self$SnagFile)) {
+        self$add_file(self$SnagFile)
+      }
 
       return(invisible(self))
     }
@@ -148,12 +182,14 @@ ForCS <- R6Class(
 
   private = list(
     .SeedingAlgorithm = NULL,
-    .ClimateFile = NULL,
+    .ForCSClimateFile = NULL,
     .InitialCommunitiesFiles = NULL,
     .DisturbanceMatrixFile = NULL,
     .SnagFile = NULL,
     .OutputTables = NULL,
-    .SoilSpinupControls = NULL,
+    .ForCSMapControl = NULL,
+    .MapOutputInterval = NULL,
+    .SpinUp = NULL,
     .AvailableLightBiomass = NULL,
     .LightEstablishmentTable = NULL,
     .SpeciesParameters = NULL,
@@ -167,24 +203,22 @@ ForCS <- R6Class(
   ),
 
   active = list(
-    #' @field SeedingAlgorithm Character. Dispersal algorithm to use.
-    #'        One of `"WardSeedDispersal"`, `"NoDispersal"`, `"UniversalDispersal"`.
+    #' @template field_SeedingAlgorithm
     SeedingAlgorithm = function(value) {
       if (missing(value)) {
         return(private$.SeedingAlgorithm)
       } else {
-        stopifnot(value %in% c("WardSeedDispersal", "NoDispersal", "UniversalDispersal"))
-
+        .checkSeedingAlgorithm(value)
         private$.SeedingAlgorithm <- value
       }
     },
 
-    #' @field ClimateFile Character. Relative file path.
-    ClimateFile = function(value) {
+    #' @field ForCSClimateFile Character. Relative file path.
+    ForCSClimateFile = function(value) {
       if (missing(value)) {
-        return(private$.ClimateFile)
+        return(private$.ForCSClimateFile)
       } else {
-        private$.ClimateFile <- .relPath(value, self$path)
+        private$.ForCSClimateFile <- .relPath(value, self$path)
       }
     },
 
@@ -226,14 +260,36 @@ ForCS <- R6Class(
       }
     },
 
-    #' @field SoilSpinupControls `data.frame`.
-    SoilSpinupControls = function(value) {
+    #' @field ForCSMapControl `data.frame`.
+    ForCSMapControl = function(value) {
       if (missing(value)) {
-        return(private$.SoilSpinupControls)
+        return(private$.ForCSMapControl)
       } else {
-        stopifnot(inherits(value, "data.frame")) ## TODO: additional column checks
+        stopifnot(inherits(value, "data.frame"), nrow(value) == 1L, ncol(value) == 7L)
 
-        private$.SoilSpinupControls <- value
+        private$.ForCSMapControl <- value
+      }
+    },
+
+    #' @field MapOutputInterval Integer.
+    MapOutputInterval = function(value) {
+      if (missing(value)) {
+        return(private$.MapOutputInterval)
+      } else {
+        stopifnot(is.numeric(value), length(value) == 1L, value > 0)
+
+        private$.MapOutputInterval <- as.integer(value)
+      }
+    },
+
+    #' @field SpinUp `data.frame`.
+    SpinUp = function(value) {
+      if (missing(value)) {
+        return(private$.SpinUp)
+      } else {
+        stopifnot(inherits(value, "data.frame"), nrow(value) == 1L, ncol(value) == 4L)
+
+        private$.SpinUp <- value
       }
     },
 
@@ -349,7 +405,7 @@ ForCS <- R6Class(
   )
 )
 
-#' Prepare `ClimateFile` for Forest Carbon Succession (ForCS) extension
+#' Prepare `ForCSClimateFile` for Forest Carbon Succession (ForCS) extension
 #'
 #' @param df `data.frame`
 #'
@@ -360,6 +416,8 @@ ForCS <- R6Class(
 #' @template return_file
 #'
 #' @returns data.frame
+#'
+#' @family ForCS helpers
 #'
 #' @export
 prepClimateFile <- function(df = NULL, path, filename = "ForCS_climate.txt") {
@@ -403,6 +461,8 @@ prepClimateFile <- function(df = NULL, path, filename = "ForCS_climate.txt") {
 #' @template return_file
 #'
 #' @returns data.frame
+#'
+#' @family ForCS helpers
 #'
 #' @export
 prepDisturbanceMatrixFile <- function(
@@ -477,6 +537,8 @@ prepDisturbanceMatrixFile <- function(
 #'
 #' @returns data.frame
 #'
+#' @family ForCS helpers
+#'
 #' @export
 prepSnagFile <- function(df = NULL, path, filename = "ForCS_snags.txt") {
   stopifnot(is.data.frame(df), ncol(df) == 4L, nrow(df) <= 20L)
@@ -509,6 +571,8 @@ prepSnagFile <- function(df = NULL, path, filename = "ForCS_snags.txt") {
 #'
 #' @returns data.frame
 #'
+#' @family ForCS helpers
+#'
 #' @export
 insertOutputTables <- function(df = NULL) {
   if (is.null(df)) {
@@ -525,18 +589,49 @@ insertOutputTables <- function(df = NULL) {
   )
 }
 
-#' Specify `SoilSpinup` for Forest Carbon Succession (ForCS) extension
+#' Specify `SpinUp` for Forest Carbon Succession (ForCS) extension
 #'
-#' @param df data.frame corresponding to `SoilSpinup` table
+#' @param df data.frame with one row and four columns: On/Off flag, Biomass
+#'   spin-up flag, Tolerance (%), Max iterations.
 #'
 #' @returns data.frame
 #'
+#' @family ForCS helpers
+#'
 #' @export
-insertSoilSpinupControls <- function(df) {
+insertSpinUp <- function(df) {
+  stopifnot(inherits(df, "data.frame"), nrow(df) == 1L, ncol(df) == 4L)
+
   c(
-    glue::glue("SoilSpinup"),
-    glue::glue(">>  On/Off  Tolerance  Max"),
-    glue::glue(">>  Flag    %          Iterations"),
+    glue::glue("SpinUp"),
+    glue::glue(">>  On/Off  Biomass    Tolerance  Max"),
+    glue::glue(">>  Flag    Spin-up    %          Iterations"),
+    glue::glue(">>          Flag"),
+    glue::glue(">>  ----------------------------------------"),
+    apply(df, 1, function(x) {
+      glue::glue_collapse(x, sep = "  ")
+    }),
+    glue::glue("") ## add blank line after each item group
+  )
+}
+
+#' Specify `ForCSMapControl` for Forest Carbon Succession (ForCS) extension
+#'
+#' @param df data.frame with one row and seven columns: `BiomassC`, `SDOMC`,
+#'   `NBP`, `NEP`, `NPP`, `RH`, `ToFPS` toggles (each `0` or `1`).
+#'
+#' @returns data.frame
+#'
+#' @family ForCS helpers
+#'
+#' @export
+insertForCSMapControl <- function(df) {
+  stopifnot(inherits(df, "data.frame"), nrow(df) == 1L, ncol(df) == 7L)
+
+  c(
+    glue::glue("ForCSMapControl"),
+    glue::glue(">>  BiomassC  SDOMC  NBP  NEP  NPP  RH  ToFPS"),
+    glue::glue(">>  -----------------------------------------"),
     apply(df, 1, function(x) {
       glue::glue_collapse(x, sep = "  ")
     }),
@@ -549,6 +644,8 @@ insertSoilSpinupControls <- function(df) {
 #' @param df data.frame corresponding to `AvailableLightBiomass` table
 #'
 #' @returns data.frame
+#'
+#' @family ForCS helpers
 #'
 #' @export
 insertAvailableLightBiomass <- function(df) {
@@ -571,6 +668,8 @@ insertAvailableLightBiomass <- function(df) {
 #' @param df data.frame corresponding to `LightEstablishmentTable` table
 #'
 #' @returns data.frame
+#'
+#' @family ForCS helpers
 #'
 #' @export
 insertLightEstablishmentTable <- function(df) {
@@ -606,20 +705,30 @@ insertLightEstablishmentTable <- function(df) {
 
 #' Specify `SpeciesParameters` for Forest Carbon Succession (ForCS) extension
 #'
-#' @param df data.frame corresponding to `SpeciesParameters` table
+#' @param df data.frame with 10 columns: `Species`, `LeafLong`, `MortalShape`,
+#'   `MerchMinAge`, `MerchCurveA`, `MerchCurveB`, `PropNonMerchToFastAG`,
+#'   `GrowthShape`, `ShadeTolerance`, `FireTolerance`.
 #'
 #' @returns data.frame
 #'
+#' @family ForCS helpers
+#'
 #' @export
 insertSpeciesParameters <- function(df) {
-  stopifnot(ncol(df) == 8L)
+  stopifnot(ncol(df) == 10L)
 
   c(
     glue::glue("SpeciesParameters"),
-    glue::glue(">>  Species  Leaf  Mortal  Merchant  Merch    Merch     Prop       Growth"),
-    glue::glue(">>           Long  Shape   Stems     Shape    Shape     Non-merch  Shape"),
+    glue::glue(
+      ">>  Species  Leaf  Mortal  Merchant  Merch    Merch     Prop       Growth  Shade      Fire"
+    ),
+    glue::glue(
+      ">>           Long  Shape   Stems     Shape    Shape     Non-merch  Shape   Tolerance  Tolerance"
+    ),
     glue::glue(">>                 Param   Min Age   Param a  Param b   to FastAG  Param"),
-    glue::glue(">>  ---------------------------------------------------------------------"),
+    glue::glue(
+      ">>  ----------------------------------------------------------------------------------------"
+    ),
     apply(df, 1, function(x) {
       glue::glue_collapse(x, sep = "  ")
     }),
@@ -632,6 +741,8 @@ insertSpeciesParameters <- function(df) {
 #' @param df data.frame corresponding to `DOMPools` table
 #'
 #' @returns data.frame
+#'
+#' @family ForCS helpers
 #'
 #' @export
 insertDOMPools <- function(df) {
@@ -655,6 +766,8 @@ insertDOMPools <- function(df) {
 #'
 #' @returns data.frame
 #'
+#' @family ForCS helpers
+#'
 #' @export
 insertEcoSppDOMParameters <- function(df) {
   stopifnot(ncol(df) == 6L)
@@ -676,6 +789,8 @@ insertEcoSppDOMParameters <- function(df) {
 #' @param df data.frame corresponding to `ForCSProportions` table
 #'
 #' @returns data.frame
+#'
+#' @family ForCS helpers
 #'
 #' @export
 insertForCSProportions <- function(df) {
@@ -700,6 +815,8 @@ insertForCSProportions <- function(df) {
 #'
 #' @returns data.frame
 #'
+#' @family ForCS helpers
+#'
 #' @export
 insertANPPTimeSeries <- function(df) {
   stopifnot(ncol(df) == 5L)
@@ -722,6 +839,8 @@ insertANPPTimeSeries <- function(df) {
 #'
 #' @returns data.frame
 #'
+#' @family ForCS helpers
+#'
 #' @export
 insertMaxBiomassTimeSeries <- function(df) {
   stopifnot(ncol(df) == 4L)
@@ -743,6 +862,8 @@ insertMaxBiomassTimeSeries <- function(df) {
 #'
 #' @returns data.frame
 #'
+#' @family ForCS helpers
+#'
 #' @export
 insertEstablishProbabilities <- function(df) {
   stopifnot(ncol(df) == 4L)
@@ -763,6 +884,8 @@ insertEstablishProbabilities <- function(df) {
 #' @param df data.frame corresponding to `RootDynamics` table
 #'
 #' @returns data.frame
+#'
+#' @family ForCS helpers
 #'
 #' @export
 insertRootDynamics <- function(df) {

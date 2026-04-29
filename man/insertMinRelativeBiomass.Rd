@@ -15,3 +15,18 @@ Character string(s) to write to the suitable LANDIS-II input file.
 \description{
 Specify Biomass Succession Extension \code{MinRelativeBiomass} Table
 }
+\seealso{
+Other Biomass Succession helpers: 
+\code{\link{BiomassSuccession}},
+\code{\link{insertEcoregionParameters}()},
+\code{\link{insertFireReductionParameters}()},
+\code{\link{insertHarvestReductionParameters}()},
+\code{\link{insertSpeciesEcoregionDataFile}()},
+\code{\link{insertSufficientLight}()},
+\code{\link{prepEcoregionParameters}()},
+\code{\link{prepFireReductionParameters}()},
+\code{\link{prepHarvestReductionParameters}()},
+\code{\link{prepMinRelativeBiomass}()},
+\code{\link{prepSpeciesEcoregionDataFile}()}
+}
+\concept{Biomass Succession helpers}

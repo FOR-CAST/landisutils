@@ -38,7 +38,7 @@ LandisScenario <- R6Class(
     #' (must be one of: `r paste(.extTypes, collapse = ", ")`)
     list_extensions = function(type) {
       lapply(self$extensions, function(ext) {
-        if (ext$type %in% type) ext$name else NULL
+        if (ext$type %in% type) ext$LandisData else NULL
       })
     },
 

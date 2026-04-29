@@ -17,3 +17,19 @@ data.frame
 \description{
 Prepare Dynamic Fire Extension \code{DynamicEcoregionTable}
 }
+\seealso{
+Other Dynamic Fire helpers: 
+\code{\link{DynamicFire}},
+\code{\link{defaultFuelTypeTable}()},
+\code{\link{insertBuildUpIndex}()},
+\code{\link{insertFireSizesTable}()},
+\code{\link{insertFuelTypeTable}()},
+\code{\link{insertGroundSlopeFile}()},
+\code{\link{insertSeasonTable}()},
+\code{\link{insertUphillSlopeAzimuthMap}()},
+\code{\link{prepDynamicWeatherTable}()},
+\code{\link{prepFireSizesTable}()},
+\code{\link{prepInitialWeatherDatabase}()},
+\code{\link{prepTopographyFile}()}
+}
+\concept{Dynamic Fire helpers}

@@ -55,6 +55,9 @@ simplifyCohorts <- function(cohortData, pixelGroupMap, ageBin = 20) {
 #'
 #' @template return_file
 #'
+#' @seealso Used by succession extensions: [BiomassSuccession], [DGSSuccession],
+#'   [ForCS], [NECNSuccession], and [PnETSuccession].
+#'
 #' @export
 #' @rdname prepInitialCommunities
 prepInitialCommunities <- function(cohortData, pixelGroupMap, path) {
@@ -115,8 +118,8 @@ prepInitialCommunities <- function(cohortData, pixelGroupMap, path) {
 #' @export
 insertInitialCommunities <- function(files) {
   c(
-    glue::glue("InitialCommunities    \"{files[1]}\""),
-    glue::glue("InitialCommunitiesMap    \"{files[2]}\""),
+    insertValue("InitialCommunities", files[1], blank_line = FALSE),
+    insertValue("InitialCommunitiesMap", files[2], blank_line = FALSE),
     glue::glue("") ## add blank line after each item group
   )
 }

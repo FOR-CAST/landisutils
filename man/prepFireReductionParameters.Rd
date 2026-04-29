@@ -15,3 +15,18 @@ data.frame
 \description{
 Prepare Biomass Succession Extension \code{FireReductionParameters} Table
 }
+\seealso{
+Other Biomass Succession helpers: 
+\code{\link{BiomassSuccession}},
+\code{\link{insertEcoregionParameters}()},
+\code{\link{insertFireReductionParameters}()},
+\code{\link{insertHarvestReductionParameters}()},
+\code{\link{insertMinRelativeBiomass}()},
+\code{\link{insertSpeciesEcoregionDataFile}()},
+\code{\link{insertSufficientLight}()},
+\code{\link{prepEcoregionParameters}()},
+\code{\link{prepHarvestReductionParameters}()},
+\code{\link{prepMinRelativeBiomass}()},
+\code{\link{prepSpeciesEcoregionDataFile}()}
+}
+\concept{Biomass Succession helpers}

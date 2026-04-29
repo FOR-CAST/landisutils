@@ -20,6 +20,18 @@ Scheller, R., Kretchun, A., Hawbaker, T.J. & Henne, P.D. (2019). A landscape mod
 variable social-ecological fire regimes. Ecological Modelling, 401, 85–93.
 \doi{10.1016/j.ecolmodel.2019.03.022}
 }
+\seealso{
+Helpers that prepare inputs for this extension:
+\code{\link[=prepGroundSlopeFile]{prepGroundSlopeFile()}},
+\code{\link[=prepUphillAzimuthMap]{prepUphillAzimuthMap()}}.
+
+Other Social Climate Fire helpers: 
+\code{\link{insertDeadWoodTable}()},
+\code{\link{insertLadderFuelSpeciesList}()},
+\code{\link{prepSuppression_CSV_File}()},
+\code{\link{prepTopographyFile}()}
+}
+\concept{Social Climate Fire helpers}
 \section{Super class}{
 \code{\link[landisutils:LandisExtension]{landisutils::LandisExtension}} -> \code{SocialClimateFire}
 }
@@ -62,7 +74,7 @@ variable social-ecological fire regimes. Ecological Modelling, 401, 85–93.
 
 \item{\code{AccidentalIgnitionsCoeffs}}{Real. B0 and B1 from equation 1 (Scheller et al. 2019).}
 
-\item{\code{IgnitionDistribution}}{Character. One of "Poisson" or "ZeroInflatedPoisson".}
+\item{\code{IgnitionDistribution}}{Character. One of \code{"Poisson"} or \code{"ZeroInflatedPoisson"}.}
 
 \item{\code{LightningIgnitionsBinomialCoeffs}}{Real. Parameters $b_z_0$ and $b_z_1$ from equation 2 (Scheller et al. 2019).}
 

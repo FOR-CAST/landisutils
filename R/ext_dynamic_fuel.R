@@ -5,6 +5,13 @@
 #' @references LANDIS-II Dynamic Fuel System Extension v4.0 User Guide
 #'   <https://github.com/LANDIS-II-Foundation/Extension-Dynamic-Biomass-Fuels/blob/master/docs/LANDIS-II%20Dynamic%20Fuel%20System%20v4.0%20User%20Guide.pdf>
 #'
+#' @seealso
+#' Helpers that prepare inputs for this extension:
+#' [prepFuelTypesTable()],
+#' [prepDisturbanceConversionTable()].
+#'
+#' @family Dynamic Fuels helpers
+#'
 #' @export
 DynamicFuels <- R6Class(
   "DynamicFuels",
@@ -194,6 +201,8 @@ DynamicFuels <- R6Class(
 #'
 #' @template return_insert
 #'
+#' @family Dynamic Fuels helpers
+#'
 insertSpeciesFuelCoefficients <- function(df) {
   c(
     glue::glue(">> Species    Fuel"),
@@ -216,6 +225,8 @@ insertSpeciesFuelCoefficients <- function(df) {
 #' Natural Resources Canada. 2019. Fire Behavior Prediction System Fuel Type Descriptions.
 #'   <https://cwfis.cfs.nrcan.gc.ca/background/fueltypes/c1>
 #'
+#' @family Dynamic Fuels helpers
+#'
 #' @export
 prepFuelTypesTable <- function() {
   browser() ## TODO
@@ -236,6 +247,8 @@ prepFuelTypesTable <- function() {
 #'   `FuelType` (int), `BaseFuel` (char), `AgeMin` (int), `AgeMax` (int), `Species` (char).
 #'
 #' @template return_insert
+#'
+#' @family Dynamic Fuels helpers
 #'
 insertFuelTypesTable <- function(df) {
   df <- df |>
@@ -260,6 +273,8 @@ insertFuelTypesTable <- function(df) {
 #'
 #' @template return_insert
 #'
+#' @family Dynamic Fuels helpers
+#'
 insertEcoregionTable <- function(df) {
   c(
     glue::glue("EcoregionTable"),
@@ -276,6 +291,8 @@ insertEcoregionTable <- function(df) {
 #'
 #' @returns data.frame for use with [insertDisturbanceConversionTable()]
 #'
+#' @family Dynamic Fuels helpers
+#'
 #' @export
 prepDisturbanceConversionTable <- function() {
   browser() ## TODO
@@ -290,6 +307,8 @@ prepDisturbanceConversionTable <- function() {
 #'   `Fuel` (int), `Type` (int), `Duration` (int), and `Prescription` (char).
 #'
 #' @template return_insert
+#'
+#' @family Dynamic Fuels helpers
 #'
 insertDisturbanceConversionTable <- function(df) {
   c(

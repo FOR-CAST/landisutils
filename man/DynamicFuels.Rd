@@ -12,6 +12,20 @@ Dynamic Fuel System Extension
 LANDIS-II Dynamic Fuel System Extension v4.0 User Guide
 \url{https://github.com/LANDIS-II-Foundation/Extension-Dynamic-Biomass-Fuels/blob/master/docs/LANDIS-II\%20Dynamic\%20Fuel\%20System\%20v4.0\%20User\%20Guide.pdf}
 }
+\seealso{
+Helpers that prepare inputs for this extension:
+\code{\link[=prepFuelTypesTable]{prepFuelTypesTable()}},
+\code{\link[=prepDisturbanceConversionTable]{prepDisturbanceConversionTable()}}.
+
+Other Dynamic Fuels helpers: 
+\code{\link{insertDisturbanceConversionTable}()},
+\code{\link{insertEcoregionTable}()},
+\code{\link{insertFuelTypesTable}()},
+\code{\link{insertSpeciesFuelCoefficients}()},
+\code{\link{prepDisturbanceConversionTable}()},
+\code{\link{prepFuelTypesTable}()}
+}
+\concept{Dynamic Fuels helpers}
 \section{Super class}{
 \code{\link[landisutils:LandisExtension]{landisutils::LandisExtension}} -> \code{DynamicFuels}
 }

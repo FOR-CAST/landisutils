@@ -7,6 +7,38 @@ appendPercent <- function(x) {
   ifelse(stringr::str_ends(x, stringr::fixed("%")), x, stringr::str_c(x, "%"))
 }
 
+#' Allowed `SeedingAlgorithm` values
+#'
+#' Used by every LANDIS-II succession extension that exposes a
+#' `SeedingAlgorithm` field.
+#'
+#' @keywords internal
+.seedingAlgorithms <- c("WardSeedDispersal", "NoDispersal", "UniversalDispersal")
+
+#' Validate a `SeedingAlgorithm` value
+#'
+#' Internal helper used by the active bindings of every succession extension
+#' that exposes a `SeedingAlgorithm` field. Raises an informative error if
+#' `value` is not one of `.seedingAlgorithms`.
+#'
+#' @param value Character. Candidate value.
+#'
+#' @return `value`, invisibly, when valid.
+#'
+#' @keywords internal
+.checkSeedingAlgorithm <- function(value) {
+  if (!value %in% .seedingAlgorithms) {
+    stop(
+      "SeedingAlgorithm must be one of: ",
+      paste(.seedingAlgorithms, collapse = ", "),
+      "; got '",
+      value,
+      "'"
+    )
+  }
+  invisible(value)
+}
+
 #' Specify Dynamic Tables
 #'
 #'
@@ -71,6 +103,27 @@ insertFireDamageTable <- function(df = NULL) {
       glue::glue_collapse(x, sep = "%      ")
     }),
     glue::glue("") ## add blank line after each item group
+  )
+}
+
+#' Collapse one row of a labelled data frame into a separator-joined string
+#'
+#' Drops the first (label) column of `df`, applies `fmt` to each remaining
+#' cell, and collapses the result with `sep`. Used by succession-extension
+#' table writers (e.g. `MinRelativeBiomass`, `SufficientLight`).
+#'
+#' @param df  data.frame whose first column is a row label and whose
+#'   remaining columns hold the values to emit.
+#' @param i   integer row index.
+#' @param fmt formatter applied to each cell; must return a length-1 character.
+#'   Defaults to [as.character()].
+#' @param sep separator between cells. Defaults to two spaces.
+#'
+#' @keywords internal
+.collapseRow <- function(df, i, fmt = as.character, sep = "  ") {
+  glue::glue_collapse(
+    vapply(df[i, -1, drop = FALSE], fmt, character(1L)),
+    sep = sep
   )
 }
 

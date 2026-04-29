@@ -16,6 +16,31 @@ Dynamic Fire System Extension
 LANDIS-II Dynamic Fire System Extension v4 User Guide
 \url{https://github.com/LANDIS-II-Foundation/Extension-Dynamic-Fire-System/blob/master/docs/LANDIS-II\%20Dynamic\%20Fire\%20System\%20v4\%20User\%20Guide.pdf}
 }
+\seealso{
+Helpers that prepare inputs for this extension:
+\code{\link[=prepFireSizesTable]{prepFireSizesTable()}},
+\code{\link[=prepDynamicEcoregionTable]{prepDynamicEcoregionTable()}},
+\code{\link[=prepTopographyFile]{prepTopographyFile()}},
+\code{\link[=prepGroundSlopeFile]{prepGroundSlopeFile()}},
+\code{\link[=prepUphillAzimuthMap]{prepUphillAzimuthMap()}},
+\code{\link[=prepInitialWeatherDatabase]{prepInitialWeatherDatabase()}},
+\code{\link[=prepDynamicWeatherTable]{prepDynamicWeatherTable()}}.
+
+Other Dynamic Fire helpers: 
+\code{\link{defaultFuelTypeTable}()},
+\code{\link{insertBuildUpIndex}()},
+\code{\link{insertFireSizesTable}()},
+\code{\link{insertFuelTypeTable}()},
+\code{\link{insertGroundSlopeFile}()},
+\code{\link{insertSeasonTable}()},
+\code{\link{insertUphillSlopeAzimuthMap}()},
+\code{\link{prepDynamicEcoregionTable}()},
+\code{\link{prepDynamicWeatherTable}()},
+\code{\link{prepFireSizesTable}()},
+\code{\link{prepInitialWeatherDatabase}()},
+\code{\link{prepTopographyFile}()}
+}
+\concept{Dynamic Fire helpers}
 \section{Super class}{
 \code{\link[landisutils:LandisExtension]{landisutils::LandisExtension}} -> \code{DynamicFire}
 }

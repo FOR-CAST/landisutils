@@ -12,6 +12,32 @@ Biomass Succession Extension
 LANDIS-II Biomass Succession v7 Extension User Guide
 \url{https://github.com/LANDIS-II-Foundation/Extension-Biomass-Succession/blob/master/docs/LANDIS-II\%20Biomass\%20Succession\%20v7\%20User\%20Guide.pdf}
 }
+\seealso{
+Helpers that prepare inputs for this extension:
+\code{\link[=prepMinRelativeBiomass]{prepMinRelativeBiomass()}},
+\code{\link[=prepEcoregionParameters]{prepEcoregionParameters()}},
+\code{\link[=prepSpeciesEcoregionDataFile]{prepSpeciesEcoregionDataFile()}},
+\code{\link[=prepFireReductionParameters]{prepFireReductionParameters()}},
+\code{\link[=prepHarvestReductionParameters]{prepHarvestReductionParameters()}}.
+Shared scenario inputs:
+\code{\link[=prepClimateConfig]{prepClimateConfig()}},
+\code{\link[=prepInitialCommunities]{prepInitialCommunities()}},
+\code{\link[=prepSpeciesData]{prepSpeciesData()}}.
+
+Other Biomass Succession helpers: 
+\code{\link{insertEcoregionParameters}()},
+\code{\link{insertFireReductionParameters}()},
+\code{\link{insertHarvestReductionParameters}()},
+\code{\link{insertMinRelativeBiomass}()},
+\code{\link{insertSpeciesEcoregionDataFile}()},
+\code{\link{insertSufficientLight}()},
+\code{\link{prepEcoregionParameters}()},
+\code{\link{prepFireReductionParameters}()},
+\code{\link{prepHarvestReductionParameters}()},
+\code{\link{prepMinRelativeBiomass}()},
+\code{\link{prepSpeciesEcoregionDataFile}()}
+}
+\concept{Biomass Succession helpers}
 \section{Super class}{
 \code{\link[landisutils:LandisExtension]{landisutils::LandisExtension}} -> \code{DynamicFuels}
 }

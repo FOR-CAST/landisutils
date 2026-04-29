@@ -15,4 +15,12 @@ Character string(s) to write to the suitable LANDIS-II input file.
 \description{
 Specify \code{LadderFuelSpeciesList} for Social-Climate-Fire extension
 }
+\seealso{
+Other Social Climate Fire helpers: 
+\code{\link{SocialClimateFire}},
+\code{\link{insertDeadWoodTable}()},
+\code{\link{prepSuppression_CSV_File}()},
+\code{\link{prepTopographyFile}()}
+}
+\concept{Social Climate Fire helpers}
 \keyword{internal}

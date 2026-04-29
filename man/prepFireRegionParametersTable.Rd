@@ -15,3 +15,13 @@ data.frame
 \description{
 Prepare Original Fire Extension \code{FireRegionParameters} Table
 }
+\seealso{
+Other Original Fire helpers: 
+\code{\link{OriginalFire}},
+\code{\link{defaultFuelCurveTable}()},
+\code{\link{insertFireRegionParametersTable}()},
+\code{\link{insertFuelCurveTable}()},
+\code{\link{insertWindCurveTable}()},
+\code{\link{prepInitialFireRegionsMap}()}
+}
+\concept{Original Fire helpers}

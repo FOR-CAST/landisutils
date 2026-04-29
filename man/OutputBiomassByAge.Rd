@@ -28,6 +28,7 @@ biomass_by_age$write()
 LANDIS-II Biomass-by-Age Output v4.0 Extension User Guide
 \url{https://github.com/LANDIS-II-Foundation/Extension-Output-Biomass-By-Age/blob/master/docs/LANDIS-II\%20Biomass-by-Age\%20Output\%20v4.0\%20User\%20Guide.pdf}
 }
+\concept{Biomass-by-Age Output helpers}
 \section{Super class}{
 \code{\link[landisutils:LandisExtension]{landisutils::LandisExtension}} -> \code{OutputBiomassByAge}
 }

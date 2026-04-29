@@ -17,6 +17,10 @@
 #'
 #' @return `LandisClimateConfig` object
 #'
+#' @seealso Used by succession extensions that share a top-level climate
+#'   library: [BiomassSuccession], [DGSSuccession], [NECNSuccession],
+#'   and (optionally) [PnETSuccession].
+#'
 #' @export
 #'
 prepClimateConfig <- function(path, ...) {
