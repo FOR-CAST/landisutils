@@ -22,7 +22,7 @@ OriginalFire <- R6Class(
     #' @param Species_CSV_File Character. Relative file path.
     #' @param FireRegionParametersTable `data.frame`.
     #' @param InitialFireRegionsMap `SpatRaster`.
-    #' @param DynamicFireRegionsTable `data.frame`.
+    #' @param DynamicFireRegionTable `data.frame`.
     #' @param FuelCurveTable `data.frame`.
     #' @param WindCurveTable `data.frame`.
     #' @param FireDamageTable `data.frame`.
@@ -35,7 +35,7 @@ OriginalFire <- R6Class(
       Species_CSV_File = NULL,
       FireRegionParametersTable = NULL,
       InitialFireRegionsMap = NULL,
-      DynamicFireRegionsTable = NULL,
+      DynamicFireRegionTable = NULL,
       FuelCurveTable = NULL,
       WindCurveTable = NULL,
       FireDamageTable = NULL,
@@ -57,7 +57,7 @@ OriginalFire <- R6Class(
       self$Species_CSV_File <- Species_CSV_File
       self$FireRegionParametersTable <- FireRegionParametersTable
       self$InitialFireRegionsMap <- InitialFireRegionsMap
-      self$DynamicFireRegionsTable <- DynamicFireRegionsTable
+      self$DynamicFireRegionTable <- DynamicFireRegionTable
       self$FuelCurveTable <- FuelCurveTable
       self$WindCurveTable <- WindCurveTable
       self$FireDamageTable <- FireDamageTable
@@ -83,7 +83,7 @@ OriginalFire <- R6Class(
           insertFile("Species_CSV_File", self$Species_CSV_File),
           insertFireRegionParametersTable(self$FireRegionParametersTable),
           insertFile("InitialFireRegionsMap", self$InitialFireRegionsMap),
-          insertDynamicTable("DynamicFireRegionsTable", self$DynamicFireRegionsTable),
+          insertDynamicTable("DynamicFireRegionTable", self$DynamicFireRegionTable),
           insertFuelCurveTable(self$FuelCurveTable),
           insertWindCurveTable(self$WindCurveTable),
           insertFireDamageTable(self$FireDamageTable),
@@ -105,7 +105,7 @@ OriginalFire <- R6Class(
     .Species_CSV_File = NULL,
     .FireRegionParametersTable = NULL,
     .InitialFireRegionsMap = NULL,
-    .DynamicFireRegionsTable = NULL,
+    .DynamicFireRegionTable = NULL,
     .FuelCurveTable = NULL,
     .WindCurveTable = NULL,
     .FireDamageTable = NULL,
@@ -142,12 +142,12 @@ OriginalFire <- R6Class(
       }
     },
 
-    #' @field DynamicFireRegionsTable `data.frame`.
-    DynamicFireRegionsTable = function(value) {
+    #' @field DynamicFireRegionTable `data.frame`.
+    DynamicFireRegionTable = function(value) {
       if (missing(value)) {
-        return(private$.DynamicFireRegionsTable)
+        return(private$.DynamicFireRegionTable)
       } else {
-        private$.DynamicFireRegionsTable <- value
+        private$.DynamicFireRegionTable <- value
       }
     },
 

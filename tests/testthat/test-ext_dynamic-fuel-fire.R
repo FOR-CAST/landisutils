@@ -32,14 +32,16 @@ testthat::test_that("Dynamic Fuel & Fire inputs are properly created", {
   gs_file <- file.path(tmp_pth, "GroundSlope.tif")
   ua_file <- file.path(tmp_pth, "UphillSlope.tif")
   iwdb_file <- file.path(tmp_pth, "dynamic-fire_WeatherData.csv")
+  spp_csv <- file.path(tmp_pth, "DynamicFire_Spp_Table.csv")
 
-  all_files <- c(ifrm_file, gs_file, ua_file, iwdb_file)
+  all_files <- c(ifrm_file, gs_file, ua_file, iwdb_file, spp_csv)
   purrr::walk2(.x = rep("", length(all_files)), .y = all_files, .f = writeLines)
 
   ## create the dynamic fire extension config object
   ext_dyn_fire <- DynamicFire$new(
     path = tmp_pth,
     Timestep = 10,
+    Species_CSV_File = spp_csv,
     EventSizeType = "size_based",
     BuildUpIndex = "yes",
     WeatherRandomizer = 0L,
@@ -114,8 +116,8 @@ testthat::test_that("Dynamic Fuel & Fire inputs are properly created", {
     EcoregionTable = data.frame(FuelType = integer(0), Ecoregion = character(0)),
     DisturbanceConversionTable = disturb_conv,
     MapFileNames = NULL, ## use default
-    PctConiferMapName = NULL, ## use default
-    PctDeadFirMapName = NULL ## use default
+    PctConiferFileName = NULL, ## use default
+    PctDeadFirFileName = NULL ## use default
   )
 
   ext_dyn_fuel$write()

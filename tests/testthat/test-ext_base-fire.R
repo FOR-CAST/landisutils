@@ -23,7 +23,7 @@ testthat::test_that("Base Fire (and Biomass Succession) inputs are properly crea
   ext_of <- OriginalFire$new(
     path = tmp_pth,
 
-    DynamicFireRegionsTable = NULL,
+    DynamicFireRegionTable = NULL,
     FireRegionParametersTable = frp_table,
     FireDamageTable = fire_dmg_df,
     FuelCurveTable = fuel_crv_df,

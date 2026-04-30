@@ -33,11 +33,19 @@ LandUsePlus <- R6Class(
     ) {
       stopifnot(!is.null(path))
 
-      ## LandisExtension fields
+      ## LandisExtension fields. The v8-release Docker image registers this
+      ## extension as "Land Use Change" in scenario.txt's extension list, but
+      ## the parser inside the extension's own config file expects the legacy
+      ## "Land Use" header. Both verified against
+      ## ghcr.io/landis-ii-foundation/landis-ii-v8-release:main.
       private$.LandisData <- "Land Use"
+      private$.scenarioName <- "Land Use Change"
       self$Timestep <- Timestep
 
-      self$type <- "other"
+      ## v8-release classifies "Land Use Change" as a disturbance extension
+      ## (verified against the runtime parser); the v7 docs called it "other"
+      ## but Core8 + parser say disturbance.
+      self$type <- "disturbance"
       self$path <- path
       self$files <- "land-use.txt" ## file won't exist yet
 

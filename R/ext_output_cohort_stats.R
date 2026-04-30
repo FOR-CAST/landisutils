@@ -60,7 +60,7 @@ OutputCohortStats <- R6Class(
       }
       self$SpeciesAgeStats <- modifyList(self$SpeciesAgeStats, SpeciesAgeStats)
       self$SpeciesAgeMapNames <- SpeciesAgeMapNames %||%
-        "outputs/cohort-stats/{{species}}-{{statistic}}-{{timestep}}.tif"
+        "outputs/cohort-stats/{species}-{statistic}-{timestep}.tif"
 
       if (is.null(SiteAgeStats$stats)) {
         SiteAgeStats$stats <- private$.site_stats
@@ -74,7 +74,7 @@ OutputCohortStats <- R6Class(
       }
       self$SiteSpeciesStats <- modifyList(self$SiteSpeciesStats, SiteSpeciesStats)
       self$SiteSpeciesMapNames <- SiteSpeciesMapNames %||%
-        "outputs/cohort-stats/spp-{{statistic}}-{{timestep}}.tif"
+        "outputs/cohort-stats/spp-{statistic}-{timestep}.tif"
     },
 
     #' @description Write extension inputs to disk

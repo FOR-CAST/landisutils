@@ -15,6 +15,8 @@ insertFile(type, file)
 Character string(s) to write to the suitable LANDIS-II input file.
 }
 \description{
-Checks that a file exists before inserting the filepath.
+Emits a \verb{<type>  <file>} line. \code{NULL} (and length-zero) input is treated
+as "parameter omitted" and produces no output, matching how
+\code{\link[=insertValue]{insertValue()}} handles \code{NA}.
 }
 \keyword{internal}

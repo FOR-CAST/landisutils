@@ -163,8 +163,8 @@ ext_dyn_fuel <- DynamicFuels$new(
   EcoregionTable = data.frame(FuelType = integer(0), Ecoregion = character(0)),
   DisturbanceConversionTable = disturb_conv,
   MapFileNames = NULL, ## use default
-  PctConiferMapName = NULL, ## use default
-  PctDeadFirMapName = NULL ## use default
+  PctConiferFileName = NULL, ## use default
+  PctDeadFirFileName = NULL ## use default
 )
 
 ext_dyn_fuel$write()

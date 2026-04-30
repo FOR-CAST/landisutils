@@ -581,11 +581,14 @@ insertOutbreakPattern <- function(agent) {
 #'
 #' @keywords internal
 insertDispersal <- function(agent) {
+  ## DispersalRate is required by the BDA agent parser regardless of the
+  ## `Dispersal` toggle, and must be > 0 even when dispersal is disabled
+  ## (verified against the v8-release runtime). Use a placeholder value when
+  ## dispersal is off and no rate was given.
+  rate <- agent$DispersalRate %||% 4000
   c(
     insertValue("Dispersal", agent$Dispersal, blank_line = FALSE),
-    if (agent$Dispersal == "yes") {
-      insertValue("DispersalRate", agent$DispersalRate, blank_line = FALSE)
-    },
+    insertValue("DispersalRate", rate, blank_line = FALSE),
     insertValue("EpidemicThresh", agent$EpidemicThresh, blank_line = FALSE),
     insertValue(
       "InitialEpicenterNum",
@@ -595,12 +598,17 @@ insertDispersal <- function(agent) {
     insertValue("OutbreakEpicenterCoeff", agent$OutbreakEpicenterCoeff, blank_line = FALSE),
     insertValue("OutbreakEpicenterThresh", agent$OutbreakEpicenterThresh, blank_line = FALSE),
     insertValue("SeedEpicenter", agent$SeedEpicenter, blank_line = FALSE),
-    if (!is.null(agent$SeedEpicenterMax)) {
-      insertValue("SeedEpicenterMax", as.integer(agent$SeedEpicenterMax), blank_line = FALSE)
-    },
-    if (agent$SeedEpicenter == "yes") {
-      insertValue("SeedEpicenterCoeff", agent$SeedEpicenterCoeff, blank_line = FALSE)
-    },
+    ## SeedEpicenterMax (v5+) and SeedEpicenterCoeff are both required by the
+    ## v8-release parser even when SeedEpicenter is "no"; supply placeholder
+    ## values when the agent didn't specify them.
+    insertValue(
+      "SeedEpicenterMax",
+      as.integer(agent$SeedEpicenterMax %||% 25), blank_line = FALSE
+    ),
+    insertValue(
+      "SeedEpicenterCoeff",
+      agent$SeedEpicenterCoeff %||% 0.5, blank_line = FALSE
+    ),
     insertValue("DispersalTemplate", agent$DispersalTemplate, blank_line = FALSE),
     glue::glue("")
   )

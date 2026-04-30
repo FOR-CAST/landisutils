@@ -83,7 +83,7 @@ testthat::test_that("Climate BDA inputs are properly created", {
   testthat::expect_true(any(grepl("^StDev\\s+10\\.6", agent_lines)))
   testthat::expect_true(any(grepl("^TemporalType\\s+variablepulse$", agent_lines)))
   testthat::expect_true(any(grepl("^Dispersal\\s+no$", agent_lines)))
-  testthat::expect_false(any(grepl("^DispersalRate", agent_lines))) ## skipped when Dispersal=no
+  testthat::expect_true(any(grepl("^DispersalRate", agent_lines))) ## always emitted (v8-release parser requires it)
   testthat::expect_true(any(grepl("^SeedEpicenter\\s+yes$", agent_lines)))
   testthat::expect_true(any(grepl("^SeedEpicenterCoeff\\s+0\\.5", agent_lines)))
   testthat::expect_true(any(grepl("^DispersalTemplate\\s+MaxRadius$", agent_lines)))

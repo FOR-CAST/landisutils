@@ -37,7 +37,7 @@ testthat::test_that("NECN Succession inputs are properly created", {
     InitialSOM3CMapName           = "random1294.tif",
     InitialSOM3NMapName           = "random50.tif",
     InitialDeadWoodSurfaceMapName = "random110.tif",
-    InitialDeadWoodRootsMapName   = "random50.tif" ## upstream: "InitialDeadCoarseRootsMapName"
+    InitialDeadCoarseRootsMapName = "random50.tif"
   )
   soil_map_files <- lapply(soil_map_names, touch)
 
@@ -49,16 +49,13 @@ testthat::test_that("NECN Succession inputs are properly created", {
     3L            , 1.0                    , 1.0                  , 0.35                 , 1.0                  , 0.75
   )
 
-  ## HarvestReductionParameters from the upstream reference. The upstream test
-  ## file has a 5-numeric-column variant (Name, WoodLitterReduct, LitterReduct,
-  ## SOMReduction, CohortWoodRemoval, CohortLeafRemoval); the user guide
-  ## (section 2.35) documents only 4 numeric columns (DeadWoodReduction,
-  ## DeadLitterReduction, CohortWoodRemoval, CohortLeafRemoval), so the
-  ## upstream `SOMReduction` value (0.2 / 1.0) is dropped here.
+  ## HarvestReductionParameters from the upstream NECN reference. Note: the
+  ## v8 user guide §2.35 documents 4 numeric columns, but the runtime NECN
+  ## parser requires 5 numeric (including SOMReduction) -- trust the parser.
   harvest_params <- tibble::tribble(
-    ~PrescriptionName , ~DeadWoodReduction , ~DeadLitterReduction , ~CohortWoodRemoval , ~CohortLeafRemoval ,
-    "MaxAgeClearcut"  , 0.5                , 0.15                 , 0.8                , 0.15               ,
-    "PatchCutting"    , 1.0                , 1.0                  , 1.0                , 1.0
+    ~PrescriptionName , ~DeadWoodReduction , ~DeadLitterReduction , ~SOMReduction , ~CohortWoodRemoval , ~CohortLeafRemoval ,
+    "MaxAgeClearcut"  , 0.5                , 0.15                 , 0.2           , 0.8                , 0.15               ,
+    "PatchCutting"    , 1.0                , 1.0                  , 1.0           , 1.0                , 1.0
   )
 
   ext_necn <- NECNSuccession$new(
@@ -101,7 +98,7 @@ testthat::test_that("NECN Succession inputs are properly created", {
   testthat::expect_true(any(grepl("^ClimateConfigFile", contents)))
   testthat::expect_true(any(grepl("^SoilDepthMapName", contents)))
   testthat::expect_true(any(grepl("^InitialSOM1CsurfMapName", contents)))
-  testthat::expect_true(any(grepl("^InitialDeadWoodRootsMapName", contents)))
+  testthat::expect_true(any(grepl("^InitialDeadCoarseRootsMapName", contents)))
   testthat::expect_true(any(grepl("^WaterDecayFunction\\s+\"?Ratio", contents)))
   testthat::expect_true(any(grepl("^InitialMineralN\\s+2", contents)))
   testthat::expect_true(any(grepl("^AtmosphericNSlope\\s+0\\.05", contents)))

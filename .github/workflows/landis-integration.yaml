@@ -20,7 +20,10 @@ jobs:
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
       R_KEEP_PKG_SOURCE: yes
-      LANDIS_IMAGE: ghcr.io/landis-ii-foundation/landis-ii-v8-release:main
+      ## Each scenario directory may carry a `.landis_image` marker selecting
+      ## which Docker image to run it against; `run_in_docker.sh` reads it.
+      LANDIS_IMAGE_RELEASE: ghcr.io/landis-ii-foundation/landis-ii-v8-release:main
+      LANDIS_IMAGE_UCLV2: ghcr.io/landis-ii-foundation/landis-ii-v8-uclv2-release:main
 
     steps:
       - uses: actions/checkout@v4
@@ -51,8 +54,10 @@ jobs:
           echo "Scenarios built:"
           cat "${RUNNER_TEMP}/landis-scenarios.list"
 
-      - name: Pull LANDIS-II Docker image
-        run: docker pull "${LANDIS_IMAGE}"
+      - name: Pull LANDIS-II Docker images
+        run: |
+          docker pull "${LANDIS_IMAGE_RELEASE}"
+          docker pull "${LANDIS_IMAGE_UCLV2}"
 
       - name: Run LANDIS-II on each scenario
         run: |

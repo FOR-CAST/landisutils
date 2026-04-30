@@ -47,6 +47,8 @@ Other Dynamic Fire helpers:
 \section{Active bindings}{
 \if{html}{\out{<div class="r6-active-bindings">}}
 \describe{
+\item{\code{Species_CSV_File}}{Character. Relative file path.}
+
 \item{\code{EventSizeType}}{Character. One of "size_based" or "duration_based".}
 
 \item{\code{BuildUpIndex}}{Logical, or character indicating "yes" or "no".}
@@ -107,6 +109,7 @@ linkage between fire size/duration distribution and weather distribution.}
 \if{html}{\out{<div class="r">}}\preformatted{DynamicFire$new(
   path,
   Timestep = 10,
+  Species_CSV_File = NULL,
   EventSizeType = NULL,
   BuildUpIndex = NULL,
   WeatherRandomizer = NULL,
@@ -133,6 +136,10 @@ linkage between fire size/duration distribution and weather distribution.}
 \item{\code{path}}{Character. Directory path.}
 
 \item{\code{Timestep}}{Integer.}
+
+\item{\code{Species_CSV_File}}{Character. Relative file path to the
+per-species fire-coefficient CSV (must precede \code{EventSizeType} in
+the emitted config).}
 
 \item{\code{EventSizeType}}{Character. One of "size_based" or "duration_based".}
 

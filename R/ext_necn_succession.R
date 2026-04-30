@@ -8,8 +8,10 @@
   "SoilStormFlowMapName",
   "SoilFieldCapacityMapName",
   "SoilWiltingPointMapName",
-  "SoilPercentClayMapName",
+  ## Sand must precede Clay -- the upstream NECN parser checks this order
+  ## (verified against ghcr.io/landis-ii-foundation/landis-ii-v8-release:main).
   "SoilPercentSandMapName",
+  "SoilPercentClayMapName",
   ## initial soil + dead wood maps (section 2.8)
   "InitialSOM1CsurfMapName",
   "InitialSOM1NsurfMapName",
@@ -20,7 +22,9 @@
   "InitialSOM3CMapName",
   "InitialSOM3NMapName",
   "InitialDeadWoodSurfaceMapName",
-  "InitialDeadWoodRootsMapName"
+  ## Upstream parser key is `InitialDeadCoarseRootsMapName`, not `InitialDeadWoodRootsMapName`
+  ## (verified against ghcr.io/landis-ii-foundation/landis-ii-v8-release:main).
+  "InitialDeadCoarseRootsMapName"
 )
 
 #' Allowed keys in `NECNSuccession$OptionalClimateMaps`
@@ -276,7 +280,12 @@ NECNSuccession <- R6Class(
           unlist(lapply(names(self$OutputMaps %||% list()), function(k) {
             insertValue(k, self$OutputMaps[[k]])
           })),
-          insertValue("CreateInputCommunityMaps", self$CreateInputCommunityMaps),
+          ## Only emit CreateInputCommunityMaps when "yes": when "no", the
+          ## parser still expects an InputCommunityMapFrequency keyword to
+          ## follow, and we don't currently generate one.
+          if (isTRUE(self$CreateInputCommunityMaps == "yes")) {
+            insertValue("CreateInputCommunityMaps", "yes")
+          },
           unlist(lapply(names(self$VariableOverrides %||% list()), function(k) {
             insertValue(k, self$VariableOverrides[[k]])
           })),
@@ -800,7 +809,9 @@ insertNECNFireReductionParameters <- function(df) {
 #' Specify NECN Succession `HarvestReductionParameters` table
 #'
 #' @param df `data.frame` with columns `PrescriptionName`, `DeadWoodReduction`,
-#'   `DeadLitterReduction`, `CohortWoodRemoval`, `CohortLeafRemoval`.
+#'   `DeadLitterReduction`, `SOMReduction`, `CohortWoodRemoval`, `CohortLeafRemoval`.
+#'   `SOMReduction` is required by the runtime NECN parser even though the v8
+#'   user guide §2.35 documents only the other four numeric columns.
 #'
 #' @template return_insert
 #'
@@ -812,6 +823,7 @@ insertNECNHarvestReductionParameters <- function(df) {
     "PrescriptionName",
     "DeadWoodReduction",
     "DeadLitterReduction",
+    "SOMReduction",
     "CohortWoodRemoval",
     "CohortLeafRemoval"
   )
@@ -823,8 +835,8 @@ insertNECNHarvestReductionParameters <- function(df) {
 
   c(
     glue::glue("HarvestReductionParameters"),
-    glue::glue(">>  Name    DeadWood    DeadLitter    Cohort        Cohort"),
-    glue::glue(">>          Reduction   Reduction     WoodRemoval   LeafRemoval"),
+    glue::glue(">>  Name    DeadWood    DeadLitter    SOM         Cohort        Cohort"),
+    glue::glue(">>          Reduction   Reduction     Reduction   WoodRemoval   LeafRemoval"),
     glue::glue(">>  --------------------------------------------------------------"),
     apply(df[, cols, drop = FALSE], 1, function(x) {
       glue::glue_collapse(x, sep = "    ")

@@ -46,7 +46,18 @@ LandisExtension <- R6Class(
     }
   ),
 
-  private = list(.LandisData = NA_character_, .Timestep = NA_integer_, .type = NA_character_),
+  private = list(
+    .LandisData = NA_character_,
+    ## Optional override for the extension name written in scenario.txt's
+    ## extension list. Most extensions use the same string in both their own
+    ## file's `LandisData` header and the scenario reference, but a few
+    ## diverge (e.g. Land Use Plus: file header is `"Land Use"`, scenario
+    ## reference is `"Land Use Change"`). When NULL, `scenarioName` falls
+    ## back to `.LandisData`.
+    .scenarioName = NULL,
+    .Timestep = NA_integer_,
+    .type = NA_character_
+  ),
 
   active = list(
     #' @field LandisData Character. The extension's `LandisData` entry
@@ -60,6 +71,21 @@ LandisExtension <- R6Class(
         )
       }
       private$.LandisData
+    },
+
+    #' @field scenarioName Character. The name to use when this extension is
+    #'   referenced in the scenario `.txt` file's extension list. Defaults to
+    #'   `LandisData`; subclasses set `private$.scenarioName` only when the
+    #'   parser-registered name differs from the file-header name (e.g. Land
+    #'   Use Plus). Read-only.
+    scenarioName = function(value) {
+      if (!missing(value)) {
+        stop(
+          "`scenarioName` is read-only; set via `private$.scenarioName` in initialize()",
+          call. = FALSE
+        )
+      }
+      private$.scenarioName %||% private$.LandisData
     },
 
     #' @field Timestep Integer.

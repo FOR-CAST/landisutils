@@ -50,11 +50,11 @@ Other Social Climate Fire helpers:
 
 \item{\code{LightningIgnitionsMap}}{Character. Relative file path.}
 
-\item{\code{DynamicLightningIgnitionsMaps}}{(Optional) \code{data.frame} with columns \code{Year} and \code{FileName}.}
+\item{\code{DynamicLightningIgnitionMaps}}{(Optional) \code{data.frame} with columns \code{Year} and \code{FileName}.}
 
 \item{\code{RxIgnitionsMap}}{Character. Relative file path.}
 
-\item{\code{DynamicRxIgnitionsMaps}}{(Optional) \code{data.frame} with columns \code{Year} and \code{FileName}.}
+\item{\code{DynamicRxIgnitionMaps}}{(Optional) \code{data.frame} with columns \code{Year} and \code{FileName}.}
 
 \item{\code{AccidentalSuppressionMap}}{Character. Relative file path.}
 
@@ -64,7 +64,7 @@ Other Social Climate Fire helpers:
 
 \item{\code{DynamicAccidentalSuppressionMaps}}{(Optional) \code{data.frame} with columns \code{Year} and \code{FileName}.}
 
-\item{\code{GroundSlopeFile}}{Character. Relative file path.}
+\item{\code{GroundSlopeMap}}{Character. Relative file path.}
 
 \item{\code{UphillSlopeAzimuthMap}}{Character. Relative file path.}
 
@@ -92,7 +92,7 @@ Other Social Climate Fire helpers:
 
 \item{\code{MinimumRxRelativeHumidity}}{(Optional) Real. Minimum relative humidity for prescribed fires.}
 
-\item{\code{MaximumRXFireIntensity}}{Integer. Maximum allowable fire intensity for prescribed fires.}
+\item{\code{MaximumRxFireIntensity}}{Integer. Maximum allowable fire intensity for prescribed fires.}
 
 \item{\code{NumberRxAnnualFires}}{Integer. Number of prescribed fires attempted per year.}
 
@@ -155,14 +155,14 @@ Other Social Climate Fire helpers:
   AccidentalIgnitionsMap = NULL,
   DynamicAccidentalIgnitionMaps = NULL,
   LightningIgnitionsMap = NULL,
-  DynamicLightningIgnitionsMaps = NULL,
+  DynamicLightningIgnitionMaps = NULL,
   RxIgnitionsMap = NULL,
-  DynamicRxIgnitionsMaps = NULL,
+  DynamicRxIgnitionMaps = NULL,
   AccidentalSuppressionMap = NULL,
   LightningSuppressionMap = NULL,
   RxSuppressionMap = NULL,
   DynamicAccidentalSuppressionMaps = NULL,
-  GroundSlopeFile = NULL,
+  GroundSlopeMap = NULL,
   UphillSlopeAzimuthMap = NULL,
   ClayMap = NULL,
   LightningIgnitionsCoeffs = NULL,
@@ -176,7 +176,7 @@ Other Social Climate Fire helpers:
   MinimumRxFireWeatherIndex = NULL,
   MaximumRxTemperature = NULL,
   MinimumRxRelativeHumidity = NULL,
-  MaximumRXFireIntensity = NULL,
+  MaximumRxFireIntensity = NULL,
   NumberRxAnnualFires = NULL,
   NumberRxDailyFires = NULL,
   FirstDayRxFires = NULL,
@@ -214,11 +214,11 @@ Other Social Climate Fire helpers:
 
 \item{\code{LightningIgnitionsMap}}{Character. Relative file path.}
 
-\item{\code{DynamicLightningIgnitionsMaps}}{(Optional) \code{data.frame}.}
+\item{\code{DynamicLightningIgnitionMaps}}{(Optional) \code{data.frame}.}
 
 \item{\code{RxIgnitionsMap}}{Character. Relative file path.}
 
-\item{\code{DynamicRxIgnitionsMaps}}{(Optional) \code{data.frame}.}
+\item{\code{DynamicRxIgnitionMaps}}{(Optional) \code{data.frame}.}
 
 \item{\code{AccidentalSuppressionMap}}{Character. Relative file path.}
 
@@ -228,7 +228,7 @@ Other Social Climate Fire helpers:
 
 \item{\code{DynamicAccidentalSuppressionMaps}}{(Optional) \code{data.frame}.}
 
-\item{\code{GroundSlopeFile}}{Character. Relative file path.}
+\item{\code{GroundSlopeMap}}{Character. Relative file path.}
 
 \item{\code{UphillSlopeAzimuthMap}}{Character. Relative file path.}
 
@@ -256,7 +256,7 @@ Other Social Climate Fire helpers:
 
 \item{\code{MinimumRxRelativeHumidity}}{(Optional) Real. Minimum relative humidity for prescribed fires.}
 
-\item{\code{MaximumRXFireIntensity}}{Integer. Maximum allowable fire intensity for prescribed fires.}
+\item{\code{MaximumRxFireIntensity}}{Integer. Maximum allowable fire intensity for prescribed fires.}
 
 \item{\code{NumberRxAnnualFires}}{Integer. Number of prescribed fires attempted per year.}
 

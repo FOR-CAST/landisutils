@@ -28,6 +28,9 @@ DynamicFire <- R6Class(
   public = list(
     #' @param path Character. Directory path.
     #' @param Timestep Integer.
+    #' @param Species_CSV_File Character. Relative file path to the
+    #'   per-species fire-coefficient CSV (must precede `EventSizeType` in
+    #'   the emitted config).
     #' @param EventSizeType Character. One of "size_based" or "duration_based".
     #' @param BuildUpIndex Logical, or character indicating "yes" or "no".
     #' @param WeatherRandomizer Integer `[0, 4]`.
@@ -48,6 +51,7 @@ DynamicFire <- R6Class(
     initialize = function(
       path,
       Timestep = 10,
+      Species_CSV_File = NULL,
       EventSizeType = NULL,
       BuildUpIndex = NULL,
       WeatherRandomizer = NULL,
@@ -77,6 +81,7 @@ DynamicFire <- R6Class(
       self$files <- "dynamic-fire.txt" ## file won't exist yet
 
       ## additional fields for this extension
+      self$Species_CSV_File <- Species_CSV_File
       self$EventSizeType <- EventSizeType
       self$BuildUpIndex <- BuildUpIndex
       self$WeatherRandomizer <- WeatherRandomizer
@@ -115,6 +120,7 @@ DynamicFire <- R6Class(
         c(
           insertLandisData(private$.LandisData),
           insertValue("Timestep", self$Timestep),
+          insertFile("Species_CSV_File", self$Species_CSV_File),
           insertValue("EventSizeType", self$EventSizeType),
           insertBuildUpIndex(self$BuildUpIndex),
           insertValue("WeatherRandomizer", self$WeatherRandomizer),
@@ -147,6 +153,7 @@ DynamicFire <- R6Class(
   ),
 
   private = list(
+    .Species_CSV_File = NULL,
     .EventSizeType = NULL,
     .BuildUpIndex = NULL,
     .WeatherRandomizer = NULL,
@@ -167,6 +174,19 @@ DynamicFire <- R6Class(
   ),
 
   active = list(
+    #' @field Species_CSV_File Character. Relative file path.
+    Species_CSV_File = function(value) {
+      if (missing(value)) {
+        return(private$.Species_CSV_File)
+      } else {
+        if (is.null(value)) {
+          private$.Species_CSV_File <- NULL
+        } else {
+          private$.Species_CSV_File <- .relPath(value, self$path)
+        }
+      }
+    },
+
     #' @field EventSizeType Character. One of "size_based" or "duration_based".
     EventSizeType = function(value) {
       if (missing(value)) {

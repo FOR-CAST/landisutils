@@ -41,7 +41,7 @@ One of \code{"WardSeedDispersal"}, \code{"NoDispersal"}, \code{"UniversalDispers
 
 \item{\code{ClimateConfigFile}}{Character. Relative file path.}
 
-\item{\code{SoilMaps}}{Named list of relative file paths. Required keys: \code{SoilDepthMapName}, \code{SoilDrainMapName}, \code{SoilBaseFlowMapName}, \code{SoilStormFlowMapName}, \code{SoilFieldCapacityMapName}, \code{SoilWiltingPointMapName}, \code{SoilPercentClayMapName}, \code{SoilPercentSandMapName}, \code{InitialSOM1CsurfMapName}, \code{InitialSOM1NsurfMapName}, \code{InitialSOM1CsoilMapName}, \code{InitialSOM1NsoilMapName}, \code{InitialSOM2CMapName}, \code{InitialSOM2NMapName}, \code{InitialSOM3CMapName}, \code{InitialSOM3NMapName}, \code{InitialDeadWoodSurfaceMapName}, \code{InitialDeadWoodRootsMapName}.}
+\item{\code{SoilMaps}}{Named list of relative file paths. Required keys: \code{SoilDepthMapName}, \code{SoilDrainMapName}, \code{SoilBaseFlowMapName}, \code{SoilStormFlowMapName}, \code{SoilFieldCapacityMapName}, \code{SoilWiltingPointMapName}, \code{SoilPercentSandMapName}, \code{SoilPercentClayMapName}, \code{InitialSOM1CsurfMapName}, \code{InitialSOM1NsurfMapName}, \code{InitialSOM1CsoilMapName}, \code{InitialSOM1NsoilMapName}, \code{InitialSOM2CMapName}, \code{InitialSOM2NMapName}, \code{InitialSOM3CMapName}, \code{InitialSOM3NMapName}, \code{InitialDeadWoodSurfaceMapName}, \code{InitialDeadCoarseRootsMapName}.}
 
 \item{\code{OptionalClimateMaps}}{Named list of relative file paths.
 Allowed keys: \code{SlopeMapName}, \code{AspectMapName}, \code{NormalSWAMapName}, \code{NormalCWDMapName}, \code{NormalTempMapName}.}
@@ -183,7 +183,7 @@ library configuration file.}
 
 \item{\code{SoilMaps}}{Named list of relative file paths for required soil physical
 and initial soil organic matter / dead wood map inputs. Keys must match
-the NECN keywords (Tables 1 and 2 of the user guide): \code{SoilDepthMapName}, \code{SoilDrainMapName}, \code{SoilBaseFlowMapName}, \code{SoilStormFlowMapName}, \code{SoilFieldCapacityMapName}, \code{SoilWiltingPointMapName}, \code{SoilPercentClayMapName}, \code{SoilPercentSandMapName}, \code{InitialSOM1CsurfMapName}, \code{InitialSOM1NsurfMapName}, \code{InitialSOM1CsoilMapName}, \code{InitialSOM1NsoilMapName}, \code{InitialSOM2CMapName}, \code{InitialSOM2NMapName}, \code{InitialSOM3CMapName}, \code{InitialSOM3NMapName}, \code{InitialDeadWoodSurfaceMapName}, \code{InitialDeadWoodRootsMapName}.}
+the NECN keywords (Tables 1 and 2 of the user guide): \code{SoilDepthMapName}, \code{SoilDrainMapName}, \code{SoilBaseFlowMapName}, \code{SoilStormFlowMapName}, \code{SoilFieldCapacityMapName}, \code{SoilWiltingPointMapName}, \code{SoilPercentSandMapName}, \code{SoilPercentClayMapName}, \code{InitialSOM1CsurfMapName}, \code{InitialSOM1NsurfMapName}, \code{InitialSOM1CsoilMapName}, \code{InitialSOM1NsoilMapName}, \code{InitialSOM2CMapName}, \code{InitialSOM2NMapName}, \code{InitialSOM3CMapName}, \code{InitialSOM3NMapName}, \code{InitialDeadWoodSurfaceMapName}, \code{InitialDeadCoarseRootsMapName}.}
 
 \item{\code{OptionalClimateMaps}}{(Optional) Named list of relative file paths for
 any of \code{SlopeMapName}, \code{AspectMapName}, \code{NormalSWAMapName},

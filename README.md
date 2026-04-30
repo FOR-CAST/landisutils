@@ -42,6 +42,7 @@ Tables below are grouped by extension type and sorted alphabetically; use the fi
 | 🔥 [Dynamic Fire System](https://github.com/LANDIS-II-Foundation/Extension-Dynamic-Fire-System)               | `DynamicFire`             |
 | 🦠 [Epidemiological Disturbance Agents](https://github.com/LANDIS-II-Foundation/Extension-Base-EDA)           | `EDA`                     |
 | 🌀 [Hurricanes](https://github.com/LANDIS-II-Foundation/Extension-Biomass-Hurricane)                          | `Hurricane`               |
+| 🗺️ [Land Use Plus](https://github.com/LANDIS-II-Foundation/Extension-Land-Use-Plus)                           | `LandUsePlus`             |
 | 🌪️ [Linear Wind](https://github.com/LANDIS-II-Foundation/Extension-LinearWind)                                | `LinearWind`              |
 | ✨ [Magic Harvest](https://github.com/Klemet/LANDIS-II-Magic-Harvest)                                         | `MagicHarvest`            |
 | 🔥 [Original Fire](https://github.com/LANDIS-II-Foundation/Extension-Base-Fire)                               | `OriginalFire`            |
@@ -60,7 +61,6 @@ Tables below are grouped by extension type and sorted alphabetically; use the fi
 | 📈 [Cohort Statistics Output](https://github.com/LANDIS-II-Foundation/Extension-Output-Cohort-Statistics)                 | `OutputCohortStats`      |
 | 📦 [Forest Product Sector](https://github.com/CarenD/Forest_Product_Sector_Module)                                        | _coming soon_            |
 | 🛣️ [Forest Road Simulator](https://github.com/Klemet/LANDIS-II-Forest-Roads-Simulation-extension)                         | `ForestRoadsSimulation`  |
-| 🗺️ [Land Use Plus](https://github.com/LANDIS-II-Foundation/Extension-Land-Use-Plus)                                       | `LandUsePlus`            |
 | 🏞️ [Landscape Habitat Output](https://github.com/LANDIS-II-Foundation/Extension-Output-Landscape-Habitat)                 | `OutputLandscapeHabitat` |
 | 🐿️ [Local Habitat Suitability Output](https://github.com/LANDIS-II-Foundation/Extension-Local-Habitat-Suitability-Output) | `OutputLocalHabitat`     |
 | 🕰️ [Maximum Species Age Output](https://github.com/LANDIS-II-Foundation/Extension-Output-Max-Species-Age)                 | `OutputMaxSpeciesAge`    |

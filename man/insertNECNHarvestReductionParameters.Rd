@@ -8,7 +8,9 @@ insertNECNHarvestReductionParameters(df)
 }
 \arguments{
 \item{df}{\code{data.frame} with columns \code{PrescriptionName}, \code{DeadWoodReduction},
-\code{DeadLitterReduction}, \code{CohortWoodRemoval}, \code{CohortLeafRemoval}.}
+\code{DeadLitterReduction}, \code{SOMReduction}, \code{CohortWoodRemoval}, \code{CohortLeafRemoval}.
+\code{SOMReduction} is required by the runtime NECN parser even though the v8
+user guide §2.35 documents only the other four numeric columns.}
 }
 \value{
 Character string(s) to write to the suitable LANDIS-II input file.

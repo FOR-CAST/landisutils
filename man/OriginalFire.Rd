@@ -38,7 +38,7 @@ Other Original Fire helpers:
 
 \item{\code{InitialFireRegionsMap}}{Character. Relative file path.}
 
-\item{\code{DynamicFireRegionsTable}}{\code{data.frame}.}
+\item{\code{DynamicFireRegionTable}}{\code{data.frame}.}
 
 \item{\code{FuelCurveTable}}{\code{data.frame}.}
 
@@ -80,7 +80,7 @@ Other Original Fire helpers:
   Species_CSV_File = NULL,
   FireRegionParametersTable = NULL,
   InitialFireRegionsMap = NULL,
-  DynamicFireRegionsTable = NULL,
+  DynamicFireRegionTable = NULL,
   FuelCurveTable = NULL,
   WindCurveTable = NULL,
   FireDamageTable = NULL,
@@ -103,7 +103,7 @@ Other Original Fire helpers:
 
 \item{\code{InitialFireRegionsMap}}{\code{SpatRaster}.}
 
-\item{\code{DynamicFireRegionsTable}}{\code{data.frame}.}
+\item{\code{DynamicFireRegionTable}}{\code{data.frame}.}
 
 \item{\code{FuelCurveTable}}{\code{data.frame}.}
 

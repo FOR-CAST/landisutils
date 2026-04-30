@@ -1,6 +1,6 @@
 .exts_by_type <- function(extlist, type) {
   lapply(extlist, function(ext) {
-    if (ext$type %in% type) ext$LandisData else NULL
+    if (ext$type %in% type) ext$scenarioName else NULL
   }) |>
     unlist() |>
     as.list()

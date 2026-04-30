@@ -113,9 +113,9 @@ testthat::test_that("Social-Climate-Fire inputs are properly created", {
     AccidentalIgnitionsMap = acc_ign_map,
     DynamicAccidentalIgnitionMaps = NULL, ## optional
     LightningIgnitionsMap = ltg_ign_map,
-    DynamicLightningIgnitionsMaps = NULL, ## optional
+    DynamicLightningIgnitionMaps = NULL, ## optional
     RxIgnitionsMap = rx_ign_map,
-    DynamicRxIgnitionsMaps = NULL, ## optional
+    DynamicRxIgnitionMaps = NULL, ## optional
 
     ## suppression maps
     AccidentalSuppressionMap = acc_supp_map,
@@ -124,7 +124,7 @@ testthat::test_that("Social-Climate-Fire inputs are properly created", {
     DynamicAccidentalSuppressionMaps = NULL, ## optional
 
     ## topography files
-    GroundSlopeFile = gs_file,
+    GroundSlopeMap = gs_file,
     UphillSlopeAzimuthMap = ua_file,
     ClayMap = cm_file,
 
@@ -142,7 +142,7 @@ testthat::test_that("Social-Climate-Fire inputs are properly created", {
     MinimumRxFireWeatherIndex = 1.0, ## optional
     MaximumRxTemperature = 35.0, ## optional
     MinimumRxRelativeHumidity = 22.0, ## optional
-    MaximumRXFireIntensity = 1,
+    MaximumRxFireIntensity = 1,
     NumberRxAnnualFires = 10,
     NumberRxDailyFires = 1,
     FirstDayRxFires = 2,

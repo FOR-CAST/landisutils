@@ -139,9 +139,9 @@ ext_social_climate_fire <- SocialClimateFire$new(
   AccidentalIgnitionsMap = acc_ign_map,
   DynamicAccidentalIgnitionMaps = NULL, ## optional
   LightningIgnitionsMap = ltg_ign_map,
-  DynamicLightningIgnitionsMaps = NULL, ## optional
+  DynamicLightningIgnitionMaps = NULL, ## optional
   RxIgnitionsMap = rx_ign_map,
-  DynamicRxIgnitionsMaps = NULL, ## optional
+  DynamicRxIgnitionMaps = NULL, ## optional
 
   ## suppression maps
   AccidentalSuppressionMap = acc_supp_map,
@@ -150,7 +150,7 @@ ext_social_climate_fire <- SocialClimateFire$new(
   DynamicAccidentalSuppressionMaps = NULL, ## optional
 
   ## topography files
-  GroundSlopeFile = gs_file,
+  GroundSlopeMap = gs_file,
   UphillSlopeAzimuthMap = ua_file,
   ClayMap = cm_file,
 
@@ -168,7 +168,7 @@ ext_social_climate_fire <- SocialClimateFire$new(
   MinimumRxFireWeatherIndex = 1.0, ## optional
   MaximumRxTemperature = 35.0, ## optional
   MinimumRxRelativeHumidity = 22.0, ## optional
-  MaximumRXFireIntensity = 1,
+  MaximumRxFireIntensity = 1,
   NumberRxAnnualFires = 10,
   NumberRxDailyFires = 1,
   FirstDayRxFires = 2,

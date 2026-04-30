@@ -44,11 +44,15 @@ Other Dynamic Fuels helpers:
 
 \item{\code{DisturbanceConversionTable}}{\code{data.frame}.}
 
-\item{\code{MapFileNames}}{Character. File pattern for writing outputs to disk.}
+\item{\code{MapFileNames}}{Character. File pattern for writing outputs to disk;
+must contain the literal \code{{timestep}} placeholder (the only variable
+the upstream Dynamic Fuels \code{MapNames} parser knows -- see \code{MapFileNames.cs}).}
 
-\item{\code{PctConiferMapName}}{Character. File pattern for writing outputs to disk.}
+\item{\code{PctConiferFileName}}{Character. File pattern for writing outputs to disk;
+must contain the literal \code{{timestep}} placeholder.}
 
-\item{\code{PctDeadFirMapName}}{Character. File pattern for writing outputs to disk.}
+\item{\code{PctDeadFirFileName}}{Character. File pattern for writing outputs to disk;
+must contain the literal \code{{timestep}} placeholder.}
 }
 \if{html}{\out{</div>}}
 }
@@ -82,8 +86,8 @@ Other Dynamic Fuels helpers:
   EcoregionTable = data.frame(FuelType = integer(0), Ecoregion = character(0)),
   DisturbanceConversionTable = NULL,
   MapFileNames = NULL,
-  PctConiferMapName = NULL,
-  PctDeadFirMapName = NULL
+  PctConiferFileName = NULL,
+  PctDeadFirFileName = NULL
 )}\if{html}{\out{</div>}}
 }
 
@@ -108,9 +112,9 @@ Other Dynamic Fuels helpers:
 
 \item{\code{MapFileNames}}{Character. File pattern for writing outputs to disk.}
 
-\item{\code{PctConiferMapName}}{Character. File pattern for writing outputs to disk.}
+\item{\code{PctConiferFileName}}{Character. File pattern for writing outputs to disk.}
 
-\item{\code{PctDeadFirMapName}}{Character. File pattern for writing outputs to disk.}
+\item{\code{PctDeadFirFileName}}{Character. File pattern for writing outputs to disk.}
 }
 \if{html}{\out{</div>}}
 }

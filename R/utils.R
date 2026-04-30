@@ -94,7 +94,9 @@ insertValue <- function(type, value, blank_line = TRUE) {
 
 #' Specify an input file for an extension
 #'
-#' Checks that a file exists before inserting the filepath.
+#' Emits a `<type>  <file>` line. `NULL` (and length-zero) input is treated
+#' as "parameter omitted" and produces no output, matching how
+#' [insertValue()] handles `NA`.
 #'
 #' @param type Character, specifying the parameter type (i.e., the LANDIS-II name for the input).
 #'
@@ -104,7 +106,9 @@ insertValue <- function(type, value, blank_line = TRUE) {
 #'
 #' @keywords internal
 insertFile <- function(type, file) {
-  stopifnot(!file.exists(file))
+  if (is.null(file) || length(file) == 0L) {
+    return("")
+  }
 
   insertValue(type, file)
 }

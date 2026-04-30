@@ -275,6 +275,14 @@ PnETSuccession <- R6Class(
       writeLines(
         c(
           insertLandisData(private$.LandisData),
+          ## PnET-Succession's parser is table-based: it requires a 2-line
+          ## "PnET-Succession  Value" / "<<---" header immediately after the
+          ## LandisData line, then reads each subsequent `<key> <value>` pair
+          ## as a row. Without this header it aborts with "Expecting keyword
+          ## PnET-Succession in headerline".
+          glue::glue("PnET-Succession    Value"),
+          glue::glue("<<-----------------------------"),
+          glue::glue(""),
           insertValue("Timestep", self$Timestep),
           insertValue("StartYear", self$StartYear),
           insertValue("SeedingAlgorithm", self$SeedingAlgorithm),

@@ -23,6 +23,12 @@ Keeps track of the input files created for an extension
 (e.g. \code{"Biomass Succession"}). Read-only; set by each subclass's
 \code{initialize()} via \code{private$.LandisData}.}
 
+\item{\code{scenarioName}}{Character. The name to use when this extension is
+referenced in the scenario \code{.txt} file's extension list. Defaults to
+\code{LandisData}; subclasses set \code{private$.scenarioName} only when the
+parser-registered name differs from the file-header name (e.g. Land
+Use Plus). Read-only.}
+
 \item{\code{Timestep}}{Integer.}
 
 \item{\code{type}}{character specifying the extension type

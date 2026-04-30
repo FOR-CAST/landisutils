@@ -29,14 +29,14 @@ SocialClimateFire <- R6Class(
     #' @param AccidentalIgnitionsMap Character. Relative file path.
     #' @param DynamicAccidentalIgnitionMaps (Optional) `data.frame`.
     #' @param LightningIgnitionsMap Character. Relative file path.
-    #' @param DynamicLightningIgnitionsMaps (Optional) `data.frame`.
+    #' @param DynamicLightningIgnitionMaps (Optional) `data.frame`.
     #' @param RxIgnitionsMap Character. Relative file path.
-    #' @param DynamicRxIgnitionsMaps (Optional) `data.frame`.
+    #' @param DynamicRxIgnitionMaps (Optional) `data.frame`.
     #' @param AccidentalSuppressionMap Character. Relative file path.
     #' @param LightningSuppressionMap Character. Relative file path.
     #' @param RxSuppressionMap Character. Relative file path.
     #' @param DynamicAccidentalSuppressionMaps (Optional) `data.frame`.
-    #' @param GroundSlopeFile Character. Relative file path.
+    #' @param GroundSlopeMap Character. Relative file path.
     #' @param UphillSlopeAzimuthMap Character. Relative file path.
     #' @param ClayMap Character. Relative file path.
     #' @param LightningIgnitionsCoeffs Real. Parameters B0 and B1 from equation 1 (Scheller et al. 2019).
@@ -50,7 +50,7 @@ SocialClimateFire <- R6Class(
     #' @param MinimumRxFireWeatherIndex (Optional) Real. Minimum Fire Weather Index (FWI) for prescribed fires.
     #' @param MaximumRxTemperature (Optional) Real. Maximum temperature for prescribed fires.
     #' @param MinimumRxRelativeHumidity (Optional) Real. Minimum relative humidity for prescribed fires.
-    #' @param MaximumRXFireIntensity Integer. Maximum allowable fire intensity for prescribed fires.
+    #' @param MaximumRxFireIntensity Integer. Maximum allowable fire intensity for prescribed fires.
     #' @param NumberRxAnnualFires Integer. Number of prescribed fires attempted per year.
     #' @param NumberRxDailyFires Integer. Number of prescribed fires attempted per day.
     #' @param FirstDayRxFires Integer. First Julian day in which a prescribed fire can begin.
@@ -80,14 +80,14 @@ SocialClimateFire <- R6Class(
       AccidentalIgnitionsMap = NULL,
       DynamicAccidentalIgnitionMaps = NULL,
       LightningIgnitionsMap = NULL,
-      DynamicLightningIgnitionsMaps = NULL,
+      DynamicLightningIgnitionMaps = NULL,
       RxIgnitionsMap = NULL,
-      DynamicRxIgnitionsMaps = NULL,
+      DynamicRxIgnitionMaps = NULL,
       AccidentalSuppressionMap = NULL,
       LightningSuppressionMap = NULL,
       RxSuppressionMap = NULL,
       DynamicAccidentalSuppressionMaps = NULL,
-      GroundSlopeFile = NULL,
+      GroundSlopeMap = NULL,
       UphillSlopeAzimuthMap = NULL,
       ClayMap = NULL,
       LightningIgnitionsCoeffs = NULL,
@@ -101,7 +101,7 @@ SocialClimateFire <- R6Class(
       MinimumRxFireWeatherIndex = NULL,
       MaximumRxTemperature = NULL,
       MinimumRxRelativeHumidity = NULL,
-      MaximumRXFireIntensity = NULL,
+      MaximumRxFireIntensity = NULL,
       NumberRxAnnualFires = NULL,
       NumberRxDailyFires = NULL,
       FirstDayRxFires = NULL,
@@ -135,14 +135,14 @@ SocialClimateFire <- R6Class(
       self$AccidentalIgnitionsMap <- AccidentalIgnitionsMap
       self$DynamicAccidentalIgnitionMaps <- DynamicAccidentalIgnitionMaps
       self$LightningIgnitionsMap <- LightningIgnitionsMap
-      self$DynamicLightningIgnitionsMaps <- DynamicLightningIgnitionsMaps
+      self$DynamicLightningIgnitionMaps <- DynamicLightningIgnitionMaps
       self$RxIgnitionsMap <- RxIgnitionsMap
-      self$DynamicRxIgnitionsMaps <- DynamicRxIgnitionsMaps
+      self$DynamicRxIgnitionMaps <- DynamicRxIgnitionMaps
       self$AccidentalSuppressionMap <- AccidentalSuppressionMap
       self$LightningSuppressionMap <- LightningSuppressionMap
       self$RxSuppressionMap <- RxSuppressionMap
       self$DynamicAccidentalSuppressionMaps <- DynamicAccidentalSuppressionMaps
-      self$GroundSlopeFile <- GroundSlopeFile
+      self$GroundSlopeMap <- GroundSlopeMap
       self$UphillSlopeAzimuthMap <- UphillSlopeAzimuthMap
       self$ClayMap <- ClayMap
       self$LightningIgnitionsCoeffs <- LightningIgnitionsCoeffs
@@ -156,7 +156,7 @@ SocialClimateFire <- R6Class(
       self$MinimumRxFireWeatherIndex <- MinimumRxFireWeatherIndex
       self$MaximumRxTemperature <- MaximumRxTemperature
       self$MinimumRxRelativeHumidity <- MinimumRxRelativeHumidity
-      self$MaximumRXFireIntensity <- MaximumRXFireIntensity
+      self$MaximumRxFireIntensity <- MaximumRxFireIntensity
       self$NumberRxAnnualFires <- NumberRxAnnualFires
       self$NumberRxDailyFires <- NumberRxDailyFires
       self$FirstDayRxFires <- FirstDayRxFires
@@ -184,7 +184,7 @@ SocialClimateFire <- R6Class(
         !is.null(self$RxIgnitionsMap),
         !is.null(self$LightningSuppressionMap),
         !is.null(self$RxSuppressionMap),
-        !is.null(self$GroundSlopeFile),
+        !is.null(self$GroundSlopeMap),
         !is.null(self$UphillSlopeAzimuthMap),
         !is.null(self$ClayMap),
         !is.null(self$LightningIgnitionsCoeffs),
@@ -194,7 +194,7 @@ SocialClimateFire <- R6Class(
         !is.null(self$AccidentalIgnitionsBinomialCoeffs),
         !is.null(self$MaximumFineFuels),
         !is.null(self$MaximumRxWindSpeed),
-        !is.null(self$MaximumRXFireIntensity),
+        !is.null(self$MaximumRxFireIntensity),
         !is.null(self$NumberRxAnnualFires),
         !is.null(self$NumberRxDailyFires),
         !is.null(self$FirstDayRxFires),
@@ -221,11 +221,14 @@ SocialClimateFire <- R6Class(
 
           ## ignition maps
           insertFile("AccidentalIgnitionsMap", self$AccidentalIgnitionsMap),
+          ## Static maps use `*IgnitionsMap` (plural Ignition); dynamic-table
+          ## maps use `*IgnitionMaps` (singular Ignition, plural Maps). Both
+          ## verified against ghcr.io/landis-ii-foundation/landis-ii-v8-release.
           insertDynamicTable("DynamicAccidentalIgnitionMaps", self$DynamicAccidentalIgnitionMaps),
           insertFile("LightningIgnitionsMap", self$LightningIgnitionsMap),
-          insertDynamicTable("DynamicLightningIgnitionsMaps", self$DynamicLightningIgnitionsMaps),
+          insertDynamicTable("DynamicLightningIgnitionMaps", self$DynamicLightningIgnitionMaps),
           insertFile("RxIgnitionsMap", self$RxIgnitionsMap),
-          insertDynamicTable("DynamicRxIgnitionsMaps", self$DynamicRxIgnitionsMaps),
+          insertDynamicTable("DynamicRxIgnitionMaps", self$DynamicRxIgnitionMaps),
 
           ## suppression maps
           insertFile("AccidentalSuppressionMap", self$AccidentalSuppressionMap),
@@ -233,7 +236,7 @@ SocialClimateFire <- R6Class(
           insertFile("RxSuppressionMap", self$RxSuppressionMap),
 
           ## topography and soil maps
-          insertFile("GroundSlopeFile", self$GroundSlopeFile),
+          insertFile("GroundSlopeMap", self$GroundSlopeMap),
           insertFile("UphillSlopeAzimuthMap", self$UphillSlopeAzimuthMap),
           insertFile("ClayMap", self$ClayMap),
 
@@ -294,7 +297,7 @@ SocialClimateFire <- R6Class(
             self$MinimumRxRelativeHumidity,
             blank_line = FALSE
           ),
-          insertValue("MaximumRXFireIntensity", self$MaximumRXFireIntensity, blank_line = FALSE),
+          insertValue("MaximumRxFireIntensity", self$MaximumRxFireIntensity, blank_line = FALSE),
           insertValue("NumberRxAnnualFires", self$NumberRxAnnualFires, blank_line = FALSE),
           insertValue("NumberRxDailyFires", self$NumberRxDailyFires, blank_line = FALSE),
           insertValue("FirstDayRxFires", self$FirstDayRxFires, blank_line = FALSE),
@@ -347,7 +350,7 @@ SocialClimateFire <- R6Class(
       self$add_file(self$AccidentalSuppressionMap)
       self$add_file(self$LightningSuppressionMap)
       self$add_file(self$RxSuppressionMap)
-      self$add_file(self$GroundSlopeFile)
+      self$add_file(self$GroundSlopeMap)
       self$add_file(self$UphillSlopeAzimuthMap)
       self$add_file(self$ClayMap)
       if (!is.null(self$RxZonesMap) && !is.na(self$RxZonesMap)) {
@@ -366,14 +369,14 @@ SocialClimateFire <- R6Class(
     .AccidentalIgnitionsMap = NULL,
     .DynamicAccidentalIgnitionMaps = NULL,
     .LightningIgnitionsMap = NULL,
-    .DynamicLightningIgnitionsMaps = NULL,
+    .DynamicLightningIgnitionMaps = NULL,
     .RxIgnitionsMap = NULL,
-    .DynamicRxIgnitionsMaps = NULL,
+    .DynamicRxIgnitionMaps = NULL,
     .AccidentalSuppressionMap = NULL,
     .LightningSuppressionMap = NULL,
     .RxSuppressionMap = NULL,
     .DynamicAccidentalSuppressionMaps = NULL,
-    .GroundSlopeFile = NULL,
+    .GroundSlopeMap = NULL,
     .UphillSlopeAzimuthMap = NULL,
     .ClayMap = NULL,
     .LightningIgnitionsCoeffs = NULL,
@@ -387,7 +390,7 @@ SocialClimateFire <- R6Class(
     .MinimumRxFireWeatherIndex = NULL,
     .MaximumRxTemperature = NULL,
     .MinimumRxRelativeHumidity = NULL,
-    .MaximumRXFireIntensity = NULL,
+    .MaximumRxFireIntensity = NULL,
     .NumberRxAnnualFires = NULL,
     .NumberRxDailyFires = NULL,
     .FirstDayRxFires = NULL,
@@ -466,10 +469,10 @@ SocialClimateFire <- R6Class(
       }
     },
 
-    #' @field DynamicLightningIgnitionsMaps (Optional) `data.frame` with columns `Year` and `FileName`.
-    DynamicLightningIgnitionsMaps = function(value) {
+    #' @field DynamicLightningIgnitionMaps (Optional) `data.frame` with columns `Year` and `FileName`.
+    DynamicLightningIgnitionMaps = function(value) {
       if (missing(value)) {
-        return(private$.DynamicLightningIgnitionsMaps)
+        return(private$.DynamicLightningIgnitionMaps)
       } else {
         if (is.null(value) || is.na(value)) {
           value <- data.frame(Year = integer(0), FileName = character(0))
@@ -477,7 +480,7 @@ SocialClimateFire <- R6Class(
           stopifnot(inherits(value, "data.frame"))
         }
 
-        private$.DynamicLightningIgnitionsMaps <- value
+        private$.DynamicLightningIgnitionMaps <- value
       }
     },
 
@@ -490,10 +493,10 @@ SocialClimateFire <- R6Class(
       }
     },
 
-    #' @field DynamicRxIgnitionsMaps (Optional) `data.frame` with columns `Year` and `FileName`.
-    DynamicRxIgnitionsMaps = function(value) {
+    #' @field DynamicRxIgnitionMaps (Optional) `data.frame` with columns `Year` and `FileName`.
+    DynamicRxIgnitionMaps = function(value) {
       if (missing(value)) {
-        return(private$.DynamicRxIgnitionsMaps)
+        return(private$.DynamicRxIgnitionMaps)
       } else {
         if (is.null(value) || is.na(value)) {
           value <- data.frame(Year = integer(0), FileName = character(0))
@@ -501,7 +504,7 @@ SocialClimateFire <- R6Class(
           stopifnot(inherits(value, "data.frame"))
         }
 
-        private$.DynamicRxIgnitionsMaps <- value
+        private$.DynamicRxIgnitionMaps <- value
       }
     },
 
@@ -547,12 +550,12 @@ SocialClimateFire <- R6Class(
       }
     },
 
-    #' @field GroundSlopeFile Character. Relative file path.
-    GroundSlopeFile = function(value) {
+    #' @field GroundSlopeMap Character. Relative file path.
+    GroundSlopeMap = function(value) {
       if (missing(value)) {
-        return(private$.GroundSlopeFile)
+        return(private$.GroundSlopeMap)
       } else {
-        private$.GroundSlopeFile <- .relPath(value, self$path)
+        private$.GroundSlopeMap <- .relPath(value, self$path)
       }
     },
 
@@ -686,12 +689,12 @@ SocialClimateFire <- R6Class(
       }
     },
 
-    #' @field MaximumRXFireIntensity Integer. Maximum allowable fire intensity for prescribed fires.
-    MaximumRXFireIntensity = function(value) {
+    #' @field MaximumRxFireIntensity Integer. Maximum allowable fire intensity for prescribed fires.
+    MaximumRxFireIntensity = function(value) {
       if (missing(value)) {
-        return(private$.MaximumRXFireIntensity)
+        return(private$.MaximumRxFireIntensity)
       } else {
-        private$.MaximumRXFireIntensity <- value
+        private$.MaximumRxFireIntensity <- value
       }
     },
 

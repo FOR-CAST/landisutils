@@ -26,8 +26,8 @@ DynamicFuels <- R6Class(
     #' @param EcoregionTable `data.frame`.
     #' @param DisturbanceConversionTable `data.frame`.
     #' @param MapFileNames Character. File pattern for writing outputs to disk.
-    #' @param PctConiferMapName Character. File pattern for writing outputs to disk.
-    #' @param PctDeadFirMapName Character. File pattern for writing outputs to disk.
+    #' @param PctConiferFileName Character. File pattern for writing outputs to disk.
+    #' @param PctDeadFirFileName Character. File pattern for writing outputs to disk.
     initialize = function(
       path,
       Timestep = 10,
@@ -38,13 +38,17 @@ DynamicFuels <- R6Class(
       EcoregionTable = data.frame(FuelType = integer(0), Ecoregion = character(0)),
       DisturbanceConversionTable = NULL,
       MapFileNames = NULL,
-      PctConiferMapName = NULL,
-      PctDeadFirMapName = NULL
+      PctConiferFileName = NULL,
+      PctDeadFirFileName = NULL
     ) {
       stopifnot(!is.null(path))
 
       ## LandisExtension fields
-      private$.LandisData <- "Dynamic Fuels"
+      ## Upstream Core8 reference (Extension-Dynamic-Biomass-Fuels @ master,
+      ## testings/Core8-DynamicFuels4.0/dynamic-fire_SetUpFuel.txt) and the
+      ## v8-release parser register this extension as "Dynamic Fuel System",
+      ## not "Dynamic Fuels".
+      private$.LandisData <- "Dynamic Fuel System"
       self$Timestep <- Timestep
 
       self$type <- "disturbance"
@@ -59,8 +63,8 @@ DynamicFuels <- R6Class(
       self$EcoregionTable <- EcoregionTable
       self$DisturbanceConversionTable <- DisturbanceConversionTable
       self$MapFileNames <- MapFileNames %||% MapNames("FuelType", "fire", self$path)
-      self$PctConiferMapName <- PctConiferMapName %||% MapNames("PctConifer", "fire", self$path)
-      self$PctDeadFirMapName <- PctDeadFirMapName %||% MapNames("PctDeadFir", "fire", self$path)
+      self$PctConiferFileName <- PctConiferFileName %||% MapNames("PctConifer", "fire", self$path)
+      self$PctDeadFirFileName <- PctDeadFirFileName %||% MapNames("PctDeadFir", "fire", self$path)
     },
 
     #' @description Write extension inputs to disk
@@ -76,8 +80,8 @@ DynamicFuels <- R6Class(
           insertEcoregionTable(self$EcoregionTable),
           insertDisturbanceConversionTable(self$DisturbanceConversionTable),
           insertFile("MapFileNames", self$MapFileNames),
-          insertFile("PctConiferMapName", self$PctConiferMapName),
-          insertFile("PctDeadFirMapName", self$PctDeadFirMapName)
+          insertFile("PctConiferFileName", self$PctConiferFileName),
+          insertFile("PctDeadFirFileName", self$PctDeadFirFileName)
         ),
         file.path(self$path, self$files[1])
       )
@@ -91,8 +95,8 @@ DynamicFuels <- R6Class(
     .EcoregionTable = NULL,
     .DisturbanceConversionTable = NULL,
     .MapFileNames = NULL,
-    .PctConiferMapName = NULL,
-    .PctDeadFirMapName = NULL
+    .PctConiferFileName = NULL,
+    .PctDeadFirFileName = NULL
   ),
   active = list(
     #' @field SpeciesFuelCoefficients `data.frame`.
@@ -166,30 +170,46 @@ DynamicFuels <- R6Class(
       }
     },
 
-    #' @field MapFileNames Character. File pattern for writing outputs to disk.
+    #' @field MapFileNames Character. File pattern for writing outputs to disk;
+    #'   must contain the literal `{timestep}` placeholder (the only variable
+    #'   the upstream Dynamic Fuels `MapNames` parser knows -- see `MapFileNames.cs`).
     MapFileNames = function(value) {
       if (missing(value)) {
         return(private$.MapFileNames)
       } else {
+        stopifnot(
+          "MapFileNames must contain the literal `{timestep}` placeholder." =
+            is.character(value) && grepl("{timestep}", value, fixed = TRUE)
+        )
         private$.MapFileNames <- value
       }
     },
 
-    #' @field PctConiferMapName Character. File pattern for writing outputs to disk.
-    PctConiferMapName = function(value) {
+    #' @field PctConiferFileName Character. File pattern for writing outputs to disk;
+    #'   must contain the literal `{timestep}` placeholder.
+    PctConiferFileName = function(value) {
       if (missing(value)) {
-        return(private$.PctConiferMapName)
+        return(private$.PctConiferFileName)
       } else {
-        private$.PctConiferMapName <- value
+        stopifnot(
+          "PctConiferFileName must contain the literal `{timestep}` placeholder." =
+            is.character(value) && grepl("{timestep}", value, fixed = TRUE)
+        )
+        private$.PctConiferFileName <- value
       }
     },
 
-    #' @field PctDeadFirMapName Character. File pattern for writing outputs to disk.
-    PctDeadFirMapName = function(value) {
+    #' @field PctDeadFirFileName Character. File pattern for writing outputs to disk;
+    #'   must contain the literal `{timestep}` placeholder.
+    PctDeadFirFileName = function(value) {
       if (missing(value)) {
-        return(private$.PctDeadFirMapName)
+        return(private$.PctDeadFirFileName)
       } else {
-        private$.PctDeadFirMapName <- value
+        stopifnot(
+          "PctDeadFirFileName must contain the literal `{timestep}` placeholder." =
+            is.character(value) && grepl("{timestep}", value, fixed = TRUE)
+        )
+        private$.PctDeadFirFileName <- value
       }
     }
   )
@@ -251,17 +271,25 @@ prepFuelTypesTable <- function() {
 #' @family Dynamic Fuels helpers
 #'
 insertFuelTypesTable <- function(df) {
-  df <- df |>
-    dplyr::mutate(AgeRange = glue::glue("{AgeMin} to {AgeMax}")) |>
-    dplyr::mutate(AgeMin = NULL, AgeMax = NULL)
+  ## Iterate row-wise rather than via apply(): the Species column is a
+  ## list-column whose entries are character vectors, and apply() coerces
+  ## them via `as.character(list(...))`, producing literal "list(\"sp\")"
+  ## tokens that the LANDIS-II parser rejects.
+  rows <- vapply(seq_len(nrow(df)), function(i) {
+    paste(
+      df$FuelType[i],
+      df$BaseFuel[i],
+      glue::glue("{df$AgeMin[i]} to {df$AgeMax[i]}"),
+      glue::glue_collapse(unlist(df$Species[i]), sep = "  "),
+      sep = "    "
+    )
+  }, character(1))
 
   c(
     glue::glue("FuelTypes"),
     glue::glue(">> Fuel Type    Base Fuel    Age Range    Species"),
     glue::glue(">> ---------    ---------    ---------    ----------------"),
-    apply(df, 1, function(x) {
-      paste(glue::glue_collapse(x[-4], sep = "    "), glue::glue_collapse(unlist(x[4]), sep = "  "))
-    }),
+    rows,
     glue::glue("") ## add blank line after each item group
   )
 }
