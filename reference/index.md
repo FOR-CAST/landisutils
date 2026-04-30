@@ -2,8 +2,20 @@
 
 ## All functions
 
+- [`BiomassBrowse`](https://for-cast.github.io/landisutils/reference/BiomassBrowse.md)
+  : Biomass Browse Extension
+
+- [`BiomassHarvest`](https://for-cast.github.io/landisutils/reference/BiomassHarvest.md)
+  : Biomass Harvest Extension
+
 - [`BiomassSuccession`](https://for-cast.github.io/landisutils/reference/BiomassSuccession.md)
   : Biomass Succession Extension
+
+- [`ClimateBDA`](https://for-cast.github.io/landisutils/reference/ClimateBDA.md)
+  : Climate BDA (Biological Disturbance Agent) Extension
+
+- [`DGSSuccession`](https://for-cast.github.io/landisutils/reference/DGSSuccession.md)
+  : DGS (DAMM-McNiP, GIPL, SHAW) Succession Extension
 
 - [`DynamicFire`](https://for-cast.github.io/landisutils/reference/DynamicFire.md)
   : Dynamic Fire System Extension
@@ -11,8 +23,20 @@
 - [`DynamicFuels`](https://for-cast.github.io/landisutils/reference/DynamicFuels.md)
   : Dynamic Fuel System Extension
 
+- [`EDA`](https://for-cast.github.io/landisutils/reference/EDA.md) :
+  Epidemiological Disturbance Agents (EDA) Extension
+
 - [`ForCS`](https://for-cast.github.io/landisutils/reference/ForCS.md) :
   Forest Carbon Succession (ForCS) Extension
+
+- [`ForestRoadsSimulation`](https://for-cast.github.io/landisutils/reference/ForestRoadsSimulation.md)
+  : Forest Roads Simulation Extension
+
+- [`Hurricane`](https://for-cast.github.io/landisutils/reference/Hurricane.md)
+  : Biomass Hurricane Extension
+
+- [`LandUsePlus`](https://for-cast.github.io/landisutils/reference/LandUsePlus.md)
+  : Land Use Plus Extension
 
 - [`LandisClimateConfig`](https://for-cast.github.io/landisutils/reference/LandisClimateConfig.md)
   :
@@ -29,11 +53,23 @@
 
   `LandisScenario` class
 
+- [`LinearWind`](https://for-cast.github.io/landisutils/reference/LinearWind.md)
+  : Linear Wind Disturbance Extension
+
+- [`MagicHarvest`](https://for-cast.github.io/landisutils/reference/MagicHarvest.md)
+  : Magic Harvest Extension
+
 - [`MapNames()`](https://for-cast.github.io/landisutils/reference/MapNames.md)
   : Create Map Names pattern for file outputs
 
+- [`NECNSuccession`](https://for-cast.github.io/landisutils/reference/NECNSuccession.md)
+  : NECN Succession Extension
+
 - [`OriginalFire`](https://for-cast.github.io/landisutils/reference/OriginalFire.md)
   : Original Fire Extension
+
+- [`OriginalWind`](https://for-cast.github.io/landisutils/reference/OriginalWind.md)
+  : Original Wind Extension
 
 - [`OutputBiomass`](https://for-cast.github.io/landisutils/reference/OutputBiomass.md)
   : Biomass Output Extension
@@ -41,11 +77,35 @@
 - [`OutputBiomassByAge`](https://for-cast.github.io/landisutils/reference/OutputBiomassByAge.md)
   : Biomass Output by Age Extension
 
+- [`OutputBiomassCommunity`](https://for-cast.github.io/landisutils/reference/OutputBiomassCommunity.md)
+  : Biomass Community Output Extension
+
+- [`OutputBiomassPnET`](https://for-cast.github.io/landisutils/reference/OutputBiomassPnET.md)
+  : PnET Biomass Output Extension
+
+- [`OutputBiomassReclass`](https://for-cast.github.io/landisutils/reference/OutputBiomassReclass.md)
+  : Biomass Reclassification Output Extension
+
 - [`OutputCohortStats`](https://for-cast.github.io/landisutils/reference/OutputCohortStats.md)
   : Cohort Statistics Extension
 
+- [`OutputLandscapeHabitat`](https://for-cast.github.io/landisutils/reference/OutputLandscapeHabitat.md)
+  : Landscape Habitat Output Extension
+
+- [`OutputLocalHabitat`](https://for-cast.github.io/landisutils/reference/OutputLocalHabitat.md)
+  : Local Habitat Suitability Output Extension
+
 - [`OutputMaxSpeciesAge`](https://for-cast.github.io/landisutils/reference/OutputMaxSpeciesAge.md)
   : Max Species Age Extension
+
+- [`OutputWildlifeHabitat`](https://for-cast.github.io/landisutils/reference/OutputWildlifeHabitat.md)
+  : Wildlife Habitat Output Extension
+
+- [`PnETSuccession`](https://for-cast.github.io/landisutils/reference/PnETSuccession.md)
+  : PnET-Succession Extension
+
+- [`RootRot`](https://for-cast.github.io/landisutils/reference/RootRot.md)
+  : Root Rot Extension
 
 - [`SocialClimateFire`](https://for-cast.github.io/landisutils/reference/SocialClimateFire.md)
   : Social-Climate-Fire Extension
@@ -53,8 +113,17 @@
 - [`appendPercent()`](https://for-cast.github.io/landisutils/reference/appendPercent.md)
   : Ensure percent symbol appended to table values
 
+- [`bdaAgent()`](https://for-cast.github.io/landisutils/reference/bdaAgent.md)
+  : Construct a Climate BDA agent
+
 - [`calibrate_original_fire()`](https://for-cast.github.io/landisutils/reference/calibrate_original_fire.md)
   : Calibrate Original Fire
+
+- [`cohortSelector()`](https://for-cast.github.io/landisutils/reference/cohortSelector.md)
+  : Construct a cohort selector for a Land Use Plus change block
+
+- [`defaultDGSDammMcNIPParameters()`](https://for-cast.github.io/landisutils/reference/defaultDGSDammMcNIPParameters.md)
+  : Default DGS Succession DAMM-McNiP scalar parameters
 
 - [`defaultFireDamageTable()`](https://for-cast.github.io/landisutils/reference/defaultFireDamageTable.md)
   : Create sample Fire Damage Table
@@ -64,6 +133,41 @@
 
 - [`defaultFuelTypeTable()`](https://for-cast.github.io/landisutils/reference/defaultFuelTypeTable.md)
   : Create default Fuel Type Table
+
+- [`defaultHurricaneMortalityCurve()`](https://for-cast.github.io/landisutils/reference/defaultHurricaneMortalityCurve.md)
+  : Default Hurricane wind-speed mortality curve
+
+- [`defaultLinearWindSeverities()`](https://for-cast.github.io/landisutils/reference/defaultLinearWindSeverities.md)
+  :
+
+  Default `WindSeverities` table for the Linear Wind extension
+
+- [`defaultPnETDisturbanceReductions()`](https://for-cast.github.io/landisutils/reference/defaultPnETDisturbanceReductions.md)
+  :
+
+  Default PnET-Succession `DisturbanceReductions` table
+
+- [`defaultPnETOutputFiles()`](https://for-cast.github.io/landisutils/reference/defaultPnETOutputFiles.md)
+  :
+
+  Default `Outputs` list for the PnET Biomass Output extension
+
+- [`defaultWindSeverities()`](https://for-cast.github.io/landisutils/reference/defaultWindSeverities.md)
+  :
+
+  Default `WindSeverities` table for the Original Wind extension
+
+- [`edaAgent()`](https://for-cast.github.io/landisutils/reference/edaAgent.md)
+  : Construct an EDA agent
+
+- [`elevationCostRange()`](https://for-cast.github.io/landisutils/reference/elevationCostRange.md)
+  : Construct an elevation cost-range entry
+
+- [`exitRoadType()`](https://for-cast.github.io/landisutils/reference/exitRoadType.md)
+  : Construct an exit road type (where wood leaves the landscape)
+
+- [`harvestPrescription()`](https://for-cast.github.io/landisutils/reference/harvestPrescription.md)
+  : Construct a Biomass Harvest prescription
 
 - [`insertANPPTimeSeries()`](https://for-cast.github.io/landisutils/reference/insertANPPTimeSeries.md)
   :
@@ -136,6 +240,12 @@
 - [`insertFireSizesTable()`](https://for-cast.github.io/landisutils/reference/insertFireSizesTable.md)
   : Specify Fire Size Table
 
+- [`insertForCSMapControl()`](https://for-cast.github.io/landisutils/reference/insertForCSMapControl.md)
+  :
+
+  Specify `ForCSMapControl` for Forest Carbon Succession (ForCS)
+  extension
+
 - [`insertForCSProportions()`](https://for-cast.github.io/landisutils/reference/insertForCSProportions.md)
   :
 
@@ -206,11 +316,6 @@
 - [`insertSeasonTable()`](https://for-cast.github.io/landisutils/reference/insertSeasonTable.md)
   : Specify Dynamic Fire Extension's Season Table
 
-- [`insertSoilSpinupControls()`](https://for-cast.github.io/landisutils/reference/insertSoilSpinupControls.md)
-  :
-
-  Specify `SoilSpinup` for Forest Carbon Succession (ForCS) extension
-
 - [`insertSpeciesDataFile()`](https://for-cast.github.io/landisutils/reference/insertSpeciesDataFile.md)
   : Specify Species Data File
 
@@ -228,6 +333,11 @@
   Specify `SpeciesParameters` for Forest Carbon Succession (ForCS)
   extension
 
+- [`insertSpinUp()`](https://for-cast.github.io/landisutils/reference/insertSpinUp.md)
+  :
+
+  Specify `SpinUp` for Forest Carbon Succession (ForCS) extension
+
 - [`insertSufficientLight()`](https://for-cast.github.io/landisutils/reference/insertSufficientLight.md)
   :
 
@@ -242,6 +352,15 @@
   :
 
   Specify Original Fire `WindCurveTable`
+
+- [`landCoverChange()`](https://for-cast.github.io/landisutils/reference/landCoverChange.md)
+  :
+
+  Construct a Land Cover Change for a
+  [`landUseType()`](https://for-cast.github.io/landisutils/reference/landUseType.md)
+
+- [`landUseType()`](https://for-cast.github.io/landisutils/reference/landUseType.md)
+  : Construct a Land Use type
 
 - [`landis_find()`](https://for-cast.github.io/landisutils/reference/landis_find.md)
   : Find an installed version of LANDIS-II
@@ -258,7 +377,13 @@
 - [`prepClimateFile()`](https://for-cast.github.io/landisutils/reference/prepClimateFile.md)
   :
 
-  Prepare `ClimateFile` for Forest Carbon Succession (ForCS) extension
+  Prepare `ForCSClimateFile` for Forest Carbon Succession (ForCS)
+  extension
+
+- [`prepDGSFireReductionParameters()`](https://for-cast.github.io/landisutils/reference/prepDGSFireReductionParameters.md)
+  :
+
+  Prepare DGS Succession `FireReductionParameters` table
 
 - [`prepDisturbanceConversionTable()`](https://for-cast.github.io/landisutils/reference/prepDisturbanceConversionTable.md)
   : Create Dynamic Fire Extension's Disturbance Conversion Table
@@ -329,6 +454,31 @@
 
   Prepare Biomass Succession Extension `MinRelativeBiomass` Table
 
+- [`prepNECNFireReductionParameters()`](https://for-cast.github.io/landisutils/reference/prepNECNFireReductionParameters.md)
+  :
+
+  Prepare NECN Succession `FireReductionParameters` table
+
+- [`prepPNEToutputsites()`](https://for-cast.github.io/landisutils/reference/prepPNEToutputsites.md)
+  :
+
+  Prepare PnET-Succession `PNEToutputsites` input file
+
+- [`prepPnETClimateFile()`](https://for-cast.github.io/landisutils/reference/prepPnETClimateFile.md)
+  : Prepare PnET-Succession Climate input file
+
+- [`prepPnETDisturbanceReductions()`](https://for-cast.github.io/landisutils/reference/prepPnETDisturbanceReductions.md)
+  : Prepare PnET-Succession Disturbance Reductions file
+
+- [`prepPnETEcoregionParameters()`](https://for-cast.github.io/landisutils/reference/prepPnETEcoregionParameters.md)
+  : Prepare PnET-Succession Ecoregion Parameters file
+
+- [`prepPnETGenericParameters()`](https://for-cast.github.io/landisutils/reference/prepPnETGenericParameters.md)
+  : Prepare PnET-Succession Generic Parameters file
+
+- [`prepPnETSpeciesParameters()`](https://for-cast.github.io/landisutils/reference/prepPnETSpeciesParameters.md)
+  : Prepare PnET-Succession Species Parameters file
+
 - [`prepSnagFile()`](https://for-cast.github.io/landisutils/reference/prepSnagFile.md)
   :
 
@@ -350,6 +500,11 @@
   [`prepUphillAzimuthMap()`](https://for-cast.github.io/landisutils/reference/prepTopographyFile.md)
   : Prepare topographical raster files
 
+- [`prepWindEventParametersTable()`](https://for-cast.github.io/landisutils/reference/prepWindEventParametersTable.md)
+  :
+
+  Prepare Original Wind `WindEventParametersTable`
+
 - [`prep_daily_weather()`](https://for-cast.github.io/landisutils/reference/prep_climate_data.md)
   [`prep_monthly_weather()`](https://for-cast.github.io/landisutils/reference/prep_climate_data.md)
   : Prepare Climate Data
@@ -360,14 +515,24 @@
 - [`proj_nrcan_lcc`](https://for-cast.github.io/landisutils/reference/proj_forest_data.md)
   : PROJ4 strings for forest data
 
+- [`roadType()`](https://for-cast.github.io/landisutils/reference/roadType.md)
+  : Construct a non-exit road type
+
 - [`scenario()`](https://for-cast.github.io/landisutils/reference/scenario.md)
   : Create LANDIS-II scenario files
 
 - [`simplifyCohorts()`](https://for-cast.github.io/landisutils/reference/simplifyCohorts.md)
   : Simplify cohorts
 
+- [`suitabilityFile()`](https://for-cast.github.io/landisutils/reference/suitabilityFile.md)
+  : Construct a habitat-suitability file reference
+
+- [`windSpeedVulnerability()`](https://for-cast.github.io/landisutils/reference/windSpeedVulnerability.md)
+  : Construct a per-species wind-speed vulnerability curve
+
 - [`writeClimateData()`](https://for-cast.github.io/landisutils/reference/writeClimateData.md)
   : Write LANDIS-II Climate Input File to disk
 
 - [`yesno()`](https://for-cast.github.io/landisutils/reference/yesno.md)
-  : Convert logical to "yes" or "no"
+  [`truefalse()`](https://for-cast.github.io/landisutils/reference/yesno.md)
+  : Convert logical to a LANDIS-II yes/no or true/false token

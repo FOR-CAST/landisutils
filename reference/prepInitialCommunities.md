@@ -27,3 +27,13 @@ prepInitialCommunities(cohortData, pixelGroupMap, path)
 
 Character string(s) specifying suitable LANDIS-II input file(s), created
 as a side effect of the function.
+
+## See also
+
+Used by succession extensions:
+[BiomassSuccession](https://for-cast.github.io/landisutils/reference/BiomassSuccession.md),
+[DGSSuccession](https://for-cast.github.io/landisutils/reference/DGSSuccession.md),
+[ForCS](https://for-cast.github.io/landisutils/reference/ForCS.md),
+[NECNSuccession](https://for-cast.github.io/landisutils/reference/NECNSuccession.md),
+and
+[PnETSuccession](https://for-cast.github.io/landisutils/reference/PnETSuccession.md).

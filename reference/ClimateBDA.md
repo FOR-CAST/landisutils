@@ -1,0 +1,173 @@
+# Climate BDA (Biological Disturbance Agent) Extension
+
+Climate BDA (Biological Disturbance Agent) Extension
+
+Climate BDA (Biological Disturbance Agent) Extension
+
+## References
+
+LANDIS-II Biological Disturbance Agent v5 Extension User Guide
+<https://github.com/LANDIS-II-Foundation/Extension-Base-BDA/blob/master/docs/LANDIS-II%20Biological%20Disturbance%20Agent%20v5%20User%20Guide.pdf>
+
+## See also
+
+Other Climate BDA helpers:
+[`bdaAgent()`](https://for-cast.github.io/landisutils/reference/bdaAgent.md),
+[`insertAgentHeader()`](https://for-cast.github.io/landisutils/reference/insertAgentHeader.md),
+[`insertBDAInputFiles()`](https://for-cast.github.io/landisutils/reference/insertBDAInputFiles.md),
+[`insertBDASpeciesParameters()`](https://for-cast.github.io/landisutils/reference/insertBDASpeciesParameters.md),
+[`insertDispersal()`](https://for-cast.github.io/landisutils/reference/insertDispersal.md),
+[`insertDisturbanceModifiers()`](https://for-cast.github.io/landisutils/reference/insertDisturbanceModifiers.md),
+[`insertEcoregionModifiers()`](https://for-cast.github.io/landisutils/reference/insertEcoregionModifiers.md),
+[`insertIgnoredSpecies()`](https://for-cast.github.io/landisutils/reference/insertIgnoredSpecies.md),
+[`insertIntensityClasses()`](https://for-cast.github.io/landisutils/reference/insertIntensityClasses.md),
+[`insertNeighborhood()`](https://for-cast.github.io/landisutils/reference/insertNeighborhood.md),
+[`insertOutbreakPattern()`](https://for-cast.github.io/landisutils/reference/insertOutbreakPattern.md),
+[`writeAgentFile()`](https://for-cast.github.io/landisutils/reference/writeAgentFile.md)
+
+## Super class
+
+[`landisutils::LandisExtension`](https://for-cast.github.io/landisutils/reference/LandisExtension.md)
+-\> `ClimateBDA`
+
+## Active bindings
+
+- `Agents`:
+
+  List of `BDAAgent` objects.
+
+- `MapNames`:
+
+  Character. Output map filename pattern; must contain the literal
+  `{agentName}` and `{timestep}` placeholders.
+
+- `SRDMapNames`:
+
+  (Optional) Character. SRD output map filename pattern; must contain
+  `{agentName}` and `{timestep}`.
+
+- `NRDMapNames`:
+
+  (Optional) Character. NRD output map filename pattern; must contain
+  `{agentName}` and `{timestep}`.
+
+- `BDPMapNames`:
+
+  (Optional) Character. BDP output map filename pattern; must contain
+  `{agentName}` and `{timestep}`.
+
+- `LogFile`:
+
+  Character. Relative file path.
+
+## Methods
+
+### Public methods
+
+- [`ClimateBDA$new()`](#method-ClimateBDA-new)
+
+- [`ClimateBDA$add_agent()`](#method-ClimateBDA-add_agent)
+
+- [`ClimateBDA$write()`](#method-ClimateBDA-write)
+
+- [`ClimateBDA$clone()`](#method-ClimateBDA-clone)
+
+Inherited methods
+
+- [`landisutils::LandisExtension$add_file()`](https://for-cast.github.io/landisutils/reference/LandisExtension.html#method-add_file)
+
+------------------------------------------------------------------------
+
+### Method `new()`
+
+#### Usage
+
+    ClimateBDA$new(
+      path,
+      Timestep = NULL,
+      Agents = list(),
+      MapNames = NULL,
+      SRDMapNames = NULL,
+      NRDMapNames = NULL,
+      BDPMapNames = NULL,
+      LogFile = "bda/bda-log.csv"
+    )
+
+#### Arguments
+
+- `path`:
+
+  Character. Directory path.
+
+- `Timestep`:
+
+  Integer.
+
+- `Agents`:
+
+  List of `BDAAgent` objects (see
+  [`bdaAgent()`](https://for-cast.github.io/landisutils/reference/bdaAgent.md)).
+
+- `MapNames`:
+
+  Character. Output map filename pattern; must contain the literal
+  `{agentName}` and `{timestep}` placeholders.
+
+- `SRDMapNames`:
+
+  (Optional) Character. SRD output map filename pattern; must contain
+  the literal `{agentName}` and `{timestep}` placeholders.
+
+- `NRDMapNames`:
+
+  (Optional) Character. NRD output map filename pattern; must contain
+  the literal `{agentName}` and `{timestep}` placeholders.
+
+- `BDPMapNames`:
+
+  (Optional) Character. BDP output map filename pattern; must contain
+  the literal `{agentName}` and `{timestep}` placeholders.
+
+- `LogFile`:
+
+  Character. Relative file path for the BDA CSV log.
+
+------------------------------------------------------------------------
+
+### Method `add_agent()`
+
+#### Usage
+
+    ClimateBDA$add_agent(value)
+
+#### Arguments
+
+- `value`:
+
+  `BDAAgent` object to append to `$Agents`.
+
+------------------------------------------------------------------------
+
+### Method [`write()`](https://rdrr.io/r/base/write.html)
+
+Write extension inputs to disk
+
+#### Usage
+
+    ClimateBDA$write()
+
+------------------------------------------------------------------------
+
+### Method `clone()`
+
+The objects of this class are cloneable with this method.
+
+#### Usage
+
+    ClimateBDA$clone(deep = FALSE)
+
+#### Arguments
+
+- `deep`:
+
+  Whether to make a deep clone.

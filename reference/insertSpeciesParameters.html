@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -22,6 +22,7 @@
     <li><a class="dropdown-item" href="../articles/climate-data.html">Preparing Climate Data for Use With LANDIS-II</a></li>
     <li><a class="dropdown-item" href="../articles/Dynamic-Fire-Fuels.html">Preparing Dynamic Fire and Fuels Inputs</a></li>
     <li><a class="dropdown-item" href="../articles/Forest-Carbon-Succession.html">Preparing Forest Carbon Succession (ForCS) Inputs</a></li>
+    <li><a class="dropdown-item" href="../articles/Multi-Extension-Scenarios.html">Assembling a Multi-Extension Scenario</a></li>
     <li><a class="dropdown-item" href="../articles/Social-Climate-Fire.html">Preparing Social-Climate-Fire Inputs</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -54,12 +55,34 @@
 
 
 <dl><dt id="arg-df">df<a class="anchor" aria-label="anchor" href="#arg-df"></a></dt>
-<dd><p>data.frame corresponding to <code>SpeciesParameters</code> table</p></dd>
+<dd><p>data.frame with 10 columns: <code>Species</code>, <code>LeafLong</code>, <code>MortalShape</code>,
+<code>MerchMinAge</code>, <code>MerchCurveA</code>, <code>MerchCurveB</code>, <code>PropNonMerchToFastAG</code>,
+<code>GrowthShape</code>, <code>ShadeTolerance</code>, <code>FireTolerance</code>.</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>data.frame</p>
+    </div>
+    <div class="section level2">
+    <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
+    <div class="dont-index"><p>Other ForCS helpers:
+<code><a href="ForCS.html">ForCS</a></code>,
+<code><a href="insertANPPTimeSeries.html">insertANPPTimeSeries()</a></code>,
+<code><a href="insertAvailableLightBiomass.html">insertAvailableLightBiomass()</a></code>,
+<code><a href="insertDOMPools.html">insertDOMPools()</a></code>,
+<code><a href="insertEcoSppDOMParameters.html">insertEcoSppDOMParameters()</a></code>,
+<code><a href="insertEstablishProbabilities.html">insertEstablishProbabilities()</a></code>,
+<code><a href="insertForCSMapControl.html">insertForCSMapControl()</a></code>,
+<code><a href="insertForCSProportions.html">insertForCSProportions()</a></code>,
+<code><a href="insertLightEstablishmentTable.html">insertLightEstablishmentTable()</a></code>,
+<code><a href="insertMaxBiomassTimeSeries.html">insertMaxBiomassTimeSeries()</a></code>,
+<code><a href="insertOutputTables.html">insertOutputTables()</a></code>,
+<code><a href="insertRootDynamics.html">insertRootDynamics()</a></code>,
+<code><a href="insertSpinUp.html">insertSpinUp()</a></code>,
+<code><a href="prepClimateFile.html">prepClimateFile()</a></code>,
+<code><a href="prepDisturbanceMatrixFile.html">prepDisturbanceMatrixFile()</a></code>,
+<code><a href="prepSnagFile.html">prepSnagFile()</a></code></p></div>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

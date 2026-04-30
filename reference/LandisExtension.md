@@ -17,6 +17,12 @@ Keeps track of the input files created for an extension
 
 ## Active bindings
 
+- `LandisData`:
+
+  Character. The extension's `LandisData` entry (e.g.
+  `"Biomass Succession"`). Read-only; set by each subclass's
+  `initialize()` via `private$.LandisData`.
+
 - `Timestep`:
 
   Integer.
@@ -43,7 +49,7 @@ Keeps track of the input files created for an extension
 #### Usage
 
     LandisExtension$new(
-      name = NULL,
+      LandisData = NULL,
       type = NA_character_,
       path = NA_character_,
       Timestep = 1L
@@ -51,9 +57,10 @@ Keeps track of the input files created for an extension
 
 #### Arguments
 
-- `name`:
+- `LandisData`:
 
-  Character. The extension name (i.e., it's `LandisData` entry).
+  Character. The extension's `LandisData` entry (e.g.
+  `"Biomass Succession"`).
 
 - `type`:
 

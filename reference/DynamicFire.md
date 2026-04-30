@@ -9,6 +9,31 @@ Dynamic Fire System Extension
 LANDIS-II Dynamic Fire System Extension v4 User Guide
 <https://github.com/LANDIS-II-Foundation/Extension-Dynamic-Fire-System/blob/master/docs/LANDIS-II%20Dynamic%20Fire%20System%20v4%20User%20Guide.pdf>
 
+## See also
+
+Helpers that prepare inputs for this extension:
+[`prepFireSizesTable()`](https://for-cast.github.io/landisutils/reference/prepFireSizesTable.md),
+[`prepDynamicEcoregionTable()`](https://for-cast.github.io/landisutils/reference/prepDynamicEcoregionTable.md),
+[`prepTopographyFile()`](https://for-cast.github.io/landisutils/reference/prepTopographyFile.md),
+[`prepGroundSlopeFile()`](https://for-cast.github.io/landisutils/reference/prepTopographyFile.md),
+[`prepUphillAzimuthMap()`](https://for-cast.github.io/landisutils/reference/prepTopographyFile.md),
+[`prepInitialWeatherDatabase()`](https://for-cast.github.io/landisutils/reference/prepInitialWeatherDatabase.md),
+[`prepDynamicWeatherTable()`](https://for-cast.github.io/landisutils/reference/prepDynamicWeatherTable.md).
+
+Other Dynamic Fire helpers:
+[`defaultFuelTypeTable()`](https://for-cast.github.io/landisutils/reference/defaultFuelTypeTable.md),
+[`insertBuildUpIndex()`](https://for-cast.github.io/landisutils/reference/insertBuildUpIndex.md),
+[`insertFireSizesTable()`](https://for-cast.github.io/landisutils/reference/insertFireSizesTable.md),
+[`insertFuelTypeTable()`](https://for-cast.github.io/landisutils/reference/insertFuelTypeTable.md),
+[`insertGroundSlopeFile()`](https://for-cast.github.io/landisutils/reference/insertGroundSlopeFile.md),
+[`insertSeasonTable()`](https://for-cast.github.io/landisutils/reference/insertSeasonTable.md),
+[`insertUphillSlopeAzimuthMap()`](https://for-cast.github.io/landisutils/reference/insertUphillSlopeAzimuthMap.md),
+[`prepDynamicEcoregionTable()`](https://for-cast.github.io/landisutils/reference/prepDynamicEcoregionTable.md),
+[`prepDynamicWeatherTable()`](https://for-cast.github.io/landisutils/reference/prepDynamicWeatherTable.md),
+[`prepFireSizesTable()`](https://for-cast.github.io/landisutils/reference/prepFireSizesTable.md),
+[`prepInitialWeatherDatabase()`](https://for-cast.github.io/landisutils/reference/prepInitialWeatherDatabase.md),
+[`prepTopographyFile()`](https://for-cast.github.io/landisutils/reference/prepTopographyFile.md)
+
 ## Super class
 
 [`landisutils::LandisExtension`](https://for-cast.github.io/landisutils/reference/LandisExtension.md)

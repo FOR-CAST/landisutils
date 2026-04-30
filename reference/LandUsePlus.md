@@ -1,0 +1,150 @@
+# Land Use Plus Extension
+
+Land Use Plus Extension
+
+Land Use Plus Extension
+
+## References
+
+LANDIS-II Land Use Plus v4 Extension User Guide
+<https://github.com/LANDIS-II-Foundation/Extension-Land-Use-Plus/blob/master/docs/LANDIS-II%20Land%20Use%20Plus%20v4%20User%20Guide.pdf>
+
+## See also
+
+Other Land Use Plus helpers:
+[`cohortSelector()`](https://for-cast.github.io/landisutils/reference/cohortSelector.md),
+[`insertCohortSelector()`](https://for-cast.github.io/landisutils/reference/insertCohortSelector.md),
+[`insertLandCoverChange()`](https://for-cast.github.io/landisutils/reference/insertLandCoverChange.md),
+[`insertLandUseType()`](https://for-cast.github.io/landisutils/reference/insertLandUseType.md),
+[`landCoverChange()`](https://for-cast.github.io/landisutils/reference/landCoverChange.md),
+[`landUseType()`](https://for-cast.github.io/landisutils/reference/landUseType.md)
+
+## Super class
+
+[`landisutils::LandisExtension`](https://for-cast.github.io/landisutils/reference/LandisExtension.md)
+-\> `LandUsePlus`
+
+## Active bindings
+
+- `InputMaps`:
+
+  Character. Template for per-timestep land-use rasters; must contain
+  the literal placeholder `{timestep}` and end in `.tif` (LU+ v4 only
+  accepts GeoTIFF).
+
+- `SiteLog`:
+
+  (Optional) Character. Relative file path.
+
+- `ExternalScript`:
+
+  (Optional) Character.
+
+- `ExternalExecutable`:
+
+  (Optional) Character.
+
+- `LandUses`:
+
+  List of `LandUseType` objects.
+
+## Methods
+
+### Public methods
+
+- [`LandUsePlus$new()`](#method-LandUsePlus-new)
+
+- [`LandUsePlus$add_land_use()`](#method-LandUsePlus-add_land_use)
+
+- [`LandUsePlus$write()`](#method-LandUsePlus-write)
+
+- [`LandUsePlus$clone()`](#method-LandUsePlus-clone)
+
+Inherited methods
+
+- [`landisutils::LandisExtension$add_file()`](https://for-cast.github.io/landisutils/reference/LandisExtension.html#method-add_file)
+
+------------------------------------------------------------------------
+
+### Method `new()`
+
+#### Usage
+
+    LandUsePlus$new(
+      path,
+      Timestep = NULL,
+      InputMaps = NULL,
+      SiteLog = NULL,
+      ExternalScript = NULL,
+      ExternalExecutable = NULL,
+      LandUses = list()
+    )
+
+#### Arguments
+
+- `path`:
+
+  Character. Directory path.
+
+- `Timestep`:
+
+  Integer. Years between land-use evaluations.
+
+- `InputMaps`:
+
+  Character. Template path for the per-timestep land-use rasters (e.g.
+  `"landuse-{timestep}.tif"`).
+
+- `SiteLog`:
+
+  (Optional) Character. Relative path to the per-site CSV change log.
+
+- `ExternalScript, ExternalExecutable`:
+
+  (Optional) Character. Used to enable the LANDIS-Pause hook for an
+  external script (user guide sections 3.2.5 and 3.2.6).
+
+- `LandUses`:
+
+  List of `LandUseType` objects (see
+  [`landUseType()`](https://for-cast.github.io/landisutils/reference/landUseType.md)).
+
+------------------------------------------------------------------------
+
+### Method `add_land_use()`
+
+#### Usage
+
+    LandUsePlus$add_land_use(value)
+
+#### Arguments
+
+- `value`:
+
+  `LandUseType` object to append to `$LandUses`.
+
+------------------------------------------------------------------------
+
+### Method [`write()`](https://rdrr.io/r/base/write.html)
+
+Write extension inputs to disk
+
+#### Usage
+
+    LandUsePlus$write()
+
+------------------------------------------------------------------------
+
+### Method `clone()`
+
+The objects of this class are cloneable with this method.
+
+#### Usage
+
+    LandUsePlus$clone(deep = FALSE)
+
+#### Arguments
+
+- `deep`:
+
+  Whether to make a deep clone.

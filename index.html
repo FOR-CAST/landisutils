@@ -22,7 +22,7 @@
 
     <a class="navbar-brand me-2" href="index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -39,6 +39,7 @@
     <li><a class="dropdown-item" href="articles/climate-data.html">Preparing Climate Data for Use With LANDIS-II</a></li>
     <li><a class="dropdown-item" href="articles/Dynamic-Fire-Fuels.html">Preparing Dynamic Fire and Fuels Inputs</a></li>
     <li><a class="dropdown-item" href="articles/Forest-Carbon-Succession.html">Preparing Forest Carbon Succession (ForCS) Inputs</a></li>
+    <li><a class="dropdown-item" href="articles/Multi-Extension-Scenarios.html">Assembling a Multi-Extension Scenario</a></li>
     <li><a class="dropdown-item" href="articles/Social-Climate-Fire.html">Preparing Social-Climate-Fire Inputs</a></li>
   </ul>
 </li>
@@ -71,135 +72,219 @@
 <blockquote>
 <p>[!NOTE] <strong>This package is a work in progress.</strong> Testing, feedback and help are greatly appreciated!</p>
 </blockquote>
-<p>The following LANDIS-II extensions are currently supported:</p>
+<p>The list of supported LANDIS-II extensions tracks the <a href="https://www.landis-ii.org/extensions" class="external-link">official v8 extension list</a>. Tables below are grouped by extension type and sorted alphabetically; use the file outline (top-right on github.com) to jump between sections.</p>
+<div class="section level3">
+<h3 id="succession-extensions">Succession extensions<a class="anchor" aria-label="anchor" href="#succession-extensions"></a>
+</h3>
 <table class="table">
-<thead><tr class="header">
-<th><strong>LANDIS-II Succession Extension</strong></th>
+<colgroup>
+<col width="82%">
+<col width="17%">
+</colgroup>
+<thead><tr>
+<th><strong>LANDIS-II extension name</strong></th>
 <th><strong><code>landisutils</code> class</strong></th>
 </tr></thead>
 <tbody>
-<tr class="odd">
-<td>Biomass Succession</td>
+<tr>
+<td>🌳 <a href="https://github.com/LANDIS-II-Foundation/Extension-Biomass-Succession" class="external-link">Biomass Succession</a>
+</td>
 <td><code>BiomassSuccession</code></td>
 </tr>
-<tr class="even">
-<td>Forest Carbon Succession (ForCS)</td>
+<tr>
+<td>🌱 <a href="https://github.com/LANDIS-II-Foundation/Extension-DGS-Succession" class="external-link">DGS Succession</a>
+</td>
+<td><code>DGSSuccession</code></td>
+</tr>
+<tr>
+<td>♻️ <a href="https://github.com/LANDIS-II-Foundation/Extension-ForCS-Succession" class="external-link">Forest Carbon Succession (ForCS)</a>
+</td>
 <td><code>ForCS</code></td>
 </tr>
-<tr class="odd">
-<td>NECN Succession</td>
-<td><em>coming soon</em></td>
+<tr>
+<td>🍂 <a href="https://github.com/LANDIS-II-Foundation/Extension-NECN-Succession" class="external-link">NECN Succession</a>
+</td>
+<td><code>NECNSuccession</code></td>
 </tr>
-<tr class="even">
-<td>PnET Succession</td>
-<td><em>coming soon</em></td>
-</tr>
-<tr class="odd">
-<td>DGS Succession</td>
-<td><em>coming soon</em></td>
+<tr>
+<td>☀️ <a href="https://github.com/LANDIS-II-Foundation/Extension-PnET-Succession" class="external-link">PnET Succession</a>
+</td>
+<td><code>PnETSuccession</code></td>
 </tr>
 </tbody>
 </table>
+</div>
+<div class="section level3">
+<h3 id="disturbance-extensions">Disturbance extensions<a class="anchor" aria-label="anchor" href="#disturbance-extensions"></a>
+</h3>
 <table class="table">
-<thead><tr class="header">
-<th><strong>LANDIS-II Disturbance Extension</strong></th>
+<colgroup>
+<col width="81%">
+<col width="18%">
+</colgroup>
+<thead><tr>
+<th><strong>LANDIS-II extension name</strong></th>
 <th><strong><code>landisutils</code> class</strong></th>
 </tr></thead>
 <tbody>
-<tr class="odd">
-<td>Original Fire</td>
-<td><code>OriginalFire</code></td>
+<tr>
+<td>🔥 <a href="https://www.fire-regime-model.com/BFOLDS%20Fire%20Regime%20Module%20v2.0%20User%20Guide.pdf" class="external-link">BFOLDS Fire</a>
+</td>
+<td><em>coming soon</em></td>
 </tr>
-<tr class="even">
-<td>Dynamic Biomass Fuels</td>
+<tr>
+<td>🦌 <a href="https://github.com/LANDIS-II-Foundation/Extension-Biomass-Browse" class="external-link">Biomass Browse</a>
+</td>
+<td>
+<code>BiomassBrowse</code> <a class="footnote-ref" tabindex="0" data-bs-toggle="popover" data-bs-content='&lt;p&gt;Not yet updated by the LANDIS-II developers for LANDIS-II v8; the most recent upstream release targets the v7 core only. The &lt;code&gt;landisutils&lt;/code&gt; R6 class tracks the latest published input-file schema (Biomass Browse v2.0, Root Rot v1.0), but &lt;code&gt;$write()&lt;/code&gt;-produced files cannot currently be run through a LANDIS-II v8 console. Constructing one of these objects emits a one-time &lt;code&gt;&lt;a href="https://rdrr.io/r/base/warning.html" class="external-link"&gt;warning()&lt;/a&gt;&lt;/code&gt; to make this explicit.&lt;/p&gt;'><sup>1</sup></a>
+</td>
+</tr>
+<tr>
+<td>🪓 <a href="https://github.com/LANDIS-II-Foundation/Extension-Biomass-Harvest" class="external-link">Biomass Harvest</a>
+</td>
+<td><code>BiomassHarvest</code></td>
+</tr>
+<tr>
+<td>🪲 <a href="https://github.com/LANDIS-II-Foundation/Extension-Base-BDA" class="external-link">Climate Biological Disturbance Agents</a>
+</td>
+<td><code>ClimateBDA</code></td>
+</tr>
+<tr>
+<td>🪵 <a href="https://github.com/LANDIS-II-Foundation/Extension-Dynamic-Biomass-Fuels" class="external-link">Dynamic Biomass Fuel System</a>
+</td>
 <td><code>DynamicFuels</code></td>
 </tr>
-<tr class="odd">
-<td>Dynamic Fire System</td>
+<tr>
+<td>🔥 <a href="https://github.com/LANDIS-II-Foundation/Extension-Dynamic-Fire-System" class="external-link">Dynamic Fire System</a>
+</td>
 <td><code>DynamicFire</code></td>
 </tr>
-<tr class="even">
-<td>Social-Climate-Fire</td>
+<tr>
+<td>🦠 <a href="https://github.com/LANDIS-II-Foundation/Extension-Base-EDA" class="external-link">Epidemiological Disturbance Agents</a>
+</td>
+<td><code>EDA</code></td>
+</tr>
+<tr>
+<td>🌀 <a href="https://github.com/LANDIS-II-Foundation/Extension-Biomass-Hurricane" class="external-link">Hurricanes</a>
+</td>
+<td><code>Hurricane</code></td>
+</tr>
+<tr>
+<td>🌪️ <a href="https://github.com/LANDIS-II-Foundation/Extension-LinearWind" class="external-link">Linear Wind</a>
+</td>
+<td><code>LinearWind</code></td>
+</tr>
+<tr>
+<td>✨ <a href="https://github.com/Klemet/LANDIS-II-Magic-Harvest" class="external-link">Magic Harvest</a>
+</td>
+<td><code>MagicHarvest</code></td>
+</tr>
+<tr>
+<td>🔥 <a href="https://github.com/LANDIS-II-Foundation/Extension-Base-Fire" class="external-link">Original Fire</a>
+</td>
+<td><code>OriginalFire</code></td>
+</tr>
+<tr>
+<td>💨 <a href="https://github.com/LANDIS-II-Foundation/Extension-Base-Wind" class="external-link">Original Wind</a>
+</td>
+<td><code>OriginalWind</code></td>
+</tr>
+<tr>
+<td>🍄 <a href="https://github.com/LANDIS-II-Foundation/Extension-Root-Rot" class="external-link">Root Rot</a>
+</td>
+<td>
+<code>RootRot</code> <a class="footnote-ref" tabindex="0" data-bs-toggle="popover" data-bs-content='&lt;p&gt;Not yet updated by the LANDIS-II developers for LANDIS-II v8; the most recent upstream release targets the v7 core only. The &lt;code&gt;landisutils&lt;/code&gt; R6 class tracks the latest published input-file schema (Biomass Browse v2.0, Root Rot v1.0), but &lt;code&gt;$write()&lt;/code&gt;-produced files cannot currently be run through a LANDIS-II v8 console. Constructing one of these objects emits a one-time &lt;code&gt;&lt;a href="https://rdrr.io/r/base/warning.html" class="external-link"&gt;warning()&lt;/a&gt;&lt;/code&gt; to make this explicit.&lt;/p&gt;'><sup>2</sup></a>
+</td>
+</tr>
+<tr>
+<td>🔥 <a href="https://github.com/LANDIS-II-Foundation/Extension-Social-Climate-Fire" class="external-link">Social-Climate Fire</a>
+</td>
 <td><code>SocialClimateFire</code></td>
-</tr>
-<tr class="odd">
-<td></td>
-<td></td>
-</tr>
-<tr class="even">
-<td>Linear Wind</td>
-<td><em>coming soon</em></td>
-</tr>
-<tr class="odd">
-<td>Original Wind</td>
-<td><em>coming soon</em></td>
-</tr>
-<tr class="even">
-<td></td>
-<td></td>
-</tr>
-<tr class="odd">
-<td>Climate Biological Disturbance Agents</td>
-<td><em>coming soon</em></td>
-</tr>
-<tr class="even">
-<td>Epidemiological Disturbance Agents</td>
-<td><em>coming soon</em></td>
-</tr>
-<tr class="odd">
-<td>Hurricanes</td>
-<td><em>coming soon</em></td>
-</tr>
-<tr class="even">
-<td>Land Use Plus</td>
-<td><em>coming soon</em></td>
-</tr>
-<tr class="odd">
-<td>DGS Succession</td>
-<td><em>coming soon</em></td>
 </tr>
 </tbody>
 </table>
+</div>
+<div class="section level3">
+<h3 id="other-extensions">Other extensions<a class="anchor" aria-label="anchor" href="#other-extensions"></a>
+</h3>
 <table class="table">
-<thead><tr class="header">
-<th><strong>LANDIS-II Other Extension</strong></th>
+<colgroup>
+<col width="83%">
+<col width="16%">
+</colgroup>
+<thead><tr>
+<th><strong>LANDIS-II extension name</strong></th>
 <th><strong><code>landisutils</code> class</strong></th>
 </tr></thead>
 <tbody>
-<tr class="odd">
-<td>Biomass Output</td>
+<tr>
+<td>🌐 <a href="https://github.com/LANDIS-II-Foundation/Extension-Output-Biomass-Community" class="external-link">Biomass Community Output</a>
+</td>
+<td><code>OutputBiomassCommunity</code></td>
+</tr>
+<tr>
+<td>📊 <a href="https://github.com/LANDIS-II-Foundation/Extension-Output-Biomass" class="external-link">Biomass Output</a>
+</td>
 <td><code>OutputBiomass</code></td>
 </tr>
-<tr class="even">
-<td>Biomass-by-Age Output</td>
+<tr>
+<td>🗂️ <a href="https://github.com/LANDIS-II-Foundation/Extension-Output-Biomass-Reclass" class="external-link">Biomass Reclassification Output</a>
+</td>
+<td><code>OutputBiomassReclass</code></td>
+</tr>
+<tr>
+<td>📅 <a href="https://github.com/LANDIS-II-Foundation/Extension-Output-Biomass-By-Age" class="external-link">Biomass-by-Age Output</a>
+</td>
 <td><code>OutputBiomassByAge</code></td>
 </tr>
-<tr class="odd">
-<td>Biomass Reclassification Output</td>
-<td><em>coming soon</em></td>
-</tr>
-<tr class="even">
-<td>Cohort Statistics Output</td>
+<tr>
+<td>📈 <a href="https://github.com/LANDIS-II-Foundation/Extension-Output-Cohort-Statistics" class="external-link">Cohort Statistics Output</a>
+</td>
 <td><code>OutputCohortStats</code></td>
 </tr>
-<tr class="odd">
-<td>Landscape Habitat Output</td>
+<tr>
+<td>📦 <a href="https://github.com/CarenD/Forest_Product_Sector_Module" class="external-link">Forest Product Sector</a>
+</td>
 <td><em>coming soon</em></td>
 </tr>
-<tr class="even">
-<td>Local Habitat Suitability Output</td>
-<td><em>coming soon</em></td>
+<tr>
+<td>🛣️ <a href="https://github.com/Klemet/LANDIS-II-Forest-Roads-Simulation-extension" class="external-link">Forest Road Simulator</a>
+</td>
+<td><code>ForestRoadsSimulation</code></td>
 </tr>
-<tr class="odd">
-<td>Maximum Species Age Output</td>
+<tr>
+<td>🗺️ <a href="https://github.com/LANDIS-II-Foundation/Extension-Land-Use-Plus" class="external-link">Land Use Plus</a>
+</td>
+<td><code>LandUsePlus</code></td>
+</tr>
+<tr>
+<td>🏞️ <a href="https://github.com/LANDIS-II-Foundation/Extension-Output-Landscape-Habitat" class="external-link">Landscape Habitat Output</a>
+</td>
+<td><code>OutputLandscapeHabitat</code></td>
+</tr>
+<tr>
+<td>🐿️ <a href="https://github.com/LANDIS-II-Foundation/Extension-Local-Habitat-Suitability-Output" class="external-link">Local Habitat Suitability Output</a>
+</td>
+<td><code>OutputLocalHabitat</code></td>
+</tr>
+<tr>
+<td>🕰️ <a href="https://github.com/LANDIS-II-Foundation/Extension-Output-Max-Species-Age" class="external-link">Maximum Species Age Output</a>
+</td>
 <td><code>OutputMaxSpeciesAge</code></td>
 </tr>
-<tr class="even">
-<td>PnET Output</td>
-<td><em>coming soon</em></td>
+<tr>
+<td>☀️ <a href="https://github.com/LANDIS-II-Foundation/Extension-Output-Biomass-PnET" class="external-link">PnET Output</a>
+</td>
+<td><code>OutputBiomassPnET</code></td>
+</tr>
+<tr>
+<td>🐾 <a href="https://github.com/LANDIS-II-Foundation/Extension-Output-Wildlife-Habitat" class="external-link">Wildlife Habitat Output</a>
+</td>
+<td><code>OutputWildlifeHabitat</code></td>
 </tr>
 </tbody>
 </table>
+</div>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
@@ -277,6 +362,8 @@
 <p><em>Coming soon!</em></p>
 </div>
 </div>
+
+
   </main><aside class="col-md-3"><div class="license">
 <h2 data-toc-skip>License</h2>
 <ul class="list-unstyled">

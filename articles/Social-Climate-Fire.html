@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -37,6 +37,7 @@
     <li><a class="dropdown-item" href="../articles/climate-data.html">Preparing Climate Data for Use With LANDIS-II</a></li>
     <li><a class="dropdown-item" href="../articles/Dynamic-Fire-Fuels.html">Preparing Dynamic Fire and Fuels Inputs</a></li>
     <li><a class="dropdown-item" href="../articles/Forest-Carbon-Succession.html">Preparing Forest Carbon Succession (ForCS) Inputs</a></li>
+    <li><a class="dropdown-item" href="../articles/Multi-Extension-Scenarios.html">Assembling a Multi-Extension Scenario</a></li>
     <li><a class="dropdown-item" href="../articles/Social-Climate-Fire.html">Preparing Social-Climate-Fire Inputs</a></li>
   </ul>
 </li>
@@ -75,6 +76,8 @@
 <div class="section level2">
 <h2 id="sample-extension-inputs">Sample extension inputs<a class="anchor" aria-label="anchor" href="#sample-extension-inputs"></a>
 </h2>
+<p>Sample values match the upstream Core8 Social Climate Fire 4.0 test
+input (<a href="https://github.com/LANDIS-II-Foundation/Extension-Social-Climate-Fire/blob/master/Testing/Core8-SocialClimateFire4.0/Social-Climate-Fire-Inputs.txt" class="external-link uri">https://github.com/LANDIS-II-Foundation/Extension-Social-Climate-Fire/blob/master/Testing/Core8-SocialClimateFire4.0/Social-Climate-Fire-Inputs.txt</a>).</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">species_table</span> <span class="op">&lt;-</span> <span class="fu">tibble</span><span class="fu">::</span><span class="fu"><a href="https://tibble.tidyverse.org/reference/tribble.html" class="external-link">tribble</a></span><span class="op">(</span></span>
 <span>  <span class="op">~</span><span class="va">SpeciesCode</span> , <span class="op">~</span><span class="va">AgeDBH</span> , <span class="op">~</span><span class="va">MaximumBarkThickness</span> ,</span>
@@ -107,7 +110,7 @@
 <span><span class="va">ltg_ign_zip_coeffs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">8.5</span>, <span class="fl">0.03</span><span class="op">)</span></span>
 <span><span class="va">acc_ign_zip_coeffs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">8.5</span>, <span class="fl">0.03</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">max_spread_area_coeffs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">10</span>, <span class="op">-</span><span class="fl">2.5</span>, <span class="op">-</span><span class="fl">2.5</span><span class="op">)</span></span>
+<span><span class="va">max_spread_area_coeffs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">100</span>, <span class="fl">0.5</span>, <span class="fl">0.5</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">spread_prob_coeffs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">1.79</span>, <span class="fl">0.06</span>, <span class="op">-</span><span class="fl">0.915</span>, <span class="fl">0.0126</span><span class="op">)</span></span>
 <span></span>
@@ -246,9 +249,8 @@
 <h2 id="verify-configuration-files">Verify configuration files<a class="anchor" aria-label="anchor" href="#verify-configuration-files"></a>
 </h2>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/readLines.html" class="external-link">readLines</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">tmp_pth</span>, <span class="va">ext_social_climate_fire</span><span class="op">$</span><span class="va">files</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span>sep <span class="op">=</span> <span class="st">"\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; &gt;&gt; generated by `landisutils` (v0.0.2) on Wed Mar 18 17:26:39 2026</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/readLines.html" class="external-link">readLines</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">tmp_pth</span>, <span class="va">ext_social_climate_fire</span><span class="op">$</span><span class="va">files</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span>sep <span class="op">=</span> <span class="st">"\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; &gt;&gt; generated by `landisutils` (v0.0.3) on Thu Apr 30 20:53:20 2026</span></span>
 <span><span class="co">#&gt; &gt;&gt; do not edit by hand; manual changes to this file may be overwritten</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; LandisData  "Social Climate Fire"</span></span>
@@ -257,44 +259,44 @@
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Species_CSV_File    "SCRPPLE_Spp_Table.csv"</span></span>
+<span><span class="co">#&gt; Species_CSV_File    SCRPPLE_Spp_Table.csv</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; AccidentalIgnitionsMap    "Accidental_Ignition_Map.img"</span></span>
+<span><span class="co">#&gt; AccidentalIgnitionsMap    Accidental_Ignition_Map.img</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; DynamicAccidentalIgnitionMaps</span></span>
 <span><span class="co">#&gt; &gt;&gt; Year    FileName</span></span>
 <span><span class="co">#&gt; &gt;&gt; ----    ------------------------</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; LightningIgnitionsMap    "Lightning_Ignition_Map.img"</span></span>
+<span><span class="co">#&gt; LightningIgnitionsMap    Lightning_Ignition_Map.img</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; DynamicLightningIgnitionsMaps</span></span>
 <span><span class="co">#&gt; &gt;&gt; Year    FileName</span></span>
 <span><span class="co">#&gt; &gt;&gt; ----    ------------------------</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; RxIgnitionsMap    "Lightning_Ignition_Map.img"</span></span>
+<span><span class="co">#&gt; RxIgnitionsMap    Lightning_Ignition_Map.img</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; DynamicRxIgnitionsMaps</span></span>
 <span><span class="co">#&gt; &gt;&gt; Year    FileName</span></span>
 <span><span class="co">#&gt; &gt;&gt; ----    ------------------------</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; AccidentalSuppressionMap    "suppress3.img"</span></span>
+<span><span class="co">#&gt; AccidentalSuppressionMap    suppress3.img</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; LightningSuppressionMap    "suppress3.img"</span></span>
+<span><span class="co">#&gt; LightningSuppressionMap    suppress3.img</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; RxSuppressionMap    "suppress3.img"</span></span>
+<span><span class="co">#&gt; RxSuppressionMap    suppress3.img</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; GroundSlopeFile    "GroundSlope.gis"</span></span>
+<span><span class="co">#&gt; GroundSlopeFile    GroundSlope.gis</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; UphillSlopeAzimuthMap    "UphillSlope.gis"</span></span>
+<span><span class="co">#&gt; UphillSlopeAzimuthMap    UphillSlope.gis</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ClayMap    "random9.img"</span></span>
+<span><span class="co">#&gt; ClayMap    random9.img</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; LightningIgnitionsB0    -8.5</span></span>
 <span><span class="co">#&gt; LightningIgnitionsB1    0.03</span></span>
 <span><span class="co">#&gt; AccidentalIgnitionsB0    -8.5</span></span>
 <span><span class="co">#&gt; AccidentalIgnitionsB1    0.03</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; IgnitionDistribution    "ZeroInflatedPoisson"</span></span>
+<span><span class="co">#&gt; IgnitionDistribution    ZeroInflatedPoisson</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; LightningIgnitionsBinomialB0    -8.5</span></span>
 <span><span class="co">#&gt; LightningIgnitionsBinomialB1    0.03</span></span>
@@ -313,11 +315,11 @@
 <span><span class="co">#&gt; FirstDayRxFires    2</span></span>
 <span><span class="co">#&gt; LastDayRxFires    300</span></span>
 <span><span class="co">#&gt; TargetRxSize    40</span></span>
-<span><span class="co">#&gt; RxZonesMap    "fire-zones.gis"</span></span>
+<span><span class="co">#&gt; RxZonesMap    fire-zones.gis</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; MaximumSpreadAreaB0    10</span></span>
-<span><span class="co">#&gt; MaximumSpreadAreaB1    -2.5</span></span>
-<span><span class="co">#&gt; MaximumSpreadAreaB2    -2.5</span></span>
+<span><span class="co">#&gt; MaximumSpreadAreaB0    100</span></span>
+<span><span class="co">#&gt; MaximumSpreadAreaB1    0.5</span></span>
+<span><span class="co">#&gt; MaximumSpreadAreaB2    0.5</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; SpreadProbabilityB0    -1.79</span></span>
 <span><span class="co">#&gt; SpreadProbabilityB1    0.06</span></span>
@@ -343,7 +345,7 @@
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; SuppressionMaxWindSpeed    100</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Suppression_CSV_File    "Example_Suppression_Input.csv"</span></span>
+<span><span class="co">#&gt; Suppression_CSV_File    Example_Suppression_Input.csv</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; DeadWoodTable</span></span>
 <span><span class="co">#&gt; PinuJeff    22</span></span>
@@ -354,8 +356,7 @@
 <span><span class="co">#&gt; AbieConc    29</span></span></code></pre></div>
 <p><em>skip species table and raster files</em></p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/readLines.html" class="external-link">readLines</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">tmp_pth</span>, <span class="va">ext_social_climate_fire</span><span class="op">$</span><span class="va">files</span><span class="op">[</span><span class="fl">10</span><span class="op">]</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span>sep <span class="op">=</span> <span class="st">"\n"</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/readLines.html" class="external-link">readLines</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">tmp_pth</span>, <span class="va">ext_social_climate_fire</span><span class="op">$</span><span class="va">files</span><span class="op">[</span><span class="fl">10</span><span class="op">]</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span>sep <span class="op">=</span> <span class="st">"\n"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; "IgnitionType","Mapcode","Suppress_Category_0","FWI_Break_1","Suppress_Category_1","FWI_Break_2","Suppress_Category_2"</span></span>
 <span><span class="co">#&gt; "Accidental",1,10,20,20,30,0</span></span>
 <span><span class="co">#&gt; "Accidental",2,30,20,95,30,10</span></span>

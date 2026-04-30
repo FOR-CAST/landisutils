@@ -9,7 +9,7 @@ Social-Climate-Fire Extension"></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -24,6 +24,7 @@ Social-Climate-Fire Extension"></head><body>
     <li><a class="dropdown-item" href="../articles/climate-data.html">Preparing Climate Data for Use With LANDIS-II</a></li>
     <li><a class="dropdown-item" href="../articles/Dynamic-Fire-Fuels.html">Preparing Dynamic Fire and Fuels Inputs</a></li>
     <li><a class="dropdown-item" href="../articles/Forest-Carbon-Succession.html">Preparing Forest Carbon Succession (ForCS) Inputs</a></li>
+    <li><a class="dropdown-item" href="../articles/Multi-Extension-Scenarios.html">Assembling a Multi-Extension Scenario</a></li>
     <li><a class="dropdown-item" href="../articles/Social-Climate-Fire.html">Preparing Social-Climate-Fire Inputs</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -55,6 +56,17 @@ Social-Climate-Fire Extension"></head><body>
 <p>Scheller, R., Kretchun, A., Hawbaker, T.J. &amp; Henne, P.D. (2019). A landscape model of
 variable social-ecological fire regimes. Ecological Modelling, 401, 85–93.
 <a href="https://doi.org/10.1016/j.ecolmodel.2019.03.022" class="external-link">doi:10.1016/j.ecolmodel.2019.03.022</a></p>
+    </div>
+    <div class="section level2">
+    <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
+    <div class="dont-index"><p>Helpers that prepare inputs for this extension:
+<code><a href="prepTopographyFile.html">prepGroundSlopeFile()</a></code>,
+<code><a href="prepTopographyFile.html">prepUphillAzimuthMap()</a></code>.</p>
+<p>Other Social Climate Fire helpers:
+<code><a href="insertDeadWoodTable.html">insertDeadWoodTable()</a></code>,
+<code><a href="insertLadderFuelSpeciesList.html">insertLadderFuelSpeciesList()</a></code>,
+<code><a href="prepSuppression_CSV_File.html">prepSuppression_CSV_File()</a></code>,
+<code><a href="prepTopographyFile.html">prepTopographyFile()</a></code></p></div>
     </div>
     <div class="section level2">
     <h2 id="super-class">Super class<a class="anchor" aria-label="anchor" href="#super-class"></a></h2>
@@ -135,7 +147,7 @@ variable social-ecological fire regimes. Ecological Modelling, 401, 85–93.
 
 
 <dt><code>IgnitionDistribution</code></dt>
-<dd><p>Character. One of "Poisson" or "ZeroInflatedPoisson".</p></dd>
+<dd><p>Character. One of <code>"Poisson"</code> or <code>"ZeroInflatedPoisson"</code>.</p></dd>
 
 
 <dt><code>LightningIgnitionsBinomialCoeffs</code></dt>

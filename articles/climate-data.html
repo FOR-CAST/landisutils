@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -37,6 +37,7 @@
     <li><a class="dropdown-item" href="../articles/climate-data.html">Preparing Climate Data for Use With LANDIS-II</a></li>
     <li><a class="dropdown-item" href="../articles/Dynamic-Fire-Fuels.html">Preparing Dynamic Fire and Fuels Inputs</a></li>
     <li><a class="dropdown-item" href="../articles/Forest-Carbon-Succession.html">Preparing Forest Carbon Succession (ForCS) Inputs</a></li>
+    <li><a class="dropdown-item" href="../articles/Multi-Extension-Scenarios.html">Assembling a Multi-Extension Scenario</a></li>
     <li><a class="dropdown-item" href="../articles/Social-Climate-Fire.html">Preparing Social-Climate-Fire Inputs</a></li>
   </ul>
 </li>
@@ -155,8 +156,8 @@
 <span></span>
 <span><span class="va">clim_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">clim_data_path</span>, <span class="st">"climate-data-monthly.csv"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/writeClimateData.html">writeClimateData</a></span><span class="op">(</span><span class="va">monthly_weather</span>, <span class="va">clim_file</span><span class="op">)</span></span></code></pre></div>
-<p>We can also use this recipe to get monthly AET data to prepare the
-<code>EcoregionParameters</code> table:</p>
+<p>We can also use this recipe to get monthly <code>AET</code> data to
+prepare the <code>EcoregionParameters</code> table:</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">aet_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/prep_climate_data.html">prep_monthly_weather</a></span><span class="op">(</span></span>
 <span>  vars <span class="op">=</span> <span class="st">"aet"</span>,</span>

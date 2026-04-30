@@ -14,6 +14,18 @@ landscape model of variable social-ecological fire regimes. Ecological
 Modelling, 401, 85–93.
 [doi:10.1016/j.ecolmodel.2019.03.022](https://doi.org/10.1016/j.ecolmodel.2019.03.022)
 
+## See also
+
+Helpers that prepare inputs for this extension:
+[`prepGroundSlopeFile()`](https://for-cast.github.io/landisutils/reference/prepTopographyFile.md),
+[`prepUphillAzimuthMap()`](https://for-cast.github.io/landisutils/reference/prepTopographyFile.md).
+
+Other Social Climate Fire helpers:
+[`insertDeadWoodTable()`](https://for-cast.github.io/landisutils/reference/insertDeadWoodTable.md),
+[`insertLadderFuelSpeciesList()`](https://for-cast.github.io/landisutils/reference/insertLadderFuelSpeciesList.md),
+[`prepSuppression_CSV_File()`](https://for-cast.github.io/landisutils/reference/prepSuppression_CSV_File.md),
+[`prepTopographyFile()`](https://for-cast.github.io/landisutils/reference/prepTopographyFile.md)
+
 ## Super class
 
 [`landisutils::LandisExtension`](https://for-cast.github.io/landisutils/reference/LandisExtension.md)
@@ -95,7 +107,7 @@ Modelling, 401, 85–93.
 
 - `IgnitionDistribution`:
 
-  Character. One of "Poisson" or "ZeroInflatedPoisson".
+  Character. One of `"Poisson"` or `"ZeroInflatedPoisson"`.
 
 - `LightningIgnitionsBinomialCoeffs`:
 

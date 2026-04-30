@@ -6,10 +6,36 @@ Forest Carbon Succession (ForCS) Extension
 
 ## References
 
-LANDIS-II Social-Climate-Fire v4 User Guide
-<https://github.com/LANDIS-II-Foundation/Extension-Social-Climate-Fire/blob/master/docs/LANDIS-II%20Social-Climate-Fire%20v4%20User%20Guide.pdf>
+LANDIS-II Forest Carbon Succession (CForC) v4.0.2 User Guide
+<https://github.com/LANDIS-II-Foundation/Extension-ForCS-Succession/blob/master/deploy/installer/LANDIS-II%20CForC%20Succession%20v4.0.2%20User%20Guide%20September%202025.pdf>
 
-TODO
+## See also
+
+Helpers that prepare inputs for this extension:
+[`prepClimateFile()`](https://for-cast.github.io/landisutils/reference/prepClimateFile.md),
+[`prepDisturbanceMatrixFile()`](https://for-cast.github.io/landisutils/reference/prepDisturbanceMatrixFile.md),
+[`prepSnagFile()`](https://for-cast.github.io/landisutils/reference/prepSnagFile.md).
+Shared scenario inputs:
+[`prepInitialCommunities()`](https://for-cast.github.io/landisutils/reference/prepInitialCommunities.md),
+[`prepSpeciesData()`](https://for-cast.github.io/landisutils/reference/prepSpeciesData.md).
+
+Other ForCS helpers:
+[`insertANPPTimeSeries()`](https://for-cast.github.io/landisutils/reference/insertANPPTimeSeries.md),
+[`insertAvailableLightBiomass()`](https://for-cast.github.io/landisutils/reference/insertAvailableLightBiomass.md),
+[`insertDOMPools()`](https://for-cast.github.io/landisutils/reference/insertDOMPools.md),
+[`insertEcoSppDOMParameters()`](https://for-cast.github.io/landisutils/reference/insertEcoSppDOMParameters.md),
+[`insertEstablishProbabilities()`](https://for-cast.github.io/landisutils/reference/insertEstablishProbabilities.md),
+[`insertForCSMapControl()`](https://for-cast.github.io/landisutils/reference/insertForCSMapControl.md),
+[`insertForCSProportions()`](https://for-cast.github.io/landisutils/reference/insertForCSProportions.md),
+[`insertLightEstablishmentTable()`](https://for-cast.github.io/landisutils/reference/insertLightEstablishmentTable.md),
+[`insertMaxBiomassTimeSeries()`](https://for-cast.github.io/landisutils/reference/insertMaxBiomassTimeSeries.md),
+[`insertOutputTables()`](https://for-cast.github.io/landisutils/reference/insertOutputTables.md),
+[`insertRootDynamics()`](https://for-cast.github.io/landisutils/reference/insertRootDynamics.md),
+[`insertSpeciesParameters()`](https://for-cast.github.io/landisutils/reference/insertSpeciesParameters.md),
+[`insertSpinUp()`](https://for-cast.github.io/landisutils/reference/insertSpinUp.md),
+[`prepClimateFile()`](https://for-cast.github.io/landisutils/reference/prepClimateFile.md),
+[`prepDisturbanceMatrixFile()`](https://for-cast.github.io/landisutils/reference/prepDisturbanceMatrixFile.md),
+[`prepSnagFile()`](https://for-cast.github.io/landisutils/reference/prepSnagFile.md)
 
 ## Super class
 
@@ -23,7 +49,7 @@ TODO
   Character. Dispersal algorithm to use. One of `"WardSeedDispersal"`,
   `"NoDispersal"`, `"UniversalDispersal"`.
 
-- `ClimateFile`:
+- `ForCSClimateFile`:
 
   Character. Relative file path.
 
@@ -43,7 +69,15 @@ TODO
 
   `data.frame`.
 
-- `SoilSpinupControls`:
+- `ForCSMapControl`:
+
+  `data.frame`.
+
+- `MapOutputInterval`:
+
+  Integer.
+
+- `SpinUp`:
 
   `data.frame`.
 
@@ -111,12 +145,14 @@ Inherited methods
       path,
       Timestep = 1,
       SeedingAlgorithm = NULL,
-      ClimateFile = NULL,
+      ForCSClimateFile = NULL,
       InitialCommunitiesFiles = NULL,
       DisturbanceMatrixFile = NULL,
       SnagFile = NULL,
       OutputTables = NULL,
-      SoilSpinupControls = NULL,
+      ForCSMapControl = NULL,
+      MapOutputInterval = NULL,
+      SpinUp = NULL,
       AvailableLightBiomass = NULL,
       LightEstablishmentTable = NULL,
       SpeciesParameters = NULL,
@@ -144,13 +180,16 @@ Inherited methods
   Character. Dispersal algorithm to use. One of `"WardSeedDispersal"`,
   `"NoDispersal"`, `"UniversalDispersal"`.
 
-- `ClimateFile`:
+- `ForCSClimateFile`:
 
-  Character. Relative file path.
+  Character. Relative file path. Mean-annual-temperature climate file
+  specific to ForCS (see
+  [`prepClimateFile()`](https://for-cast.github.io/landisutils/reference/prepClimateFile.md)).
 
 - `InitialCommunitiesFiles`:
 
-  Character. Relative file paths.
+  Character. Two-element vector of relative file paths: the
+  initial-communities text/CSV and the initial-communities raster.
 
 - `DisturbanceMatrixFile`:
 
@@ -158,15 +197,26 @@ Inherited methods
 
 - `SnagFile`:
 
-  (Optional) Character. Relative file path.
+  (Optional) Character. Relative file path. May be `NULL`.
 
 - `OutputTables`:
 
-  `data.frame`.
+  `data.frame` corresponding to `ForCSOutput` (one row, four columns:
+  Biomass, DOM_Pools, Fluxes, Summary intervals).
 
-- `SoilSpinupControls`:
+- `ForCSMapControl`:
 
-  `data.frame`.
+  `data.frame` (one row, seven columns: `BiomassC`, `SDOMC`, `NBP`,
+  `NEP`, `NPP`, `RH`, `ToFPS` toggles).
+
+- `MapOutputInterval`:
+
+  Integer. Map output interval (years).
+
+- `SpinUp`:
+
+  `data.frame` (one row, four columns: On/Off Flag, Biomass Spin-up
+  Flag, Tolerance %, Max Iterations).
 
 - `AvailableLightBiomass`:
 
@@ -178,7 +228,9 @@ Inherited methods
 
 - `SpeciesParameters`:
 
-  `data.frame`.
+  `data.frame` with 10 columns: `Species`, `LeafLong`, `MortalShape`,
+  `MerchMinAge`, `MerchCurveA`, `MerchCurveB`, `PropNonMerchToFastAG`,
+  `GrowthShape`, `ShadeTolerance`, `FireTolerance`.
 
 - `DOMPools`:
 

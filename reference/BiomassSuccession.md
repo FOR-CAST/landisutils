@@ -9,6 +9,32 @@ Biomass Succession Extension
 LANDIS-II Biomass Succession v7 Extension User Guide
 <https://github.com/LANDIS-II-Foundation/Extension-Biomass-Succession/blob/master/docs/LANDIS-II%20Biomass%20Succession%20v7%20User%20Guide.pdf>
 
+## See also
+
+Helpers that prepare inputs for this extension:
+[`prepMinRelativeBiomass()`](https://for-cast.github.io/landisutils/reference/prepMinRelativeBiomass.md),
+[`prepEcoregionParameters()`](https://for-cast.github.io/landisutils/reference/prepEcoregionParameters.md),
+[`prepSpeciesEcoregionDataFile()`](https://for-cast.github.io/landisutils/reference/prepSpeciesEcoregionDataFile.md),
+[`prepFireReductionParameters()`](https://for-cast.github.io/landisutils/reference/prepFireReductionParameters.md),
+[`prepHarvestReductionParameters()`](https://for-cast.github.io/landisutils/reference/prepHarvestReductionParameters.md).
+Shared scenario inputs:
+[`prepClimateConfig()`](https://for-cast.github.io/landisutils/reference/prepClimateConfig.md),
+[`prepInitialCommunities()`](https://for-cast.github.io/landisutils/reference/prepInitialCommunities.md),
+[`prepSpeciesData()`](https://for-cast.github.io/landisutils/reference/prepSpeciesData.md).
+
+Other Biomass Succession helpers:
+[`insertEcoregionParameters()`](https://for-cast.github.io/landisutils/reference/insertEcoregionParameters.md),
+[`insertFireReductionParameters()`](https://for-cast.github.io/landisutils/reference/insertFireReductionParameters.md),
+[`insertHarvestReductionParameters()`](https://for-cast.github.io/landisutils/reference/insertHarvestReductionParameters.md),
+[`insertMinRelativeBiomass()`](https://for-cast.github.io/landisutils/reference/insertMinRelativeBiomass.md),
+[`insertSpeciesEcoregionDataFile()`](https://for-cast.github.io/landisutils/reference/insertSpeciesEcoregionDataFile.md),
+[`insertSufficientLight()`](https://for-cast.github.io/landisutils/reference/insertSufficientLight.md),
+[`prepEcoregionParameters()`](https://for-cast.github.io/landisutils/reference/prepEcoregionParameters.md),
+[`prepFireReductionParameters()`](https://for-cast.github.io/landisutils/reference/prepFireReductionParameters.md),
+[`prepHarvestReductionParameters()`](https://for-cast.github.io/landisutils/reference/prepHarvestReductionParameters.md),
+[`prepMinRelativeBiomass()`](https://for-cast.github.io/landisutils/reference/prepMinRelativeBiomass.md),
+[`prepSpeciesEcoregionDataFile()`](https://for-cast.github.io/landisutils/reference/prepSpeciesEcoregionDataFile.md)
+
 ## Super class
 
 [`landisutils::LandisExtension`](https://for-cast.github.io/landisutils/reference/LandisExtension.md)

@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -37,6 +37,7 @@
     <li><a class="dropdown-item" href="../articles/climate-data.html">Preparing Climate Data for Use With LANDIS-II</a></li>
     <li><a class="dropdown-item" href="../articles/Dynamic-Fire-Fuels.html">Preparing Dynamic Fire and Fuels Inputs</a></li>
     <li><a class="dropdown-item" href="../articles/Forest-Carbon-Succession.html">Preparing Forest Carbon Succession (ForCS) Inputs</a></li>
+    <li><a class="dropdown-item" href="../articles/Multi-Extension-Scenarios.html">Assembling a Multi-Extension Scenario</a></li>
     <li><a class="dropdown-item" href="../articles/Social-Climate-Fire.html">Preparing Social-Climate-Fire Inputs</a></li>
   </ul>
 </li>
@@ -75,6 +76,14 @@
 <div class="section level2">
 <h2 id="sample-extension-inputs">Sample extension inputs<a class="anchor" aria-label="anchor" href="#sample-extension-inputs"></a>
 </h2>
+<p>The <code>ForCS</code> R6 class targets the <strong>v4.0.2
+schema</strong> (LANDIS-II v8 core). Sample values below are taken
+verbatim from the upstream v8 test scenario and the v4.0.2 user
+guide:</p>
+<ul>
+<li><a href="https://github.com/LANDIS-II-Foundation/Extension-ForCS-Succession/blob/master/testing/v8%20Scenario/FORC-successionv4simpleroots.txt" class="external-link uri">https://github.com/LANDIS-II-Foundation/Extension-ForCS-Succession/blob/master/testing/v8%20Scenario/FORC-successionv4simpleroots.txt</a></li>
+<li><a href="https://github.com/LANDIS-II-Foundation/Extension-ForCS-Succession/blob/master/deploy/installer/LANDIS-II%20CForC%20Succession%20v4.0.2%20User%20Guide%20September%202025.pdf" class="external-link uri">https://github.com/LANDIS-II-Foundation/Extension-ForCS-Succession/blob/master/deploy/installer/LANDIS-II%20CForC%20Succession%20v4.0.2%20User%20Guide%20September%202025.pdf</a></li>
+</ul>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">clim_df</span> <span class="op">&lt;-</span> <span class="fu">tibble</span><span class="fu">::</span><span class="fu"><a href="https://tibble.tidyverse.org/reference/tribble.html" class="external-link">tribble</a></span><span class="op">(</span></span>
 <span>  <span class="op">~</span><span class="va">year</span> , <span class="op">~</span><span class="va">ecoregion</span> , <span class="op">~</span><span class="va">avg_temp</span> ,</span>
@@ -174,13 +183,17 @@
 <span></span>
 <span><span class="va">snags</span> <span class="op">&lt;-</span> <span class="fu">tibble</span><span class="fu">::</span><span class="fu"><a href="https://tibble.tidyverse.org/reference/tribble.html" class="external-link">tribble</a></span><span class="op">(</span></span>
 <span>  <span class="op">~</span><span class="va">species</span>   , <span class="op">~</span><span class="va">age_at_death</span> , <span class="op">~</span><span class="va">time_since_death</span> , <span class="op">~</span><span class="va">cause</span>  ,</span>
-<span>  <span class="st">"querelli"</span> ,            <span class="fl">53</span> ,                 <span class="fl">5</span> , <span class="st">"other"</span> ,</span>
-<span>  <span class="st">"pinubank"</span> ,            <span class="fl">88</span> ,                <span class="fl">12</span> , <span class="st">"bda"</span></span>
+<span>  <span class="st">"querelli"</span> ,            <span class="fl">40</span> ,                 <span class="fl">1</span> , <span class="st">"other"</span> ,</span>
+<span>  <span class="st">"pinubank"</span> ,            <span class="fl">88</span> ,                <span class="fl">12</span> , <span class="st">"wind"</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">output_tables</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>Biomass <span class="op">=</span> <span class="fl">1</span>, DOM_Pools <span class="op">=</span> <span class="fl">1</span>, Fluxes <span class="op">=</span> <span class="fl">1</span>, Summary <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">soil_spinup</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>Flag <span class="op">=</span> <span class="fl">1</span>, Tolerance <span class="op">=</span> <span class="fl">1.0</span>, MaxIter <span class="op">=</span> <span class="fl">20</span><span class="op">)</span></span>
+<span><span class="va">for_cs_map_control</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>  BiomassC <span class="op">=</span> <span class="fl">1</span>, SDOMC <span class="op">=</span> <span class="fl">1</span>, NBP <span class="op">=</span> <span class="fl">1</span>, NEP <span class="op">=</span> <span class="fl">1</span>, NPP <span class="op">=</span> <span class="fl">1</span>, RH <span class="op">=</span> <span class="fl">1</span>, ToFPS <span class="op">=</span> <span class="fl">1</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">spin_up</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>Flag <span class="op">=</span> <span class="fl">1</span>, BiomassSpinUpFlag <span class="op">=</span> <span class="fl">1</span>, Tolerance <span class="op">=</span> <span class="fl">1.0</span>, MaxIter <span class="op">=</span> <span class="fl">20</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">avail_light_biomass</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>  Class <span class="op">=</span> <span class="fl">1L</span><span class="op">:</span><span class="fl">5L</span>,</span>
@@ -190,18 +203,19 @@
 <span></span>
 <span><span class="va">light_est</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>  class <span class="op">=</span> <span class="fl">1L</span><span class="op">:</span><span class="fl">5L</span>,</span>
-<span>  X0 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1.0</span>, <span class="fl">0.5</span>, <span class="fl">0.2</span>, <span class="fl">0.1</span>, <span class="fl">0.1</span><span class="op">)</span>,</span>
-<span>  X1 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.5</span>, <span class="fl">1.0</span>, <span class="fl">0.2</span>, <span class="fl">0.1</span>, <span class="fl">0.5</span><span class="op">)</span>,</span>
-<span>  X2 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.0</span>, <span class="fl">0.5</span>, <span class="fl">1.0</span>, <span class="fl">0.2</span>, <span class="fl">0.2</span><span class="op">)</span>,</span>
-<span>  X3 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.0</span>, <span class="fl">0.0</span>, <span class="fl">0.5</span>, <span class="fl">1.0</span>, <span class="fl">0.2</span><span class="op">)</span>,</span>
-<span>  X4 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.0</span>, <span class="fl">0.0</span>, <span class="fl">0.0</span>, <span class="fl">0.5</span>, <span class="fl">1.0</span><span class="op">)</span>,</span>
-<span>  X5 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.0</span>, <span class="fl">0.0</span>, <span class="fl">0.0</span>, <span class="fl">0.5</span>, <span class="fl">1.0</span><span class="op">)</span></span>
+<span>  X0 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1.0</span>, <span class="fl">0.5</span>, <span class="fl">0.0</span>, <span class="fl">0.0</span>, <span class="fl">0.0</span><span class="op">)</span>,</span>
+<span>  X1 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.0</span>, <span class="fl">1.0</span>, <span class="fl">0.5</span>, <span class="fl">0.0</span>, <span class="fl">0.0</span><span class="op">)</span>,</span>
+<span>  X2 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.0</span>, <span class="fl">0.0</span>, <span class="fl">1.0</span>, <span class="fl">0.5</span>, <span class="fl">0.0</span><span class="op">)</span>,</span>
+<span>  X3 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.0</span>, <span class="fl">0.0</span>, <span class="fl">0.5</span>, <span class="fl">1.0</span>, <span class="fl">0.5</span><span class="op">)</span>,</span>
+<span>  X4 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.0</span>, <span class="fl">0.0</span>, <span class="fl">0.0</span>, <span class="fl">0.0</span>, <span class="fl">1.0</span><span class="op">)</span>,</span>
+<span>  X5 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.0</span>, <span class="fl">0.0</span>, <span class="fl">0.0</span>, <span class="fl">0.0</span>, <span class="fl">0.5</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
+<span><span class="co">## v4.0.2 schema: 10 columns (adds ShadeTolerance + FireTolerance)</span></span>
 <span><span class="va">species_params</span> <span class="op">&lt;-</span> <span class="fu">tibble</span><span class="fu">::</span><span class="fu"><a href="https://tibble.tidyverse.org/reference/tribble.html" class="external-link">tribble</a></span><span class="op">(</span></span>
-<span>  <span class="op">~</span><span class="va">species</span>   , <span class="op">~</span><span class="va">leaf_long</span> , <span class="op">~</span><span class="va">mort_shp</span> , <span class="op">~</span><span class="va">min_age_merch</span> , <span class="op">~</span><span class="va">merch_shp_a</span> , <span class="op">~</span><span class="va">merch_shp_b</span> , <span class="op">~</span><span class="va">nonmerch_biomass_soil</span> , <span class="op">~</span><span class="va">growth_shp</span> ,</span>
-<span>  <span class="st">"pinubank"</span> , <span class="fl">3.0</span>        ,        <span class="fl">10</span> ,             <span class="fl">10</span> , <span class="fl">0.7546</span>       , <span class="fl">0.983</span>        , <span class="fl">0.25</span>                   , <span class="fl">0.25</span>        ,</span>
-<span>  <span class="st">"querelli"</span> , <span class="fl">1.0</span>        ,        <span class="fl">10</span> ,             <span class="fl">30</span> , <span class="fl">0.7546</span>       , <span class="fl">0.983</span>        , <span class="fl">0.25</span>                   , <span class="fl">0.25</span></span>
+<span>  <span class="op">~</span><span class="va">species</span>   , <span class="op">~</span><span class="va">leaf_long</span> , <span class="op">~</span><span class="va">mort_shp</span> , <span class="op">~</span><span class="va">merch_min_age</span> , <span class="op">~</span><span class="va">merch_a</span> , <span class="op">~</span><span class="va">merch_b</span> , <span class="op">~</span><span class="va">prop_non_merch</span> , <span class="op">~</span><span class="va">growth_shp</span> , <span class="op">~</span><span class="va">shade_tol</span> , <span class="op">~</span><span class="va">fire_tol</span> ,</span>
+<span>  <span class="st">"pinubank"</span> , <span class="fl">3.0</span>        ,        <span class="fl">10</span> ,              <span class="fl">5</span> , <span class="fl">0.7546</span>   , <span class="fl">0.983</span>    , <span class="fl">0.25</span>            , <span class="fl">0.9</span>         ,         <span class="fl">1L</span> ,        <span class="fl">2L</span> ,</span>
+<span>  <span class="st">"querelli"</span> , <span class="fl">1.0</span>        ,        <span class="fl">10</span> ,              <span class="fl">5</span> , <span class="fl">0.7546</span>   , <span class="fl">0.983</span>    , <span class="fl">0.25</span>            , <span class="fl">0.9</span>         ,         <span class="fl">2L</span> ,        <span class="fl">4L</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">dom_pools</span> <span class="op">&lt;-</span> <span class="fu">tibble</span><span class="fu">::</span><span class="fu"><a href="https://tibble.tidyverse.org/reference/tribble.html" class="external-link">tribble</a></span><span class="op">(</span></span>
@@ -211,56 +225,47 @@
 <span>    <span class="fl">3</span> , <span class="st">"Fast Aboveground"</span>      , <span class="fl">0.83</span>                ,</span>
 <span>    <span class="fl">4</span> , <span class="st">"Fast Belowground"</span>      , <span class="fl">0.83</span>                ,</span>
 <span>    <span class="fl">5</span> , <span class="st">"Medium"</span>                , <span class="fl">0.83</span>                ,</span>
-<span>    <span class="fl">6</span> , <span class="st">"Slow Aboveground"</span>      , <span class="fl">1</span>                   ,</span>
-<span>    <span class="fl">7</span> , <span class="st">"Slow Belowground"</span>      , <span class="fl">1</span>                   ,</span>
+<span>    <span class="fl">6</span> , <span class="st">"Slow Aboveground"</span>      , <span class="fl">0.83</span>                ,</span>
+<span>    <span class="fl">7</span> , <span class="st">"Slow Belowground"</span>      , <span class="fl">0.83</span>                ,</span>
 <span>    <span class="fl">8</span> , <span class="st">"Stem Snag"</span>             , <span class="fl">0.83</span>                ,</span>
 <span>    <span class="fl">9</span> , <span class="st">"Other Snag"</span>            , <span class="fl">0.83</span>                ,</span>
 <span>   <span class="fl">10</span> , <span class="st">"Extra pool"</span>            , <span class="fl">0.83</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">ecosppdom_params</span> <span class="op">&lt;-</span> <span class="fu">tibble</span><span class="fu">::</span><span class="fu"><a href="https://tibble.tidyverse.org/reference/tribble.html" class="external-link">tribble</a></span><span class="op">(</span></span>
-<span>  <span class="op">~</span><span class="va">ecoregion</span> , <span class="op">~</span><span class="va">species</span>   , <span class="op">~</span><span class="va">dom_pool</span> , <span class="op">~</span><span class="va">decay_rate</span> , <span class="op">~</span><span class="va">amt_t0</span> , <span class="op">~</span><span class="va">q10_ref_temp_10c</span> ,</span>
-<span>  <span class="st">"eco1"</span>     , <span class="st">"pinubank"</span> ,         <span class="fl">1</span> , <span class="fl">0.355</span>       ,   <span class="fl">53.04</span> , <span class="fl">2.65</span>              ,</span>
-<span>  <span class="st">"eco1"</span>     , <span class="st">"pinubank"</span> ,         <span class="fl">2</span> , <span class="fl">0.5</span>         ,  <span class="fl">295.4</span>  , <span class="fl">2</span>                 ,</span>
-<span>  <span class="st">"eco1"</span>     , <span class="st">"pinubank"</span> ,         <span class="fl">3</span> , <span class="fl">0.1435</span>      , <span class="fl">1395.49</span> , <span class="fl">2</span>                 ,</span>
-<span>  <span class="st">"eco1"</span>     , <span class="st">"pinubank"</span> ,         <span class="fl">4</span> , <span class="fl">0.0374</span>      , <span class="fl">1360.62</span> , <span class="fl">2</span>                 ,</span>
-<span>  <span class="st">"eco1"</span>     , <span class="st">"pinubank"</span> ,         <span class="fl">5</span> , <span class="fl">0.015</span>       ,  <span class="fl">863.88</span> , <span class="fl">2</span>                 ,</span>
-<span>  <span class="st">"eco1"</span>     , <span class="st">"pinubank"</span> ,         <span class="fl">6</span> , <span class="fl">0.0033</span>      , <span class="fl">1656.13</span> , <span class="fl">2.65</span>              ,</span>
-<span>  <span class="st">"eco1"</span>     , <span class="st">"pinubank"</span> ,         <span class="fl">7</span> , <span class="fl">0.0187</span>      , <span class="fl">8451.22</span> , <span class="fl">2</span>                 ,</span>
-<span>  <span class="st">"eco1"</span>     , <span class="st">"pinubank"</span> ,         <span class="fl">8</span> , <span class="fl">0.07175</span>     , <span class="fl">7466.54</span> , <span class="fl">2</span>                 ,</span>
-<span>  <span class="st">"eco1"</span>     , <span class="st">"pinubank"</span> ,         <span class="fl">9</span> , <span class="fl">0.07</span>        , <span class="fl">2036.14</span> , <span class="fl">2</span>                 ,</span>
-<span>  <span class="st">"eco1"</span>     , <span class="st">"pinubank"</span> ,        <span class="fl">10</span> , <span class="fl">0</span>           ,    <span class="fl">0</span>    , <span class="fl">2</span>                 ,</span>
-<span>  <span class="st">"eco2"</span>     , <span class="st">"pinubank"</span> ,         <span class="fl">1</span> , <span class="fl">0.355</span>       ,   <span class="fl">53.04</span> , <span class="fl">2.65</span>              ,</span>
-<span>  <span class="st">"eco2"</span>     , <span class="st">"pinubank"</span> ,         <span class="fl">2</span> , <span class="fl">0.5</span>         ,  <span class="fl">295.4</span>  , <span class="fl">2</span>                 ,</span>
-<span>  <span class="st">"eco2"</span>     , <span class="st">"pinubank"</span> ,         <span class="fl">3</span> , <span class="fl">0.1435</span>      , <span class="fl">1395.49</span> , <span class="fl">2</span>                 ,</span>
-<span>  <span class="st">"eco2"</span>     , <span class="st">"pinubank"</span> ,         <span class="fl">4</span> , <span class="fl">0.0374</span>      , <span class="fl">1360.62</span> , <span class="fl">2</span>                 ,</span>
-<span>  <span class="st">"eco2"</span>     , <span class="st">"pinubank"</span> ,         <span class="fl">5</span> , <span class="fl">0.015</span>       ,  <span class="fl">863.88</span> , <span class="fl">2</span>                 ,</span>
-<span>  <span class="st">"eco2"</span>     , <span class="st">"pinubank"</span> ,         <span class="fl">6</span> , <span class="fl">0.0033</span>      , <span class="fl">1656.13</span> , <span class="fl">2.65</span>              ,</span>
-<span>  <span class="st">"eco2"</span>     , <span class="st">"pinubank"</span> ,         <span class="fl">7</span> , <span class="fl">0.0187</span>      , <span class="fl">8451.22</span> , <span class="fl">2</span>                 ,</span>
-<span>  <span class="st">"eco2"</span>     , <span class="st">"pinubank"</span> ,         <span class="fl">8</span> , <span class="fl">0.07175</span>     , <span class="fl">7466.54</span> , <span class="fl">2</span>                 ,</span>
-<span>  <span class="st">"eco2"</span>     , <span class="st">"pinubank"</span> ,         <span class="fl">9</span> , <span class="fl">0.07</span>        , <span class="fl">2036.14</span> , <span class="fl">2</span>                 ,</span>
-<span>  <span class="st">"eco2"</span>     , <span class="st">"pinubank"</span> ,        <span class="fl">10</span> , <span class="fl">0</span>           ,    <span class="fl">0</span>    , <span class="fl">2</span>                 ,</span>
-<span>  <span class="st">"eco1"</span>     , <span class="st">"querelli"</span> ,         <span class="fl">1</span> , <span class="fl">0.355</span>       ,   <span class="fl">53.04</span> , <span class="fl">2.65</span>              ,</span>
-<span>  <span class="st">"eco1"</span>     , <span class="st">"querelli"</span> ,         <span class="fl">2</span> , <span class="fl">0.5</span>         ,  <span class="fl">295.4</span>  , <span class="fl">2</span>                 ,</span>
-<span>  <span class="st">"eco1"</span>     , <span class="st">"querelli"</span> ,         <span class="fl">3</span> , <span class="fl">0.1435</span>      , <span class="fl">1395.49</span> , <span class="fl">2</span>                 ,</span>
-<span>  <span class="st">"eco1"</span>     , <span class="st">"querelli"</span> ,         <span class="fl">4</span> , <span class="fl">0.0374</span>      , <span class="fl">1360.62</span> , <span class="fl">2</span>                 ,</span>
-<span>  <span class="st">"eco1"</span>     , <span class="st">"querelli"</span> ,         <span class="fl">5</span> , <span class="fl">0.015</span>       ,  <span class="fl">863.88</span> , <span class="fl">2</span>                 ,</span>
-<span>  <span class="st">"eco1"</span>     , <span class="st">"querelli"</span> ,         <span class="fl">6</span> , <span class="fl">0.0033</span>      , <span class="fl">1656.13</span> , <span class="fl">2.65</span>              ,</span>
-<span>  <span class="st">"eco1"</span>     , <span class="st">"querelli"</span> ,         <span class="fl">7</span> , <span class="fl">0.0187</span>      , <span class="fl">8451.22</span> , <span class="fl">2</span>                 ,</span>
-<span>  <span class="st">"eco1"</span>     , <span class="st">"querelli"</span> ,         <span class="fl">8</span> , <span class="fl">0.07175</span>     , <span class="fl">7466.54</span> , <span class="fl">2</span>                 ,</span>
-<span>  <span class="st">"eco1"</span>     , <span class="st">"querelli"</span> ,         <span class="fl">9</span> , <span class="fl">0.07</span>        , <span class="fl">2036.14</span> , <span class="fl">2</span>                 ,</span>
-<span>  <span class="st">"eco1"</span>     , <span class="st">"querelli"</span> ,        <span class="fl">10</span> , <span class="fl">0</span>           ,    <span class="fl">0</span>    , <span class="fl">2</span>                 ,</span>
-<span>  <span class="st">"eco2"</span>     , <span class="st">"querelli"</span> ,         <span class="fl">1</span> , <span class="fl">0.355</span>       ,   <span class="fl">53.04</span> , <span class="fl">2.65</span>              ,</span>
-<span>  <span class="st">"eco2"</span>     , <span class="st">"querelli"</span> ,         <span class="fl">2</span> , <span class="fl">0.5</span>         ,  <span class="fl">295.4</span>  , <span class="fl">2</span>                 ,</span>
-<span>  <span class="st">"eco2"</span>     , <span class="st">"querelli"</span> ,         <span class="fl">3</span> , <span class="fl">0.1435</span>      , <span class="fl">1395.49</span> , <span class="fl">2</span>                 ,</span>
-<span>  <span class="st">"eco2"</span>     , <span class="st">"querelli"</span> ,         <span class="fl">4</span> , <span class="fl">0.0374</span>      , <span class="fl">1360.62</span> , <span class="fl">2</span>                 ,</span>
-<span>  <span class="st">"eco2"</span>     , <span class="st">"querelli"</span> ,         <span class="fl">5</span> , <span class="fl">0.015</span>       ,  <span class="fl">863.88</span> , <span class="fl">2</span>                 ,</span>
-<span>  <span class="st">"eco2"</span>     , <span class="st">"querelli"</span> ,         <span class="fl">6</span> , <span class="fl">0.0033</span>      , <span class="fl">1656.13</span> , <span class="fl">2.65</span>              ,</span>
-<span>  <span class="st">"eco2"</span>     , <span class="st">"querelli"</span> ,         <span class="fl">7</span> , <span class="fl">0.0187</span>      , <span class="fl">8451.22</span> , <span class="fl">2</span>                 ,</span>
-<span>  <span class="st">"eco2"</span>     , <span class="st">"querelli"</span> ,         <span class="fl">8</span> , <span class="fl">0.07175</span>     , <span class="fl">7466.54</span> , <span class="fl">2</span>                 ,</span>
-<span>  <span class="st">"eco2"</span>     , <span class="st">"querelli"</span> ,         <span class="fl">9</span> , <span class="fl">0.07</span>        , <span class="fl">2036.14</span> , <span class="fl">2</span>                 ,</span>
-<span>  <span class="st">"eco2"</span>     , <span class="st">"querelli"</span> ,        <span class="fl">10</span> , <span class="fl">0</span>           ,    <span class="fl">0</span>    , <span class="fl">2</span></span>
+<span><span class="co">## EcoSppDOMParameters: per-pool decay parameters (v4.0.2 user guide §3 sample)</span></span>
+<span><span class="va">ecosppdom_pinubank</span> <span class="op">&lt;-</span> <span class="fu">tibble</span><span class="fu">::</span><span class="fu"><a href="https://tibble.tidyverse.org/reference/tribble.html" class="external-link">tribble</a></span><span class="op">(</span></span>
+<span>  <span class="op">~</span><span class="va">dom_pool</span> , <span class="op">~</span><span class="va">decay_rate</span> , <span class="op">~</span><span class="va">amt_t0</span> , <span class="op">~</span><span class="va">q10</span> ,</span>
+<span>          <span class="fl">1</span> , <span class="fl">0.355</span>       ,    <span class="fl">1.49</span> , <span class="fl">2.65</span> ,</span>
+<span>          <span class="fl">2</span> , <span class="fl">0.5</span>         ,    <span class="fl">0.07</span> , <span class="fl">2</span>    ,</span>
+<span>          <span class="fl">3</span> , <span class="fl">0.1435</span>      ,  <span class="fl">158.48</span> , <span class="fl">2</span>    ,</span>
+<span>          <span class="fl">4</span> , <span class="fl">0.0374</span>      ,  <span class="fl">288.71</span> , <span class="fl">2</span>    ,</span>
+<span>          <span class="fl">5</span> , <span class="fl">0.015</span>       , <span class="fl">1349.40</span> , <span class="fl">2</span>    ,</span>
+<span>          <span class="fl">6</span> , <span class="fl">0.0033</span>      , <span class="fl">1927.71</span> , <span class="fl">2</span>    ,</span>
+<span>          <span class="fl">7</span> , <span class="fl">0.0187</span>      ,  <span class="fl">851.21</span> , <span class="fl">2</span>    ,</span>
+<span>          <span class="fl">8</span> , <span class="fl">0.07175</span>     ,  <span class="fl">314.88</span> , <span class="fl">2</span>    ,</span>
+<span>          <span class="fl">9</span> , <span class="fl">0.07</span>        ,   <span class="fl">45.53</span> , <span class="fl">2</span>    ,</span>
+<span>         <span class="fl">10</span> , <span class="fl">0</span>           ,    <span class="fl">0.00</span> , <span class="fl">2</span></span>
 <span><span class="op">)</span></span>
+<span><span class="va">ecosppdom_querelli</span> <span class="op">&lt;-</span> <span class="fu">tibble</span><span class="fu">::</span><span class="fu"><a href="https://tibble.tidyverse.org/reference/tribble.html" class="external-link">tribble</a></span><span class="op">(</span></span>
+<span>  <span class="op">~</span><span class="va">dom_pool</span> , <span class="op">~</span><span class="va">decay_rate</span> , <span class="op">~</span><span class="va">amt_t0</span> , <span class="op">~</span><span class="va">q10</span> ,</span>
+<span>          <span class="fl">1</span> , <span class="fl">0.355</span>       ,    <span class="fl">0.34</span> , <span class="fl">2.65</span> ,</span>
+<span>          <span class="fl">2</span> , <span class="fl">0.5</span>         ,    <span class="fl">0.02</span> , <span class="fl">2</span>    ,</span>
+<span>          <span class="fl">3</span> , <span class="fl">0.1435</span>      ,    <span class="fl">5.15</span> , <span class="fl">2</span>    ,</span>
+<span>          <span class="fl">4</span> , <span class="fl">0.0374</span>      ,  <span class="fl">143.23</span> , <span class="fl">2</span>    ,</span>
+<span>          <span class="fl">5</span> , <span class="fl">0.015</span>       , <span class="fl">2476.27</span> , <span class="fl">2</span>    ,</span>
+<span>          <span class="fl">6</span> , <span class="fl">0.0033</span>      , <span class="fl">4075.40</span> , <span class="fl">2</span>    ,</span>
+<span>          <span class="fl">7</span> , <span class="fl">0.0187</span>      , <span class="fl">2339.42</span> , <span class="fl">2</span>    ,</span>
+<span>          <span class="fl">8</span> , <span class="fl">0.07175</span>     ,    <span class="fl">7.45</span> , <span class="fl">2</span>    ,</span>
+<span>          <span class="fl">9</span> , <span class="fl">0.07</span>        ,    <span class="fl">1.97</span> , <span class="fl">2</span>    ,</span>
+<span>         <span class="fl">10</span> , <span class="fl">0</span>           ,    <span class="fl">0.00</span> , <span class="fl">2</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">ecosppdom_params</span> <span class="op">&lt;-</span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/bind_rows.html" class="external-link">bind_rows</a></span><span class="op">(</span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span><span class="va">ecosppdom_pinubank</span>, ecoregion <span class="op">=</span> <span class="st">"eco1"</span>, species <span class="op">=</span> <span class="st">"pinubank"</span><span class="op">)</span>,</span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span><span class="va">ecosppdom_pinubank</span>, ecoregion <span class="op">=</span> <span class="st">"eco2"</span>, species <span class="op">=</span> <span class="st">"pinubank"</span><span class="op">)</span>,</span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span><span class="va">ecosppdom_querelli</span>, ecoregion <span class="op">=</span> <span class="st">"eco1"</span>, species <span class="op">=</span> <span class="st">"querelli"</span><span class="op">)</span>,</span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span><span class="va">ecosppdom_querelli</span>, ecoregion <span class="op">=</span> <span class="st">"eco2"</span>, species <span class="op">=</span> <span class="st">"querelli"</span><span class="op">)</span></span>
+<span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">ecoregion</span>, <span class="va">species</span>, <span class="va">dom_pool</span>, <span class="va">decay_rate</span>, <span class="va">amt_t0</span>, <span class="va">q10</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">forcs_props</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>  BiomassFine <span class="op">=</span> <span class="fl">0.5</span>,</span>
@@ -272,10 +277,10 @@
 <span></span>
 <span><span class="va">anpp_timeseries</span> <span class="op">&lt;-</span> <span class="fu">tibble</span><span class="fu">::</span><span class="fu"><a href="https://tibble.tidyverse.org/reference/tribble.html" class="external-link">tribble</a></span><span class="op">(</span></span>
 <span>  <span class="op">~</span><span class="va">year</span> , <span class="op">~</span><span class="va">ecoregion</span> , <span class="op">~</span><span class="va">species</span>   , <span class="op">~</span><span class="va">anpp</span> , <span class="op">~</span><span class="va">anpp_std</span> ,</span>
-<span>      <span class="fl">0</span> , <span class="st">"eco1"</span>     , <span class="st">"pinubank"</span> ,   <span class="fl">648</span> ,         <span class="fl">0</span> ,</span>
-<span>      <span class="fl">0</span> , <span class="st">"eco1"</span>     , <span class="st">"querelli"</span> ,  <span class="fl">1415</span> ,         <span class="fl">0</span> ,</span>
-<span>      <span class="fl">0</span> , <span class="st">"eco2"</span>     , <span class="st">"pinubank"</span> ,   <span class="fl">648</span> ,         <span class="fl">0</span> ,</span>
-<span>      <span class="fl">0</span> , <span class="st">"eco2"</span>     , <span class="st">"querelli"</span> ,  <span class="fl">1415</span> ,         <span class="fl">0</span></span>
+<span>      <span class="fl">0</span> , <span class="st">"eco1"</span>     , <span class="st">"pinubank"</span> ,   <span class="fl">648</span> ,       <span class="fl">0.1</span> ,</span>
+<span>      <span class="fl">0</span> , <span class="st">"eco1"</span>     , <span class="st">"querelli"</span> ,  <span class="fl">1415</span> ,       <span class="fl">0.1</span> ,</span>
+<span>      <span class="fl">0</span> , <span class="st">"eco2"</span>     , <span class="st">"pinubank"</span> ,   <span class="fl">648</span> ,       <span class="fl">0.1</span> ,</span>
+<span>      <span class="fl">0</span> , <span class="st">"eco2"</span>     , <span class="st">"querelli"</span> ,  <span class="fl">1415</span> ,       <span class="fl">0.1</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">maxb_timeseries</span> <span class="op">&lt;-</span> <span class="fu">tibble</span><span class="fu">::</span><span class="fu"><a href="https://tibble.tidyverse.org/reference/tribble.html" class="external-link">tribble</a></span><span class="op">(</span></span>
@@ -294,14 +299,13 @@
 <span>      <span class="fl">0</span> , <span class="st">"eco2"</span>     , <span class="st">"querelli"</span> , <span class="fl">0.1</span></span>
 <span><span class="op">)</span></span>
 <span></span>
+<span><span class="co">## "simpleroots" variant: one row per (ecoregion, species), MinABio = 0</span></span>
 <span><span class="va">root_dynamics</span> <span class="op">&lt;-</span> <span class="fu">tibble</span><span class="fu">::</span><span class="fu"><a href="https://tibble.tidyverse.org/reference/tribble.html" class="external-link">tribble</a></span><span class="op">(</span></span>
 <span>  <span class="op">~</span><span class="va">ecoregion</span> , <span class="op">~</span><span class="va">species</span>   , <span class="op">~</span><span class="va">min_abio</span> , <span class="op">~</span><span class="va">root_abio</span> , <span class="op">~</span><span class="va">prop_fine_rt</span> , <span class="op">~</span><span class="va">fr_turnover</span> , <span class="op">~</span><span class="va">cr_turnover</span> ,</span>
-<span>  <span class="st">"eco1"</span>     , <span class="st">"pinubank"</span> ,         <span class="fl">0</span> , <span class="fl">0.403</span>      , <span class="fl">0.18</span>          , <span class="fl">0.6</span>          , <span class="fl">0.02</span>         ,</span>
-<span>  <span class="st">"eco1"</span>     , <span class="st">"pinubank"</span> ,      <span class="fl">5000</span> , <span class="fl">0.292</span>      , <span class="fl">0.1</span>           , <span class="fl">0.6</span>          , <span class="fl">0.02</span>         ,</span>
+<span>  <span class="st">"eco1"</span>     , <span class="st">"pinubank"</span> ,         <span class="fl">0</span> , <span class="fl">0.399</span>      , <span class="fl">0.18</span>          , <span class="fl">0.6</span>          , <span class="fl">0.02</span>         ,</span>
 <span>  <span class="st">"eco1"</span>     , <span class="st">"querelli"</span> ,         <span class="fl">0</span> , <span class="fl">0.403</span>      , <span class="fl">0.18</span>          , <span class="fl">1</span>            , <span class="fl">0.02</span>         ,</span>
-<span>  <span class="st">"eco2"</span>     , <span class="st">"pinubank"</span> ,         <span class="fl">0</span> , <span class="fl">0.433</span>      , <span class="fl">0.18</span>          , <span class="fl">0.6</span>          , <span class="fl">0.02</span>         ,</span>
-<span>  <span class="st">"eco2"</span>     , <span class="st">"querelli"</span> ,         <span class="fl">0</span> , <span class="fl">0.403</span>      , <span class="fl">0.18</span>          , <span class="fl">1</span>            , <span class="fl">0.02</span>         ,</span>
-<span>  <span class="st">"eco2"</span>     , <span class="st">"querelli"</span> ,      <span class="fl">5000</span> , <span class="fl">0.292</span>      , <span class="fl">0.1</span>           , <span class="fl">0.6</span>          , <span class="fl">0.02</span></span>
+<span>  <span class="st">"eco2"</span>     , <span class="st">"pinubank"</span> ,         <span class="fl">0</span> , <span class="fl">0.399</span>      , <span class="fl">0.18</span>          , <span class="fl">0.6</span>          , <span class="fl">0.02</span>         ,</span>
+<span>  <span class="st">"eco2"</span>     , <span class="st">"querelli"</span> ,         <span class="fl">0</span> , <span class="fl">0.403</span>      , <span class="fl">0.18</span>          , <span class="fl">1</span>            , <span class="fl">0.02</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
@@ -344,12 +348,14 @@
 <span>  path <span class="op">=</span> <span class="va">tmp_pth</span>,</span>
 <span>  Timestep <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  SeedingAlgorithm <span class="op">=</span> <span class="st">"WardSeedDispersal"</span>,</span>
-<span>  ClimateFile <span class="op">=</span> <span class="va">clim_file</span>,</span>
+<span>  ForCSClimateFile <span class="op">=</span> <span class="va">clim_file</span>,</span>
 <span>  InitialCommunitiesFiles <span class="op">=</span> <span class="va">init_comm_files</span>,</span>
 <span>  DisturbanceMatrixFile <span class="op">=</span> <span class="va">dm_file</span>,</span>
 <span>  SnagFile <span class="op">=</span> <span class="va">snag_file</span>,</span>
 <span>  OutputTables <span class="op">=</span> <span class="va">output_tables</span>,</span>
-<span>  SoilSpinupControls <span class="op">=</span> <span class="va">soil_spinup</span>,</span>
+<span>  ForCSMapControl <span class="op">=</span> <span class="va">for_cs_map_control</span>,</span>
+<span>  MapOutputInterval <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  SpinUp <span class="op">=</span> <span class="va">spin_up</span>,</span>
 <span>  AvailableLightBiomass <span class="op">=</span> <span class="va">avail_light_biomass</span>,</span>
 <span>  LightEstablishmentTable <span class="op">=</span> <span class="va">light_est</span>,</span>
 <span>  SpeciesParameters <span class="op">=</span> <span class="va">species_params</span>,</span>
@@ -371,21 +377,23 @@
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/readLines.html" class="external-link">readLines</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">tmp_pth</span>, <span class="va">ext_forcs</span><span class="op">$</span><span class="va">files</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span>sep <span class="op">=</span> <span class="st">"\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; &gt;&gt; generated by `landisutils` (v0.0.2) on Wed Mar 18 17:26:34 2026</span></span>
+<span><span class="co">#&gt; &gt;&gt; generated by `landisutils` (v0.0.3) on Thu Apr 30 20:53:08 2026</span></span>
 <span><span class="co">#&gt; &gt;&gt; do not edit by hand; manual changes to this file may be overwritten</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; LandisData  "ForC Succession"</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Timestep    1</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ClimateFile    "ForCS_climate.txt"</span></span>
+<span><span class="co">#&gt; SeedingAlgorithm    WardSeedDispersal</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; InitialCommunities    "initial-communities.txt"</span></span>
-<span><span class="co">#&gt; InitialCommunitiesMap    "initial-communities.gis"</span></span>
+<span><span class="co">#&gt; ForCSClimateFile    ForCS_climate.txt</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; DisturbanceMatrixFile    "ForCS_DM.txt"</span></span>
+<span><span class="co">#&gt; InitialCommunities    initial-communities.txt</span></span>
+<span><span class="co">#&gt; InitialCommunitiesMap    initial-communities.gis</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; SnagFile    "ForCS_snags.txt"</span></span>
+<span><span class="co">#&gt; DisturbanceMatrixFile    ForCS_DM.txt</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; SnagFile    ForCS_snags.txt</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ForCSOutput</span></span>
 <span><span class="co">#&gt; &gt;&gt; Output interval</span></span>
@@ -393,10 +401,19 @@
 <span><span class="co">#&gt; &gt;&gt; -----------------------------------</span></span>
 <span><span class="co">#&gt;     1        1        1        1</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; SoilSpinup</span></span>
-<span><span class="co">#&gt; &gt;&gt;  On/Off  Tolerance  Max</span></span>
-<span><span class="co">#&gt; &gt;&gt;  Flag    %          Iterations</span></span>
-<span><span class="co">#&gt; 1  1  20</span></span>
+<span><span class="co">#&gt; ForCSMapControl</span></span>
+<span><span class="co">#&gt; &gt;&gt;  BiomassC  SDOMC  NBP  NEP  NPP  RH  ToFPS</span></span>
+<span><span class="co">#&gt; &gt;&gt;  -----------------------------------------</span></span>
+<span><span class="co">#&gt; 1  1  1  1  1  1  1</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; MapOutputInterval    1</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; SpinUp</span></span>
+<span><span class="co">#&gt; &gt;&gt;  On/Off  Biomass    Tolerance  Max</span></span>
+<span><span class="co">#&gt; &gt;&gt;  Flag    Spin-up    %          Iterations</span></span>
+<span><span class="co">#&gt; &gt;&gt;          Flag</span></span>
+<span><span class="co">#&gt; &gt;&gt;  ----------------------------------------</span></span>
+<span><span class="co">#&gt; 1  1  1  20</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; AvailableLightBiomass</span></span>
 <span><span class="co">#&gt; &gt;&gt;  Shade</span></span>
@@ -413,19 +430,19 @@
 <span><span class="co">#&gt; &gt;&gt;  Class            by Actual Shade</span></span>
 <span><span class="co">#&gt; &gt;&gt;  ----------------------------------</span></span>
 <span><span class="co">#&gt; &gt;&gt;        0    1    2    3    4    5</span></span>
-<span><span class="co">#&gt;    1            1.00  0.50  0.00  0.00  0.00  0.00</span></span>
-<span><span class="co">#&gt;    2            0.50  1.00  0.50  0.00  0.00  0.00</span></span>
-<span><span class="co">#&gt;    3            0.20  0.20  1.00  0.50  0.00  0.00</span></span>
-<span><span class="co">#&gt;    4            0.10  0.10  0.20  1.00  0.50  0.50</span></span>
-<span><span class="co">#&gt;    5            0.10  0.50  0.20  0.20  1.00  1.00</span></span>
+<span><span class="co">#&gt;    1            1.00  0.00  0.00  0.00  0.00  0.00</span></span>
+<span><span class="co">#&gt;    2            0.50  1.00  0.00  0.00  0.00  0.00</span></span>
+<span><span class="co">#&gt;    3            0.00  0.50  1.00  0.50  0.00  0.00</span></span>
+<span><span class="co">#&gt;    4            0.00  0.00  0.50  1.00  0.00  0.00</span></span>
+<span><span class="co">#&gt;    5            0.00  0.00  0.00  0.50  1.00  0.50</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; SpeciesParameters</span></span>
-<span><span class="co">#&gt; &gt;&gt;  Species  Leaf  Mortal  Merchant  Merch    Merch     Prop       Growth</span></span>
-<span><span class="co">#&gt; &gt;&gt;           Long  Shape   Stems     Shape    Shape     Non-merch  Shape</span></span>
+<span><span class="co">#&gt; &gt;&gt;  Species  Leaf  Mortal  Merchant  Merch    Merch     Prop       Growth  Shade      Fire</span></span>
+<span><span class="co">#&gt; &gt;&gt;           Long  Shape   Stems     Shape    Shape     Non-merch  Shape   Tolerance  Tolerance</span></span>
 <span><span class="co">#&gt; &gt;&gt;                 Param   Min Age   Param a  Param b   to FastAG  Param</span></span>
-<span><span class="co">#&gt; &gt;&gt;  ---------------------------------------------------------------------</span></span>
-<span><span class="co">#&gt; pinubank  3  10  10  0.7546  0.983  0.25  0.25</span></span>
-<span><span class="co">#&gt; querelli  1  10  30  0.7546  0.983  0.25  0.25</span></span>
+<span><span class="co">#&gt; &gt;&gt;  ----------------------------------------------------------------------------------------</span></span>
+<span><span class="co">#&gt; pinubank  3  10  5  0.7546  0.983  0.25  0.9  1  2</span></span>
+<span><span class="co">#&gt; querelli  1  10  5  0.7546  0.983  0.25  0.9  2  4</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; DOMPools</span></span>
 <span><span class="co">#&gt; &gt;&gt;  ID    Name            Proportion to</span></span>
@@ -436,8 +453,8 @@
 <span><span class="co">#&gt;  3  Fast Aboveground  0.830</span></span>
 <span><span class="co">#&gt;  4  Fast Belowground  0.830</span></span>
 <span><span class="co">#&gt;  5  Medium  0.830</span></span>
-<span><span class="co">#&gt;  6  Slow Aboveground  1.000</span></span>
-<span><span class="co">#&gt;  7  Slow Belowground  1.000</span></span>
+<span><span class="co">#&gt;  6  Slow Aboveground  0.830</span></span>
+<span><span class="co">#&gt;  7  Slow Belowground  0.830</span></span>
 <span><span class="co">#&gt;  8  Stem Snag  0.830</span></span>
 <span><span class="co">#&gt;  9  Other Snag  0.830</span></span>
 <span><span class="co">#&gt; 10  Extra pool  0.830</span></span>
@@ -446,45 +463,45 @@
 <span><span class="co">#&gt; &gt;&gt;  Ecoregion  Species  DOM   Decay  Amount  Q10 Ref</span></span>
 <span><span class="co">#&gt; &gt;&gt;                      Pool  Rate   at T0   Temp 10C</span></span>
 <span><span class="co">#&gt; &gt;&gt;  -------------------------------------------------</span></span>
-<span><span class="co">#&gt; eco1  pinubank   1  0.35500    53.04  2.65</span></span>
-<span><span class="co">#&gt; eco1  pinubank   2  0.50000   295.40  2.00</span></span>
-<span><span class="co">#&gt; eco1  pinubank   3  0.14350  1395.49  2.00</span></span>
-<span><span class="co">#&gt; eco1  pinubank   4  0.03740  1360.62  2.00</span></span>
-<span><span class="co">#&gt; eco1  pinubank   5  0.01500   863.88  2.00</span></span>
-<span><span class="co">#&gt; eco1  pinubank   6  0.00330  1656.13  2.65</span></span>
-<span><span class="co">#&gt; eco1  pinubank   7  0.01870  8451.22  2.00</span></span>
-<span><span class="co">#&gt; eco1  pinubank   8  0.07175  7466.54  2.00</span></span>
-<span><span class="co">#&gt; eco1  pinubank   9  0.07000  2036.14  2.00</span></span>
+<span><span class="co">#&gt; eco1  pinubank   1  0.35500     1.49  2.65</span></span>
+<span><span class="co">#&gt; eco1  pinubank   2  0.50000     0.07  2.00</span></span>
+<span><span class="co">#&gt; eco1  pinubank   3  0.14350   158.48  2.00</span></span>
+<span><span class="co">#&gt; eco1  pinubank   4  0.03740   288.71  2.00</span></span>
+<span><span class="co">#&gt; eco1  pinubank   5  0.01500  1349.40  2.00</span></span>
+<span><span class="co">#&gt; eco1  pinubank   6  0.00330  1927.71  2.00</span></span>
+<span><span class="co">#&gt; eco1  pinubank   7  0.01870   851.21  2.00</span></span>
+<span><span class="co">#&gt; eco1  pinubank   8  0.07175   314.88  2.00</span></span>
+<span><span class="co">#&gt; eco1  pinubank   9  0.07000    45.53  2.00</span></span>
 <span><span class="co">#&gt; eco1  pinubank  10  0.00000     0.00  2.00</span></span>
-<span><span class="co">#&gt; eco2  pinubank   1  0.35500    53.04  2.65</span></span>
-<span><span class="co">#&gt; eco2  pinubank   2  0.50000   295.40  2.00</span></span>
-<span><span class="co">#&gt; eco2  pinubank   3  0.14350  1395.49  2.00</span></span>
-<span><span class="co">#&gt; eco2  pinubank   4  0.03740  1360.62  2.00</span></span>
-<span><span class="co">#&gt; eco2  pinubank   5  0.01500   863.88  2.00</span></span>
-<span><span class="co">#&gt; eco2  pinubank   6  0.00330  1656.13  2.65</span></span>
-<span><span class="co">#&gt; eco2  pinubank   7  0.01870  8451.22  2.00</span></span>
-<span><span class="co">#&gt; eco2  pinubank   8  0.07175  7466.54  2.00</span></span>
-<span><span class="co">#&gt; eco2  pinubank   9  0.07000  2036.14  2.00</span></span>
+<span><span class="co">#&gt; eco2  pinubank   1  0.35500     1.49  2.65</span></span>
+<span><span class="co">#&gt; eco2  pinubank   2  0.50000     0.07  2.00</span></span>
+<span><span class="co">#&gt; eco2  pinubank   3  0.14350   158.48  2.00</span></span>
+<span><span class="co">#&gt; eco2  pinubank   4  0.03740   288.71  2.00</span></span>
+<span><span class="co">#&gt; eco2  pinubank   5  0.01500  1349.40  2.00</span></span>
+<span><span class="co">#&gt; eco2  pinubank   6  0.00330  1927.71  2.00</span></span>
+<span><span class="co">#&gt; eco2  pinubank   7  0.01870   851.21  2.00</span></span>
+<span><span class="co">#&gt; eco2  pinubank   8  0.07175   314.88  2.00</span></span>
+<span><span class="co">#&gt; eco2  pinubank   9  0.07000    45.53  2.00</span></span>
 <span><span class="co">#&gt; eco2  pinubank  10  0.00000     0.00  2.00</span></span>
-<span><span class="co">#&gt; eco1  querelli   1  0.35500    53.04  2.65</span></span>
-<span><span class="co">#&gt; eco1  querelli   2  0.50000   295.40  2.00</span></span>
-<span><span class="co">#&gt; eco1  querelli   3  0.14350  1395.49  2.00</span></span>
-<span><span class="co">#&gt; eco1  querelli   4  0.03740  1360.62  2.00</span></span>
-<span><span class="co">#&gt; eco1  querelli   5  0.01500   863.88  2.00</span></span>
-<span><span class="co">#&gt; eco1  querelli   6  0.00330  1656.13  2.65</span></span>
-<span><span class="co">#&gt; eco1  querelli   7  0.01870  8451.22  2.00</span></span>
-<span><span class="co">#&gt; eco1  querelli   8  0.07175  7466.54  2.00</span></span>
-<span><span class="co">#&gt; eco1  querelli   9  0.07000  2036.14  2.00</span></span>
+<span><span class="co">#&gt; eco1  querelli   1  0.35500     0.34  2.65</span></span>
+<span><span class="co">#&gt; eco1  querelli   2  0.50000     0.02  2.00</span></span>
+<span><span class="co">#&gt; eco1  querelli   3  0.14350     5.15  2.00</span></span>
+<span><span class="co">#&gt; eco1  querelli   4  0.03740   143.23  2.00</span></span>
+<span><span class="co">#&gt; eco1  querelli   5  0.01500  2476.27  2.00</span></span>
+<span><span class="co">#&gt; eco1  querelli   6  0.00330  4075.40  2.00</span></span>
+<span><span class="co">#&gt; eco1  querelli   7  0.01870  2339.42  2.00</span></span>
+<span><span class="co">#&gt; eco1  querelli   8  0.07175     7.45  2.00</span></span>
+<span><span class="co">#&gt; eco1  querelli   9  0.07000     1.97  2.00</span></span>
 <span><span class="co">#&gt; eco1  querelli  10  0.00000     0.00  2.00</span></span>
-<span><span class="co">#&gt; eco2  querelli   1  0.35500    53.04  2.65</span></span>
-<span><span class="co">#&gt; eco2  querelli   2  0.50000   295.40  2.00</span></span>
-<span><span class="co">#&gt; eco2  querelli   3  0.14350  1395.49  2.00</span></span>
-<span><span class="co">#&gt; eco2  querelli   4  0.03740  1360.62  2.00</span></span>
-<span><span class="co">#&gt; eco2  querelli   5  0.01500   863.88  2.00</span></span>
-<span><span class="co">#&gt; eco2  querelli   6  0.00330  1656.13  2.65</span></span>
-<span><span class="co">#&gt; eco2  querelli   7  0.01870  8451.22  2.00</span></span>
-<span><span class="co">#&gt; eco2  querelli   8  0.07175  7466.54  2.00</span></span>
-<span><span class="co">#&gt; eco2  querelli   9  0.07000  2036.14  2.00</span></span>
+<span><span class="co">#&gt; eco2  querelli   1  0.35500     0.34  2.65</span></span>
+<span><span class="co">#&gt; eco2  querelli   2  0.50000     0.02  2.00</span></span>
+<span><span class="co">#&gt; eco2  querelli   3  0.14350     5.15  2.00</span></span>
+<span><span class="co">#&gt; eco2  querelli   4  0.03740   143.23  2.00</span></span>
+<span><span class="co">#&gt; eco2  querelli   5  0.01500  2476.27  2.00</span></span>
+<span><span class="co">#&gt; eco2  querelli   6  0.00330  4075.40  2.00</span></span>
+<span><span class="co">#&gt; eco2  querelli   7  0.01870  2339.42  2.00</span></span>
+<span><span class="co">#&gt; eco2  querelli   8  0.07175     7.45  2.00</span></span>
+<span><span class="co">#&gt; eco2  querelli   9  0.07000     1.97  2.00</span></span>
 <span><span class="co">#&gt; eco2  querelli  10  0.00000     0.00  2.00</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ForCSProportions</span></span>
@@ -498,10 +515,10 @@
 <span><span class="co">#&gt; &gt;&gt;  Year  Ecoregion  Species  ANPP       ANPP-std</span></span>
 <span><span class="co">#&gt; &gt;&gt;                            (g/m2/yr)</span></span>
 <span><span class="co">#&gt; &gt;&gt;  ---------------------------------------------</span></span>
-<span><span class="co">#&gt; 0  eco1  pinubank   648  0</span></span>
-<span><span class="co">#&gt; 0  eco1  querelli  1415  0</span></span>
-<span><span class="co">#&gt; 0  eco2  pinubank   648  0</span></span>
-<span><span class="co">#&gt; 0  eco2  querelli  1415  0</span></span>
+<span><span class="co">#&gt; 0  eco1  pinubank   648  0.1</span></span>
+<span><span class="co">#&gt; 0  eco1  querelli  1415  0.1</span></span>
+<span><span class="co">#&gt; 0  eco2  pinubank   648  0.1</span></span>
+<span><span class="co">#&gt; 0  eco2  querelli  1415  0.1</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; MaxBiomassTimeSeries</span></span>
 <span><span class="co">#&gt; &gt;&gt;  Year  Ecoregion  Species  Max Biomass (g/m2)</span></span>
@@ -523,16 +540,14 @@
 <span><span class="co">#&gt; &gt;&gt;  Ecoregion  Species  MinABio  Root  PropFineRt  Frturnover  Crturnover</span></span>
 <span><span class="co">#&gt; &gt;&gt;                      (g/m2)   Abio</span></span>
 <span><span class="co">#&gt; &gt;&gt;  ---------------------------------------------------------------------</span></span>
-<span><span class="co">#&gt; eco1  pinubank     0  0.403  0.18  0.6  0.02</span></span>
-<span><span class="co">#&gt; eco1  pinubank  5000  0.292  0.10  0.6  0.02</span></span>
-<span><span class="co">#&gt; eco1  querelli     0  0.403  0.18  1.0  0.02</span></span>
-<span><span class="co">#&gt; eco2  pinubank     0  0.433  0.18  0.6  0.02</span></span>
-<span><span class="co">#&gt; eco2  querelli     0  0.403  0.18  1.0  0.02</span></span>
-<span><span class="co">#&gt; eco2  querelli  5000  0.292  0.10  0.6  0.02</span></span></code></pre></div>
+<span><span class="co">#&gt; eco1  pinubank  0  0.399  0.18  0.6  0.02</span></span>
+<span><span class="co">#&gt; eco1  querelli  0  0.403  0.18  1.0  0.02</span></span>
+<span><span class="co">#&gt; eco2  pinubank  0  0.399  0.18  0.6  0.02</span></span>
+<span><span class="co">#&gt; eco2  querelli  0  0.403  0.18  1.0  0.02</span></span></code></pre></div>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/readLines.html" class="external-link">readLines</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">tmp_pth</span>, <span class="va">ext_forcs</span><span class="op">$</span><span class="va">files</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span>sep <span class="op">=</span> <span class="st">"\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; &gt;&gt; generated by `landisutils` (v0.0.2) on Wed Mar 18 17:26:34 2026</span></span>
+<span><span class="co">#&gt; &gt;&gt; generated by `landisutils` (v0.0.3) on Thu Apr 30 20:53:08 2026</span></span>
 <span><span class="co">#&gt; &gt;&gt; do not edit by hand; manual changes to this file may be overwritten</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; LandisData  "ForC Succession"</span></span>
@@ -554,7 +569,7 @@
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/readLines.html" class="external-link">readLines</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">tmp_pth</span>, <span class="va">ext_forcs</span><span class="op">$</span><span class="va">files</span><span class="op">[</span><span class="fl">5</span><span class="op">]</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span>sep <span class="op">=</span> <span class="st">"\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; &gt;&gt; generated by `landisutils` (v0.0.2) on Wed Mar 18 17:26:34 2026</span></span>
+<span><span class="co">#&gt; &gt;&gt; generated by `landisutils` (v0.0.3) on Thu Apr 30 20:53:08 2026</span></span>
 <span><span class="co">#&gt; &gt;&gt; do not edit by hand; manual changes to this file may be overwritten</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; LandisData  "ForC Succession"</span></span>
@@ -650,7 +665,7 @@
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/readLines.html" class="external-link">readLines</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">tmp_pth</span>, <span class="va">ext_forcs</span><span class="op">$</span><span class="va">files</span><span class="op">[</span><span class="fl">6</span><span class="op">]</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span>sep <span class="op">=</span> <span class="st">"\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; &gt;&gt; generated by `landisutils` (v0.0.2) on Wed Mar 18 17:26:34 2026</span></span>
+<span><span class="co">#&gt; &gt;&gt; generated by `landisutils` (v0.0.3) on Thu Apr 30 20:53:08 2026</span></span>
 <span><span class="co">#&gt; &gt;&gt; do not edit by hand; manual changes to this file may be overwritten</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; LandisData  "ForC Succession"</span></span>
@@ -659,8 +674,8 @@
 <span><span class="co">#&gt; SnagData</span></span>
 <span><span class="co">#&gt; &gt;&gt; Species  AgeAtDeath  TimeSinceDeath  Cause</span></span>
 <span><span class="co">#&gt; &gt;&gt; ------------------------------------------</span></span>
-<span><span class="co">#&gt; querelli  53   5  other</span></span>
-<span><span class="co">#&gt; pinubank  88  12  bda</span></span></code></pre></div>
+<span><span class="co">#&gt; querelli  40   1  other</span></span>
+<span><span class="co">#&gt; pinubank  88  12  wind</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="cleanup">Cleanup<a class="anchor" aria-label="anchor" href="#cleanup"></a>

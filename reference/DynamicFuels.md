@@ -9,6 +9,20 @@ Dynamic Fuel System Extension
 LANDIS-II Dynamic Fuel System Extension v4.0 User Guide
 <https://github.com/LANDIS-II-Foundation/Extension-Dynamic-Biomass-Fuels/blob/master/docs/LANDIS-II%20Dynamic%20Fuel%20System%20v4.0%20User%20Guide.pdf>
 
+## See also
+
+Helpers that prepare inputs for this extension:
+[`prepFuelTypesTable()`](https://for-cast.github.io/landisutils/reference/prepFuelTypesTable.md),
+[`prepDisturbanceConversionTable()`](https://for-cast.github.io/landisutils/reference/prepDisturbanceConversionTable.md).
+
+Other Dynamic Fuels helpers:
+[`insertDisturbanceConversionTable()`](https://for-cast.github.io/landisutils/reference/insertDisturbanceConversionTable.md),
+[`insertEcoregionTable()`](https://for-cast.github.io/landisutils/reference/insertEcoregionTable.md),
+[`insertFuelTypesTable()`](https://for-cast.github.io/landisutils/reference/insertFuelTypesTable.md),
+[`insertSpeciesFuelCoefficients()`](https://for-cast.github.io/landisutils/reference/insertSpeciesFuelCoefficients.md),
+[`prepDisturbanceConversionTable()`](https://for-cast.github.io/landisutils/reference/prepDisturbanceConversionTable.md),
+[`prepFuelTypesTable()`](https://for-cast.github.io/landisutils/reference/prepFuelTypesTable.md)
+
 ## Super class
 
 [`landisutils::LandisExtension`](https://for-cast.github.io/landisutils/reference/LandisExtension.md)

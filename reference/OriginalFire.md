@@ -9,6 +9,20 @@ Original Fire Extension
 LANDIS-II Original Fire v5.0 Extension User Guide
 <https://github.com/LANDIS-II-Foundation/Extension-Base-Fire/blob/master/docs/LANDIS-II%20Original%20Fire%20v5.0%20User%20Guide.pdf>
 
+## See also
+
+Helpers that prepare inputs for this extension:
+[`prepFireRegionParametersTable()`](https://for-cast.github.io/landisutils/reference/prepFireRegionParametersTable.md),
+[`prepInitialFireRegionsMap()`](https://for-cast.github.io/landisutils/reference/prepInitialFireRegionsMap.md).
+
+Other Original Fire helpers:
+[`defaultFuelCurveTable()`](https://for-cast.github.io/landisutils/reference/defaultFuelCurveTable.md),
+[`insertFireRegionParametersTable()`](https://for-cast.github.io/landisutils/reference/insertFireRegionParametersTable.md),
+[`insertFuelCurveTable()`](https://for-cast.github.io/landisutils/reference/insertFuelCurveTable.md),
+[`insertWindCurveTable()`](https://for-cast.github.io/landisutils/reference/insertWindCurveTable.md),
+[`prepFireRegionParametersTable()`](https://for-cast.github.io/landisutils/reference/prepFireRegionParametersTable.md),
+[`prepInitialFireRegionsMap()`](https://for-cast.github.io/landisutils/reference/prepInitialFireRegionsMap.md)
+
 ## Super class
 
 [`landisutils::LandisExtension`](https://for-cast.github.io/landisutils/reference/LandisExtension.md)

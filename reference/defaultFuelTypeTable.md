@@ -13,8 +13,8 @@ defaultFuelTypeTable()
 
 ## Value
 
-`data.frame` with columns: 'Index', 'Base', 'Surface', 'IgnProb', 'a',
-'b', 'c', 'q', 'BUI', 'maxBE' and 'CBH'.
+`data.frame` with columns: `Index`, `Base`, `Surface`, `IgnProb`, `a`,
+`b`, `c`, `q`, `BUI`, `maxBE` and `CBH`.
 
 ## References
 
@@ -33,3 +33,19 @@ to the 1992 Canadian Forest Fire Behavior Prediction System. Natural
 Resources Canada, Canadian Forest Service, Great Lakes Forestry Centre,
 Sault Ste. Marie, Ontario. Information Report GLC-X-10. 45 p.
 <https://ostrnrcan-dostrncan.canada.ca/handle/1845/247839>
+
+## See also
+
+Other Dynamic Fire helpers:
+[`DynamicFire`](https://for-cast.github.io/landisutils/reference/DynamicFire.md),
+[`insertBuildUpIndex()`](https://for-cast.github.io/landisutils/reference/insertBuildUpIndex.md),
+[`insertFireSizesTable()`](https://for-cast.github.io/landisutils/reference/insertFireSizesTable.md),
+[`insertFuelTypeTable()`](https://for-cast.github.io/landisutils/reference/insertFuelTypeTable.md),
+[`insertGroundSlopeFile()`](https://for-cast.github.io/landisutils/reference/insertGroundSlopeFile.md),
+[`insertSeasonTable()`](https://for-cast.github.io/landisutils/reference/insertSeasonTable.md),
+[`insertUphillSlopeAzimuthMap()`](https://for-cast.github.io/landisutils/reference/insertUphillSlopeAzimuthMap.md),
+[`prepDynamicEcoregionTable()`](https://for-cast.github.io/landisutils/reference/prepDynamicEcoregionTable.md),
+[`prepDynamicWeatherTable()`](https://for-cast.github.io/landisutils/reference/prepDynamicWeatherTable.md),
+[`prepFireSizesTable()`](https://for-cast.github.io/landisutils/reference/prepFireSizesTable.md),
+[`prepInitialWeatherDatabase()`](https://for-cast.github.io/landisutils/reference/prepInitialWeatherDatabase.md),
+[`prepTopographyFile()`](https://for-cast.github.io/landisutils/reference/prepTopographyFile.md)

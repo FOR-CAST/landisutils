@@ -9,7 +9,7 @@ Forest Carbon Succession (ForCS) Extension"></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -24,6 +24,7 @@ Forest Carbon Succession (ForCS) Extension"></head><body>
     <li><a class="dropdown-item" href="../articles/climate-data.html">Preparing Climate Data for Use With LANDIS-II</a></li>
     <li><a class="dropdown-item" href="../articles/Dynamic-Fire-Fuels.html">Preparing Dynamic Fire and Fuels Inputs</a></li>
     <li><a class="dropdown-item" href="../articles/Forest-Carbon-Succession.html">Preparing Forest Carbon Succession (ForCS) Inputs</a></li>
+    <li><a class="dropdown-item" href="../articles/Multi-Extension-Scenarios.html">Assembling a Multi-Extension Scenario</a></li>
     <li><a class="dropdown-item" href="../articles/Social-Climate-Fire.html">Preparing Social-Climate-Fire Inputs</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -50,9 +51,35 @@ Forest Carbon Succession (ForCS) Extension"></head><body>
 
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
-    <p>LANDIS-II Social-Climate-Fire v4 User Guide
-<a href="https://github.com/LANDIS-II-Foundation/Extension-Social-Climate-Fire/blob/master/docs/LANDIS-II%20Social-Climate-Fire%20v4%20User%20Guide.pdf" class="external-link">https://github.com/LANDIS-II-Foundation/Extension-Social-Climate-Fire/blob/master/docs/LANDIS-II%20Social-Climate-Fire%20v4%20User%20Guide.pdf</a></p>
-<p>TODO</p>
+    <p>LANDIS-II Forest Carbon Succession (CForC) v4.0.2 User Guide
+<a href="https://github.com/LANDIS-II-Foundation/Extension-ForCS-Succession/blob/master/deploy/installer/LANDIS-II%20CForC%20Succession%20v4.0.2%20User%20Guide%20September%202025.pdf" class="external-link">https://github.com/LANDIS-II-Foundation/Extension-ForCS-Succession/blob/master/deploy/installer/LANDIS-II%20CForC%20Succession%20v4.0.2%20User%20Guide%20September%202025.pdf</a></p>
+    </div>
+    <div class="section level2">
+    <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
+    <div class="dont-index"><p>Helpers that prepare inputs for this extension:
+<code><a href="prepClimateFile.html">prepClimateFile()</a></code>,
+<code><a href="prepDisturbanceMatrixFile.html">prepDisturbanceMatrixFile()</a></code>,
+<code><a href="prepSnagFile.html">prepSnagFile()</a></code>.
+Shared scenario inputs:
+<code><a href="prepInitialCommunities.html">prepInitialCommunities()</a></code>,
+<code><a href="prepSpeciesData.html">prepSpeciesData()</a></code>.</p>
+<p>Other ForCS helpers:
+<code><a href="insertANPPTimeSeries.html">insertANPPTimeSeries()</a></code>,
+<code><a href="insertAvailableLightBiomass.html">insertAvailableLightBiomass()</a></code>,
+<code><a href="insertDOMPools.html">insertDOMPools()</a></code>,
+<code><a href="insertEcoSppDOMParameters.html">insertEcoSppDOMParameters()</a></code>,
+<code><a href="insertEstablishProbabilities.html">insertEstablishProbabilities()</a></code>,
+<code><a href="insertForCSMapControl.html">insertForCSMapControl()</a></code>,
+<code><a href="insertForCSProportions.html">insertForCSProportions()</a></code>,
+<code><a href="insertLightEstablishmentTable.html">insertLightEstablishmentTable()</a></code>,
+<code><a href="insertMaxBiomassTimeSeries.html">insertMaxBiomassTimeSeries()</a></code>,
+<code><a href="insertOutputTables.html">insertOutputTables()</a></code>,
+<code><a href="insertRootDynamics.html">insertRootDynamics()</a></code>,
+<code><a href="insertSpeciesParameters.html">insertSpeciesParameters()</a></code>,
+<code><a href="insertSpinUp.html">insertSpinUp()</a></code>,
+<code><a href="prepClimateFile.html">prepClimateFile()</a></code>,
+<code><a href="prepDisturbanceMatrixFile.html">prepDisturbanceMatrixFile()</a></code>,
+<code><a href="prepSnagFile.html">prepSnagFile()</a></code></p></div>
     </div>
     <div class="section level2">
     <h2 id="super-class">Super class<a class="anchor" aria-label="anchor" href="#super-class"></a></h2>
@@ -65,7 +92,7 @@ Forest Carbon Succession (ForCS) Extension"></head><body>
 One of <code>"WardSeedDispersal"</code>, <code>"NoDispersal"</code>, <code>"UniversalDispersal"</code>.</p></dd>
 
 
-<dt><code>ClimateFile</code></dt>
+<dt><code>ForCSClimateFile</code></dt>
 <dd><p>Character. Relative file path.</p></dd>
 
 
@@ -85,7 +112,15 @@ One of <code>"WardSeedDispersal"</code>, <code>"NoDispersal"</code>, <code>"Univ
 <dd><p><code>data.frame</code>.</p></dd>
 
 
-<dt><code>SoilSpinupControls</code></dt>
+<dt><code>ForCSMapControl</code></dt>
+<dd><p><code>data.frame</code>.</p></dd>
+
+
+<dt><code>MapOutputInterval</code></dt>
+<dd><p>Integer.</p></dd>
+
+
+<dt><code>SpinUp</code></dt>
 <dd><p><code>data.frame</code>.</p></dd>
 
 
@@ -150,12 +185,14 @@ One of <code>"WardSeedDispersal"</code>, <code>"NoDispersal"</code>, <code>"Univ
 <span>  <span class="va">path</span>,</span>
 <span>  Timestep <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  SeedingAlgorithm <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  ClimateFile <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  ForCSClimateFile <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  InitialCommunitiesFiles <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  DisturbanceMatrixFile <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  SnagFile <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  OutputTables <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  SoilSpinupControls <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  ForCSMapControl <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  MapOutputInterval <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  SpinUp <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  AvailableLightBiomass <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  LightEstablishmentTable <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  SpeciesParameters <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -184,12 +221,15 @@ One of <code>"WardSeedDispersal"</code>, <code>"NoDispersal"</code>, <code>"Univ
 One of <code>"WardSeedDispersal"</code>, <code>"NoDispersal"</code>, <code>"UniversalDispersal"</code>.</p></dd>
 
 
-<dt><code>ClimateFile</code></dt>
-<dd><p>Character. Relative file path.</p></dd>
+<dt><code>ForCSClimateFile</code></dt>
+<dd><p>Character. Relative file path. Mean-annual-temperature
+climate file specific to ForCS (see <code><a href="prepClimateFile.html">prepClimateFile()</a></code>).</p></dd>
 
 
 <dt><code>InitialCommunitiesFiles</code></dt>
-<dd><p>Character. Relative file paths.</p></dd>
+<dd><p>Character. Two-element vector of relative
+file paths: the initial-communities text/CSV and the initial-communities
+raster.</p></dd>
 
 
 <dt><code>DisturbanceMatrixFile</code></dt>
@@ -197,15 +237,26 @@ One of <code>"WardSeedDispersal"</code>, <code>"NoDispersal"</code>, <code>"Univ
 
 
 <dt><code>SnagFile</code></dt>
-<dd><p>(Optional) Character. Relative file path.</p></dd>
+<dd><p>(Optional) Character. Relative file path. May be <code>NULL</code>.</p></dd>
 
 
 <dt><code>OutputTables</code></dt>
-<dd><p><code>data.frame</code>.</p></dd>
+<dd><p><code>data.frame</code> corresponding to <code>ForCSOutput</code> (one row,
+four columns: Biomass, DOM_Pools, Fluxes, Summary intervals).</p></dd>
 
 
-<dt><code>SoilSpinupControls</code></dt>
-<dd><p><code>data.frame</code>.</p></dd>
+<dt><code>ForCSMapControl</code></dt>
+<dd><p><code>data.frame</code> (one row, seven columns: <code>BiomassC</code>,
+<code>SDOMC</code>, <code>NBP</code>, <code>NEP</code>, <code>NPP</code>, <code>RH</code>, <code>ToFPS</code> toggles).</p></dd>
+
+
+<dt><code>MapOutputInterval</code></dt>
+<dd><p>Integer. Map output interval (years).</p></dd>
+
+
+<dt><code>SpinUp</code></dt>
+<dd><p><code>data.frame</code> (one row, four columns: On/Off Flag,
+Biomass Spin-up Flag, Tolerance %, Max Iterations).</p></dd>
 
 
 <dt><code>AvailableLightBiomass</code></dt>
@@ -217,7 +268,9 @@ One of <code>"WardSeedDispersal"</code>, <code>"NoDispersal"</code>, <code>"Univ
 
 
 <dt><code>SpeciesParameters</code></dt>
-<dd><p><code>data.frame</code>.</p></dd>
+<dd><p><code>data.frame</code> with 10 columns: <code>Species</code>,
+<code>LeafLong</code>, <code>MortalShape</code>, <code>MerchMinAge</code>, <code>MerchCurveA</code>, <code>MerchCurveB</code>,
+<code>PropNonMerchToFastAG</code>, <code>GrowthShape</code>, <code>ShadeTolerance</code>, <code>FireTolerance</code>.</p></dd>
 
 
 <dt><code>DOMPools</code></dt>

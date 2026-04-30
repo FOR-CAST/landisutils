@@ -13,48 +13,64 @@ simulations, and post-processing their outputs.
 > \[!NOTE\] **This package is a work in progress.** Testing, feedback
 > and help are greatly appreciated!
 
-The following LANDIS-II extensions are currently supported:
+The list of supported LANDIS-II extensions tracks the [official v8
+extension list](https://www.landis-ii.org/extensions). Tables below are
+grouped by extension type and sorted alphabetically; use the file
+outline (top-right on github.com) to jump between sections.
 
-| **LANDIS-II Succession Extension** | **`landisutils` class** |
-|------------------------------------|-------------------------|
-| Biomass Succession                 | `BiomassSuccession`     |
-| Forest Carbon Succession (ForCS)   | `ForCS`                 |
-| NECN Succession                    | *coming soon*           |
-| PnET Succession                    | *coming soon*           |
-| DGS Succession                     | *coming soon*           |
+### Succession extensions
 
-| **LANDIS-II Disturbance Extension**   | **`landisutils` class** |
-|---------------------------------------|-------------------------|
-| Original Fire                         | `OriginalFire`          |
-| Dynamic Biomass Fuels                 | `DynamicFuels`          |
-| Dynamic Fire System                   | `DynamicFire`           |
-| Social-Climate-Fire                   | `SocialClimateFire`     |
-|                                       |                         |
-| Linear Wind                           | *coming soon*           |
-| Original Wind                         | *coming soon*           |
-|                                       |                         |
-| Climate Biological Disturbance Agents | *coming soon*           |
-| Epidemiological Disturbance Agents    | *coming soon*           |
-| Hurricanes                            | *coming soon*           |
-| Land Use Plus                         | *coming soon*           |
-| DGS Succession                        | *coming soon*           |
+| **LANDIS-II extension name** | **`landisutils` class** |
+|----|----|
+| 🌳 [Biomass Succession](https://github.com/LANDIS-II-Foundation/Extension-Biomass-Succession) | `BiomassSuccession` |
+| 🌱 [DGS Succession](https://github.com/LANDIS-II-Foundation/Extension-DGS-Succession) | `DGSSuccession` |
+| ♻️ [Forest Carbon Succession (ForCS)](https://github.com/LANDIS-II-Foundation/Extension-ForCS-Succession) | `ForCS` |
+| 🍂 [NECN Succession](https://github.com/LANDIS-II-Foundation/Extension-NECN-Succession) | `NECNSuccession` |
+| ☀️ [PnET Succession](https://github.com/LANDIS-II-Foundation/Extension-PnET-Succession) | `PnETSuccession` |
 
-| **LANDIS-II Other Extension**    | **`landisutils` class** |
-|----------------------------------|-------------------------|
-| Biomass Output                   | `OutputBiomass`         |
-| Biomass-by-Age Output            | `OutputBiomassByAge`    |
-| Biomass Reclassification Output  | *coming soon*           |
-| Cohort Statistics Output         | `OutputCohortStats`     |
-| Landscape Habitat Output         | *coming soon*           |
-| Local Habitat Suitability Output | *coming soon*           |
-| Maximum Species Age Output       | `OutputMaxSpeciesAge`   |
-| PnET Output                      | *coming soon*           |
+### Disturbance extensions
+
+| **LANDIS-II extension name** | **`landisutils` class** |
+|----|----|
+| 🔥 [BFOLDS Fire](https://www.fire-regime-model.com/BFOLDS%20Fire%20Regime%20Module%20v2.0%20User%20Guide.pdf) | *coming soon* |
+| 🦌 [Biomass Browse](https://github.com/LANDIS-II-Foundation/Extension-Biomass-Browse) | `BiomassBrowse` [^1] |
+| 🪓 [Biomass Harvest](https://github.com/LANDIS-II-Foundation/Extension-Biomass-Harvest) | `BiomassHarvest` |
+| 🪲 [Climate Biological Disturbance Agents](https://github.com/LANDIS-II-Foundation/Extension-Base-BDA) | `ClimateBDA` |
+| 🪵 [Dynamic Biomass Fuel System](https://github.com/LANDIS-II-Foundation/Extension-Dynamic-Biomass-Fuels) | `DynamicFuels` |
+| 🔥 [Dynamic Fire System](https://github.com/LANDIS-II-Foundation/Extension-Dynamic-Fire-System) | `DynamicFire` |
+| 🦠 [Epidemiological Disturbance Agents](https://github.com/LANDIS-II-Foundation/Extension-Base-EDA) | `EDA` |
+| 🌀 [Hurricanes](https://github.com/LANDIS-II-Foundation/Extension-Biomass-Hurricane) | `Hurricane` |
+| 🌪️ [Linear Wind](https://github.com/LANDIS-II-Foundation/Extension-LinearWind) | `LinearWind` |
+| ✨ [Magic Harvest](https://github.com/Klemet/LANDIS-II-Magic-Harvest) | `MagicHarvest` |
+| 🔥 [Original Fire](https://github.com/LANDIS-II-Foundation/Extension-Base-Fire) | `OriginalFire` |
+| 💨 [Original Wind](https://github.com/LANDIS-II-Foundation/Extension-Base-Wind) | `OriginalWind` |
+| 🍄 [Root Rot](https://github.com/LANDIS-II-Foundation/Extension-Root-Rot) | `RootRot` [^2] |
+| 🔥 [Social-Climate Fire](https://github.com/LANDIS-II-Foundation/Extension-Social-Climate-Fire) | `SocialClimateFire` |
+
+### Other extensions
+
+| **LANDIS-II extension name** | **`landisutils` class** |
+|----|----|
+| 🌐 [Biomass Community Output](https://github.com/LANDIS-II-Foundation/Extension-Output-Biomass-Community) | `OutputBiomassCommunity` |
+| 📊 [Biomass Output](https://github.com/LANDIS-II-Foundation/Extension-Output-Biomass) | `OutputBiomass` |
+| 🗂️ [Biomass Reclassification Output](https://github.com/LANDIS-II-Foundation/Extension-Output-Biomass-Reclass) | `OutputBiomassReclass` |
+| 📅 [Biomass-by-Age Output](https://github.com/LANDIS-II-Foundation/Extension-Output-Biomass-By-Age) | `OutputBiomassByAge` |
+| 📈 [Cohort Statistics Output](https://github.com/LANDIS-II-Foundation/Extension-Output-Cohort-Statistics) | `OutputCohortStats` |
+| 📦 [Forest Product Sector](https://github.com/CarenD/Forest_Product_Sector_Module) | *coming soon* |
+| 🛣️ [Forest Road Simulator](https://github.com/Klemet/LANDIS-II-Forest-Roads-Simulation-extension) | `ForestRoadsSimulation` |
+| 🗺️ [Land Use Plus](https://github.com/LANDIS-II-Foundation/Extension-Land-Use-Plus) | `LandUsePlus` |
+| 🏞️ [Landscape Habitat Output](https://github.com/LANDIS-II-Foundation/Extension-Output-Landscape-Habitat) | `OutputLandscapeHabitat` |
+| 🐿️ [Local Habitat Suitability Output](https://github.com/LANDIS-II-Foundation/Extension-Local-Habitat-Suitability-Output) | `OutputLocalHabitat` |
+| 🕰️ [Maximum Species Age Output](https://github.com/LANDIS-II-Foundation/Extension-Output-Max-Species-Age) | `OutputMaxSpeciesAge` |
+| ☀️ [PnET Output](https://github.com/LANDIS-II-Foundation/Extension-Output-Biomass-PnET) | `OutputBiomassPnET` |
+| 🐾 [Wildlife Habitat Output](https://github.com/LANDIS-II-Foundation/Extension-Output-Wildlife-Habitat) | `OutputWildlifeHabitat` |
 
 ## Installation
 
 You can install the development version of `landisutils` like so:
 
 ``` r
+
 remotes::install_github("FOR-CAST/landisutils")
 ```
 
@@ -64,6 +80,7 @@ Use `prep*()` functions to convert input data to LANDIS-II data formats
 or auxiliary config files.
 
 ``` r
+
 ## e.g., to prepare the initial communities .csv and raster files
 init_comm_files <- prepInitialCommunities(cohortData, pixelGroupMap, tmp_pth)
 ```
@@ -78,6 +95,7 @@ configurations, be sure to update the `path` for each configuration to
 ensure they will not be overwritten.
 
 ``` r
+
 ## e.g., to prepare Biomass Succession inputs
 ext_biomass_succession <- BiomassSuccession$new(
   path = tmp_pth,
@@ -102,6 +120,7 @@ Once your configuration is ready to write to disk for use with
 LANDIS-II:
 
 ``` r
+
 ## show files associated with this configuration
 ext_biomass_succession$files
 
@@ -115,6 +134,7 @@ Use `insert*()` functions when generating LANDIS-II input text files
 manually.
 
 ``` r
+
 insertInitialCommunities(init_comm_files)
 ```
 
@@ -125,6 +145,7 @@ Use
 to construct scenario files:
 
 ``` r
+
 ## other extensions can be added to be run once created per above
 scenario(
   cell_length = 250,
@@ -142,3 +163,21 @@ scenario(
 ## Working with simulation outputs
 
 *Coming soon!*
+
+[^1]: Not yet updated by the LANDIS-II developers for LANDIS-II v8; the
+    most recent upstream release targets the v7 core only. The
+    `landisutils` R6 class tracks the latest published input-file schema
+    (Biomass Browse v2.0, Root Rot v1.0), but `$write()`-produced files
+    cannot currently be run through a LANDIS-II v8 console. Constructing
+    one of these objects emits a one-time
+    [`warning()`](https://rdrr.io/r/base/warning.html) to make this
+    explicit.
+
+[^2]: Not yet updated by the LANDIS-II developers for LANDIS-II v8; the
+    most recent upstream release targets the v7 core only. The
+    `landisutils` R6 class tracks the latest published input-file schema
+    (Biomass Browse v2.0, Root Rot v1.0), but `$write()`-produced files
+    cannot currently be run through a LANDIS-II v8 console. Constructing
+    one of these objects emits a one-time
+    [`warning()`](https://rdrr.io/r/base/warning.html) to make this
+    explicit.

@@ -42,3 +42,30 @@ prepUphillAzimuthMap(
 ## Value
 
 Character file path.
+
+## See also
+
+Used by
+[DynamicFire](https://for-cast.github.io/landisutils/reference/DynamicFire.md)
+and
+[SocialClimateFire](https://for-cast.github.io/landisutils/reference/SocialClimateFire.md).
+
+Other Dynamic Fire helpers:
+[`DynamicFire`](https://for-cast.github.io/landisutils/reference/DynamicFire.md),
+[`defaultFuelTypeTable()`](https://for-cast.github.io/landisutils/reference/defaultFuelTypeTable.md),
+[`insertBuildUpIndex()`](https://for-cast.github.io/landisutils/reference/insertBuildUpIndex.md),
+[`insertFireSizesTable()`](https://for-cast.github.io/landisutils/reference/insertFireSizesTable.md),
+[`insertFuelTypeTable()`](https://for-cast.github.io/landisutils/reference/insertFuelTypeTable.md),
+[`insertGroundSlopeFile()`](https://for-cast.github.io/landisutils/reference/insertGroundSlopeFile.md),
+[`insertSeasonTable()`](https://for-cast.github.io/landisutils/reference/insertSeasonTable.md),
+[`insertUphillSlopeAzimuthMap()`](https://for-cast.github.io/landisutils/reference/insertUphillSlopeAzimuthMap.md),
+[`prepDynamicEcoregionTable()`](https://for-cast.github.io/landisutils/reference/prepDynamicEcoregionTable.md),
+[`prepDynamicWeatherTable()`](https://for-cast.github.io/landisutils/reference/prepDynamicWeatherTable.md),
+[`prepFireSizesTable()`](https://for-cast.github.io/landisutils/reference/prepFireSizesTable.md),
+[`prepInitialWeatherDatabase()`](https://for-cast.github.io/landisutils/reference/prepInitialWeatherDatabase.md)
+
+Other Social Climate Fire helpers:
+[`SocialClimateFire`](https://for-cast.github.io/landisutils/reference/SocialClimateFire.md),
+[`insertDeadWoodTable()`](https://for-cast.github.io/landisutils/reference/insertDeadWoodTable.md),
+[`insertLadderFuelSpeciesList()`](https://for-cast.github.io/landisutils/reference/insertLadderFuelSpeciesList.md),
+[`prepSuppression_CSV_File()`](https://for-cast.github.io/landisutils/reference/prepSuppression_CSV_File.md)

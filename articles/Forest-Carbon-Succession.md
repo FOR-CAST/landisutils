@@ -1,6 +1,7 @@
 # Preparing Forest Carbon Succession (ForCS) Inputs
 
 ``` r
+
 library(landisutils)
 
 tmp_pth <- withr::local_tempdir("example_ForCS_")
@@ -8,7 +9,15 @@ tmp_pth <- withr::local_tempdir("example_ForCS_")
 
 ## Sample extension inputs
 
+The `ForCS` R6 class targets the **v4.0.2 schema** (LANDIS-II v8 core).
+Sample values below are taken verbatim from the upstream v8 test
+scenario and the v4.0.2 user guide:
+
+- <https://github.com/LANDIS-II-Foundation/Extension-ForCS-Succession/blob/master/testing/v8%20Scenario/FORC-successionv4simpleroots.txt>
+- <https://github.com/LANDIS-II-Foundation/Extension-ForCS-Succession/blob/master/deploy/installer/LANDIS-II%20CForC%20Succession%20v4.0.2%20User%20Guide%20September%202025.pdf>
+
 ``` r
+
 clim_df <- tibble::tribble(
   ~year , ~ecoregion , ~avg_temp ,
       0 , "eco1"     , 5         ,
@@ -107,13 +116,17 @@ disturb_other_biomass = tibble::tribble(
 
 snags <- tibble::tribble(
   ~species   , ~age_at_death , ~time_since_death , ~cause  ,
-  "querelli" ,            53 ,                 5 , "other" ,
-  "pinubank" ,            88 ,                12 , "bda"
+  "querelli" ,            40 ,                 1 , "other" ,
+  "pinubank" ,            88 ,                12 , "wind"
 )
 
 output_tables <- data.frame(Biomass = 1, DOM_Pools = 1, Fluxes = 1, Summary = 1)
 
-soil_spinup <- data.frame(Flag = 1, Tolerance = 1.0, MaxIter = 20)
+for_cs_map_control <- data.frame(
+  BiomassC = 1, SDOMC = 1, NBP = 1, NEP = 1, NPP = 1, RH = 1, ToFPS = 1
+)
+
+spin_up <- data.frame(Flag = 1, BiomassSpinUpFlag = 1, Tolerance = 1.0, MaxIter = 20)
 
 avail_light_biomass <- data.frame(
   Class = 1L:5L,
@@ -123,18 +136,19 @@ avail_light_biomass <- data.frame(
 
 light_est <- data.frame(
   class = 1L:5L,
-  X0 = c(1.0, 0.5, 0.2, 0.1, 0.1),
-  X1 = c(0.5, 1.0, 0.2, 0.1, 0.5),
-  X2 = c(0.0, 0.5, 1.0, 0.2, 0.2),
-  X3 = c(0.0, 0.0, 0.5, 1.0, 0.2),
-  X4 = c(0.0, 0.0, 0.0, 0.5, 1.0),
-  X5 = c(0.0, 0.0, 0.0, 0.5, 1.0)
+  X0 = c(1.0, 0.5, 0.0, 0.0, 0.0),
+  X1 = c(0.0, 1.0, 0.5, 0.0, 0.0),
+  X2 = c(0.0, 0.0, 1.0, 0.5, 0.0),
+  X3 = c(0.0, 0.0, 0.5, 1.0, 0.5),
+  X4 = c(0.0, 0.0, 0.0, 0.0, 1.0),
+  X5 = c(0.0, 0.0, 0.0, 0.0, 0.5)
 )
 
+## v4.0.2 schema: 10 columns (adds ShadeTolerance + FireTolerance)
 species_params <- tibble::tribble(
-  ~species   , ~leaf_long , ~mort_shp , ~min_age_merch , ~merch_shp_a , ~merch_shp_b , ~nonmerch_biomass_soil , ~growth_shp ,
-  "pinubank" , 3.0        ,        10 ,             10 , 0.7546       , 0.983        , 0.25                   , 0.25        ,
-  "querelli" , 1.0        ,        10 ,             30 , 0.7546       , 0.983        , 0.25                   , 0.25
+  ~species   , ~leaf_long , ~mort_shp , ~merch_min_age , ~merch_a , ~merch_b , ~prop_non_merch , ~growth_shp , ~shade_tol , ~fire_tol ,
+  "pinubank" , 3.0        ,        10 ,              5 , 0.7546   , 0.983    , 0.25            , 0.9         ,         1L ,        2L ,
+  "querelli" , 1.0        ,        10 ,              5 , 0.7546   , 0.983    , 0.25            , 0.9         ,         2L ,        4L
 )
 
 dom_pools <- tibble::tribble(
@@ -144,56 +158,47 @@ dom_pools <- tibble::tribble(
     3 , "Fast Aboveground"      , 0.83                ,
     4 , "Fast Belowground"      , 0.83                ,
     5 , "Medium"                , 0.83                ,
-    6 , "Slow Aboveground"      , 1                   ,
-    7 , "Slow Belowground"      , 1                   ,
+    6 , "Slow Aboveground"      , 0.83                ,
+    7 , "Slow Belowground"      , 0.83                ,
     8 , "Stem Snag"             , 0.83                ,
     9 , "Other Snag"            , 0.83                ,
    10 , "Extra pool"            , 0.83
 )
 
-ecosppdom_params <- tibble::tribble(
-  ~ecoregion , ~species   , ~dom_pool , ~decay_rate , ~amt_t0 , ~q10_ref_temp_10c ,
-  "eco1"     , "pinubank" ,         1 , 0.355       ,   53.04 , 2.65              ,
-  "eco1"     , "pinubank" ,         2 , 0.5         ,  295.4  , 2                 ,
-  "eco1"     , "pinubank" ,         3 , 0.1435      , 1395.49 , 2                 ,
-  "eco1"     , "pinubank" ,         4 , 0.0374      , 1360.62 , 2                 ,
-  "eco1"     , "pinubank" ,         5 , 0.015       ,  863.88 , 2                 ,
-  "eco1"     , "pinubank" ,         6 , 0.0033      , 1656.13 , 2.65              ,
-  "eco1"     , "pinubank" ,         7 , 0.0187      , 8451.22 , 2                 ,
-  "eco1"     , "pinubank" ,         8 , 0.07175     , 7466.54 , 2                 ,
-  "eco1"     , "pinubank" ,         9 , 0.07        , 2036.14 , 2                 ,
-  "eco1"     , "pinubank" ,        10 , 0           ,    0    , 2                 ,
-  "eco2"     , "pinubank" ,         1 , 0.355       ,   53.04 , 2.65              ,
-  "eco2"     , "pinubank" ,         2 , 0.5         ,  295.4  , 2                 ,
-  "eco2"     , "pinubank" ,         3 , 0.1435      , 1395.49 , 2                 ,
-  "eco2"     , "pinubank" ,         4 , 0.0374      , 1360.62 , 2                 ,
-  "eco2"     , "pinubank" ,         5 , 0.015       ,  863.88 , 2                 ,
-  "eco2"     , "pinubank" ,         6 , 0.0033      , 1656.13 , 2.65              ,
-  "eco2"     , "pinubank" ,         7 , 0.0187      , 8451.22 , 2                 ,
-  "eco2"     , "pinubank" ,         8 , 0.07175     , 7466.54 , 2                 ,
-  "eco2"     , "pinubank" ,         9 , 0.07        , 2036.14 , 2                 ,
-  "eco2"     , "pinubank" ,        10 , 0           ,    0    , 2                 ,
-  "eco1"     , "querelli" ,         1 , 0.355       ,   53.04 , 2.65              ,
-  "eco1"     , "querelli" ,         2 , 0.5         ,  295.4  , 2                 ,
-  "eco1"     , "querelli" ,         3 , 0.1435      , 1395.49 , 2                 ,
-  "eco1"     , "querelli" ,         4 , 0.0374      , 1360.62 , 2                 ,
-  "eco1"     , "querelli" ,         5 , 0.015       ,  863.88 , 2                 ,
-  "eco1"     , "querelli" ,         6 , 0.0033      , 1656.13 , 2.65              ,
-  "eco1"     , "querelli" ,         7 , 0.0187      , 8451.22 , 2                 ,
-  "eco1"     , "querelli" ,         8 , 0.07175     , 7466.54 , 2                 ,
-  "eco1"     , "querelli" ,         9 , 0.07        , 2036.14 , 2                 ,
-  "eco1"     , "querelli" ,        10 , 0           ,    0    , 2                 ,
-  "eco2"     , "querelli" ,         1 , 0.355       ,   53.04 , 2.65              ,
-  "eco2"     , "querelli" ,         2 , 0.5         ,  295.4  , 2                 ,
-  "eco2"     , "querelli" ,         3 , 0.1435      , 1395.49 , 2                 ,
-  "eco2"     , "querelli" ,         4 , 0.0374      , 1360.62 , 2                 ,
-  "eco2"     , "querelli" ,         5 , 0.015       ,  863.88 , 2                 ,
-  "eco2"     , "querelli" ,         6 , 0.0033      , 1656.13 , 2.65              ,
-  "eco2"     , "querelli" ,         7 , 0.0187      , 8451.22 , 2                 ,
-  "eco2"     , "querelli" ,         8 , 0.07175     , 7466.54 , 2                 ,
-  "eco2"     , "querelli" ,         9 , 0.07        , 2036.14 , 2                 ,
-  "eco2"     , "querelli" ,        10 , 0           ,    0    , 2
+## EcoSppDOMParameters: per-pool decay parameters (v4.0.2 user guide §3 sample)
+ecosppdom_pinubank <- tibble::tribble(
+  ~dom_pool , ~decay_rate , ~amt_t0 , ~q10 ,
+          1 , 0.355       ,    1.49 , 2.65 ,
+          2 , 0.5         ,    0.07 , 2    ,
+          3 , 0.1435      ,  158.48 , 2    ,
+          4 , 0.0374      ,  288.71 , 2    ,
+          5 , 0.015       , 1349.40 , 2    ,
+          6 , 0.0033      , 1927.71 , 2    ,
+          7 , 0.0187      ,  851.21 , 2    ,
+          8 , 0.07175     ,  314.88 , 2    ,
+          9 , 0.07        ,   45.53 , 2    ,
+         10 , 0           ,    0.00 , 2
 )
+ecosppdom_querelli <- tibble::tribble(
+  ~dom_pool , ~decay_rate , ~amt_t0 , ~q10 ,
+          1 , 0.355       ,    0.34 , 2.65 ,
+          2 , 0.5         ,    0.02 , 2    ,
+          3 , 0.1435      ,    5.15 , 2    ,
+          4 , 0.0374      ,  143.23 , 2    ,
+          5 , 0.015       , 2476.27 , 2    ,
+          6 , 0.0033      , 4075.40 , 2    ,
+          7 , 0.0187      , 2339.42 , 2    ,
+          8 , 0.07175     ,    7.45 , 2    ,
+          9 , 0.07        ,    1.97 , 2    ,
+         10 , 0           ,    0.00 , 2
+)
+ecosppdom_params <- dplyr::bind_rows(
+  dplyr::mutate(ecosppdom_pinubank, ecoregion = "eco1", species = "pinubank"),
+  dplyr::mutate(ecosppdom_pinubank, ecoregion = "eco2", species = "pinubank"),
+  dplyr::mutate(ecosppdom_querelli, ecoregion = "eco1", species = "querelli"),
+  dplyr::mutate(ecosppdom_querelli, ecoregion = "eco2", species = "querelli")
+) |>
+  dplyr::select(ecoregion, species, dom_pool, decay_rate, amt_t0, q10)
 
 forcs_props <- data.frame(
   BiomassFine = 0.5,
@@ -205,10 +210,10 @@ forcs_props <- data.frame(
 
 anpp_timeseries <- tibble::tribble(
   ~year , ~ecoregion , ~species   , ~anpp , ~anpp_std ,
-      0 , "eco1"     , "pinubank" ,   648 ,         0 ,
-      0 , "eco1"     , "querelli" ,  1415 ,         0 ,
-      0 , "eco2"     , "pinubank" ,   648 ,         0 ,
-      0 , "eco2"     , "querelli" ,  1415 ,         0
+      0 , "eco1"     , "pinubank" ,   648 ,       0.1 ,
+      0 , "eco1"     , "querelli" ,  1415 ,       0.1 ,
+      0 , "eco2"     , "pinubank" ,   648 ,       0.1 ,
+      0 , "eco2"     , "querelli" ,  1415 ,       0.1
 )
 
 maxb_timeseries <- tibble::tribble(
@@ -227,20 +232,20 @@ est_prob <- tibble::tribble(
       0 , "eco2"     , "querelli" , 0.1
 )
 
+## "simpleroots" variant: one row per (ecoregion, species), MinABio = 0
 root_dynamics <- tibble::tribble(
   ~ecoregion , ~species   , ~min_abio , ~root_abio , ~prop_fine_rt , ~fr_turnover , ~cr_turnover ,
-  "eco1"     , "pinubank" ,         0 , 0.403      , 0.18          , 0.6          , 0.02         ,
-  "eco1"     , "pinubank" ,      5000 , 0.292      , 0.1           , 0.6          , 0.02         ,
+  "eco1"     , "pinubank" ,         0 , 0.399      , 0.18          , 0.6          , 0.02         ,
   "eco1"     , "querelli" ,         0 , 0.403      , 0.18          , 1            , 0.02         ,
-  "eco2"     , "pinubank" ,         0 , 0.433      , 0.18          , 0.6          , 0.02         ,
-  "eco2"     , "querelli" ,         0 , 0.403      , 0.18          , 1            , 0.02         ,
-  "eco2"     , "querelli" ,      5000 , 0.292      , 0.1           , 0.6          , 0.02
+  "eco2"     , "pinubank" ,         0 , 0.399      , 0.18          , 0.6          , 0.02         ,
+  "eco2"     , "querelli" ,         0 , 0.403      , 0.18          , 1            , 0.02
 )
 ```
 
 ## Extension configuration
 
 ``` r
+
 ## write the climate file
 clim_file <- prepClimateFile(
   df = clim_df,
@@ -277,12 +282,14 @@ ext_forcs <- ForCS$new(
   path = tmp_pth,
   Timestep = 1,
   SeedingAlgorithm = "WardSeedDispersal",
-  ClimateFile = clim_file,
+  ForCSClimateFile = clim_file,
   InitialCommunitiesFiles = init_comm_files,
   DisturbanceMatrixFile = dm_file,
   SnagFile = snag_file,
   OutputTables = output_tables,
-  SoilSpinupControls = soil_spinup,
+  ForCSMapControl = for_cs_map_control,
+  MapOutputInterval = 1,
+  SpinUp = spin_up,
   AvailableLightBiomass = avail_light_biomass,
   LightEstablishmentTable = light_est,
   SpeciesParameters = species_params,
@@ -302,23 +309,26 @@ ext_forcs$write()
 ## Verify configuration files
 
 ``` r
+
 readLines(file.path(tmp_pth, ext_forcs$files[1])) |>
   cat(sep = "\n")
-#> >> generated by `landisutils` (v0.0.2) on Wed Mar 18 17:26:34 2026
+#> >> generated by `landisutils` (v0.0.3) on Thu Apr 30 20:53:08 2026
 #> >> do not edit by hand; manual changes to this file may be overwritten
 #> 
 #> LandisData  "ForC Succession"
 #> 
 #> Timestep    1
 #> 
-#> ClimateFile    "ForCS_climate.txt"
+#> SeedingAlgorithm    WardSeedDispersal
 #> 
-#> InitialCommunities    "initial-communities.txt"
-#> InitialCommunitiesMap    "initial-communities.gis"
+#> ForCSClimateFile    ForCS_climate.txt
 #> 
-#> DisturbanceMatrixFile    "ForCS_DM.txt"
+#> InitialCommunities    initial-communities.txt
+#> InitialCommunitiesMap    initial-communities.gis
 #> 
-#> SnagFile    "ForCS_snags.txt"
+#> DisturbanceMatrixFile    ForCS_DM.txt
+#> 
+#> SnagFile    ForCS_snags.txt
 #> 
 #> ForCSOutput
 #> >> Output interval
@@ -326,10 +336,19 @@ readLines(file.path(tmp_pth, ext_forcs$files[1])) |>
 #> >> -----------------------------------
 #>     1        1        1        1
 #> 
-#> SoilSpinup
-#> >>  On/Off  Tolerance  Max
-#> >>  Flag    %          Iterations
-#> 1  1  20
+#> ForCSMapControl
+#> >>  BiomassC  SDOMC  NBP  NEP  NPP  RH  ToFPS
+#> >>  -----------------------------------------
+#> 1  1  1  1  1  1  1
+#> 
+#> MapOutputInterval    1
+#> 
+#> SpinUp
+#> >>  On/Off  Biomass    Tolerance  Max
+#> >>  Flag    Spin-up    %          Iterations
+#> >>          Flag
+#> >>  ----------------------------------------
+#> 1  1  1  20
 #> 
 #> AvailableLightBiomass
 #> >>  Shade
@@ -346,19 +365,19 @@ readLines(file.path(tmp_pth, ext_forcs$files[1])) |>
 #> >>  Class            by Actual Shade
 #> >>  ----------------------------------
 #> >>        0    1    2    3    4    5
-#>    1            1.00  0.50  0.00  0.00  0.00  0.00
-#>    2            0.50  1.00  0.50  0.00  0.00  0.00
-#>    3            0.20  0.20  1.00  0.50  0.00  0.00
-#>    4            0.10  0.10  0.20  1.00  0.50  0.50
-#>    5            0.10  0.50  0.20  0.20  1.00  1.00
+#>    1            1.00  0.00  0.00  0.00  0.00  0.00
+#>    2            0.50  1.00  0.00  0.00  0.00  0.00
+#>    3            0.00  0.50  1.00  0.50  0.00  0.00
+#>    4            0.00  0.00  0.50  1.00  0.00  0.00
+#>    5            0.00  0.00  0.00  0.50  1.00  0.50
 #> 
 #> SpeciesParameters
-#> >>  Species  Leaf  Mortal  Merchant  Merch    Merch     Prop       Growth
-#> >>           Long  Shape   Stems     Shape    Shape     Non-merch  Shape
+#> >>  Species  Leaf  Mortal  Merchant  Merch    Merch     Prop       Growth  Shade      Fire
+#> >>           Long  Shape   Stems     Shape    Shape     Non-merch  Shape   Tolerance  Tolerance
 #> >>                 Param   Min Age   Param a  Param b   to FastAG  Param
-#> >>  ---------------------------------------------------------------------
-#> pinubank  3  10  10  0.7546  0.983  0.25  0.25
-#> querelli  1  10  30  0.7546  0.983  0.25  0.25
+#> >>  ----------------------------------------------------------------------------------------
+#> pinubank  3  10  5  0.7546  0.983  0.25  0.9  1  2
+#> querelli  1  10  5  0.7546  0.983  0.25  0.9  2  4
 #> 
 #> DOMPools
 #> >>  ID    Name            Proportion to
@@ -369,8 +388,8 @@ readLines(file.path(tmp_pth, ext_forcs$files[1])) |>
 #>  3  Fast Aboveground  0.830
 #>  4  Fast Belowground  0.830
 #>  5  Medium  0.830
-#>  6  Slow Aboveground  1.000
-#>  7  Slow Belowground  1.000
+#>  6  Slow Aboveground  0.830
+#>  7  Slow Belowground  0.830
 #>  8  Stem Snag  0.830
 #>  9  Other Snag  0.830
 #> 10  Extra pool  0.830
@@ -379,45 +398,45 @@ readLines(file.path(tmp_pth, ext_forcs$files[1])) |>
 #> >>  Ecoregion  Species  DOM   Decay  Amount  Q10 Ref
 #> >>                      Pool  Rate   at T0   Temp 10C
 #> >>  -------------------------------------------------
-#> eco1  pinubank   1  0.35500    53.04  2.65
-#> eco1  pinubank   2  0.50000   295.40  2.00
-#> eco1  pinubank   3  0.14350  1395.49  2.00
-#> eco1  pinubank   4  0.03740  1360.62  2.00
-#> eco1  pinubank   5  0.01500   863.88  2.00
-#> eco1  pinubank   6  0.00330  1656.13  2.65
-#> eco1  pinubank   7  0.01870  8451.22  2.00
-#> eco1  pinubank   8  0.07175  7466.54  2.00
-#> eco1  pinubank   9  0.07000  2036.14  2.00
+#> eco1  pinubank   1  0.35500     1.49  2.65
+#> eco1  pinubank   2  0.50000     0.07  2.00
+#> eco1  pinubank   3  0.14350   158.48  2.00
+#> eco1  pinubank   4  0.03740   288.71  2.00
+#> eco1  pinubank   5  0.01500  1349.40  2.00
+#> eco1  pinubank   6  0.00330  1927.71  2.00
+#> eco1  pinubank   7  0.01870   851.21  2.00
+#> eco1  pinubank   8  0.07175   314.88  2.00
+#> eco1  pinubank   9  0.07000    45.53  2.00
 #> eco1  pinubank  10  0.00000     0.00  2.00
-#> eco2  pinubank   1  0.35500    53.04  2.65
-#> eco2  pinubank   2  0.50000   295.40  2.00
-#> eco2  pinubank   3  0.14350  1395.49  2.00
-#> eco2  pinubank   4  0.03740  1360.62  2.00
-#> eco2  pinubank   5  0.01500   863.88  2.00
-#> eco2  pinubank   6  0.00330  1656.13  2.65
-#> eco2  pinubank   7  0.01870  8451.22  2.00
-#> eco2  pinubank   8  0.07175  7466.54  2.00
-#> eco2  pinubank   9  0.07000  2036.14  2.00
+#> eco2  pinubank   1  0.35500     1.49  2.65
+#> eco2  pinubank   2  0.50000     0.07  2.00
+#> eco2  pinubank   3  0.14350   158.48  2.00
+#> eco2  pinubank   4  0.03740   288.71  2.00
+#> eco2  pinubank   5  0.01500  1349.40  2.00
+#> eco2  pinubank   6  0.00330  1927.71  2.00
+#> eco2  pinubank   7  0.01870   851.21  2.00
+#> eco2  pinubank   8  0.07175   314.88  2.00
+#> eco2  pinubank   9  0.07000    45.53  2.00
 #> eco2  pinubank  10  0.00000     0.00  2.00
-#> eco1  querelli   1  0.35500    53.04  2.65
-#> eco1  querelli   2  0.50000   295.40  2.00
-#> eco1  querelli   3  0.14350  1395.49  2.00
-#> eco1  querelli   4  0.03740  1360.62  2.00
-#> eco1  querelli   5  0.01500   863.88  2.00
-#> eco1  querelli   6  0.00330  1656.13  2.65
-#> eco1  querelli   7  0.01870  8451.22  2.00
-#> eco1  querelli   8  0.07175  7466.54  2.00
-#> eco1  querelli   9  0.07000  2036.14  2.00
+#> eco1  querelli   1  0.35500     0.34  2.65
+#> eco1  querelli   2  0.50000     0.02  2.00
+#> eco1  querelli   3  0.14350     5.15  2.00
+#> eco1  querelli   4  0.03740   143.23  2.00
+#> eco1  querelli   5  0.01500  2476.27  2.00
+#> eco1  querelli   6  0.00330  4075.40  2.00
+#> eco1  querelli   7  0.01870  2339.42  2.00
+#> eco1  querelli   8  0.07175     7.45  2.00
+#> eco1  querelli   9  0.07000     1.97  2.00
 #> eco1  querelli  10  0.00000     0.00  2.00
-#> eco2  querelli   1  0.35500    53.04  2.65
-#> eco2  querelli   2  0.50000   295.40  2.00
-#> eco2  querelli   3  0.14350  1395.49  2.00
-#> eco2  querelli   4  0.03740  1360.62  2.00
-#> eco2  querelli   5  0.01500   863.88  2.00
-#> eco2  querelli   6  0.00330  1656.13  2.65
-#> eco2  querelli   7  0.01870  8451.22  2.00
-#> eco2  querelli   8  0.07175  7466.54  2.00
-#> eco2  querelli   9  0.07000  2036.14  2.00
+#> eco2  querelli   1  0.35500     0.34  2.65
+#> eco2  querelli   2  0.50000     0.02  2.00
+#> eco2  querelli   3  0.14350     5.15  2.00
+#> eco2  querelli   4  0.03740   143.23  2.00
+#> eco2  querelli   5  0.01500  2476.27  2.00
+#> eco2  querelli   6  0.00330  4075.40  2.00
+#> eco2  querelli   7  0.01870  2339.42  2.00
+#> eco2  querelli   8  0.07175     7.45  2.00
+#> eco2  querelli   9  0.07000     1.97  2.00
 #> eco2  querelli  10  0.00000     0.00  2.00
 #> 
 #> ForCSProportions
@@ -431,10 +450,10 @@ readLines(file.path(tmp_pth, ext_forcs$files[1])) |>
 #> >>  Year  Ecoregion  Species  ANPP       ANPP-std
 #> >>                            (g/m2/yr)
 #> >>  ---------------------------------------------
-#> 0  eco1  pinubank   648  0
-#> 0  eco1  querelli  1415  0
-#> 0  eco2  pinubank   648  0
-#> 0  eco2  querelli  1415  0
+#> 0  eco1  pinubank   648  0.1
+#> 0  eco1  querelli  1415  0.1
+#> 0  eco2  pinubank   648  0.1
+#> 0  eco2  querelli  1415  0.1
 #> 
 #> MaxBiomassTimeSeries
 #> >>  Year  Ecoregion  Species  Max Biomass (g/m2)
@@ -456,18 +475,17 @@ readLines(file.path(tmp_pth, ext_forcs$files[1])) |>
 #> >>  Ecoregion  Species  MinABio  Root  PropFineRt  Frturnover  Crturnover
 #> >>                      (g/m2)   Abio
 #> >>  ---------------------------------------------------------------------
-#> eco1  pinubank     0  0.403  0.18  0.6  0.02
-#> eco1  pinubank  5000  0.292  0.10  0.6  0.02
-#> eco1  querelli     0  0.403  0.18  1.0  0.02
-#> eco2  pinubank     0  0.433  0.18  0.6  0.02
-#> eco2  querelli     0  0.403  0.18  1.0  0.02
-#> eco2  querelli  5000  0.292  0.10  0.6  0.02
+#> eco1  pinubank  0  0.399  0.18  0.6  0.02
+#> eco1  querelli  0  0.403  0.18  1.0  0.02
+#> eco2  pinubank  0  0.399  0.18  0.6  0.02
+#> eco2  querelli  0  0.403  0.18  1.0  0.02
 ```
 
 ``` r
+
 readLines(file.path(tmp_pth, ext_forcs$files[2])) |>
   cat(sep = "\n")
-#> >> generated by `landisutils` (v0.0.2) on Wed Mar 18 17:26:34 2026
+#> >> generated by `landisutils` (v0.0.3) on Thu Apr 30 20:53:08 2026
 #> >> do not edit by hand; manual changes to this file may be overwritten
 #> 
 #> LandisData  "ForC Succession"
@@ -490,9 +508,10 @@ readLines(file.path(tmp_pth, ext_forcs$files[2])) |>
 *skip initial communities files*
 
 ``` r
+
 readLines(file.path(tmp_pth, ext_forcs$files[5])) |>
   cat(sep = "\n")
-#> >> generated by `landisutils` (v0.0.2) on Wed Mar 18 17:26:34 2026
+#> >> generated by `landisutils` (v0.0.3) on Thu Apr 30 20:53:08 2026
 #> >> do not edit by hand; manual changes to this file may be overwritten
 #> 
 #> LandisData  "ForC Succession"
@@ -588,9 +607,10 @@ readLines(file.path(tmp_pth, ext_forcs$files[5])) |>
 ```
 
 ``` r
+
 readLines(file.path(tmp_pth, ext_forcs$files[6])) |>
   cat(sep = "\n")
-#> >> generated by `landisutils` (v0.0.2) on Wed Mar 18 17:26:34 2026
+#> >> generated by `landisutils` (v0.0.3) on Thu Apr 30 20:53:08 2026
 #> >> do not edit by hand; manual changes to this file may be overwritten
 #> 
 #> LandisData  "ForC Succession"
@@ -599,13 +619,14 @@ readLines(file.path(tmp_pth, ext_forcs$files[6])) |>
 #> SnagData
 #> >> Species  AgeAtDeath  TimeSinceDeath  Cause
 #> >> ------------------------------------------
-#> querelli  53   5  other
-#> pinubank  88  12  bda
+#> querelli  40   1  other
+#> pinubank  88  12  wind
 ```
 
 ## Cleanup
 
 ``` r
+
 withr::deferred_run()
 #> Ran 1/1 deferred expressions
 ```

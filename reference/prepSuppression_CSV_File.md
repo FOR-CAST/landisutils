@@ -26,3 +26,11 @@ prepSuppression_CSV_File(df, path, filename = "suppression.csv")
 
 Character string(s) specifying suitable LANDIS-II input file(s), created
 as a side effect of the function.
+
+## See also
+
+Other Social Climate Fire helpers:
+[`SocialClimateFire`](https://for-cast.github.io/landisutils/reference/SocialClimateFire.md),
+[`insertDeadWoodTable()`](https://for-cast.github.io/landisutils/reference/insertDeadWoodTable.md),
+[`insertLadderFuelSpeciesList()`](https://for-cast.github.io/landisutils/reference/insertLadderFuelSpeciesList.md),
+[`prepTopographyFile()`](https://for-cast.github.io/landisutils/reference/prepTopographyFile.md)

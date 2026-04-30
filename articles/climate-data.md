@@ -1,12 +1,14 @@
 # Preparing Climate Data for Use With LANDIS-II
 
 ``` r
+
 library(landisutils)
 ```
 
 ## Define a ‘study area’ or ‘area of interest’
 
 ``` r
+
 ## random study area in BC using BEC zones as ecoregions
 ecoregionPolys <- landisutils::test_ecoregionPolys
 
@@ -16,6 +18,7 @@ plot(ecoregionPolys["PolyID"])
 ## Historical weather data
 
 ``` r
+
 clim_years <- 2018:2019 ## availability is 1980 to last year
 
 clim_data_path <- withr::local_tempdir("climate_data_")
@@ -24,6 +27,7 @@ clim_data_path <- withr::local_tempdir("climate_data_")
 ### BioSIM
 
 ``` r
+
 climvars <- c(
   ## BioSIM::getModelHelp("ClimaticEx_Daily")
   "Prcp", "SRad", "RelH", "Tair", "Tmax", "Tmin", "WndD", "WndS",
@@ -57,6 +61,7 @@ BioSIM::generateWeather(
 ### Daily Climate Data (Daymet)
 
 ``` r
+
 climvars_daily <- c("prcp", "tmax", "tmin")
 
 daily_weather <- prep_daily_weather(
@@ -77,6 +82,7 @@ writeClimateData(daily_weather, clim_file)
 As above, we can get monthly data using the following recipe:
 
 ``` r
+
 climvars_monthly <- c("ppt", "tmax", "tmin")
 
 monthly_weather <- prep_monthly_weather(
@@ -92,10 +98,11 @@ clim_file <- file.path(clim_data_path, "climate-data-monthly.csv")
 writeClimateData(monthly_weather, clim_file)
 ```
 
-We can also use this recipe to get monthly AET data to prepare the
+We can also use this recipe to get monthly `AET` data to prepare the
 `EcoregionParameters` table:
 
 ``` r
+
 aet_df <- prep_monthly_weather(
   vars = "aet",
   years = clim_years,
@@ -116,5 +123,6 @@ See
 <https://mikejohnson51.github.io/climateR/articles/intro.html#climate-projections>
 
 ``` r
+
 ## TODO
 ```
