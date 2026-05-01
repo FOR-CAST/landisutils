@@ -9,7 +9,7 @@ Social-Climate-Fire Extension"></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.3</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -98,7 +98,7 @@ variable social-ecological fire regimes. Ecological Modelling, 401, 85–93.
 <dd><p>Character. Relative file path.</p></dd>
 
 
-<dt><code>DynamicLightningIgnitionsMaps</code></dt>
+<dt><code>DynamicLightningIgnitionMaps</code></dt>
 <dd><p>(Optional) <code>data.frame</code> with columns <code>Year</code> and <code>FileName</code>.</p></dd>
 
 
@@ -106,7 +106,7 @@ variable social-ecological fire regimes. Ecological Modelling, 401, 85–93.
 <dd><p>Character. Relative file path.</p></dd>
 
 
-<dt><code>DynamicRxIgnitionsMaps</code></dt>
+<dt><code>DynamicRxIgnitionMaps</code></dt>
 <dd><p>(Optional) <code>data.frame</code> with columns <code>Year</code> and <code>FileName</code>.</p></dd>
 
 
@@ -126,7 +126,7 @@ variable social-ecological fire regimes. Ecological Modelling, 401, 85–93.
 <dd><p>(Optional) <code>data.frame</code> with columns <code>Year</code> and <code>FileName</code>.</p></dd>
 
 
-<dt><code>GroundSlopeFile</code></dt>
+<dt><code>GroundSlopeMap</code></dt>
 <dd><p>Character. Relative file path.</p></dd>
 
 
@@ -182,7 +182,7 @@ variable social-ecological fire regimes. Ecological Modelling, 401, 85–93.
 <dd><p>(Optional) Real. Minimum relative humidity for prescribed fires.</p></dd>
 
 
-<dt><code>MaximumRXFireIntensity</code></dt>
+<dt><code>MaximumRxFireIntensity</code></dt>
 <dd><p>Integer. Maximum allowable fire intensity for prescribed fires.</p></dd>
 
 
@@ -272,14 +272,14 @@ variable social-ecological fire regimes. Ecological Modelling, 401, 85–93.
 <span>  AccidentalIgnitionsMap <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  DynamicAccidentalIgnitionMaps <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  LightningIgnitionsMap <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  DynamicLightningIgnitionsMaps <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  DynamicLightningIgnitionMaps <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  RxIgnitionsMap <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  DynamicRxIgnitionsMaps <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  DynamicRxIgnitionMaps <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  AccidentalSuppressionMap <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  LightningSuppressionMap <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  RxSuppressionMap <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  DynamicAccidentalSuppressionMaps <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  GroundSlopeFile <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  GroundSlopeMap <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  UphillSlopeAzimuthMap <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  ClayMap <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  LightningIgnitionsCoeffs <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -293,7 +293,7 @@ variable social-ecological fire regimes. Ecological Modelling, 401, 85–93.
 <span>  MinimumRxFireWeatherIndex <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  MaximumRxTemperature <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  MinimumRxRelativeHumidity <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  MaximumRXFireIntensity <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  MaximumRxFireIntensity <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  NumberRxAnnualFires <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  NumberRxDailyFires <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  FirstDayRxFires <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -346,7 +346,7 @@ variable social-ecological fire regimes. Ecological Modelling, 401, 85–93.
 <dd><p>Character. Relative file path.</p></dd>
 
 
-<dt><code>DynamicLightningIgnitionsMaps</code></dt>
+<dt><code>DynamicLightningIgnitionMaps</code></dt>
 <dd><p>(Optional) <code>data.frame</code>.</p></dd>
 
 
@@ -354,7 +354,7 @@ variable social-ecological fire regimes. Ecological Modelling, 401, 85–93.
 <dd><p>Character. Relative file path.</p></dd>
 
 
-<dt><code>DynamicRxIgnitionsMaps</code></dt>
+<dt><code>DynamicRxIgnitionMaps</code></dt>
 <dd><p>(Optional) <code>data.frame</code>.</p></dd>
 
 
@@ -374,7 +374,7 @@ variable social-ecological fire regimes. Ecological Modelling, 401, 85–93.
 <dd><p>(Optional) <code>data.frame</code>.</p></dd>
 
 
-<dt><code>GroundSlopeFile</code></dt>
+<dt><code>GroundSlopeMap</code></dt>
 <dd><p>Character. Relative file path.</p></dd>
 
 
@@ -430,7 +430,7 @@ variable social-ecological fire regimes. Ecological Modelling, 401, 85–93.
 <dd><p>(Optional) Real. Minimum relative humidity for prescribed fires.</p></dd>
 
 
-<dt><code>MaximumRXFireIntensity</code></dt>
+<dt><code>MaximumRxFireIntensity</code></dt>
 <dd><p>Integer. Maximum allowable fire intensity for prescribed fires.</p></dd>
 
 

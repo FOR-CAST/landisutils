@@ -23,6 +23,14 @@ Keeps track of the input files created for an extension
   `"Biomass Succession"`). Read-only; set by each subclass's
   `initialize()` via `private$.LandisData`.
 
+- `scenarioName`:
+
+  Character. The name to use when this extension is referenced in the
+  scenario `.txt` file's extension list. Defaults to `LandisData`;
+  subclasses set `private$.scenarioName` only when the parser-registered
+  name differs from the file-header name (e.g. Land Use Plus).
+  Read-only.
+
 - `Timestep`:
 
   Integer.

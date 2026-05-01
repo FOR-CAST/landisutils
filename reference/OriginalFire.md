@@ -42,7 +42,7 @@ Other Original Fire helpers:
 
   Character. Relative file path.
 
-- `DynamicFireRegionsTable`:
+- `DynamicFireRegionTable`:
 
   `data.frame`.
 
@@ -96,7 +96,7 @@ Inherited methods
       Species_CSV_File = NULL,
       FireRegionParametersTable = NULL,
       InitialFireRegionsMap = NULL,
-      DynamicFireRegionsTable = NULL,
+      DynamicFireRegionTable = NULL,
       FuelCurveTable = NULL,
       WindCurveTable = NULL,
       FireDamageTable = NULL,
@@ -127,7 +127,7 @@ Inherited methods
 
   `SpatRaster`.
 
-- `DynamicFireRegionsTable`:
+- `DynamicFireRegionTable`:
 
   `data.frame`.
 

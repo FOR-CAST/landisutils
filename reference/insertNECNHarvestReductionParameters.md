@@ -13,7 +13,10 @@ insertNECNHarvestReductionParameters(df)
 - df:
 
   `data.frame` with columns `PrescriptionName`, `DeadWoodReduction`,
-  `DeadLitterReduction`, `CohortWoodRemoval`, `CohortLeafRemoval`.
+  `DeadLitterReduction`, `SOMReduction`, `CohortWoodRemoval`,
+  `CohortLeafRemoval`. `SOMReduction` is required by the runtime NECN
+  parser even though the v8 user guide §2.35 documents only the other
+  four numeric columns.
 
 ## Value
 

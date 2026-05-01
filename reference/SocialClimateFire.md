@@ -57,7 +57,7 @@ Other Social Climate Fire helpers:
 
   Character. Relative file path.
 
-- `DynamicLightningIgnitionsMaps`:
+- `DynamicLightningIgnitionMaps`:
 
   (Optional) `data.frame` with columns `Year` and `FileName`.
 
@@ -65,7 +65,7 @@ Other Social Climate Fire helpers:
 
   Character. Relative file path.
 
-- `DynamicRxIgnitionsMaps`:
+- `DynamicRxIgnitionMaps`:
 
   (Optional) `data.frame` with columns `Year` and `FileName`.
 
@@ -85,7 +85,7 @@ Other Social Climate Fire helpers:
 
   (Optional) `data.frame` with columns `Year` and `FileName`.
 
-- `GroundSlopeFile`:
+- `GroundSlopeMap`:
 
   Character. Relative file path.
 
@@ -145,7 +145,7 @@ Other Social Climate Fire helpers:
 
   (Optional) Real. Minimum relative humidity for prescribed fires.
 
-- `MaximumRXFireIntensity`:
+- `MaximumRxFireIntensity`:
 
   Integer. Maximum allowable fire intensity for prescribed fires.
 
@@ -239,14 +239,14 @@ Inherited methods
       AccidentalIgnitionsMap = NULL,
       DynamicAccidentalIgnitionMaps = NULL,
       LightningIgnitionsMap = NULL,
-      DynamicLightningIgnitionsMaps = NULL,
+      DynamicLightningIgnitionMaps = NULL,
       RxIgnitionsMap = NULL,
-      DynamicRxIgnitionsMaps = NULL,
+      DynamicRxIgnitionMaps = NULL,
       AccidentalSuppressionMap = NULL,
       LightningSuppressionMap = NULL,
       RxSuppressionMap = NULL,
       DynamicAccidentalSuppressionMaps = NULL,
-      GroundSlopeFile = NULL,
+      GroundSlopeMap = NULL,
       UphillSlopeAzimuthMap = NULL,
       ClayMap = NULL,
       LightningIgnitionsCoeffs = NULL,
@@ -260,7 +260,7 @@ Inherited methods
       MinimumRxFireWeatherIndex = NULL,
       MaximumRxTemperature = NULL,
       MinimumRxRelativeHumidity = NULL,
-      MaximumRXFireIntensity = NULL,
+      MaximumRxFireIntensity = NULL,
       NumberRxAnnualFires = NULL,
       NumberRxDailyFires = NULL,
       FirstDayRxFires = NULL,
@@ -312,7 +312,7 @@ Inherited methods
 
   Character. Relative file path.
 
-- `DynamicLightningIgnitionsMaps`:
+- `DynamicLightningIgnitionMaps`:
 
   (Optional) `data.frame`.
 
@@ -320,7 +320,7 @@ Inherited methods
 
   Character. Relative file path.
 
-- `DynamicRxIgnitionsMaps`:
+- `DynamicRxIgnitionMaps`:
 
   (Optional) `data.frame`.
 
@@ -340,7 +340,7 @@ Inherited methods
 
   (Optional) `data.frame`.
 
-- `GroundSlopeFile`:
+- `GroundSlopeMap`:
 
   Character. Relative file path.
 
@@ -400,7 +400,7 @@ Inherited methods
 
   (Optional) Real. Minimum relative humidity for prescribed fires.
 
-- `MaximumRXFireIntensity`:
+- `MaximumRxFireIntensity`:
 
   Integer. Maximum allowable fire intensity for prescribed fires.
 

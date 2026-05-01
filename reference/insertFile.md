@@ -1,6 +1,9 @@
 # Specify an input file for an extension
 
-Checks that a file exists before inserting the filepath.
+Emits a `<type> <file>` line. `NULL` (and length-zero) input is treated
+as "parameter omitted" and produces no output, matching how
+[`insertValue()`](https://for-cast.github.io/landisutils/reference/insertValue.md)
+handles `NA`.
 
 ## Usage
 

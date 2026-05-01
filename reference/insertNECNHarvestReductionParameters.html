@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.3</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -56,7 +56,9 @@
 
 <dl><dt id="arg-df">df<a class="anchor" aria-label="anchor" href="#arg-df"></a></dt>
 <dd><p><code>data.frame</code> with columns <code>PrescriptionName</code>, <code>DeadWoodReduction</code>,
-<code>DeadLitterReduction</code>, <code>CohortWoodRemoval</code>, <code>CohortLeafRemoval</code>.</p></dd>
+<code>DeadLitterReduction</code>, <code>SOMReduction</code>, <code>CohortWoodRemoval</code>, <code>CohortLeafRemoval</code>.
+<code>SOMReduction</code> is required by the runtime NECN parser even though the v8
+user guide §2.35 documents only the other four numeric columns.</p></dd>
 
 </dl></div>
     <div class="section level2">

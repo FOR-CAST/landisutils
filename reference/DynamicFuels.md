@@ -58,15 +58,19 @@ Other Dynamic Fuels helpers:
 
 - `MapFileNames`:
 
-  Character. File pattern for writing outputs to disk.
+  Character. File pattern for writing outputs to disk; must contain the
+  literal `{timestep}` placeholder (the only variable the upstream
+  Dynamic Fuels `MapNames` parser knows – see `MapFileNames.cs`).
 
-- `PctConiferMapName`:
+- `PctConiferFileName`:
 
-  Character. File pattern for writing outputs to disk.
+  Character. File pattern for writing outputs to disk; must contain the
+  literal `{timestep}` placeholder.
 
-- `PctDeadFirMapName`:
+- `PctDeadFirFileName`:
 
-  Character. File pattern for writing outputs to disk.
+  Character. File pattern for writing outputs to disk; must contain the
+  literal `{timestep}` placeholder.
 
 ## Methods
 
@@ -98,8 +102,8 @@ Inherited methods
       EcoregionTable = data.frame(FuelType = integer(0), Ecoregion = character(0)),
       DisturbanceConversionTable = NULL,
       MapFileNames = NULL,
-      PctConiferMapName = NULL,
-      PctDeadFirMapName = NULL
+      PctConiferFileName = NULL,
+      PctDeadFirFileName = NULL
     )
 
 #### Arguments
@@ -142,11 +146,11 @@ Inherited methods
 
   Character. File pattern for writing outputs to disk.
 
-- `PctConiferMapName`:
+- `PctConiferFileName`:
 
   Character. File pattern for writing outputs to disk.
 
-- `PctDeadFirMapName`:
+- `PctDeadFirFileName`:
 
   Character. File pattern for writing outputs to disk.
 

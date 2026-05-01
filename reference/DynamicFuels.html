@@ -9,7 +9,7 @@ Dynamic Fuel System Extension"></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.3</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -98,15 +98,19 @@ Dynamic Fuel System Extension"></head><body>
 
 
 <dt><code>MapFileNames</code></dt>
-<dd><p>Character. File pattern for writing outputs to disk.</p></dd>
+<dd><p>Character. File pattern for writing outputs to disk;
+must contain the literal <code>{timestep}</code> placeholder (the only variable
+the upstream Dynamic Fuels <code>MapNames</code> parser knows – see <code>MapFileNames.cs</code>).</p></dd>
 
 
-<dt><code>PctConiferMapName</code></dt>
-<dd><p>Character. File pattern for writing outputs to disk.</p></dd>
+<dt><code>PctConiferFileName</code></dt>
+<dd><p>Character. File pattern for writing outputs to disk;
+must contain the literal <code>{timestep}</code> placeholder.</p></dd>
 
 
-<dt><code>PctDeadFirMapName</code></dt>
-<dd><p>Character. File pattern for writing outputs to disk.</p></dd>
+<dt><code>PctDeadFirFileName</code></dt>
+<dd><p>Character. File pattern for writing outputs to disk;
+must contain the literal <code>{timestep}</code> placeholder.</p></dd>
 
 
 </dl><p></p></div>
@@ -136,8 +140,8 @@ Dynamic Fuel System Extension"></head><body>
 <span>  EcoregionTable <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>FuelType <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">integer</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span>, Ecoregion <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span><span class="op">)</span>,</span>
 <span>  DisturbanceConversionTable <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  MapFileNames <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  PctConiferMapName <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  PctDeadFirMapName <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  PctConiferFileName <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  PctDeadFirFileName <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
@@ -179,11 +183,11 @@ Dynamic Fuel System Extension"></head><body>
 <dd><p>Character. File pattern for writing outputs to disk.</p></dd>
 
 
-<dt><code>PctConiferMapName</code></dt>
+<dt><code>PctConiferFileName</code></dt>
 <dd><p>Character. File pattern for writing outputs to disk.</p></dd>
 
 
-<dt><code>PctDeadFirMapName</code></dt>
+<dt><code>PctDeadFirFileName</code></dt>
 <dd><p>Character. File pattern for writing outputs to disk.</p></dd>
 
 

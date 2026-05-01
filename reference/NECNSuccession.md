@@ -52,12 +52,12 @@ Other NECN Succession helpers:
   Named list of relative file paths. Required keys: `SoilDepthMapName`,
   `SoilDrainMapName`, `SoilBaseFlowMapName`, `SoilStormFlowMapName`,
   `SoilFieldCapacityMapName`, `SoilWiltingPointMapName`,
-  `SoilPercentClayMapName`, `SoilPercentSandMapName`,
+  `SoilPercentSandMapName`, `SoilPercentClayMapName`,
   `InitialSOM1CsurfMapName`, `InitialSOM1NsurfMapName`,
   `InitialSOM1CsoilMapName`, `InitialSOM1NsoilMapName`,
   `InitialSOM2CMapName`, `InitialSOM2NMapName`, `InitialSOM3CMapName`,
   `InitialSOM3NMapName`, `InitialDeadWoodSurfaceMapName`,
-  `InitialDeadWoodRootsMapName`.
+  `InitialDeadCoarseRootsMapName`.
 
 - `OptionalClimateMaps`:
 
@@ -269,12 +269,12 @@ Inherited methods
   the NECN keywords (Tables 1 and 2 of the user guide):
   `SoilDepthMapName`, `SoilDrainMapName`, `SoilBaseFlowMapName`,
   `SoilStormFlowMapName`, `SoilFieldCapacityMapName`,
-  `SoilWiltingPointMapName`, `SoilPercentClayMapName`,
-  `SoilPercentSandMapName`, `InitialSOM1CsurfMapName`,
+  `SoilWiltingPointMapName`, `SoilPercentSandMapName`,
+  `SoilPercentClayMapName`, `InitialSOM1CsurfMapName`,
   `InitialSOM1NsurfMapName`, `InitialSOM1CsoilMapName`,
   `InitialSOM1NsoilMapName`, `InitialSOM2CMapName`,
   `InitialSOM2NMapName`, `InitialSOM3CMapName`, `InitialSOM3NMapName`,
-  `InitialDeadWoodSurfaceMapName`, `InitialDeadWoodRootsMapName`.
+  `InitialDeadWoodSurfaceMapName`, `InitialDeadCoarseRootsMapName`.
 
 - `OptionalClimateMaps`:
 

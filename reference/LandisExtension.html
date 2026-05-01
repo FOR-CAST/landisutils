@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.3</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -65,6 +65,14 @@
 <dd><p>Character. The extension's <code>LandisData</code> entry
 (e.g. <code>"Biomass Succession"</code>). Read-only; set by each subclass's
 <code>initialize()</code> via <code>private$.LandisData</code>.</p></dd>
+
+
+<dt><code>scenarioName</code></dt>
+<dd><p>Character. The name to use when this extension is
+referenced in the scenario <code>.txt</code> file's extension list. Defaults to
+<code>LandisData</code>; subclasses set <code>private$.scenarioName</code> only when the
+parser-registered name differs from the file-header name (e.g. Land
+Use Plus). Read-only.</p></dd>
 
 
 <dt><code>Timestep</code></dt>

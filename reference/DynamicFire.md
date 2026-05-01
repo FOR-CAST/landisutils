@@ -41,6 +41,10 @@ Other Dynamic Fire helpers:
 
 ## Active bindings
 
+- `Species_CSV_File`:
+
+  Character. Relative file path.
+
 - `EventSizeType`:
 
   Character. One of "size_based" or "duration_based".
@@ -133,6 +137,7 @@ Inherited methods
     DynamicFire$new(
       path,
       Timestep = 10,
+      Species_CSV_File = NULL,
       EventSizeType = NULL,
       BuildUpIndex = NULL,
       WeatherRandomizer = NULL,
@@ -161,6 +166,11 @@ Inherited methods
 - `Timestep`:
 
   Integer.
+
+- `Species_CSV_File`:
+
+  Character. Relative file path to the per-species fire-coefficient CSV
+  (must precede `EventSizeType` in the emitted config).
 
 - `EventSizeType`:
 
