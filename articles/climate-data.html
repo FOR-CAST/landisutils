@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.6</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -76,7 +76,7 @@
 </h2>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">## random study area in BC using BEC zones as ecoregions</span></span>
-<span><span class="va">ecoregionPolys</span> <span class="op">&lt;-</span> <span class="fu">landisutils</span><span class="fu">::</span><span class="va">test_ecoregionPolys</span></span>
+<span><span class="va">ecoregionPolys</span> <span class="op">&lt;-</span> <span class="fu">landisutils</span><span class="fu">::</span><span class="va"><a href="../reference/test_ecoregionPolys.html">test_ecoregionPolys</a></span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">ecoregionPolys</span><span class="op">[</span><span class="st">"PolyID"</span><span class="op">]</span><span class="op">)</span></span></code></pre></div>
 </div>
@@ -88,42 +88,13 @@
 <span></span>
 <span><span class="va">clim_data_path</span> <span class="op">&lt;-</span> <span class="fu">withr</span><span class="fu">::</span><span class="fu"><a href="https://withr.r-lib.org/reference/with_tempfile.html" class="external-link">local_tempdir</a></span><span class="op">(</span><span class="st">"climate_data_"</span><span class="op">)</span></span></code></pre></div>
 <div class="section level3">
-<h3 id="biosim">BioSIM<a class="anchor" aria-label="anchor" href="#biosim"></a>
+<h3 id="daily-climate-data-biosim">Daily Climate Data (BioSIM)<a class="anchor" aria-label="anchor" href="#daily-climate-data-biosim"></a>
 </h3>
+<p>Daily weather is fetched from BioSIM using the
+<code>ClimaticEx_Daily</code> model. The high-level wrapper <a href="../reference/prep_climate_data.html"><code>prep_daily_weather()</code></a>
+takes a study-area polygons object and a column name identifying
+ecoregions:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">climvars</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
-<span>  <span class="co">## BioSIM::getModelHelp("ClimaticEx_Daily")</span></span>
-<span>  <span class="st">"Prcp"</span>, <span class="st">"SRad"</span>, <span class="st">"RelH"</span>, <span class="st">"Tair"</span>, <span class="st">"Tmax"</span>, <span class="st">"Tmin"</span>, <span class="st">"WndD"</span>, <span class="st">"WndS"</span>,</span>
-<span>  </span>
-<span>  <span class="co">## BioSIM::getModelHelp("Potential_Evapotranspiration_Daily")</span></span>
-<span>  <span class="co">## BioSIM::getModelHelp("Potential_Evapotranspiration_Ex_Daily")</span></span>
-<span>  <span class="st">"PET"</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="co">## TODO: use Prcp / 10 (must be in cm);</span></span>
-<span><span class="co">## TODO: convert WndS from km/h to m/s;</span></span>
-<span><span class="co">## TODO: verify wind direction is the FROM Direction;</span></span>
-<span></span>
-<span><span class="fu">BioSIM</span><span class="fu">::</span><span class="fu">generateWeather</span><span class="op">(</span></span>
-<span>  modelNames <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ClimaticEx_Daily"</span>, <span class="st">"Potential_Evapotranspiration_Daily"</span><span class="op">)</span>,</span>
-<span>  fromYr <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">clim_years</span>, <span class="fl">1</span><span class="op">)</span>,</span>
-<span>  toYr <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">tail</a></span><span class="op">(</span><span class="va">clim_years</span>, <span class="fl">1</span><span class="op">)</span>,</span>
-<span>  id <span class="op">=</span> ,      <span class="co">## TODO: e.g., 1:length(longDeg)</span></span>
-<span>  latDeg <span class="op">=</span> ,  <span class="co">## TODO: extract points from gridded polygon</span></span>
-<span>  longDeg <span class="op">=</span> , <span class="co">## TODO: extract points from gridded polygon</span></span>
-<span>  elevM <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="cn">NA</span>, <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">longDeg</span><span class="op">)</span><span class="op">)</span>,</span>
-<span>  rep <span class="op">=</span> <span class="fl">1</span>,</span>
-<span>  repModel <span class="op">=</span> <span class="fl">1</span>,</span>
-<span>  rcp <span class="op">=</span> <span class="st">"RCP45"</span>,      <span class="co">## shouldn't matter for historical, but FRV to use SSPs not RCPs;</span></span>
-<span>  climModel <span class="op">=</span> <span class="st">"RCM4"</span>, <span class="co">## shouldn't matter for historical, but FRV to use SSPs not RCPs;</span></span>
-<span>  additionalParms <span class="op">=</span> <span class="cn">NULL</span></span>
-<span><span class="op">)</span></span>
-<span><span class="co">## TODO: gridded values need to be summarized by ecolocation; i.e., `zonal`</span></span></code></pre></div>
-</div>
-<div class="section level3">
-<h3 id="daily-climate-data-daymet">Daily Climate Data (Daymet)<a class="anchor" aria-label="anchor" href="#daily-climate-data-daymet"></a>
-</h3>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">climvars_daily</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"prcp"</span>, <span class="st">"tmax"</span>, <span class="st">"tmin"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">daily_weather</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/prep_climate_data.html">prep_daily_weather</a></span><span class="op">(</span></span>
@@ -137,12 +108,90 @@
 <span></span>
 <span><span class="va">clim_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">clim_data_path</span>, <span class="st">"climate-data-daily.csv"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/writeClimateData.html">writeClimateData</a></span><span class="op">(</span><span class="va">daily_weather</span>, <span class="va">clim_file</span><span class="op">)</span></span></code></pre></div>
+<p>Internally, <code><a href="../reference/prep_climate_data.html">prep_daily_weather()</a></code> chains four lower-level
+helpers that you can call directly when you need finer control (e.g. to
+schedule per-batch fetches as dynamic targets):</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co">## 1. Build an elevation raster covering the study area (lon-lat).</span></span>
+<span><span class="va">elev</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_elevation_rast.html">get_elevation_rast</a></span><span class="op">(</span><span class="va">ecoregionPolys</span>, z <span class="op">=</span> <span class="fl">9</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">## 2. Tile cells of `elev` that fall inside `ecoregionPolys` into batches.</span></span>
+<span><span class="co">##    Each row carries Longitude/Latitude/Elevation, plus EcoID (from the</span></span>
+<span><span class="co">##    studyArea field named by `id`) and BatchID (for parallel dispatch).</span></span>
+<span><span class="va">locations_batch</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/create_locations_df.html">create_locations_df</a></span><span class="op">(</span></span>
+<span>  elev <span class="op">=</span> <span class="va">elev</span>,</span>
+<span>  studyArea <span class="op">=</span> <span class="va">ecoregionPolys</span>,</span>
+<span>  id <span class="op">=</span> <span class="st">"PolyID"</span>,</span>
+<span>  batch_size <span class="op">=</span> <span class="fl">500</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">## 3. Fetch one (batch, year) at a time. Cap parallelism to &lt;= 4 workers</span></span>
+<span><span class="co">##    so we don't overload the BioSIM web service. The cache is namespaced</span></span>
+<span><span class="co">##    by a short hash of `studyArea` so distinct study areas don't collide.</span></span>
+<span><span class="fu">future</span><span class="fu">::</span><span class="fu"><a href="https://future.futureverse.org/reference/plan.html" class="external-link">plan</a></span><span class="op">(</span><span class="fu">future</span><span class="fu">::</span><span class="va"><a href="https://future.futureverse.org/reference/multisession.html" class="external-link">multisession</a></span>, workers <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">sa_hash</span> <span class="op">&lt;-</span> <span class="fu">landisutils</span><span class="fu">:::</span><span class="fu"><a href="../reference/dot-studyArea_hash.html">.studyArea_hash</a></span><span class="op">(</span><span class="va">ecoregionPolys</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">grid</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/expand.grid.html" class="external-link">expand.grid</a></span><span class="op">(</span>batch <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_along</a></span><span class="op">(</span><span class="va">locations_batch</span><span class="op">)</span>, year <span class="op">=</span> <span class="va">clim_years</span><span class="op">)</span></span>
+<span><span class="fu">furrr</span><span class="fu">::</span><span class="fu"><a href="https://furrr.futureverse.org/reference/future_map2.html" class="external-link">future_map2</a></span><span class="op">(</span><span class="va">grid</span><span class="op">$</span><span class="va">batch</span>, <span class="va">grid</span><span class="op">$</span><span class="va">year</span>, <span class="kw">function</span><span class="op">(</span><span class="va">b</span>, <span class="va">y</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="fu"><a href="../reference/get_clim_daily.html">get_clim_daily</a></span><span class="op">(</span></span>
+<span>    <span class="va">locations_batch</span><span class="op">[</span><span class="va">b</span><span class="op">]</span>, year <span class="op">=</span> <span class="va">y</span>,</span>
+<span>    studyArea_hash <span class="op">=</span> <span class="va">sa_hash</span>, path <span class="op">=</span> <span class="va">clim_data_path</span></span>
+<span>  <span class="op">)</span></span>
+<span><span class="op">}</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">## 4. Read the partitioned Arrow CSV dataset, summarize by ecoregion,</span></span>
+<span><span class="co">##    and pivot to LANDIS-II Climate Library wide format.</span></span>
+<span><span class="va">daily_weather</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/assemble_climate_library_file.html">assemble_climate_library_file</a></span><span class="op">(</span></span>
+<span>  dataset_path <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">clim_data_path</span>, <span class="st">"ClimaticEx_Daily"</span>, <span class="va">sa_hash</span><span class="op">)</span>,</span>
+<span>  vars <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Prcp"</span>, <span class="st">"Tmin"</span>, <span class="st">"Tmax"</span><span class="op">)</span>,</span>
+<span>  id_col <span class="op">=</span> <span class="st">"EcoID"</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<div class="section level4">
+<h4 id="daily-climate-inputs-for-social-climate-fire">Daily climate inputs for Social Climate Fire<a class="anchor" aria-label="anchor" href="#daily-climate-inputs-for-social-climate-fire"></a>
+</h4>
+<p>The CSV that <code><a href="../reference/prep_climate_data.html">prep_daily_weather()</a></code> /
+<code><a href="../reference/assemble_climate_library_file.html">assemble_climate_library_file()</a></code> produces is consumed by the
+LANDIS-II Climate Library (<code>Daily_RandomYears</code> /
+<code>Daily_AverageAllYears</code> time series). The <a href="https://github.com/LANDIS-II-Foundation/Extension-Social-Climate-Fire" class="external-link">Social
+Climate Fire</a> extension reads daily fire-weather indirectly through
+the Climate Library and computes FWI internally.
+<code><a href="../reference/assemble_climate_library_file_scf.html">assemble_climate_library_file_scf()</a></code> is a thin wrapper that
+emits the same table with the lowercase <code>Variable</code> spellings
+used by the Social-Climate-Fire reference input (<a href="https://github.com/LANDIS-II-Foundation/Extension-Social-Climate-Fire/blob/master/Testing/Core8-SocialClimateFire4.0/LTB_ClimateInputs_91_10_v2.csv" class="external-link"><code>LTB_ClimateInputs_91_10_v2.csv</code></a>):
+<code>precip</code>, <code>maxtemp</code>, <code>mintemp</code>,
+<code>windspeed</code>, <code>winddirection</code>. The Climate Library
+parser is case-insensitive, so either spelling works as input — pick
+whichever your scenario template expects.</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co">## populate the BioSIM cache with the 5 SCF variables</span></span>
+<span><span class="fu"><a href="../reference/prep_climate_data.html">prep_daily_weather</a></span><span class="op">(</span></span>
+<span>  vars <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"prcp"</span>, <span class="st">"tmax"</span>, <span class="st">"tmin"</span>, <span class="st">"ws"</span>, <span class="st">"wnddir"</span><span class="op">)</span>,</span>
+<span>  years <span class="op">=</span> <span class="va">clim_years</span>,</span>
+<span>  studyArea <span class="op">=</span> <span class="va">ecoregionPolys</span>,</span>
+<span>  id <span class="op">=</span> <span class="st">"PolyID"</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">sa_hash</span> <span class="op">&lt;-</span> <span class="fu">landisutils</span><span class="fu">:::</span><span class="fu"><a href="../reference/dot-studyArea_hash.html">.studyArea_hash</a></span><span class="op">(</span><span class="va">ecoregionPolys</span><span class="op">)</span></span>
+<span><span class="va">scenario_tag</span> <span class="op">&lt;-</span> <span class="fu">landisutils</span><span class="fu">:::</span><span class="fu">.biosim_scenario_tag</span><span class="op">(</span><span class="st">"RCP45"</span>, <span class="st">"RCM4"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">scf_inputs</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/assemble_climate_library_file_scf.html">assemble_climate_library_file_scf</a></span><span class="op">(</span></span>
+<span>  dataset_path <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span></span>
+<span>    <span class="va">clim_data_path</span>, <span class="st">"ClimaticEx_Daily"</span>, <span class="va">sa_hash</span>, <span class="va">scenario_tag</span></span>
+<span>  <span class="op">)</span>,</span>
+<span>  vars <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Prcp"</span>, <span class="st">"Tmin"</span>, <span class="st">"Tmax"</span>, <span class="st">"WndS"</span>, <span class="st">"WndD"</span><span class="op">)</span>,</span>
+<span>  id_col <span class="op">=</span> <span class="st">"EcoID"</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">clim_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">clim_data_path</span>, <span class="st">"scf-climate-inputs.csv"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/writeClimateData.html">writeClimateData</a></span><span class="op">(</span><span class="va">scf_inputs</span>, <span class="va">clim_file</span><span class="op">)</span></span></code></pre></div>
+</div>
 </div>
 <div class="section level3">
 <h3 id="monthly-climate-data-terraclim">Monthly Climate Data (TerraClim)<a class="anchor" aria-label="anchor" href="#monthly-climate-data-terraclim"></a>
 </h3>
 <p>As above, we can get monthly data using the following recipe:</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">climvars_monthly</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ppt"</span>, <span class="st">"tmax"</span>, <span class="st">"tmin"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">monthly_weather</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/prep_climate_data.html">prep_monthly_weather</a></span><span class="op">(</span></span>
@@ -158,7 +207,7 @@
 <span><span class="fu"><a href="../reference/writeClimateData.html">writeClimateData</a></span><span class="op">(</span><span class="va">monthly_weather</span>, <span class="va">clim_file</span><span class="op">)</span></span></code></pre></div>
 <p>We can also use this recipe to get monthly <code>AET</code> data to
 prepare the <code>EcoregionParameters</code> table:</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">aet_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/prep_climate_data.html">prep_monthly_weather</a></span><span class="op">(</span></span>
 <span>  vars <span class="op">=</span> <span class="st">"aet"</span>,</span>
 <span>  years <span class="op">=</span> <span class="va">clim_years</span>,</span>
@@ -172,14 +221,196 @@ prepare the <code>EcoregionParameters</code> table:</p>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">erp_df</span><span class="op">)</span></span></code></pre></div>
 </div>
+<div class="section level3">
+<h3 id="monthly-climate-data-biosim">Monthly Climate Data (BioSIM)<a class="anchor" aria-label="anchor" href="#monthly-climate-data-biosim"></a>
+</h3>
+<p>If you want monthly weather co-located with the daily BioSIM cells
+(same elevation raster, same point batches), use
+<code><a href="../reference/prep_climate_data.html">prep_monthly_weather_biosim()</a></code> — it shares the
+elevation/batching machinery with <code><a href="../reference/prep_climate_data.html">prep_daily_weather()</a></code> and
+fetches BioSIM’s <code>Climatic_Monthly</code> model. Wind variables
+(<code>ws</code>, <code>wnddir</code>) are pulled in the same call from
+BioSIM’s companion <code>ClimaticWind_Monthly</code> model; wind
+from-direction is summarised across the model’s 36 directional bins
+(<code>W0</code>..<code>W350</code>) using a frequency-weighted circular
+mean:</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">climvars_monthly_biosim</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"prcp"</span>, <span class="st">"tmax"</span>, <span class="st">"tmin"</span>, <span class="st">"temp"</span>, <span class="st">"rh"</span>, <span class="st">"srad"</span>, <span class="st">"ws"</span>, <span class="st">"wnddir"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">monthly_weather_biosim</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/prep_climate_data.html">prep_monthly_weather_biosim</a></span><span class="op">(</span></span>
+<span>  vars <span class="op">=</span> <span class="va">climvars_monthly_biosim</span>,</span>
+<span>  years <span class="op">=</span> <span class="va">clim_years</span>,</span>
+<span>  studyArea <span class="op">=</span> <span class="va">ecoregionPolys</span>,</span>
+<span>  id <span class="op">=</span> <span class="st">"PolyID"</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">monthly_weather_biosim</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">clim_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">clim_data_path</span>, <span class="st">"climate-data-monthly-biosim.csv"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/writeClimateData.html">writeClimateData</a></span><span class="op">(</span><span class="va">monthly_weather_biosim</span>, <span class="va">clim_file</span><span class="op">)</span></span></code></pre></div>
+<p>The lower-level helpers (<a href="../reference/get_clim_monthly.html"><code>get_clim_monthly()</code></a>,
+<a href="../reference/assemble_climate_library_file_monthly.html"><code>assemble_climate_library_file_monthly()</code></a>)
+mirror the daily pipeline if you need to schedule per-batch fetches as
+dynamic targets:</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">elev</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_elevation_rast.html">get_elevation_rast</a></span><span class="op">(</span><span class="va">ecoregionPolys</span>, z <span class="op">=</span> <span class="fl">9</span><span class="op">)</span></span>
+<span><span class="va">locations_batch</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/create_locations_df.html">create_locations_df</a></span><span class="op">(</span></span>
+<span>  elev <span class="op">=</span> <span class="va">elev</span>,</span>
+<span>  studyArea <span class="op">=</span> <span class="va">ecoregionPolys</span>,</span>
+<span>  id <span class="op">=</span> <span class="st">"PolyID"</span>,</span>
+<span>  batch_size <span class="op">=</span> <span class="fl">500</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">future</span><span class="fu">::</span><span class="fu"><a href="https://future.futureverse.org/reference/plan.html" class="external-link">plan</a></span><span class="op">(</span><span class="fu">future</span><span class="fu">::</span><span class="va"><a href="https://future.futureverse.org/reference/multisession.html" class="external-link">multisession</a></span>, workers <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">sa_hash</span> <span class="op">&lt;-</span> <span class="fu">landisutils</span><span class="fu">:::</span><span class="fu"><a href="../reference/dot-studyArea_hash.html">.studyArea_hash</a></span><span class="op">(</span><span class="va">ecoregionPolys</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">grid</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/expand.grid.html" class="external-link">expand.grid</a></span><span class="op">(</span>batch <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_along</a></span><span class="op">(</span><span class="va">locations_batch</span><span class="op">)</span>, year <span class="op">=</span> <span class="va">clim_years</span><span class="op">)</span></span>
+<span><span class="fu">furrr</span><span class="fu">::</span><span class="fu"><a href="https://furrr.futureverse.org/reference/future_map2.html" class="external-link">future_map2</a></span><span class="op">(</span><span class="va">grid</span><span class="op">$</span><span class="va">batch</span>, <span class="va">grid</span><span class="op">$</span><span class="va">year</span>, <span class="kw">function</span><span class="op">(</span><span class="va">b</span>, <span class="va">y</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="fu"><a href="../reference/get_clim_monthly.html">get_clim_monthly</a></span><span class="op">(</span></span>
+<span>    <span class="va">locations_batch</span><span class="op">[</span><span class="va">b</span><span class="op">]</span>, year <span class="op">=</span> <span class="va">y</span>,</span>
+<span>    studyArea_hash <span class="op">=</span> <span class="va">sa_hash</span>, path <span class="op">=</span> <span class="va">clim_data_path</span></span>
+<span>  <span class="op">)</span></span>
+<span><span class="op">}</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">monthly_weather_biosim</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/assemble_climate_library_file_monthly.html">assemble_climate_library_file_monthly</a></span><span class="op">(</span></span>
+<span>  dataset_path <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">clim_data_path</span>, <span class="st">"Climatic_Monthly"</span>, <span class="va">sa_hash</span><span class="op">)</span>,</span>
+<span>  vars <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"TotalPrcp"</span>, <span class="st">"MeanTmin"</span>, <span class="st">"MeanTmax"</span>, <span class="st">"WndS"</span>, <span class="st">"WndD"</span><span class="op">)</span>,</span>
+<span>  id_col <span class="op">=</span> <span class="st">"EcoID"</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="monthly-climate-data-climr">Monthly Climate Data (climr)<a class="anchor" aria-label="anchor" href="#monthly-climate-data-climr"></a>
+</h3>
+<p><a href="https://github.com/bcgov/climr" class="external-link">climr</a> provides
+ClimateNA-style change-factor downscaling against a PRISM/DAYMET
+composite reference grid for North America. Historical observational
+years span 1901-2024 (<code>obs_ts_dataset = "climatena"</code> or
+<code>"cru.gpcc"</code>). Wind variables are not available from climr -
+use <code><a href="../reference/prep_climate_data.html">prep_monthly_weather_biosim()</a></code> for wind.</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">climvars_monthly_climr</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"prcp"</span>, <span class="st">"tmax"</span>, <span class="st">"tmin"</span>, <span class="st">"temp"</span>, <span class="st">"rh"</span>, <span class="st">"srad"</span>, <span class="st">"cmd"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">monthly_weather_climr</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/prep_climate_data.html">prep_monthly_weather_climr</a></span><span class="op">(</span></span>
+<span>  vars <span class="op">=</span> <span class="va">climvars_monthly_climr</span>,</span>
+<span>  years <span class="op">=</span> <span class="va">clim_years</span>,</span>
+<span>  studyArea <span class="op">=</span> <span class="va">ecoregionPolys</span>,</span>
+<span>  id <span class="op">=</span> <span class="st">"PolyID"</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">monthly_weather_climr</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">clim_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">clim_data_path</span>, <span class="st">"climate-data-monthly-climr.csv"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/writeClimateData.html">writeClimateData</a></span><span class="op">(</span><span class="va">monthly_weather_climr</span>, <span class="va">clim_file</span><span class="op">)</span></span></code></pre></div>
+<p>The lower-level helpers (<a href="../reference/get_clim_monthly_climr.html"><code>get_clim_monthly_climr()</code></a>,
+<a href="../reference/assemble_climate_library_file_monthly_climr.html"><code>assemble_climate_library_file_monthly_climr()</code></a>)
+mirror the BioSIM pipeline if you need to schedule per-year fetches as
+dynamic targets. climr’s own on-disk cache is configured via
+<code>options("climr.cache.path" = ...)</code>;
+<code><a href="../reference/prep_climate_data.html">prep_monthly_weather_climr()</a></code> defaults this to a
+<code>climr/</code> subdirectory of
+<code>getOption("landisutils.cache.path")</code> for the duration of the
+call.</p>
+</div>
 </div>
 <div class="section level2">
 <h2 id="climate-projections">Climate projections<a class="anchor" aria-label="anchor" href="#climate-projections"></a>
 </h2>
-<p>See <a href="https://mikejohnson51.github.io/climateR/articles/intro.html#climate-projections" class="external-link uri">https://mikejohnson51.github.io/climateR/articles/intro.html#climate-projections</a></p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co">## TODO</span></span></code></pre></div>
+<p>The same <code>prep_*()</code> functions used above for
+historical/observational weather can also produce
+<strong>future</strong> weather under climate-change scenarios. Two
+complementary sources are wired in:</p>
+<ul>
+<li>
+<strong>BioSIM</strong> (CMIP5-era):
+<code><a href="../reference/prep_climate_data.html">prep_daily_weather()</a></code> and
+<code><a href="../reference/prep_climate_data.html">prep_monthly_weather_biosim()</a></code> accept <code>rcp</code> and
+<code>clim_model</code> arguments forwarded to
+<code><a href="https://rdrr.io/pkg/BioSIM/man/generateWeather.html" class="external-link">BioSIM::generateWeather()</a></code>. <code>rcp</code> is one of
+<code>"CONSTANT_CLIMATE"</code>, <code>"RCP45"</code>,
+<code>"RCP85"</code>; <code>clim_model</code> is one of
+<code>"RCM4"</code> (Canadian Regional Climate Model 4, CanESM2-driven),
+<code>"GCM4"</code> (CGCM4 / CanESM2-family GCM), or
+<code>"Hadley"</code> (HadGEM).</li>
+<li>
+<strong>climr</strong> (CMIP6):
+<code><a href="../reference/prep_climate_data.html">prep_monthly_weather_climr()</a></code> accepts <code>gcms</code>,
+<code>ssps</code>, and <code>max_run</code> arguments forwarded to
+<code><a href="https://bcgov.github.io/climr/reference/downscale.html" class="external-link">climr::downscale()</a></code>. Pass any subset of
+<code><a href="https://bcgov.github.io/climr/reference/data-option-lists.html" class="external-link">climr::list_gcms()</a></code> (or use the bcgov-recommended 8-member
+subset exposed as <code>climr_ensemble_8</code>) and any subset of
+<code><a href="https://bcgov.github.io/climr/reference/data-option-lists.html" class="external-link">climr::list_ssps()</a></code>.</li>
+</ul>
+<p>The BioSIM and climr caches are namespaced by scenario, so historical
+and future fetches for the same study area coexist on disk without
+colliding.</p>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">clim_years_future</span> <span class="op">&lt;-</span> <span class="fl">2041</span><span class="op">:</span><span class="fl">2042</span></span></code></pre></div>
+<div class="section level3">
+<h3 id="daily-future-weather-biosim-canesm2-rcp-4-5">Daily future weather (BioSIM, CanESM2 + RCP 4.5)<a class="anchor" aria-label="anchor" href="#daily-future-weather-biosim-canesm2-rcp-4-5"></a>
+</h3>
+<p>Pass <code>rcp</code> and <code>clim_model</code> straight through to
+<code><a href="../reference/prep_climate_data.html">prep_daily_weather()</a></code>. The Canadian fourth-generation GCM
+(CGCM4 / CanESM2-family) corresponds to BioSIM’s
+<code>clim_model = "GCM4"</code>:</p>
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">climvars_daily</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"prcp"</span>, <span class="st">"tmax"</span>, <span class="st">"tmin"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">daily_weather_future</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/prep_climate_data.html">prep_daily_weather</a></span><span class="op">(</span></span>
+<span>  vars <span class="op">=</span> <span class="va">climvars_daily</span>,</span>
+<span>  years <span class="op">=</span> <span class="va">clim_years_future</span>,</span>
+<span>  studyArea <span class="op">=</span> <span class="va">ecoregionPolys</span>,</span>
+<span>  id <span class="op">=</span> <span class="st">"PolyID"</span>,</span>
+<span>  rcp <span class="op">=</span> <span class="st">"RCP45"</span>,</span>
+<span>  clim_model <span class="op">=</span> <span class="st">"GCM4"</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">daily_weather_future</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">clim_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">clim_data_path</span>, <span class="st">"climate-data-daily-rcp45-canesm.csv"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/writeClimateData.html">writeClimateData</a></span><span class="op">(</span><span class="va">daily_weather_future</span>, <span class="va">clim_file</span><span class="op">)</span></span></code></pre></div>
+<p>The same arguments are also accepted by
+<code><a href="../reference/prep_climate_data.html">prep_monthly_weather_biosim()</a></code>, which lets you pull wind
+variables (<code>ws</code>, <code>wnddir</code>) under the matching
+scenario - climr does not expose wind, so pair it with BioSIM when you
+need wind under a future projection.</p>
+</div>
+<div class="section level3">
+<h3 id="monthly-future-weather-climr-8-member-ensemble-ssp2-4-5">Monthly future weather (climr, 8-member ensemble + SSP2-4.5)<a class="anchor" aria-label="anchor" href="#monthly-future-weather-climr-8-member-ensemble-ssp2-4-5"></a>
+</h3>
+<p><code><a href="../reference/prep_climate_data.html">prep_monthly_weather_climr()</a></code> switches into projection
+mode whenever <code>gcms</code> is non-<code>NULL</code>. The
+bcgov-recommended 8-member subset of <code><a href="https://bcgov.github.io/climr/reference/data-option-lists.html" class="external-link">climr::list_gcms()</a></code> is
+exposed for convenience as <code>climr_ensemble_8</code>; see <a href="https://bcgov.github.io/climr/articles/guidance_ensembleSelection.html" class="external-link uri">https://bcgov.github.io/climr/articles/guidance_ensembleSelection.html</a>
+for the rationale. SSP2-4.5 (<code>"ssp245"</code>) is the standard
+CMIP6 analogue to CMIP5 RCP 4.5:</p>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">climvars_monthly_climr</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"prcp"</span>, <span class="st">"tmax"</span>, <span class="st">"tmin"</span>, <span class="st">"temp"</span>, <span class="st">"rh"</span>, <span class="st">"srad"</span>, <span class="st">"cmd"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">monthly_weather_climr_future</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/prep_climate_data.html">prep_monthly_weather_climr</a></span><span class="op">(</span></span>
+<span>  vars <span class="op">=</span> <span class="va">climvars_monthly_climr</span>,</span>
+<span>  years <span class="op">=</span> <span class="va">clim_years_future</span>,</span>
+<span>  studyArea <span class="op">=</span> <span class="va">ecoregionPolys</span>,</span>
+<span>  id <span class="op">=</span> <span class="st">"PolyID"</span>,</span>
+<span>  gcms <span class="op">=</span> <span class="va">climr_ensemble_8</span>,</span>
+<span>  ssps <span class="op">=</span> <span class="st">"ssp245"</span>,</span>
+<span>  max_run <span class="op">=</span> <span class="fl">0L</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">monthly_weather_climr_future</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">clim_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">clim_data_path</span>, <span class="st">"climate-data-monthly-climr-ssp245-ens8.csv"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/writeClimateData.html">writeClimateData</a></span><span class="op">(</span><span class="va">monthly_weather_climr_future</span>, <span class="va">clim_file</span><span class="op">)</span></span></code></pre></div>
+<p>Each row is the <strong>multi-GCM ensemble mean</strong> across the 8
+members, taken inside
+<code><a href="../reference/assemble_climate_library_file_monthly_climr.html">assemble_climate_library_file_monthly_climr()</a></code>, so the
+output has the same
+<code>(Year, Month, Variable, &lt;ecoregion-id&gt;...)</code> shape as
+the observational pipeline. Set <code>max_run &gt; 0</code> to
+additionally average over multiple runs per GCM (climr defaults to
+ensemble-mean only, <code>max_run = 0</code>).</p>
 <!-- cleanup -->
+</div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

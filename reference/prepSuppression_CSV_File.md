@@ -31,6 +31,7 @@ as a side effect of the function.
 
 Other Social Climate Fire helpers:
 [`SocialClimateFire`](https://for-cast.github.io/landisutils/reference/SocialClimateFire.md),
+[`assemble_climate_library_file_scf()`](https://for-cast.github.io/landisutils/reference/assemble_climate_library_file_scf.md),
 [`insertDeadWoodTable()`](https://for-cast.github.io/landisutils/reference/insertDeadWoodTable.md),
 [`insertLadderFuelSpeciesList()`](https://for-cast.github.io/landisutils/reference/insertLadderFuelSpeciesList.md),
 [`prepTopographyFile()`](https://for-cast.github.io/landisutils/reference/prepTopographyFile.md)

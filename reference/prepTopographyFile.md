@@ -66,6 +66,7 @@ Other Dynamic Fire helpers:
 
 Other Social Climate Fire helpers:
 [`SocialClimateFire`](https://for-cast.github.io/landisutils/reference/SocialClimateFire.md),
+[`assemble_climate_library_file_scf()`](https://for-cast.github.io/landisutils/reference/assemble_climate_library_file_scf.md),
 [`insertDeadWoodTable()`](https://for-cast.github.io/landisutils/reference/insertDeadWoodTable.md),
 [`insertLadderFuelSpeciesList()`](https://for-cast.github.io/landisutils/reference/insertLadderFuelSpeciesList.md),
 [`prepSuppression_CSV_File()`](https://for-cast.github.io/landisutils/reference/prepSuppression_CSV_File.md)

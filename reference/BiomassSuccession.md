@@ -38,7 +38,7 @@ Other Biomass Succession helpers:
 ## Super class
 
 [`landisutils::LandisExtension`](https://for-cast.github.io/landisutils/reference/LandisExtension.md)
--\> `DynamicFuels`
+-\> `BiomassSuccession`
 
 ## Active bindings
 
@@ -99,11 +99,11 @@ Other Biomass Succession helpers:
 
 ### Public methods
 
-- [`BiomassSuccession$new()`](#method-DynamicFuels-new)
+- [`BiomassSuccession$new()`](#method-BiomassSuccession-new)
 
-- [`BiomassSuccession$write()`](#method-DynamicFuels-write)
+- [`BiomassSuccession$write()`](#method-BiomassSuccession-write)
 
-- [`BiomassSuccession$clone()`](#method-DynamicFuels-clone)
+- [`BiomassSuccession$clone()`](#method-BiomassSuccession-clone)
 
 Inherited methods
 

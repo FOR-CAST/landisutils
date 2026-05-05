@@ -113,14 +113,40 @@
 - [`appendPercent()`](https://for-cast.github.io/landisutils/reference/appendPercent.md)
   : Ensure percent symbol appended to table values
 
+- [`assemble_climate_library_file()`](https://for-cast.github.io/landisutils/reference/assemble_climate_library_file.md)
+  : Assemble LANDIS-II Climate Library wide-format table from a BioSIM
+  Arrow dataset
+
+- [`assemble_climate_library_file_monthly()`](https://for-cast.github.io/landisutils/reference/assemble_climate_library_file_monthly.md)
+  : Assemble LANDIS-II Climate Library wide-format table from a monthly
+  BioSIM Arrow dataset
+
+- [`assemble_climate_library_file_monthly_climr()`](https://for-cast.github.io/landisutils/reference/assemble_climate_library_file_monthly_climr.md)
+  : Assemble LANDIS-II Climate Library wide-format table from a climr
+  Arrow dataset
+
+- [`assemble_climate_library_file_monthly_terraclim()`](https://for-cast.github.io/landisutils/reference/assemble_climate_library_file_monthly_terraclim.md)
+  : Assemble LANDIS-II Climate Library wide-format table from a
+  TerraClim Arrow dataset
+
+- [`assemble_climate_library_file_scf()`](https://for-cast.github.io/landisutils/reference/assemble_climate_library_file_scf.md)
+  : Assemble Social-Climate-Fire-shaped daily climate CSV from a BioSIM
+  Arrow dataset
+
 - [`bdaAgent()`](https://for-cast.github.io/landisutils/reference/bdaAgent.md)
   : Construct a Climate BDA agent
 
 - [`calibrate_original_fire()`](https://for-cast.github.io/landisutils/reference/calibrate_original_fire.md)
   : Calibrate Original Fire
 
+- [`climr_ensemble_8`](https://for-cast.github.io/landisutils/reference/climr_ensemble_8.md)
+  : bcgov-recommended eight-member climr GCM ensemble
+
 - [`cohortSelector()`](https://for-cast.github.io/landisutils/reference/cohortSelector.md)
   : Construct a cohort selector for a Land Use Plus change block
+
+- [`create_locations_df()`](https://for-cast.github.io/landisutils/reference/create_locations_df.md)
+  : Build batched point-location table from a study area
 
 - [`defaultDGSDammMcNIPParameters()`](https://for-cast.github.io/landisutils/reference/defaultDGSDammMcNIPParameters.md)
   : Default DGS Succession DAMM-McNiP scalar parameters
@@ -165,6 +191,26 @@
 
 - [`exitRoadType()`](https://for-cast.github.io/landisutils/reference/exitRoadType.md)
   : Construct an exit road type (where wood leaves the landscape)
+
+- [`get_clim_daily()`](https://for-cast.github.io/landisutils/reference/get_clim_daily.md)
+  : Fetch a single year of daily BioSIM weather for one location batch
+
+- [`get_clim_monthly()`](https://for-cast.github.io/landisutils/reference/get_clim_monthly.md)
+  : Fetch a single year of monthly BioSIM weather for one location batch
+
+- [`get_clim_monthly_climr()`](https://for-cast.github.io/landisutils/reference/get_clim_monthly_climr.md)
+  : Fetch one year of monthly climr weather and write Arrow CSV
+  partitions
+
+- [`get_clim_monthly_terraclim()`](https://for-cast.github.io/landisutils/reference/get_clim_monthly_terraclim.md)
+  : Fetch a single year-variable of monthly TerraClim weather
+
+- [`get_elevation_rast()`](https://for-cast.github.io/landisutils/reference/get_elevation_rast.md)
+  : Get an elevation raster for a study area
+
+- [`get_fwi_daily()`](https://for-cast.github.io/landisutils/reference/get_fwi_daily.md)
+  : Fetch a single year of daily BioSIM Fire Weather Index for one
+  location batch
 
 - [`harvestPrescription()`](https://for-cast.github.io/landisutils/reference/harvestPrescription.md)
   : Construct a Biomass Harvest prescription
@@ -506,6 +552,8 @@
   Prepare Original Wind `WindEventParametersTable`
 
 - [`prep_daily_weather()`](https://for-cast.github.io/landisutils/reference/prep_climate_data.md)
+  [`prep_monthly_weather_biosim()`](https://for-cast.github.io/landisutils/reference/prep_climate_data.md)
+  [`prep_monthly_weather_climr()`](https://for-cast.github.io/landisutils/reference/prep_climate_data.md)
   [`prep_monthly_weather()`](https://for-cast.github.io/landisutils/reference/prep_climate_data.md)
   : Prepare Climate Data
 
@@ -526,6 +574,9 @@
 
 - [`suitabilityFile()`](https://for-cast.github.io/landisutils/reference/suitabilityFile.md)
   : Construct a habitat-suitability file reference
+
+- [`test_ecoregionPolys`](https://for-cast.github.io/landisutils/reference/test_ecoregionPolys.md)
+  : Test ecoregion polygons
 
 - [`windSpeedVulnerability()`](https://for-cast.github.io/landisutils/reference/windSpeedVulnerability.md)
   : Construct a per-species wind-speed vulnerability curve

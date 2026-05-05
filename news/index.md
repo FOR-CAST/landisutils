@@ -1,5 +1,51 @@
 # Changelog
 
+## landisutils 0.0.6
+
+- added a focused integration-test scenario `necn_scrpple` exercising
+  `NECNSuccession` + `SocialClimateFire` (SCRAPPLE) plus the biomass
+  output extensions (`OutputBiomass`, `OutputBiomassCommunity`,
+  `OutputBiomassByAge`, `OutputBiomassReclass`); validated end-to-end on
+  both v8 Docker images;
+- fixed `OutputBiomassByAge$write()` emitting one `Species` line per
+  element (the LANDIS-II parser only accepts one `Species` keyword); the
+  species list is now joined with indented continuation lines as the
+  format requires;
+
+## landisutils 0.0.5
+
+- added new climate-data backends for use with the LANDIS-II Climate
+  Library:
+  - daily and monthly weather from BioSIM via the `BioSIM` package
+    ([`prep_daily_weather()`](https://for-cast.github.io/landisutils/reference/prep_climate_data.md),
+    [`prep_monthly_weather_biosim()`](https://for-cast.github.io/landisutils/reference/prep_climate_data.md));
+  - monthly weather from `climr`
+    ([`prep_monthly_weather_climr()`](https://for-cast.github.io/landisutils/reference/prep_climate_data.md)),
+    including the bcgov-recommended 8-member GCM ensemble
+    (`climr_ensemble_8`);
+  - monthly weather from TerraClim via `climateR`
+    ([`prep_monthly_weather()`](https://for-cast.github.io/landisutils/reference/prep_climate_data.md));
+- exported the lower-level fetch and assembly helpers used by the above
+  ([`get_clim_daily()`](https://for-cast.github.io/landisutils/reference/get_clim_daily.md),
+  [`get_clim_monthly()`](https://for-cast.github.io/landisutils/reference/get_clim_monthly.md),
+  [`get_clim_monthly_climr()`](https://for-cast.github.io/landisutils/reference/get_clim_monthly_climr.md),
+  [`get_clim_monthly_terraclim()`](https://for-cast.github.io/landisutils/reference/get_clim_monthly_terraclim.md),
+  [`get_fwi_daily()`](https://for-cast.github.io/landisutils/reference/get_fwi_daily.md),
+  [`get_elevation_rast()`](https://for-cast.github.io/landisutils/reference/get_elevation_rast.md),
+  [`create_locations_df()`](https://for-cast.github.io/landisutils/reference/create_locations_df.md),
+  and the `assemble_climate_library_file*()` family);
+- climate caches are now namespaced by a study-area hash so distinct
+  study areas don’t collide;
+- added `test_ecoregionPolys` dataset to support examples and tests;
+- reworked the `climate-data` vignette to demonstrate the new backends;
+- fixed `BiomassSuccession` R6 class name (was `"DynamicFuels"`);
+- added `cffdrs` and `digest` to `Imports`;
+- added `arrow`, `BioSIM`, and `climr` to `Suggests`.
+
+## landisutils 0.0.4
+
+- improve docker integration tests;
+
 ## landisutils 0.0.3
 
 - added support for the remaining LANDIS-II v8 extensions:

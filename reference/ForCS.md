@@ -40,7 +40,7 @@ Other ForCS helpers:
 ## Super class
 
 [`landisutils::LandisExtension`](https://for-cast.github.io/landisutils/reference/LandisExtension.md)
--\> `ForC Succession`
+-\> `ForCS`
 
 ## Active bindings
 
@@ -125,11 +125,11 @@ Other ForCS helpers:
 
 ### Public methods
 
-- [`ForCS$new()`](#method-ForC%20Succession-new)
+- [`ForCS$new()`](#method-ForCS-new)
 
-- [`ForCS$write()`](#method-ForC%20Succession-write)
+- [`ForCS$write()`](#method-ForCS-write)
 
-- [`ForCS$clone()`](#method-ForC%20Succession-clone)
+- [`ForCS$clone()`](#method-ForCS-clone)
 
 Inherited methods
 
