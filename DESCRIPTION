@@ -58,10 +58,10 @@ VignetteBuilder:
 Remotes:
     bcgov/climr,
     bluegreen-labs/appeears,
-    cffdrs/cffdrs_r,
+    cffdrs=cffdrs/cffdrs_r,
     mikejohnson51/climateR,
     mikejohnson51/zonal,
-    RNCan/BioSimClient_R,
+    BioSIM=RNCan/BioSimClient_R,
     PredictiveEcology/LandR@development,
     PredictiveEcology/map@development,
     PredictiveEcology/reproducible@development,
