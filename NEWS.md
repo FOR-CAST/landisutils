@@ -1,3 +1,13 @@
+# landisutils 0.0.6
+
+* added a focused integration-test scenario `necn_scrpple` exercising
+  `NECNSuccession` + `SocialClimateFire` (SCRAPPLE) plus the biomass output
+  extensions (`OutputBiomass`, `OutputBiomassCommunity`, `OutputBiomassByAge`,
+  `OutputBiomassReclass`); validated end-to-end on both v8 Docker images;
+* fixed `OutputBiomassByAge$write()` emitting one `Species` line per element
+  (the LANDIS-II parser only accepts one `Species` keyword); the species list
+  is now joined with indented continuation lines as the format requires;
+
 # landisutils 0.0.5
 
 * added new climate-data backends for use with the LANDIS-II Climate Library:

@@ -61,7 +61,7 @@ OutputBiomassByAge <- R6Class(
           insertLandisData(private$.LandisData),
           insertValue("Timestep", self$Timestep),
           insertFile("MapNames", self$MapNames),
-          glue::glue("Species {paste(self$Species, sep = '\n         ')}")
+          glue::glue("Species {paste(self$Species, collapse = '\n         ')}")
         ),
         file.path(self$path, self$files[1])
       )

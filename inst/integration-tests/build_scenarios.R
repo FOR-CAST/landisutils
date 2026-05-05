@@ -1342,106 +1342,95 @@ build_pnet_all_extension <- function(scen_dir, allowed_classes) {
 }
 
 ## ---------------------------------------------------------------------------
-## Scenario: Biomass Succession + Social Climate Fire + biomass output extensions
+## Scenario: NECN Succession + Social Climate Fire + biomass output extensions
 ##
-## More targeted than the AllExtension blocks: validates that Biomass Succession
+## More targeted than `build_necn_all_extension`: validates that NECN Succession
 ## config + SCRAPPLE config + every biomass-flavoured output extension parse
-## cleanly together. Reuses the same `CoreV8.0-BiomassSuccession7.0` reference
-## inputs as the first two scenarios -- SCRAPPLE raster slots all point at
-## `ecoregions.tif` since the upstream BiomassSuccession testings dir doesn't
-## ship dedicated SCRAPPLE rasters and the parser only needs valid raster
-## paths (same approach as the PnET AllExtension scenario).
+## cleanly together. Reuses `tests/TestNECN_UCLv2_AllExtension/inputs` (same
+## fixtures as `build_necn_all_extension`) but exercises a much smaller
+## extension stack so a SCRAPPLE/output regression isn't masked by failures
+## elsewhere in the AllExtension scenario.
 ##
-## Skipped on any image that doesn't register both BiomassSuccession and
+## Skipped on any image that doesn't register both NECNSuccession and
 ## SocialClimateFire; individual output extensions get filtered out per image
 ## by `filter_extensions_for_image()`.
 ## ---------------------------------------------------------------------------
 
-build_biomass_succession_scrpple <- function(scen_dir, allowed_classes) {
-  ## Bail fast: this scenario exists to exercise SCRAPPLE on top of Biomass
+build_necn_scrpple <- function(scen_dir, allowed_classes) {
+  ## Bail fast: this scenario exists to exercise SCRAPPLE on top of NECN
   ## Succession, so skip on images that lack either backend.
-  if (!all(c("BiomassSuccession", "SocialClimateFire") %in% allowed_classes)) {
+  if (!all(c("NECNSuccession", "SocialClimateFire") %in% allowed_classes)) {
     return(NULL)
   }
 
-  ref_base <- paste0(
-    "https://raw.githubusercontent.com/",
-    "LANDIS-II-Foundation/Extension-Biomass-Succession/master/",
-    "testings/CoreV8.0-BiomassSuccession7.0"
-  )
-  ref_files <- c(
-    "Core_species_data.txt",
-    "SpeciesData.csv",
-    "SppEcoregionData.csv",
-    "biomass-succession_ClimateGenerator.txt",
-    "biomass-succession_InitialCommunities.csv",
-    "ecoregions.tif",
-    "ecoregions.txt",
-    "initial-communities.tif",
-    "PRISM_data_AFRI_4.18.13_v2.csv"
-  )
-  download_refs(ref_base, scen_dir, ref_files)
+  download_repo_subtree(TDA_REPO, TDA_REF, "tests/TestNECN_UCLv2_AllExtension/inputs", scen_dir)
+  flatten_path_refs(scen_dir)
 
   scen_name <- basename(scen_dir)
 
-  ## ---- Biomass Succession (mirrors upstream biomass-succession.txt) ------
-  min_rel_b <- tibble::tribble(
-    ~ShadeClass , ~Eco1 , ~Eco2 ,
-    NA_integer_ , "101" , "102" ,
-    1L          , "25%" , "25%" ,
-    2L          , "45%" , "45%" ,
-    3L          , "56%" , "56%" ,
-    4L          , "70%" , "70%" ,
-    5L          , "90%" , "90%"
+  ## ---- NECN Succession (mirrors build_necn_all_extension) ----------------
+  abs <- function(name) file.path(scen_dir, name)
+  soil_map_names <- list(
+    SoilDepthMapName = abs("random110.tif"),
+    SoilDrainMapName = abs("constantpoint75.tif"),
+    SoilBaseFlowMapName = abs("constantpoint4.tif"),
+    SoilStormFlowMapName = abs("constantpoint4.tif"),
+    SoilFieldCapacityMapName = abs("random_point1_point2.tif"),
+    SoilWiltingPointMapName = abs("random_point05_point099.tif"),
+    SoilPercentClayMapName = abs("random_point01_point5.tif"),
+    SoilPercentSandMapName = abs("random_point01_point5.tif"),
+    InitialSOM1CsurfMapName = abs("random110.tif"),
+    InitialSOM1NsurfMapName = abs("random6.tif"),
+    InitialSOM1CsoilMapName = abs("random110.tif"),
+    InitialSOM1NsoilMapName = abs("random9.tif"),
+    InitialSOM2CMapName = abs("random4500.tif"),
+    InitialSOM2NMapName = abs("random145.tif"),
+    InitialSOM3CMapName = abs("random1294.tif"),
+    InitialSOM3NMapName = abs("random50.tif"),
+    InitialDeadWoodSurfaceMapName = abs("random110.tif"),
+    InitialDeadCoarseRootsMapName = abs("random50.tif")
   )
-  suff_light <- tibble::tribble(
-    ~class , ~X0 , ~X1 , ~X2  , ~X3  , ~X4  , ~X5  ,
-    1L     , 1.0 , 0.5 , 0.25 , 0.0  , 0.0  , 0.0  ,
-    2L     , 1.0 , 1.0 , 0.5  , 0.25 , 0.0  , 0.0  ,
-    3L     , 1.0 , 1.0 , 1.0  , 0.5  , 0.25 , 0.0  ,
-    4L     , 1.0 , 1.0 , 1.0  , 1.0  , 0.5  , 0.25 ,
-    5L     , 0.1 , 0.5 , 1.0  , 1.0  , 1.0  , 1.0
+  fire_params <- tibble::tribble(
+    ~FireSeverity        , ~CoarseDebrisReduction , ~FineLitterReduction ,
+    ~CohortWoodReduction , ~CohortLeafReduction   , ~SOMReduction        ,
+    1L                   , 0.0                    , 0.5                  , 0.05 , 0.85 , 0.10 ,
+    2L                   , 0.5                    , 0.75                 , 0.15 , 0.95 , 0.50 ,
+    3L                   , 1.0                    , 1.0                  , 0.35 , 1.00 , 0.75
   )
-  erp_df <- tibble::tribble(
-    ~ecoregion , ~AET ,
-    "101"      ,  600 ,
-    "102"      ,  600
+  harvest_params <- tibble::tribble(
+    ~PrescriptionName  , ~DeadWoodReduction , ~DeadLitterReduction , ~SOMReduction ,
+    ~CohortWoodRemoval , ~CohortLeafRemoval ,
+    "MaxAgeClearcut"   , 0.5                , 0.15                 , 0.2           , 0.8 , 0.15 ,
+    "PatchCutting"     , 1.0                , 1.0                  , 1.0           , 1.0 , 1.0
   )
-  frp_df <- tibble::tribble(
-    ~Severity , ~WoodLitterReduct , ~LitterReduct ,
-    1L        , 0.0               , 0.5           ,
-    2L        , 0.0               , 0.75          ,
-    3L        , 0.0               , 1.0
-  )
-  hrp_df <- tibble::tribble(
-    ~Name            , ~WoodLitterReduct , ~LitterReduct , ~CohortWoodRemoval , ~CohortLeafRemoval ,
-    "MaxAgeClearcut" , 0.5               , 0.15          , 0.8                , 0.0                ,
-    "PatchCutting"   , 1.0               , 1.0           , 1.0                , 0.0
-  )
-  ext_bs <- BiomassSuccession$new(
+  ext_necn <- NECNSuccession$new(
     path = scen_dir,
-    Timestep = 10,
+    Timestep = 5L,
     SeedingAlgorithm = "WardSeedDispersal",
-    InitialCommunitiesFiles = c(
-      file.path(scen_dir, "biomass-succession_InitialCommunities.csv"),
-      file.path(scen_dir, "initial-communities.tif")
-    ),
-    ClimateConfigFile = file.path(scen_dir, "biomass-succession_ClimateGenerator.txt"),
-    CalibrateMode = NULL,
-    SpinupCohorts = FALSE,
-    SpinupMortalityFraction = 0.05,
-    MinRelativeBiomass = min_rel_b,
-    SufficientLight = suff_light,
-    SpeciesDataFile = file.path(scen_dir, "SpeciesData.csv"),
-    EcoregionParameters = erp_df,
-    SpeciesEcoregionDataFile = file.path(scen_dir, "SppEcoregionData.csv"),
-    FireReductionParameters = frp_df,
-    HarvestReductionParameters = hrp_df
+    InitialCommunitiesCSV = file.path(scen_dir, "initial-communities.csv"),
+    InitialCommunitiesMap = file.path(scen_dir, "initial-communities.img"),
+    ClimateConfigFile = file.path(scen_dir, "climate-generator-baseline.txt"),
+    SoilMaps = soil_map_names,
+    CalibrateMode = FALSE,
+    SmokeModelOutputs = FALSE,
+    WaterDecayFunction = "Ratio",
+    ProbabilityEstablishAdjust = 1.0,
+    InitialMineralN = 2.0,
+    InitialFineFuels = 0.99,
+    AtmosphericNSlope = 0.05,
+    AtmosphericNIntercept = 0.05,
+    Latitude = 44.0,
+    DenitrificationRate = 0.001,
+    DecayRateSurf = 0.01,
+    DecayRateSOM1 = 0.01,
+    DecayRateSOM2 = 0.2,
+    DecayRateSOM3 = 0.001,
+    SpeciesParameters = file.path(scen_dir, "NECN_Spp_Table.csv"),
+    FireReductionParameters = fire_params,
+    HarvestReductionParameters = harvest_params
   )
 
   ## ---- Social Climate Fire (SCRAPPLE) ------------------------------------
-  ## Species list mirrors Core_species_data.txt; raster slots all point at
-  ## `ecoregions.tif` (parser-valid; runtime values are placeholders).
   scrpple_species <- tibble::tribble(
     ~SpeciesCode , ~AgeDBH , ~MaximumBarkThickness ,
     "abiebals"   ,     100 ,                    10 , "acerrubr" , 100 , 10 , "acersacc" , 100 , 10 ,
@@ -1473,15 +1462,15 @@ build_biomass_succession_scrpple <- function(scen_dir, allowed_classes) {
     path = scen_dir,
     Timestep = 1L,
     Species_CSV_File = scrpple_species_file,
-    AccidentalIgnitionsMap = rast("ecoregions.tif"),
-    LightningIgnitionsMap = rast("ecoregions.tif"),
-    RxIgnitionsMap = rast("ecoregions.tif"),
-    AccidentalSuppressionMap = rast("ecoregions.tif"),
-    LightningSuppressionMap = rast("ecoregions.tif"),
-    RxSuppressionMap = rast("ecoregions.tif"),
-    GroundSlopeMap = rast("ecoregions.tif"),
-    UphillSlopeAzimuthMap = rast("ecoregions.tif"),
-    ClayMap = rast("ecoregions.tif"),
+    AccidentalIgnitionsMap = rast("Accidental_Ignition_Map.tif"),
+    LightningIgnitionsMap = rast("Lightning_Ignition_Map.tif"),
+    RxIgnitionsMap = rast("Lightning_Ignition_Map.tif"),
+    AccidentalSuppressionMap = rast("Suppression_3Zones.tif"),
+    LightningSuppressionMap = rast("Suppression_3Zones.tif"),
+    RxSuppressionMap = rast("Suppression_3Zones.tif"),
+    GroundSlopeMap = rast("GroundSlope.tif"),
+    UphillSlopeAzimuthMap = rast("UphillSlope.tif"),
+    ClayMap = rast("random_point01_point5.tif"),
     LightningIgnitionsCoeffs = c(-8.5, 0.03),
     AccidentalIgnitionsCoeffs = c(-8.5, 0.03),
     IgnitionDistribution = "ZeroInflatedPoisson",
@@ -1507,7 +1496,7 @@ build_biomass_succession_scrpple <- function(scen_dir, allowed_classes) {
     LadderFuelSpeciesList = c("abiebals", "pinubank"),
     SuppressionMaxWindSpeed = 100,
     Suppression_CSV_File = scrpple_supp_file,
-    DeadWoodTable = data.frame(species = "pinubank", age = 22)
+    DeadWoodTable = data.frame(species = c("pinubank"), age = 22)
   )
 
   ## ---- Biomass output extensions -----------------------------------------
@@ -1534,7 +1523,7 @@ build_biomass_succession_scrpple <- function(scen_dir, allowed_classes) {
   )
 
   ## ---- Filter, write, and assemble scenario.txt --------------------------
-  exts <- list(ext_bs, ext_scf, ext_ob, ext_obc, ext_obba, ext_obr)
+  exts <- list(ext_necn, ext_scf, ext_ob, ext_obc, ext_obba, ext_obr)
   exts <- filter_extensions_for_image(exts, allowed_classes)
 
   for (e in exts) {
@@ -1542,22 +1531,19 @@ build_biomass_succession_scrpple <- function(scen_dir, allowed_classes) {
   }
 
   climate_cfg <- LandisClimateConfig$new(path = scen_dir)
-  climate_cfg$add_file("biomass-succession_ClimateGenerator.txt")
+  climate_cfg$add_file("climate.txt")
 
   scen <- scenario(
     name = scen_name,
     extensions = exts,
     climate_config = climate_cfg,
     path = scen_dir,
-    CellLength = 100,
+    Duration = 50,
+    EcoregionsFiles = c(file.path(scen_dir, "ecoregion.txt"), file.path(scen_dir, "ecoregion.img")),
+    SpeciesInputFile = file.path(scen_dir, "species.txt"),
+    CellLength = 30,
     DisturbancesRandomOrder = FALSE,
-    Duration = 10,
-    EcoregionsFiles = c(
-      file.path(scen_dir, "ecoregions.txt"),
-      file.path(scen_dir, "ecoregions.tif")
-    ),
-    RandomNumberSeed = 147,
-    SpeciesInputFile = file.path(scen_dir, "Core_species_data.txt")
+    RandomNumberSeed = 1111
   )
 
   scen_dir
@@ -1571,7 +1557,8 @@ for (image_id in names(IMAGES)) {
   image_info <- IMAGES[[image_id]]
   for (sb in list(
     list(name = "necn_all_extension", builder = build_necn_all_extension),
-    list(name = "pnet_all_extension", builder = build_pnet_all_extension)
+    list(name = "pnet_all_extension", builder = build_pnet_all_extension),
+    list(name = "necn_scrpple", builder = build_necn_scrpple)
   )) {
     p <- build_one(sb$name, image_id, image_info, sb$builder, out_dir)
     if (!is.null(p)) scenarios <- c(scenarios, p)
