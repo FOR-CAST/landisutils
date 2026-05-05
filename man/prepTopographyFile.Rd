@@ -54,6 +54,7 @@ Other Dynamic Fire helpers:
 
 Other Social Climate Fire helpers: 
 \code{\link{SocialClimateFire}},
+\code{\link{assemble_climate_library_file_scf}()},
 \code{\link{insertDeadWoodTable}()},
 \code{\link{insertLadderFuelSpeciesList}()},
 \code{\link{prepSuppression_CSV_File}()}

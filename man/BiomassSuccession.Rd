@@ -39,7 +39,7 @@ Other Biomass Succession helpers:
 }
 \concept{Biomass Succession helpers}
 \section{Super class}{
-\code{\link[landisutils:LandisExtension]{landisutils::LandisExtension}} -> \code{DynamicFuels}
+\code{\link[landisutils:LandisExtension]{landisutils::LandisExtension}} -> \code{BiomassSuccession}
 }
 \section{Active bindings}{
 \if{html}{\out{<div class="r6-active-bindings">}}
@@ -76,9 +76,9 @@ One of \code{"WardSeedDispersal"}, \code{"NoDispersal"}, \code{"UniversalDispers
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
-\item \href{#method-DynamicFuels-new}{\code{BiomassSuccession$new()}}
-\item \href{#method-DynamicFuels-write}{\code{BiomassSuccession$write()}}
-\item \href{#method-DynamicFuels-clone}{\code{BiomassSuccession$clone()}}
+\item \href{#method-BiomassSuccession-new}{\code{BiomassSuccession$new()}}
+\item \href{#method-BiomassSuccession-write}{\code{BiomassSuccession$write()}}
+\item \href{#method-BiomassSuccession-clone}{\code{BiomassSuccession$clone()}}
 }
 }
 \if{html}{\out{
@@ -89,8 +89,8 @@ One of \code{"WardSeedDispersal"}, \code{"NoDispersal"}, \code{"UniversalDispers
 </details>
 }}
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-DynamicFuels-new"></a>}}
-\if{latex}{\out{\hypertarget{method-DynamicFuels-new}{}}}
+\if{html}{\out{<a id="method-BiomassSuccession-new"></a>}}
+\if{latex}{\out{\hypertarget{method-BiomassSuccession-new}{}}}
 \subsection{Method \code{new()}}{
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{BiomassSuccession$new(
@@ -150,8 +150,8 @@ One of \code{"WardSeedDispersal"}, \code{"NoDispersal"}, \code{"UniversalDispers
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-DynamicFuels-write"></a>}}
-\if{latex}{\out{\hypertarget{method-DynamicFuels-write}{}}}
+\if{html}{\out{<a id="method-BiomassSuccession-write"></a>}}
+\if{latex}{\out{\hypertarget{method-BiomassSuccession-write}{}}}
 \subsection{Method \code{write()}}{
 Write extension inputs to disk
 \subsection{Usage}{
@@ -160,8 +160,8 @@ Write extension inputs to disk
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-DynamicFuels-clone"></a>}}
-\if{latex}{\out{\hypertarget{method-DynamicFuels-clone}{}}}
+\if{html}{\out{<a id="method-BiomassSuccession-clone"></a>}}
+\if{latex}{\out{\hypertarget{method-BiomassSuccession-clone}{}}}
 \subsection{Method \code{clone()}}{
 The objects of this class are cloneable with this method.
 \subsection{Usage}{

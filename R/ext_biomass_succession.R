@@ -21,7 +21,7 @@
 #'
 #' @export
 BiomassSuccession <- R6Class(
-  "DynamicFuels",
+  "BiomassSuccession",
   inherit = LandisExtension,
   public = list(
     #' @param path Character. Directory path.

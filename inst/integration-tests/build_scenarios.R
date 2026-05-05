@@ -1342,6 +1342,228 @@ build_pnet_all_extension <- function(scen_dir, allowed_classes) {
 }
 
 ## ---------------------------------------------------------------------------
+## Scenario: Biomass Succession + Social Climate Fire + biomass output extensions
+##
+## More targeted than the AllExtension blocks: validates that Biomass Succession
+## config + SCRAPPLE config + every biomass-flavoured output extension parse
+## cleanly together. Reuses the same `CoreV8.0-BiomassSuccession7.0` reference
+## inputs as the first two scenarios -- SCRAPPLE raster slots all point at
+## `ecoregions.tif` since the upstream BiomassSuccession testings dir doesn't
+## ship dedicated SCRAPPLE rasters and the parser only needs valid raster
+## paths (same approach as the PnET AllExtension scenario).
+##
+## Skipped on any image that doesn't register both BiomassSuccession and
+## SocialClimateFire; individual output extensions get filtered out per image
+## by `filter_extensions_for_image()`.
+## ---------------------------------------------------------------------------
+
+build_biomass_succession_scrpple <- function(scen_dir, allowed_classes) {
+  ## Bail fast: this scenario exists to exercise SCRAPPLE on top of Biomass
+  ## Succession, so skip on images that lack either backend.
+  if (!all(c("BiomassSuccession", "SocialClimateFire") %in% allowed_classes)) {
+    return(NULL)
+  }
+
+  ref_base <- paste0(
+    "https://raw.githubusercontent.com/",
+    "LANDIS-II-Foundation/Extension-Biomass-Succession/master/",
+    "testings/CoreV8.0-BiomassSuccession7.0"
+  )
+  ref_files <- c(
+    "Core_species_data.txt",
+    "SpeciesData.csv",
+    "SppEcoregionData.csv",
+    "biomass-succession_ClimateGenerator.txt",
+    "biomass-succession_InitialCommunities.csv",
+    "ecoregions.tif",
+    "ecoregions.txt",
+    "initial-communities.tif",
+    "PRISM_data_AFRI_4.18.13_v2.csv"
+  )
+  download_refs(ref_base, scen_dir, ref_files)
+
+  scen_name <- basename(scen_dir)
+
+  ## ---- Biomass Succession (mirrors upstream biomass-succession.txt) ------
+  min_rel_b <- tibble::tribble(
+    ~ShadeClass , ~Eco1 , ~Eco2 ,
+    NA_integer_ , "101" , "102" ,
+    1L          , "25%" , "25%" ,
+    2L          , "45%" , "45%" ,
+    3L          , "56%" , "56%" ,
+    4L          , "70%" , "70%" ,
+    5L          , "90%" , "90%"
+  )
+  suff_light <- tibble::tribble(
+    ~class , ~X0 , ~X1 , ~X2  , ~X3  , ~X4  , ~X5  ,
+    1L     , 1.0 , 0.5 , 0.25 , 0.0  , 0.0  , 0.0  ,
+    2L     , 1.0 , 1.0 , 0.5  , 0.25 , 0.0  , 0.0  ,
+    3L     , 1.0 , 1.0 , 1.0  , 0.5  , 0.25 , 0.0  ,
+    4L     , 1.0 , 1.0 , 1.0  , 1.0  , 0.5  , 0.25 ,
+    5L     , 0.1 , 0.5 , 1.0  , 1.0  , 1.0  , 1.0
+  )
+  erp_df <- tibble::tribble(
+    ~ecoregion , ~AET ,
+    "101"      ,  600 ,
+    "102"      ,  600
+  )
+  frp_df <- tibble::tribble(
+    ~Severity , ~WoodLitterReduct , ~LitterReduct ,
+    1L        , 0.0               , 0.5           ,
+    2L        , 0.0               , 0.75          ,
+    3L        , 0.0               , 1.0
+  )
+  hrp_df <- tibble::tribble(
+    ~Name            , ~WoodLitterReduct , ~LitterReduct , ~CohortWoodRemoval , ~CohortLeafRemoval ,
+    "MaxAgeClearcut" , 0.5               , 0.15          , 0.8                , 0.0                ,
+    "PatchCutting"   , 1.0               , 1.0           , 1.0                , 0.0
+  )
+  ext_bs <- BiomassSuccession$new(
+    path = scen_dir,
+    Timestep = 10,
+    SeedingAlgorithm = "WardSeedDispersal",
+    InitialCommunitiesFiles = c(
+      file.path(scen_dir, "biomass-succession_InitialCommunities.csv"),
+      file.path(scen_dir, "initial-communities.tif")
+    ),
+    ClimateConfigFile = file.path(scen_dir, "biomass-succession_ClimateGenerator.txt"),
+    CalibrateMode = NULL,
+    SpinupCohorts = FALSE,
+    SpinupMortalityFraction = 0.05,
+    MinRelativeBiomass = min_rel_b,
+    SufficientLight = suff_light,
+    SpeciesDataFile = file.path(scen_dir, "SpeciesData.csv"),
+    EcoregionParameters = erp_df,
+    SpeciesEcoregionDataFile = file.path(scen_dir, "SppEcoregionData.csv"),
+    FireReductionParameters = frp_df,
+    HarvestReductionParameters = hrp_df
+  )
+
+  ## ---- Social Climate Fire (SCRAPPLE) ------------------------------------
+  ## Species list mirrors Core_species_data.txt; raster slots all point at
+  ## `ecoregions.tif` (parser-valid; runtime values are placeholders).
+  scrpple_species <- tibble::tribble(
+    ~SpeciesCode , ~AgeDBH , ~MaximumBarkThickness ,
+    "abiebals"   ,     100 ,                    10 , "acerrubr" , 100 , 10 , "acersacc" , 100 , 10 ,
+    "betualle"   ,     100 ,                    10 , "fraxamer" , 100 , 10 , "piceglau" , 100 , 10 ,
+    "pinubank"   ,     100 ,                    10 , "pinuresi" , 100 , 10 , "pinustro" , 100 , 10 ,
+    "poputrem"   ,     100 ,                    10 , "querelli" , 100 , 10 , "querrubr" , 100 , 10 ,
+    "thujocci"   ,     100 ,                    10 , "tiliamer" , 100 , 10
+  )
+  scrpple_species_file <- prepSpeciesData(
+    df = scrpple_species,
+    type = "fire",
+    path = scen_dir,
+    filename = "SCRPPLE_Spp_Table.csv"
+  )
+  scrpple_supp <- tibble::tribble(
+    ~IgnitionType        , ~Mapcode     , ~Suppress_Category_0 , ~FWI_Break_1 ,
+    ~Suppress_Category_1 , ~FWI_Break_2 , ~Suppress_Category_2 ,
+    "Accidental"         ,            1 ,                   10 ,           20 , 20 , 30 , 0 ,
+    "Lightning"          ,            1 ,                   10 ,           20 , 20 , 30 , 0 ,
+    "Rx"                 ,            1 ,                   10 ,           20 , 20 , 30 , 0
+  )
+  scrpple_supp_file <- prepSuppression_CSV_File(
+    scrpple_supp,
+    path = scen_dir,
+    filename = "Suppression_Input.csv"
+  )
+  rast <- function(name) file.path(scen_dir, name)
+  ext_scf <- SocialClimateFire$new(
+    path = scen_dir,
+    Timestep = 1L,
+    Species_CSV_File = scrpple_species_file,
+    AccidentalIgnitionsMap = rast("ecoregions.tif"),
+    LightningIgnitionsMap = rast("ecoregions.tif"),
+    RxIgnitionsMap = rast("ecoregions.tif"),
+    AccidentalSuppressionMap = rast("ecoregions.tif"),
+    LightningSuppressionMap = rast("ecoregions.tif"),
+    RxSuppressionMap = rast("ecoregions.tif"),
+    GroundSlopeMap = rast("ecoregions.tif"),
+    UphillSlopeAzimuthMap = rast("ecoregions.tif"),
+    ClayMap = rast("ecoregions.tif"),
+    LightningIgnitionsCoeffs = c(-8.5, 0.03),
+    AccidentalIgnitionsCoeffs = c(-8.5, 0.03),
+    IgnitionDistribution = "ZeroInflatedPoisson",
+    LightningIgnitionsBinomialCoeffs = c(-8.5, 0.03),
+    AccidentalIgnitionsBinomialCoeffs = c(-8.5, 0.03),
+    MaximumFineFuels = 500.0,
+    MaximumRxWindSpeed = 80.0,
+    MaximumRxFireWeatherIndex = 80.0,
+    MinimumRxFireWeatherIndex = 1.0,
+    MaximumRxTemperature = 35.0,
+    MinimumRxRelativeHumidity = 22.0,
+    MaximumRxFireIntensity = 1,
+    NumberRxAnnualFires = 10,
+    NumberRxDailyFires = 1,
+    FirstDayRxFires = 2,
+    LastDayRxFires = 300,
+    TargetRxSize = 40,
+    MaximumSpreadAreaCoeffs = c(10, -2.5, -2.5),
+    SpreadProbabilityCoeffs = c(-1.79, 0.06, -0.915, 0.0126),
+    SiteMortalityCoeffs = c(0.0059, 0.00050, -0.000010, -0.0002200, -0.00000050, 0.00000, 0.00000),
+    CohortMortalityCoeffs = c(-0.703, -0.9908, 0.009),
+    LadderFuelMaxAge = 40,
+    LadderFuelSpeciesList = c("abiebals", "pinubank"),
+    SuppressionMaxWindSpeed = 100,
+    Suppression_CSV_File = scrpple_supp_file,
+    DeadWoodTable = data.frame(species = "pinubank", age = 22)
+  )
+
+  ## ---- Biomass output extensions -----------------------------------------
+  ## OutputBiomassPnET is intentionally omitted -- it requires PnET-Succession.
+  ext_ob <- OutputBiomass$new(path = scen_dir, Timestep = 10, Species = "all")
+  ext_obc <- OutputBiomassCommunity$new(path = scen_dir, Timestep = 10L)
+  ext_obba <- OutputBiomassByAge$new(
+    path = scen_dir,
+    Timestep = 10,
+    Species = c("pinubank ageclass1(10-40)", "poputrem ageclass1(<50)")
+  )
+  reclass_maps <- list(
+    forest = list(
+      Conifers = c("abiebals", "piceglau", "pinubank", "pinustro", "thujocci"),
+      Hardwoods = c("acerrubr", "acersacc", "betualle", "fraxamer", "poputrem"),
+      Other = c("querelli", "querrubr", "tiliamer")
+    )
+  )
+  ext_obr <- OutputBiomassReclass$new(
+    path = scen_dir,
+    Timestep = 10L,
+    ReclassMaps = reclass_maps,
+    MapFileNames = "outputs/biomass-reclass/{reclass-map-name}-{timestep}.tif"
+  )
+
+  ## ---- Filter, write, and assemble scenario.txt --------------------------
+  exts <- list(ext_bs, ext_scf, ext_ob, ext_obc, ext_obba, ext_obr)
+  exts <- filter_extensions_for_image(exts, allowed_classes)
+
+  for (e in exts) {
+    e$write()
+  }
+
+  climate_cfg <- LandisClimateConfig$new(path = scen_dir)
+  climate_cfg$add_file("biomass-succession_ClimateGenerator.txt")
+
+  scen <- scenario(
+    name = scen_name,
+    extensions = exts,
+    climate_config = climate_cfg,
+    path = scen_dir,
+    CellLength = 100,
+    DisturbancesRandomOrder = FALSE,
+    Duration = 10,
+    EcoregionsFiles = c(
+      file.path(scen_dir, "ecoregions.txt"),
+      file.path(scen_dir, "ecoregions.tif")
+    ),
+    RandomNumberSeed = 147,
+    SpeciesInputFile = file.path(scen_dir, "Core_species_data.txt")
+  )
+
+  scen_dir
+}
+
+## ---------------------------------------------------------------------------
 ## Drive the per-image build for the AllExtension scenarios.
 ## ---------------------------------------------------------------------------
 

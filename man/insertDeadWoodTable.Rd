@@ -18,6 +18,7 @@ Specify \code{DeadWoodTable} for Social-Climate-Fire extension
 \seealso{
 Other Social Climate Fire helpers: 
 \code{\link{SocialClimateFire}},
+\code{\link{assemble_climate_library_file_scf}()},
 \code{\link{insertLadderFuelSpeciesList}()},
 \code{\link{prepSuppression_CSV_File}()},
 \code{\link{prepTopographyFile}()}

@@ -45,7 +45,7 @@ Other ForCS helpers:
 }
 \concept{ForCS helpers}
 \section{Super class}{
-\code{\link[landisutils:LandisExtension]{landisutils::LandisExtension}} -> \code{ForC Succession}
+\code{\link[landisutils:LandisExtension]{landisutils::LandisExtension}} -> \code{ForCS}
 }
 \section{Active bindings}{
 \if{html}{\out{<div class="r6-active-bindings">}}
@@ -94,9 +94,9 @@ One of \code{"WardSeedDispersal"}, \code{"NoDispersal"}, \code{"UniversalDispers
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
-\item \href{#method-ForC Succession-new}{\code{ForCS$new()}}
-\item \href{#method-ForC Succession-write}{\code{ForCS$write()}}
-\item \href{#method-ForC Succession-clone}{\code{ForCS$clone()}}
+\item \href{#method-ForCS-new}{\code{ForCS$new()}}
+\item \href{#method-ForCS-write}{\code{ForCS$write()}}
+\item \href{#method-ForCS-clone}{\code{ForCS$clone()}}
 }
 }
 \if{html}{\out{
@@ -107,8 +107,8 @@ One of \code{"WardSeedDispersal"}, \code{"NoDispersal"}, \code{"UniversalDispers
 </details>
 }}
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-ForC Succession-new"></a>}}
-\if{latex}{\out{\hypertarget{method-ForC Succession-new}{}}}
+\if{html}{\out{<a id="method-ForCS-new"></a>}}
+\if{latex}{\out{\hypertarget{method-ForCS-new}{}}}
 \subsection{Method \code{new()}}{
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ForCS$new(
@@ -194,8 +194,8 @@ Biomass Spin-up Flag, Tolerance \%, Max Iterations).}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-ForC Succession-write"></a>}}
-\if{latex}{\out{\hypertarget{method-ForC Succession-write}{}}}
+\if{html}{\out{<a id="method-ForCS-write"></a>}}
+\if{latex}{\out{\hypertarget{method-ForCS-write}{}}}
 \subsection{Method \code{write()}}{
 Write extension inputs to disk
 \subsection{Usage}{
@@ -204,8 +204,8 @@ Write extension inputs to disk
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-ForC Succession-clone"></a>}}
-\if{latex}{\out{\hypertarget{method-ForC Succession-clone}{}}}
+\if{html}{\out{<a id="method-ForCS-clone"></a>}}
+\if{latex}{\out{\hypertarget{method-ForCS-clone}{}}}
 \subsection{Method \code{clone()}}{
 The objects of this class are cloneable with this method.
 \subsection{Usage}{

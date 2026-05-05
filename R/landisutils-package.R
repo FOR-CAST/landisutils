@@ -1,18 +1,20 @@
 utils::globalVariables(c(
-  ".", "active", "age", "all_files", "Area", "as.data.table", "B", "cellSize", "CohortAge",
-  "CohortBiomass", "community", "Day", "ecoregionGroup", "emfs_ha", "empiricalBurnRate",
-  "establishprob", "everything", "FireRegionName", "FireSeverity", "firetolerance",
-  "FireTolerance", "growthcurve", "GrowthCurve", "growthCurveSource", "hardsoft",
-  "IgnitionProb", "inflationFactor", "k", "leafLignin", "LeafLignin", "leaflongevity",
-  "LeafLongevity", "longevity", "Longevity", "mANPPproportion", "MapCode", "maxANPP",
-  "maxB", "MaxSize", "MeanSize", "MinSize", "Month", "MortalityCurve", "mortalityshape",
-  "newAge", "newB", "newPixelGroup", "pIgnition", "pixelGroup",
-  "PolyID", "postfireregen", "PostFireRegen", "ProbMortality", "resproutage_max",
-  "resproutage_min", "resproutprob", "SeedDispDistEff", "SeedDispDistMax",
-  "seeddistance_eff", "seeddistance_max", "sexualmature", "SexualMaturity",
-  "shadetolerance", "ShadeTolerance", "species", "speciesCode", "SpeciesCode",
-  "SpeciesName", "SproutAgeMax", "SproutAgeMin", "starts_with", "Value", "VegReprodProb",
-  "wooddecayrate", "WoodDecayRate", "xBar", "year", "Year"
+  ".", ".data", "active", "age", "all_files", "Area", "as.data.table", "B", "BaseVar",
+  "BatchID", "BUI", "cellSize", "CellID", "CohortAge", "CohortBiomass", "community", "DATE",
+  "DAY", "Day", "DC", "DMC", "ecoregionGroup", "EcoID", "elev", "emfs_ha", "empiricalBurnRate",
+  "establishprob", "everything", "FFMC", "FireRegionName", "FireSeverity", "firetolerance",
+  "FireTolerance", "FWI", "growthcurve", "GrowthCurve", "growthCurveSource", "hardsoft", "id",
+  "IgnitionProb", "inflationFactor", "ISI", "JULIAN_DAY", "k", "KeyID", "lat", "leafLignin",
+  "LeafLignin", "leaflongevity", "LeafLongevity", "lon", "longevity", "Longevity",
+  "mANPPproportion", "MapCode", "maxANPP", "maxB", "MaxSize", "MeanSize", "MinSize",
+  "Month", "MONTH", "MortalityCurve", "mortalityshape", "newAge", "newB",
+  "newPixelGroup", "pIgnition", "pixelGroup", "PolyID", "postfireregen", "PostFireRegen",
+  "Prcp", "ProbMortality", "RelH", "resproutage_max", "resproutage_min", "resproutprob",
+  "RH", "SeedDispDistEff", "SeedDispDistMax", "seeddistance_eff", "seeddistance_max",
+  "sexualmature", "SexualMaturity", "shadetolerance", "ShadeTolerance", "species",
+  "speciesCode", "SpeciesCode", "SpeciesName", "SproutAgeMax", "SproutAgeMin", "SRad",
+  "starts_with", "Tmax", "Tmin", "Value", "Variable", "VegReprodProb", "WD", "WndD", "WndS",
+  "wooddecayrate", "WoodDecayRate", "WS", "xBar", "year", "Year", "YEAR"
 ))
 
 #' @keywords internal
@@ -23,6 +25,7 @@ NULL
 
 ## usethis namespace: start
 #' @importFrom callr r_bg
+#' @importFrom cffdrs grass_fuel_moisture_code
 #' @importFrom data.table :=
 #' @importFrom data.table .BY
 #' @importFrom data.table .EACHI

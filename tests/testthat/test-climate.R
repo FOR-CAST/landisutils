@@ -1,5 +1,376 @@
+## Real BioSIM / climr fetches can take many hours against a fine elevation
+## raster (BioSIM batches scale with raster cell count; climr also downloads
+## multi-GB GCM rasters in projection mode), which causes R CMD check to
+## hang. Tests that hit those services skip by default and opt in via
+## `LANDISUTILS_RUN_NETWORK_TESTS=true`. To keep opt-in runs reasonable we
+## also pass a coarse `z = 6` to the prep_*() functions so the elevation
+## raster shrinks to ~1 BioSIM batch over `test_ecoregionPolys`. Pure-
+## validation tests further down do not call this helper and always run.
+##
+## climr's projection mode still pulls multi-GB GCM rasters regardless of
+## bbox / `z`, so even with the env var set that one test takes longer than
+## the BioSIM ones. If it becomes a problem, mock `climr::downscale()` or
+## move it to an out-of-band integration job.
+
+.skip_unless_network_tests <- function() {
+  testthat::skip_on_cran()
+  if (!isTRUE(as.logical(Sys.getenv("LANDISUTILS_RUN_NETWORK_TESTS", "false")))) {
+    testthat::skip("Set LANDISUTILS_RUN_NETWORK_TESTS=true to run BioSIM/climr fetch tests.")
+  }
+}
+
+testthat::test_that("BioSIM daily-climate pipeline produces wide LANDIS-II table", {
+  .skip_unless_network_tests()
+  testthat::skip_if_not_installed("BioSIM")
+  testthat::skip_if_not_installed("arrow")
+  testthat::skip_if_not_installed("elevatr")
+  testthat::skip_if_not_installed("furrr")
+  testthat::skip_if_not_installed("sf")
+  testthat::skip_if_offline()
+
+  tmp_pth <- withr::local_tempdir("test_climate_biosim_")
+  withr::local_options(landisutils.cache.path = tmp_pth)
+
+  ecoregionPolys <- landisutils::test_ecoregionPolys
+  clim_years <- 2018L
+
+  daily_weather <- prep_daily_weather(
+    vars = c("prcp", "tmax", "tmin"),
+    years = clim_years,
+    studyArea = ecoregionPolys,
+    id = "PolyID",
+    z = 6
+  )
+
+  testthat::expect_s3_class(daily_weather, "tbl_df")
+  testthat::expect_true(all(c("Year", "Month", "Day", "Variable") %in% names(daily_weather)))
+  testthat::expect_setequal(unique(daily_weather$Variable), c("precip", "Tmin", "Tmax"))
+  testthat::expect_true(all(daily_weather$Year == clim_years))
+})
+
+testthat::test_that("assemble_climate_library_file_scf() produces SCF-shaped Variable column", {
+  .skip_unless_network_tests()
+  testthat::skip_if_not_installed("BioSIM")
+  testthat::skip_if_not_installed("arrow")
+  testthat::skip_if_not_installed("elevatr")
+  testthat::skip_if_not_installed("furrr")
+  testthat::skip_if_not_installed("sf")
+  testthat::skip_if_offline()
+
+  tmp_pth <- withr::local_tempdir("test_climate_biosim_scf_")
+  withr::local_options(landisutils.cache.path = tmp_pth)
+
+  ecoregionPolys <- landisutils::test_ecoregionPolys
+  clim_years <- 2018L
+
+  ## populate the BioSIM cache with the 5 variables Social Climate Fire needs
+  prep_daily_weather(
+    vars = c("prcp", "tmax", "tmin", "ws", "wnddir"),
+    years = clim_years,
+    studyArea = ecoregionPolys,
+    id = "PolyID",
+    z = 6
+  )
+
+  sa_hash <- landisutils:::.studyArea_hash(ecoregionPolys)
+  scenario_tag <- landisutils:::.biosim_scenario_tag("RCP45", "RCM4")
+  dataset_path <- file.path(tmp_pth, "ClimaticEx_Daily", sa_hash, scenario_tag)
+
+  scf_df <- assemble_climate_library_file_scf(
+    dataset_path = dataset_path,
+    vars = c("Prcp", "Tmin", "Tmax", "WndS", "WndD"),
+    id_col = "EcoID"
+  )
+
+  testthat::expect_s3_class(scf_df, "tbl_df")
+  testthat::expect_true(all(c("Year", "Month", "Day", "Variable") %in% names(scf_df)))
+  testthat::expect_setequal(
+    unique(scf_df$Variable),
+    c("precip", "mintemp", "maxtemp", "windspeed", "winddirection")
+  )
+  testthat::expect_true(all(scf_df$Year == clim_years))
+
+  ## SCF helper must not perturb the LANDIS-flavoured assembly
+  landis_df <- assemble_climate_library_file(
+    dataset_path = dataset_path,
+    vars = c("Prcp", "Tmin", "Tmax", "WndS", "WndD"),
+    id_col = "EcoID"
+  )
+  testthat::expect_setequal(
+    unique(landis_df$Variable),
+    c("precip", "Tmin", "Tmax", "windSpeed", "windDirection")
+  )
+})
+
+testthat::test_that("BioSIM monthly-climate pipeline produces wide LANDIS-II table", {
+  .skip_unless_network_tests()
+  testthat::skip_if_not_installed("BioSIM")
+  testthat::skip_if_not_installed("arrow")
+  testthat::skip_if_not_installed("elevatr")
+  testthat::skip_if_not_installed("furrr")
+  testthat::skip_if_not_installed("sf")
+  testthat::skip_if_offline()
+
+  tmp_pth <- withr::local_tempdir("test_climate_biosim_monthly_")
+  withr::local_options(landisutils.cache.path = tmp_pth)
+
+  ecoregionPolys <- landisutils::test_ecoregionPolys
+  clim_years <- 2018L
+
+  monthly_weather <- prep_monthly_weather_biosim(
+    vars = c("prcp", "tmax", "tmin", "ws", "wnddir"),
+    years = clim_years,
+    studyArea = ecoregionPolys,
+    id = "PolyID",
+    z = 6
+  )
+
+  testthat::expect_s3_class(monthly_weather, "tbl_df")
+  testthat::expect_true(all(c("Year", "Month", "Variable") %in% names(monthly_weather)))
+  testthat::expect_false("Day" %in% names(monthly_weather))
+  testthat::expect_setequal(
+    unique(monthly_weather$Variable),
+    c("precip", "Tmin", "Tmax", "windSpeed", "windDirection")
+  )
+  testthat::expect_true(all(monthly_weather$Year == clim_years))
+  testthat::expect_setequal(unique(monthly_weather$Month), 1:12)
+
+  ## wind direction must stay within [0, 360) after circular-mean summarisation
+  eco_cols <- setdiff(names(monthly_weather), c("Year", "Month", "Variable"))
+  wnddir_vals <- monthly_weather[monthly_weather$Variable == "windDirection", eco_cols] |>
+    unlist(use.names = FALSE)
+  testthat::expect_true(all(wnddir_vals >= 0 & wnddir_vals < 360, na.rm = TRUE))
+})
+
+testthat::test_that("climr monthly-climate pipeline produces wide LANDIS-II table", {
+  .skip_unless_network_tests()
+  testthat::skip_if_not_installed("arrow")
+  testthat::skip_if_not_installed("climr")
+  testthat::skip_if_not_installed("digest")
+  testthat::skip_if_not_installed("elevatr")
+  testthat::skip_if_not_installed("furrr")
+  testthat::skip_if_not_installed("sf")
+  testthat::skip_if_not_installed("withr")
+  testthat::skip_if_offline()
+
+  tmp_pth <- withr::local_tempdir("test_climate_climr_")
+  withr::local_options(landisutils.cache.path = tmp_pth)
+
+  ecoregionPolys <- landisutils::test_ecoregionPolys
+  clim_years <- 2018L
+
+  monthly_weather <- prep_monthly_weather_climr(
+    vars = c("prcp", "tmax", "tmin"),
+    years = clim_years,
+    studyArea = ecoregionPolys,
+    id = "PolyID",
+    z = 6
+  )
+
+  testthat::expect_s3_class(monthly_weather, "tbl_df")
+  testthat::expect_true(all(c("Year", "Month", "Variable") %in% names(monthly_weather)))
+  testthat::expect_false("Day" %in% names(monthly_weather))
+  testthat::expect_setequal(unique(monthly_weather$Variable), c("precip", "Tmin", "Tmax"))
+  testthat::expect_true(all(monthly_weather$Year == clim_years))
+  testthat::expect_setequal(unique(monthly_weather$Month), 1:12)
+})
+
+testthat::test_that("BioSIM daily future-scenario pipeline namespaces cache and runs", {
+  .skip_unless_network_tests()
+  testthat::skip_if_not_installed("BioSIM")
+  testthat::skip_if_not_installed("arrow")
+  testthat::skip_if_not_installed("elevatr")
+  testthat::skip_if_not_installed("furrr")
+  testthat::skip_if_not_installed("sf")
+  testthat::skip_if_offline()
+  testthat::skip_if_not(exists("test_ecoregionPolys", envir = asNamespace("landisutils")))
+
+  tmp_pth <- withr::local_tempdir("test_climate_biosim_future_")
+  withr::local_options(landisutils.cache.path = tmp_pth)
+
+  ecoregionPolys <- landisutils::test_ecoregionPolys
+  clim_years <- 2041L
+
+  daily_weather <- prep_daily_weather(
+    vars = c("prcp", "tmax", "tmin"),
+    years = clim_years,
+    studyArea = ecoregionPolys,
+    id = "PolyID",
+    z = 6,
+    rcp = "RCP45",
+    clim_model = "GCM4"
+  )
+
+  testthat::expect_s3_class(daily_weather, "tbl_df")
+  testthat::expect_true(all(daily_weather$Year == clim_years))
+  testthat::expect_setequal(unique(daily_weather$Variable), c("precip", "Tmin", "Tmax"))
+
+  ## cache should be namespaced by RCP45_GCM4
+  scenario_dirs <- list.files(
+    file.path(tmp_pth, "ClimaticEx_Daily"),
+    recursive = FALSE,
+    include.dirs = TRUE,
+    full.names = FALSE
+  )
+  expected_tag <- "RCP45_GCM4"
+  hits <- list.files(
+    file.path(tmp_pth, "ClimaticEx_Daily"),
+    pattern = paste0("^", expected_tag, "$"),
+    recursive = TRUE,
+    include.dirs = TRUE,
+    full.names = FALSE
+  )
+  testthat::expect_true(length(hits) >= 1L)
+})
+
+testthat::test_that("BioSIM args validate: bad rcp / clim_model rejected", {
+  testthat::skip_if_not(exists("test_ecoregionPolys", envir = asNamespace("landisutils")))
+
+  testthat::expect_error(
+    prep_daily_weather(
+      vars = "prcp",
+      years = 2018L,
+      studyArea = landisutils::test_ecoregionPolys,
+      id = "PolyID",
+      rcp = "BOGUS"
+    ),
+    "should be one of"
+  )
+  testthat::expect_error(
+    prep_daily_weather(
+      vars = "prcp",
+      years = 2018L,
+      studyArea = landisutils::test_ecoregionPolys,
+      id = "PolyID",
+      clim_model = "BOGUS"
+    ),
+    "should be one of"
+  )
+})
+
+testthat::test_that("climr_ensemble_8 names match climr::list_gcms()", {
+  testthat::skip_if_not_installed("climr")
+
+  testthat::expect_length(landisutils::climr_ensemble_8, 8L)
+  testthat::expect_true(all(landisutils::climr_ensemble_8 %in% climr::list_gcms()))
+})
+
+testthat::test_that("climr projection mode validates gcms/ssps/years", {
+  testthat::skip_if_not_installed("climr")
+  testthat::skip_if_not(exists("test_ecoregionPolys", envir = asNamespace("landisutils")))
+
+  ## gcms without ssps -> error
+  testthat::expect_error(
+    prep_monthly_weather_climr(
+      vars = "prcp",
+      years = 2041L,
+      studyArea = landisutils::test_ecoregionPolys,
+      id = "PolyID",
+      gcms = "MIROC6"
+    ),
+    "ssps"
+  )
+  ## bogus GCM
+  testthat::expect_error(
+    prep_monthly_weather_climr(
+      vars = "prcp",
+      years = 2041L,
+      studyArea = landisutils::test_ecoregionPolys,
+      id = "PolyID",
+      gcms = "BOGUS-GCM",
+      ssps = "ssp245"
+    ),
+    "unknown GCM"
+  )
+  ## bogus SSP
+  testthat::expect_error(
+    prep_monthly_weather_climr(
+      vars = "prcp",
+      years = 2041L,
+      studyArea = landisutils::test_ecoregionPolys,
+      id = "PolyID",
+      gcms = "MIROC6",
+      ssps = "ssp999"
+    ),
+    "unknown SSP"
+  )
+  ## year outside list_gcm_ssp_years()
+  testthat::expect_error(
+    prep_monthly_weather_climr(
+      vars = "prcp",
+      years = 1900L,
+      studyArea = landisutils::test_ecoregionPolys,
+      id = "PolyID",
+      gcms = "MIROC6",
+      ssps = "ssp245"
+    ),
+    "outside climr GCM SSP timeseries range"
+  )
+})
+
+testthat::test_that("climr projection-mode pipeline produces wide LANDIS-II table", {
+  .skip_unless_network_tests()
+  testthat::skip_if_not_installed("arrow")
+  testthat::skip_if_not_installed("climr")
+  testthat::skip_if_not_installed("digest")
+  testthat::skip_if_not_installed("elevatr")
+  testthat::skip_if_not_installed("furrr")
+  testthat::skip_if_not_installed("sf")
+  testthat::skip_if_not_installed("withr")
+  testthat::skip_if_offline()
+
+  tmp_pth <- withr::local_tempdir("test_climate_climr_future_")
+  withr::local_options(landisutils.cache.path = tmp_pth)
+
+  ecoregionPolys <- landisutils::test_ecoregionPolys
+  clim_years <- 2041L
+
+  ## small 2-GCM subset to keep runtime down; uses the same code path as the
+  ## bcgov 8-member ensemble.
+  monthly_weather <- prep_monthly_weather_climr(
+    vars = c("prcp", "tmax", "tmin"),
+    years = clim_years,
+    studyArea = ecoregionPolys,
+    id = "PolyID",
+    z = 6,
+    gcms = c("MIROC6", "MPI-ESM1-2-HR"),
+    ssps = "ssp245",
+    max_run = 0L
+  )
+
+  testthat::expect_s3_class(monthly_weather, "tbl_df")
+  testthat::expect_true(all(c("Year", "Month", "Variable") %in% names(monthly_weather)))
+  testthat::expect_setequal(unique(monthly_weather$Variable), c("precip", "Tmin", "Tmax"))
+  testthat::expect_true(all(monthly_weather$Year == clim_years))
+  testthat::expect_setequal(unique(monthly_weather$Month), 1:12)
+
+  ## cache should be namespaced by gcm_ssp245_run0
+  hits <- list.files(
+    file.path(tmp_pth, "Climr_Monthly"),
+    pattern = "^gcm_ssp245_run0$",
+    recursive = TRUE,
+    include.dirs = TRUE,
+    full.names = FALSE
+  )
+  testthat::expect_true(length(hits) >= 1L)
+})
+
+testthat::test_that("climr wrapper rejects wind variables with a clear error", {
+  testthat::skip_if_not_installed("climr")
+
+  testthat::expect_error(
+    prep_monthly_weather_climr(
+      vars = "ws",
+      years = 2018L,
+      studyArea = landisutils::test_ecoregionPolys,
+      id = "PolyID"
+    ),
+    "climr does not provide wind"
+  )
+})
+
 testthat::test_that("Climate inputs are properly created", {
-  skip("incomplete") ## TODO: rework / fix using BioSIM
+  skip("incomplete") ## legacy AppEEARS workflow; not exercised by the BioSIM refactor
 
   testthat::skip_if_not_installed("climateR")
   testthat::skip_if_not_installed("withr")

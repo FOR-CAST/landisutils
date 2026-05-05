@@ -1,3 +1,29 @@
+# landisutils 0.0.5
+
+* added new climate-data backends for use with the LANDIS-II Climate Library:
+    - daily and monthly weather from BioSIM via the `BioSIM` package
+      (`prep_daily_weather()`, `prep_monthly_weather_biosim()`);
+    - monthly weather from `climr` (`prep_monthly_weather_climr()`),
+      including the bcgov-recommended 8-member GCM ensemble
+      (`climr_ensemble_8`);
+    - monthly weather from TerraClim via `climateR`
+      (`prep_monthly_weather()`);
+* exported the lower-level fetch and assembly helpers used by the above
+  (`get_clim_daily()`, `get_clim_monthly()`, `get_clim_monthly_climr()`,
+  `get_clim_monthly_terraclim()`, `get_fwi_daily()`, `get_elevation_rast()`,
+  `create_locations_df()`, and the `assemble_climate_library_file*()` family);
+* climate caches are now namespaced by a study-area hash so distinct study
+  areas don't collide;
+* added `test_ecoregionPolys` dataset to support examples and tests;
+* reworked the `climate-data` vignette to demonstrate the new backends;
+* fixed `BiomassSuccession` R6 class name (was `"DynamicFuels"`);
+* added `cffdrs` and `digest` to `Imports`;
+* added `arrow`, `BioSIM`, and `climr` to `Suggests`.
+
+# landisutils 0.0.4
+
+* improve docker integration tests;
+
 # landisutils 0.0.3
 
 * added support for the remaining LANDIS-II v8 extensions:

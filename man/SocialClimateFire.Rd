@@ -26,6 +26,7 @@ Helpers that prepare inputs for this extension:
 \code{\link[=prepUphillAzimuthMap]{prepUphillAzimuthMap()}}.
 
 Other Social Climate Fire helpers: 
+\code{\link{assemble_climate_library_file_scf}()},
 \code{\link{insertDeadWoodTable}()},
 \code{\link{insertLadderFuelSpeciesList}()},
 \code{\link{prepSuppression_CSV_File}()},

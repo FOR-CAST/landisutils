@@ -24,7 +24,7 @@ utils::globalVariables(c("AgeAtDeath"))
 #' ## See vignette for example usage
 #'
 ForCS <- R6Class(
-  "ForC Succession",
+  "ForCS", ## ForC Succession
   inherit = LandisExtension,
   public = list(
     #' @param path Character. Directory path.

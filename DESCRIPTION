@@ -1,6 +1,6 @@
 Package: landisutils
 Title: Utilities for running LANDIS-II simulations
-Version: 0.0.4
+Version: 0.0.5
 Authors@R: 
     person(c("Alex", "M"), "Chubaty", , "achubaty@for-cast.ca", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0001-7146-8135"))
@@ -12,7 +12,9 @@ Depends:
     R (>= 4.2)
 Imports:
     callr,
+    cffdrs,
     data.table,
+    digest,
     dplyr,
     fs,
     glue,
@@ -27,8 +29,11 @@ Imports:
     utils
 Suggests:
     appeears,
+    arrow,
     bcdata,
+    BioSIM,
     climateR,
+    climr,
     elevatr,
     furrr,
     future,
@@ -51,9 +56,12 @@ Suggests:
 VignetteBuilder: 
     knitr
 Remotes:
+    bcgov/climr,
     bluegreen-labs/appeears,
+    cffdrs/cffdrs_r,
     mikejohnson51/climateR,
     mikejohnson51/zonal,
+    RNCan/BioSimClient_R,
     PredictiveEcology/LandR@development,
     PredictiveEcology/map@development,
     PredictiveEcology/reproducible@development,
@@ -73,7 +81,12 @@ Collate:
     'LandisScenario.R'
     'calibrate_original_fire.R'
     'climate.R'
+    'climate_daily_biosim.R'
     'climate_data.R'
+    'climate_monthly_biosim.R'
+    'climate_monthly_climr.R'
+    'climate_monthly_terraclim.R'
+    'data.R'
     'ecoregions.R'
     'ext_utils.R'
     'ext_biomass_browse.R'
