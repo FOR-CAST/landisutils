@@ -2,8 +2,6 @@
 
 Linear Wind Disturbance Extension
 
-Linear Wind Disturbance Extension
-
 ## References
 
 LANDIS-II Linear Wind Disturbance v3 Extension User Guide
@@ -20,7 +18,7 @@ Other Linear Wind helpers:
 
 ## Super class
 
-[`landisutils::LandisExtension`](https://for-cast.github.io/landisutils/reference/LandisExtension.md)
+[`LandisExtension`](https://for-cast.github.io/landisutils/reference/LandisExtension.md)
 -\> `LinearWind`
 
 ## Active bindings
@@ -107,7 +105,7 @@ Other Linear Wind helpers:
 
 ### Public methods
 
-- [`LinearWind$new()`](#method-LinearWind-new)
+- [`LinearWind$new()`](#method-LinearWind-initialize)
 
 - [`LinearWind$write()`](#method-LinearWind-write)
 
@@ -115,11 +113,11 @@ Other Linear Wind helpers:
 
 Inherited methods
 
-- [`landisutils::LandisExtension$add_file()`](https://for-cast.github.io/landisutils/reference/LandisExtension.html#method-add_file)
+- [`LandisExtension$add_file()`](https://for-cast.github.io/landisutils/reference/LandisExtension.html#method-add_file)
 
 ------------------------------------------------------------------------
 
-### Method `new()`
+### `LinearWind$new()`
 
 #### Usage
 
@@ -242,7 +240,7 @@ Inherited methods
 
 ------------------------------------------------------------------------
 
-### Method [`write()`](https://rdrr.io/r/base/write.html)
+### `LinearWind$write()`
 
 Write extension inputs to disk
 
@@ -252,7 +250,7 @@ Write extension inputs to disk
 
 ------------------------------------------------------------------------
 
-### Method `clone()`
+### `LinearWind$clone()`
 
 The objects of this class are cloneable with this method.
 

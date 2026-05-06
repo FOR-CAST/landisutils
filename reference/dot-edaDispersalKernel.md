@@ -7,7 +7,3 @@ Allowed EDA agent `DispersalKernel` values
 ``` r
 .edaDispersalKernel
 ```
-
-## Format
-
-An object of class `character` of length 2.

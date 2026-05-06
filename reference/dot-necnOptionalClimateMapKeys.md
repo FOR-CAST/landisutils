@@ -7,7 +7,3 @@ Allowed keys in `NECNSuccession$OptionalClimateMaps`
 ``` r
 .necnOptionalClimateMapKeys
 ```
-
-## Format
-
-An object of class `character` of length 5.

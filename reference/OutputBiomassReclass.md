@@ -2,8 +2,6 @@
 
 Biomass Reclassification Output Extension
 
-Biomass Reclassification Output Extension
-
 ## References
 
 LANDIS-II Output Biomass Reclassification v4 Extension User Guide
@@ -16,7 +14,7 @@ Other Biomass Reclass Output helpers:
 
 ## Super class
 
-[`landisutils::LandisExtension`](https://for-cast.github.io/landisutils/reference/LandisExtension.md)
+[`LandisExtension`](https://for-cast.github.io/landisutils/reference/LandisExtension.md)
 -\> `OutputBiomassReclass`
 
 ## Active bindings
@@ -34,7 +32,7 @@ Other Biomass Reclass Output helpers:
 
 ### Public methods
 
-- [`OutputBiomassReclass$new()`](#method-OutputBiomassReclass-new)
+- [`OutputBiomassReclass$new()`](#method-OutputBiomassReclass-initialize)
 
 - [`OutputBiomassReclass$write()`](#method-OutputBiomassReclass-write)
 
@@ -42,11 +40,11 @@ Other Biomass Reclass Output helpers:
 
 Inherited methods
 
-- [`landisutils::LandisExtension$add_file()`](https://for-cast.github.io/landisutils/reference/LandisExtension.html#method-add_file)
+- [`LandisExtension$add_file()`](https://for-cast.github.io/landisutils/reference/LandisExtension.html#method-add_file)
 
 ------------------------------------------------------------------------
 
-### Method `new()`
+### `OutputBiomassReclass$new()`
 
 #### Usage
 
@@ -82,7 +80,7 @@ Inherited methods
 
 ------------------------------------------------------------------------
 
-### Method [`write()`](https://rdrr.io/r/base/write.html)
+### `OutputBiomassReclass$write()`
 
 Write extension inputs to disk
 
@@ -92,7 +90,7 @@ Write extension inputs to disk
 
 ------------------------------------------------------------------------
 
-### Method `clone()`
+### `OutputBiomassReclass$clone()`
 
 The objects of this class are cloneable with this method.
 

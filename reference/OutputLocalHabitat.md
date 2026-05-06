@@ -2,8 +2,6 @@
 
 Local Habitat Suitability Output Extension
 
-Local Habitat Suitability Output Extension
-
 ## References
 
 LANDIS-II Local Habitat Suitability Output v3 Extension User Guide
@@ -17,7 +15,7 @@ Other Local Habitat Output helpers:
 
 ## Super class
 
-[`landisutils::LandisExtension`](https://for-cast.github.io/landisutils/reference/LandisExtension.md)
+[`LandisExtension`](https://for-cast.github.io/landisutils/reference/LandisExtension.md)
 -\> `OutputLocalHabitat`
 
 ## Active bindings
@@ -40,7 +38,7 @@ Other Local Habitat Output helpers:
 
 ### Public methods
 
-- [`OutputLocalHabitat$new()`](#method-OutputLocalHabitat-new)
+- [`OutputLocalHabitat$new()`](#method-OutputLocalHabitat-initialize)
 
 - [`OutputLocalHabitat$write()`](#method-OutputLocalHabitat-write)
 
@@ -48,11 +46,11 @@ Other Local Habitat Output helpers:
 
 Inherited methods
 
-- [`landisutils::LandisExtension$add_file()`](https://for-cast.github.io/landisutils/reference/LandisExtension.html#method-add_file)
+- [`LandisExtension$add_file()`](https://for-cast.github.io/landisutils/reference/LandisExtension.html#method-add_file)
 
 ------------------------------------------------------------------------
 
-### Method `new()`
+### `OutputLocalHabitat$new()`
 
 #### Usage
 
@@ -91,7 +89,7 @@ Inherited methods
 
 ------------------------------------------------------------------------
 
-### Method [`write()`](https://rdrr.io/r/base/write.html)
+### `OutputLocalHabitat$write()`
 
 Write extension inputs to disk
 
@@ -101,7 +99,7 @@ Write extension inputs to disk
 
 ------------------------------------------------------------------------
 
-### Method `clone()`
+### `OutputLocalHabitat$clone()`
 
 The objects of this class are cloneable with this method.
 

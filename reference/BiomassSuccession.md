@@ -2,8 +2,6 @@
 
 Biomass Succession Extension
 
-Biomass Succession Extension
-
 ## References
 
 LANDIS-II Biomass Succession v7 Extension User Guide
@@ -37,7 +35,7 @@ Other Biomass Succession helpers:
 
 ## Super class
 
-[`landisutils::LandisExtension`](https://for-cast.github.io/landisutils/reference/LandisExtension.md)
+[`LandisExtension`](https://for-cast.github.io/landisutils/reference/LandisExtension.md)
 -\> `BiomassSuccession`
 
 ## Active bindings
@@ -99,7 +97,7 @@ Other Biomass Succession helpers:
 
 ### Public methods
 
-- [`BiomassSuccession$new()`](#method-BiomassSuccession-new)
+- [`BiomassSuccession$new()`](#method-BiomassSuccession-initialize)
 
 - [`BiomassSuccession$write()`](#method-BiomassSuccession-write)
 
@@ -107,11 +105,11 @@ Other Biomass Succession helpers:
 
 Inherited methods
 
-- [`landisutils::LandisExtension$add_file()`](https://for-cast.github.io/landisutils/reference/LandisExtension.html#method-add_file)
+- [`LandisExtension$add_file()`](https://for-cast.github.io/landisutils/reference/LandisExtension.html#method-add_file)
 
 ------------------------------------------------------------------------
 
-### Method `new()`
+### `BiomassSuccession$new()`
 
 #### Usage
 
@@ -198,7 +196,7 @@ Inherited methods
 
 ------------------------------------------------------------------------
 
-### Method [`write()`](https://rdrr.io/r/base/write.html)
+### `BiomassSuccession$write()`
 
 Write extension inputs to disk
 
@@ -208,7 +206,7 @@ Write extension inputs to disk
 
 ------------------------------------------------------------------------
 
-### Method `clone()`
+### `BiomassSuccession$clone()`
 
 The objects of this class are cloneable with this method.
 

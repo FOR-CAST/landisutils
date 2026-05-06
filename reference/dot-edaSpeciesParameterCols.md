@@ -7,7 +7,3 @@ Required columns for `EDASpeciesParameters`
 ``` r
 .edaSpeciesParameterCols
 ```
-
-## Format
-
-An object of class `character` of length 15.

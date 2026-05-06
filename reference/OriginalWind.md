@@ -2,8 +2,6 @@
 
 Original Wind Extension
 
-Original Wind Extension
-
 ## References
 
 LANDIS-II Original Wind v4.1 Extension User Guide
@@ -22,7 +20,7 @@ Other Original Wind helpers:
 
 ## Super class
 
-[`landisutils::LandisExtension`](https://for-cast.github.io/landisutils/reference/LandisExtension.md)
+[`LandisExtension`](https://for-cast.github.io/landisutils/reference/LandisExtension.md)
 -\> `OriginalWind`
 
 ## Active bindings
@@ -54,7 +52,7 @@ Other Original Wind helpers:
 
 ### Public methods
 
-- [`OriginalWind$new()`](#method-OriginalWind-new)
+- [`OriginalWind$new()`](#method-OriginalWind-initialize)
 
 - [`OriginalWind$write()`](#method-OriginalWind-write)
 
@@ -62,11 +60,11 @@ Other Original Wind helpers:
 
 Inherited methods
 
-- [`landisutils::LandisExtension$add_file()`](https://for-cast.github.io/landisutils/reference/LandisExtension.html#method-add_file)
+- [`LandisExtension$add_file()`](https://for-cast.github.io/landisutils/reference/LandisExtension.html#method-add_file)
 
 ------------------------------------------------------------------------
 
-### Method `new()`
+### `OriginalWind$new()`
 
 #### Usage
 
@@ -118,7 +116,7 @@ Inherited methods
 
 ------------------------------------------------------------------------
 
-### Method [`write()`](https://rdrr.io/r/base/write.html)
+### `OriginalWind$write()`
 
 Write extension inputs to disk
 
@@ -128,7 +126,7 @@ Write extension inputs to disk
 
 ------------------------------------------------------------------------
 
-### Method `clone()`
+### `OriginalWind$clone()`
 
 The objects of this class are cloneable with this method.
 

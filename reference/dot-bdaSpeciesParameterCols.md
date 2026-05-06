@@ -7,7 +7,3 @@ Required columns for `BDASpeciesParameters`
 ``` r
 .bdaSpeciesParameterCols
 ```
-
-## Format
-
-An object of class `character` of length 14.

@@ -7,7 +7,3 @@ Allowed Biomass Harvest stand-ranking methods
 ``` r
 .harvestStandRanking
 ```
-
-## Format
-
-An object of class `character` of length 6.

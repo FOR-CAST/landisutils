@@ -1,10 +1,30 @@
 # Changelog
 
+## landisutils 0.0.7
+
+- [`prep_monthly_weather_climr()`](https://for-cast.github.io/landisutils/reference/prep_climate_data.md)
+  no longer silently advertises `"srad"` as a supported variable.
+  Vignette examples updated.
+- [`get_elevation_rast()`](https://for-cast.github.io/landisutils/reference/get_elevation_rast.md)
+  gained a `tmp_dir` argument (default
+  `<landisutils.cache.path>/elevatr_tiles/`) so AWS Terrain Tile
+  downloads land in the package cache instead of leaking into the R
+  session’s global [`tempdir()`](https://rdrr.io/r/base/tempfile.html)
+  (`elevatr`’s own default).
+- climate test cleanup: a new `local_climate_test_cache()` test helper
+  (`tests/testthat/helper-climate-cleanup.R`) routes the cache option,
+  child-process `TMPDIR`, and the JVM `java.io.tmpdir` (used by `J4R`
+  for `J4RServer*.log` and `hsperfdata_<user>/`) into the per-test
+  [`withr::local_tempdir()`](https://withr.r-lib.org/reference/with_tempfile.html),
+  and tears down any `future::plan(multisession)` on exit, so
+  `BioSIM`/`climr`/`elevatr` fetch tests no longer accumulate `/tmp`
+  residue across runs.
+
 ## landisutils 0.0.6
 
 - added a focused integration-test scenario `necn_scrpple` exercising
-  `NECNSuccession` + `SocialClimateFire` (SCRAPPLE) plus the biomass
-  output extensions (`OutputBiomass`, `OutputBiomassCommunity`,
+  `NECNSuccession` + `SocialClimateFire` plus the biomass output
+  extensions (`OutputBiomass`, `OutputBiomassCommunity`,
   `OutputBiomassByAge`, `OutputBiomassReclass`); validated end-to-end on
   both v8 Docker images;
 - fixed `OutputBiomassByAge$write()` emitting one `Species` line per

@@ -2,8 +2,6 @@
 
 Max Species Age Extension
 
-Max Species Age Extension
-
 ## References
 
 LANDIS-II Output Max Species Age v4 Extension User Guide
@@ -11,7 +9,7 @@ LANDIS-II Output Max Species Age v4 Extension User Guide
 
 ## Super class
 
-[`landisutils::LandisExtension`](https://for-cast.github.io/landisutils/reference/LandisExtension.md)
+[`LandisExtension`](https://for-cast.github.io/landisutils/reference/LandisExtension.md)
 -\> `OutputMaxSpeciesAge`
 
 ## Active bindings
@@ -28,7 +26,7 @@ LANDIS-II Output Max Species Age v4 Extension User Guide
 
 ### Public methods
 
-- [`OutputMaxSpeciesAge$new()`](#method-OutputMaxSpeciesAge-new)
+- [`OutputMaxSpeciesAge$new()`](#method-OutputMaxSpeciesAge-initialize)
 
 - [`OutputMaxSpeciesAge$write()`](#method-OutputMaxSpeciesAge-write)
 
@@ -36,11 +34,11 @@ LANDIS-II Output Max Species Age v4 Extension User Guide
 
 Inherited methods
 
-- [`landisutils::LandisExtension$add_file()`](https://for-cast.github.io/landisutils/reference/LandisExtension.html#method-add_file)
+- [`LandisExtension$add_file()`](https://for-cast.github.io/landisutils/reference/LandisExtension.html#method-add_file)
 
 ------------------------------------------------------------------------
 
-### Method `new()`
+### `OutputMaxSpeciesAge$new()`
 
 #### Usage
 
@@ -66,7 +64,7 @@ Inherited methods
 
 ------------------------------------------------------------------------
 
-### Method [`write()`](https://rdrr.io/r/base/write.html)
+### `OutputMaxSpeciesAge$write()`
 
 Write extension inputs to disk
 
@@ -76,7 +74,7 @@ Write extension inputs to disk
 
 ------------------------------------------------------------------------
 
-### Method `clone()`
+### `OutputMaxSpeciesAge$clone()`
 
 The objects of this class are cloneable with this method.
 

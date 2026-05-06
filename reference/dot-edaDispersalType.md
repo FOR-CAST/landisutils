@@ -7,7 +7,3 @@ Allowed EDA agent `DispersalType` values
 ``` r
 .edaDispersalType
 ```
-
-## Format
-
-An object of class `character` of length 2.

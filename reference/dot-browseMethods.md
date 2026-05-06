@@ -7,7 +7,3 @@ Allowed Biomass Browse `BrowseMethod` values
 ``` r
 .browseMethods
 ```
-
-## Format
-
-An object of class `character` of length 2.

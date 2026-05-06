@@ -2,8 +2,6 @@
 
 Root Rot Extension
 
-Root Rot Extension
-
 ## LANDIS-II v8 compatibility
 
 Root Rot has not yet been updated by the LANDIS-II developers for
@@ -27,7 +25,7 @@ Other Root Rot helpers:
 
 ## Super class
 
-[`landisutils::LandisExtension`](https://for-cast.github.io/landisutils/reference/LandisExtension.md)
+[`LandisExtension`](https://for-cast.github.io/landisutils/reference/LandisExtension.md)
 -\> `RootRot`
 
 ## Active bindings
@@ -113,7 +111,7 @@ Other Root Rot helpers:
 
 ### Public methods
 
-- [`RootRot$new()`](#method-RootRot-new)
+- [`RootRot$new()`](#method-RootRot-initialize)
 
 - [`RootRot$write()`](#method-RootRot-write)
 
@@ -121,11 +119,11 @@ Other Root Rot helpers:
 
 Inherited methods
 
-- [`landisutils::LandisExtension$add_file()`](https://for-cast.github.io/landisutils/reference/LandisExtension.html#method-add_file)
+- [`LandisExtension$add_file()`](https://for-cast.github.io/landisutils/reference/LandisExtension.html#method-add_file)
 
 ------------------------------------------------------------------------
 
-### Method `new()`
+### `RootRot$new()`
 
 #### Usage
 
@@ -234,7 +232,7 @@ Inherited methods
 
 ------------------------------------------------------------------------
 
-### Method [`write()`](https://rdrr.io/r/base/write.html)
+### `RootRot$write()`
 
 Write extension inputs to disk
 
@@ -244,7 +242,7 @@ Write extension inputs to disk
 
 ------------------------------------------------------------------------
 
-### Method `clone()`
+### `RootRot$clone()`
 
 The objects of this class are cloneable with this method.
 

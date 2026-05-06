@@ -7,7 +7,3 @@ Required keys in `NECNSuccession$SoilMaps`
 ``` r
 .necnSoilMapKeys
 ```
-
-## Format
-
-An object of class `character` of length 18.

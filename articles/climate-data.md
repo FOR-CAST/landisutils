@@ -78,10 +78,7 @@ sa_hash <- landisutils:::.studyArea_hash(ecoregionPolys)
 
 grid <- expand.grid(batch = seq_along(locations_batch), year = clim_years)
 furrr::future_map2(grid$batch, grid$year, function(b, y) {
-  get_clim_daily(
-    locations_batch[b], year = y,
-    studyArea_hash = sa_hash, path = clim_data_path
-  )
+  get_clim_daily(locations_batch[b], year = y, studyArea_hash = sa_hash, path = clim_data_path)
 })
 
 ## 4. Read the partitioned Arrow CSV dataset, summarize by ecoregion,
@@ -127,9 +124,7 @@ sa_hash <- landisutils:::.studyArea_hash(ecoregionPolys)
 scenario_tag <- landisutils:::.biosim_scenario_tag("RCP45", "RCM4")
 
 scf_inputs <- assemble_climate_library_file_scf(
-  dataset_path = file.path(
-    clim_data_path, "ClimaticEx_Daily", sa_hash, scenario_tag
-  ),
+  dataset_path = file.path(clim_data_path, "ClimaticEx_Daily", sa_hash, scenario_tag),
   vars = c("Prcp", "Tmin", "Tmax", "WndS", "WndD"),
   id_col = "EcoID"
 )
@@ -230,10 +225,7 @@ sa_hash <- landisutils:::.studyArea_hash(ecoregionPolys)
 
 grid <- expand.grid(batch = seq_along(locations_batch), year = clim_years)
 furrr::future_map2(grid$batch, grid$year, function(b, y) {
-  get_clim_monthly(
-    locations_batch[b], year = y,
-    studyArea_hash = sa_hash, path = clim_data_path
-  )
+  get_clim_monthly(locations_batch[b], year = y, studyArea_hash = sa_hash, path = clim_data_path)
 })
 
 monthly_weather_biosim <- assemble_climate_library_file_monthly(
@@ -248,14 +240,11 @@ monthly_weather_biosim <- assemble_climate_library_file_monthly(
 [climr](https://github.com/bcgov/climr) provides ClimateNA-style
 change-factor downscaling against a PRISM/DAYMET composite reference
 grid for North America. Historical observational years span 1901-2024
-(`obs_ts_dataset = "climatena"` or `"cru.gpcc"`). Wind variables are not
-available from climr - use
-[`prep_monthly_weather_biosim()`](https://for-cast.github.io/landisutils/reference/prep_climate_data.md)
-for wind.
+(`obs_ts_dataset = "climatena"` or `"cru.gpcc"`).
 
 ``` r
 
-climvars_monthly_climr <- c("prcp", "tmax", "tmin", "temp", "rh", "srad", "cmd")
+climvars_monthly_climr <- c("prcp", "tmax", "tmin", "temp", "rh", "cmd")
 
 monthly_weather_climr <- prep_monthly_weather_climr(
   vars = climvars_monthly_climr,
@@ -343,9 +332,10 @@ writeClimateData(daily_weather_future, clim_file)
 
 The same arguments are also accepted by
 [`prep_monthly_weather_biosim()`](https://for-cast.github.io/landisutils/reference/prep_climate_data.md),
-which lets you pull wind variables (`ws`, `wnddir`) under the matching
-scenario - climr does not expose wind, so pair it with BioSIM when you
-need wind under a future projection.
+which lets you pull wind (`ws`, `wnddir`) and shortwave-radiation
+(`srad`) variables under the matching scenario - climr does not expose
+either, so pair it with BioSIM when you need wind or radiation under a
+future projection.
 
 ### Monthly future weather (climr, 8-member ensemble + SSP2-4.5)
 
@@ -360,7 +350,7 @@ to CMIP5 RCP 4.5:
 
 ``` r
 
-climvars_monthly_climr <- c("prcp", "tmax", "tmin", "temp", "rh", "srad", "cmd")
+climvars_monthly_climr <- c("prcp", "tmax", "tmin", "temp", "rh", "cmd")
 
 monthly_weather_climr_future <- prep_monthly_weather_climr(
   vars = climvars_monthly_climr,

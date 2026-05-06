@@ -9,7 +9,3 @@ biomass into / out of the dead pools.
 ``` r
 .pnetDisturbancePools
 ```
-
-## Format
-
-An object of class `character` of length 5.

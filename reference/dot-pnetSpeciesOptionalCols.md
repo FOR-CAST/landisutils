@@ -10,7 +10,3 @@ precedence.
 ``` r
 .pnetSpeciesOptionalCols
 ```
-
-## Format
-
-An object of class `character` of length 22.

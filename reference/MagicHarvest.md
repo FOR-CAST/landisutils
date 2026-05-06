@@ -1,11 +1,5 @@
 # Magic Harvest Extension
 
-Magic Harvest Extension
-
-Magic Harvest Extension
-
-## Details
-
 Wraps an external script invocation that mutates a Biomass Harvest
 parameter file at each timestep.
 
@@ -16,7 +10,7 @@ LANDIS-II Magic Harvest v2 Extension User Guide
 
 ## Super class
 
-[`landisutils::LandisExtension`](https://for-cast.github.io/landisutils/reference/LandisExtension.md)
+[`LandisExtension`](https://for-cast.github.io/landisutils/reference/LandisExtension.md)
 -\> `MagicHarvest`
 
 ## Active bindings
@@ -44,7 +38,7 @@ LANDIS-II Magic Harvest v2 Extension User Guide
 
 ### Public methods
 
-- [`MagicHarvest$new()`](#method-MagicHarvest-new)
+- [`MagicHarvest$new()`](#method-MagicHarvest-initialize)
 
 - [`MagicHarvest$write()`](#method-MagicHarvest-write)
 
@@ -52,11 +46,11 @@ LANDIS-II Magic Harvest v2 Extension User Guide
 
 Inherited methods
 
-- [`landisutils::LandisExtension$add_file()`](https://for-cast.github.io/landisutils/reference/LandisExtension.html#method-add_file)
+- [`LandisExtension$add_file()`](https://for-cast.github.io/landisutils/reference/LandisExtension.html#method-add_file)
 
 ------------------------------------------------------------------------
 
-### Method `new()`
+### `MagicHarvest$new()`
 
 #### Usage
 
@@ -104,7 +98,7 @@ Inherited methods
 
 ------------------------------------------------------------------------
 
-### Method [`write()`](https://rdrr.io/r/base/write.html)
+### `MagicHarvest$write()`
 
 Write extension inputs to disk
 
@@ -114,7 +108,7 @@ Write extension inputs to disk
 
 ------------------------------------------------------------------------
 
-### Method `clone()`
+### `MagicHarvest$clone()`
 
 The objects of this class are cloneable with this method.
 

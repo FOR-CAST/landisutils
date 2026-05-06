@@ -2,8 +2,6 @@
 
 Biomass Browse Extension
 
-Biomass Browse Extension
-
 ## LANDIS-II v8 compatibility
 
 Biomass Browse has not yet been updated by the LANDIS-II developers for
@@ -29,7 +27,7 @@ Other Biomass Browse helpers:
 
 ## Super class
 
-[`landisutils::LandisExtension`](https://for-cast.github.io/landisutils/reference/LandisExtension.md)
+[`LandisExtension`](https://for-cast.github.io/landisutils/reference/LandisExtension.md)
 -\> `BiomassBrowse`
 
 ## Active bindings
@@ -145,7 +143,7 @@ Other Biomass Browse helpers:
 
 ### Public methods
 
-- [`BiomassBrowse$new()`](#method-BiomassBrowse-new)
+- [`BiomassBrowse$new()`](#method-BiomassBrowse-initialize)
 
 - [`BiomassBrowse$write()`](#method-BiomassBrowse-write)
 
@@ -153,11 +151,11 @@ Other Biomass Browse helpers:
 
 Inherited methods
 
-- [`landisutils::LandisExtension$add_file()`](https://for-cast.github.io/landisutils/reference/LandisExtension.html#method-add_file)
+- [`LandisExtension$add_file()`](https://for-cast.github.io/landisutils/reference/LandisExtension.html#method-add_file)
 
 ------------------------------------------------------------------------
 
-### Method `new()`
+### `BiomassBrowse$new()`
 
 #### Usage
 
@@ -304,7 +302,7 @@ Inherited methods
 
 ------------------------------------------------------------------------
 
-### Method [`write()`](https://rdrr.io/r/base/write.html)
+### `BiomassBrowse$write()`
 
 Write extension inputs to disk
 
@@ -314,7 +312,7 @@ Write extension inputs to disk
 
 ------------------------------------------------------------------------
 
-### Method `clone()`
+### `BiomassBrowse$clone()`
 
 The objects of this class are cloneable with this method.
 

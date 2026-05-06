@@ -2,8 +2,6 @@
 
 Land Use Plus Extension
 
-Land Use Plus Extension
-
 ## References
 
 LANDIS-II Land Use Plus v4 Extension User Guide
@@ -21,7 +19,7 @@ Other Land Use Plus helpers:
 
 ## Super class
 
-[`landisutils::LandisExtension`](https://for-cast.github.io/landisutils/reference/LandisExtension.md)
+[`LandisExtension`](https://for-cast.github.io/landisutils/reference/LandisExtension.md)
 -\> `LandUsePlus`
 
 ## Active bindings
@@ -52,7 +50,7 @@ Other Land Use Plus helpers:
 
 ### Public methods
 
-- [`LandUsePlus$new()`](#method-LandUsePlus-new)
+- [`LandUsePlus$new()`](#method-LandUsePlus-initialize)
 
 - [`LandUsePlus$add_land_use()`](#method-LandUsePlus-add_land_use)
 
@@ -62,11 +60,11 @@ Other Land Use Plus helpers:
 
 Inherited methods
 
-- [`landisutils::LandisExtension$add_file()`](https://for-cast.github.io/landisutils/reference/LandisExtension.html#method-add_file)
+- [`LandisExtension$add_file()`](https://for-cast.github.io/landisutils/reference/LandisExtension.html#method-add_file)
 
 ------------------------------------------------------------------------
 
-### Method `new()`
+### `LandUsePlus$new()`
 
 #### Usage
 
@@ -111,7 +109,7 @@ Inherited methods
 
 ------------------------------------------------------------------------
 
-### Method `add_land_use()`
+### `LandUsePlus$add_land_use()`
 
 #### Usage
 
@@ -125,7 +123,7 @@ Inherited methods
 
 ------------------------------------------------------------------------
 
-### Method [`write()`](https://rdrr.io/r/base/write.html)
+### `LandUsePlus$write()`
 
 Write extension inputs to disk
 
@@ -135,7 +133,7 @@ Write extension inputs to disk
 
 ------------------------------------------------------------------------
 
-### Method `clone()`
+### `LandUsePlus$clone()`
 
 The objects of this class are cloneable with this method.
 

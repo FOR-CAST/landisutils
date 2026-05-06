@@ -11,7 +11,3 @@ extension; values supplied here override the defaults.
 ``` r
 .pnetGenericParameterKeys
 ```
-
-## Format
-
-An object of class `character` of length 34.

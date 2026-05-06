@@ -16,10 +16,14 @@ prepSpeciesData(df = NULL, type = NULL, path = NULL, filename = NULL)
 
 - type:
 
-  character, corresponding to one of the following types: - "core":
-  generates core species data (`.txt`) file; - "fire": generates `.csv`
-  version for use with fire extensions; - "succession": generates `.csv`
-  version for use with succession extensions;
+  character, corresponding to one of the following types:
+
+  - "core": generates core species data (`.txt`) file;
+
+  - "fire": generates `.csv` version for use with fire extensions;
+
+  - "succession": generates `.csv` version for use with succession
+    extensions;
 
 - path:
 

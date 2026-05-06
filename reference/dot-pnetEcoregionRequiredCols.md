@@ -10,7 +10,3 @@ when `ClimateConfigFile` is supplied at the top level).
 ``` r
 .pnetEcoregionRequiredCols
 ```
-
-## Format
-
-An object of class `character` of length 8.

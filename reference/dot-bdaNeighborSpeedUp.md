@@ -7,7 +7,3 @@ Allowed Climate BDA `NeighborSpeedUp` values
 ``` r
 .bdaNeighborSpeedUp
 ```
-
-## Format
-
-An object of class `character` of length 4.

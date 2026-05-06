@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.6</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.7</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -134,10 +134,7 @@ schedule per-batch fetches as dynamic targets):</p>
 <span></span>
 <span><span class="va">grid</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/expand.grid.html" class="external-link">expand.grid</a></span><span class="op">(</span>batch <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_along</a></span><span class="op">(</span><span class="va">locations_batch</span><span class="op">)</span>, year <span class="op">=</span> <span class="va">clim_years</span><span class="op">)</span></span>
 <span><span class="fu">furrr</span><span class="fu">::</span><span class="fu"><a href="https://furrr.futureverse.org/reference/future_map2.html" class="external-link">future_map2</a></span><span class="op">(</span><span class="va">grid</span><span class="op">$</span><span class="va">batch</span>, <span class="va">grid</span><span class="op">$</span><span class="va">year</span>, <span class="kw">function</span><span class="op">(</span><span class="va">b</span>, <span class="va">y</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="fu"><a href="../reference/get_clim_daily.html">get_clim_daily</a></span><span class="op">(</span></span>
-<span>    <span class="va">locations_batch</span><span class="op">[</span><span class="va">b</span><span class="op">]</span>, year <span class="op">=</span> <span class="va">y</span>,</span>
-<span>    studyArea_hash <span class="op">=</span> <span class="va">sa_hash</span>, path <span class="op">=</span> <span class="va">clim_data_path</span></span>
-<span>  <span class="op">)</span></span>
+<span>  <span class="fu"><a href="../reference/get_clim_daily.html">get_clim_daily</a></span><span class="op">(</span><span class="va">locations_batch</span><span class="op">[</span><span class="va">b</span><span class="op">]</span>, year <span class="op">=</span> <span class="va">y</span>, studyArea_hash <span class="op">=</span> <span class="va">sa_hash</span>, path <span class="op">=</span> <span class="va">clim_data_path</span><span class="op">)</span></span>
 <span><span class="op">}</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co">## 4. Read the partitioned Arrow CSV dataset, summarize by ecoregion,</span></span>
@@ -176,9 +173,7 @@ whichever your scenario template expects.</p>
 <span><span class="va">scenario_tag</span> <span class="op">&lt;-</span> <span class="fu">landisutils</span><span class="fu">:::</span><span class="fu">.biosim_scenario_tag</span><span class="op">(</span><span class="st">"RCP45"</span>, <span class="st">"RCM4"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">scf_inputs</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/assemble_climate_library_file_scf.html">assemble_climate_library_file_scf</a></span><span class="op">(</span></span>
-<span>  dataset_path <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span></span>
-<span>    <span class="va">clim_data_path</span>, <span class="st">"ClimaticEx_Daily"</span>, <span class="va">sa_hash</span>, <span class="va">scenario_tag</span></span>
-<span>  <span class="op">)</span>,</span>
+<span>  dataset_path <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">clim_data_path</span>, <span class="st">"ClimaticEx_Daily"</span>, <span class="va">sa_hash</span>, <span class="va">scenario_tag</span><span class="op">)</span>,</span>
 <span>  vars <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Prcp"</span>, <span class="st">"Tmin"</span>, <span class="st">"Tmax"</span>, <span class="st">"WndS"</span>, <span class="st">"WndD"</span><span class="op">)</span>,</span>
 <span>  id_col <span class="op">=</span> <span class="st">"EcoID"</span></span>
 <span><span class="op">)</span></span>
@@ -267,10 +262,7 @@ dynamic targets:</p>
 <span></span>
 <span><span class="va">grid</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/expand.grid.html" class="external-link">expand.grid</a></span><span class="op">(</span>batch <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_along</a></span><span class="op">(</span><span class="va">locations_batch</span><span class="op">)</span>, year <span class="op">=</span> <span class="va">clim_years</span><span class="op">)</span></span>
 <span><span class="fu">furrr</span><span class="fu">::</span><span class="fu"><a href="https://furrr.futureverse.org/reference/future_map2.html" class="external-link">future_map2</a></span><span class="op">(</span><span class="va">grid</span><span class="op">$</span><span class="va">batch</span>, <span class="va">grid</span><span class="op">$</span><span class="va">year</span>, <span class="kw">function</span><span class="op">(</span><span class="va">b</span>, <span class="va">y</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="fu"><a href="../reference/get_clim_monthly.html">get_clim_monthly</a></span><span class="op">(</span></span>
-<span>    <span class="va">locations_batch</span><span class="op">[</span><span class="va">b</span><span class="op">]</span>, year <span class="op">=</span> <span class="va">y</span>,</span>
-<span>    studyArea_hash <span class="op">=</span> <span class="va">sa_hash</span>, path <span class="op">=</span> <span class="va">clim_data_path</span></span>
-<span>  <span class="op">)</span></span>
+<span>  <span class="fu"><a href="../reference/get_clim_monthly.html">get_clim_monthly</a></span><span class="op">(</span><span class="va">locations_batch</span><span class="op">[</span><span class="va">b</span><span class="op">]</span>, year <span class="op">=</span> <span class="va">y</span>, studyArea_hash <span class="op">=</span> <span class="va">sa_hash</span>, path <span class="op">=</span> <span class="va">clim_data_path</span><span class="op">)</span></span>
 <span><span class="op">}</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">monthly_weather_biosim</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/assemble_climate_library_file_monthly.html">assemble_climate_library_file_monthly</a></span><span class="op">(</span></span>
@@ -286,10 +278,9 @@ dynamic targets:</p>
 ClimateNA-style change-factor downscaling against a PRISM/DAYMET
 composite reference grid for North America. Historical observational
 years span 1901-2024 (<code>obs_ts_dataset = "climatena"</code> or
-<code>"cru.gpcc"</code>). Wind variables are not available from climr -
-use <code><a href="../reference/prep_climate_data.html">prep_monthly_weather_biosim()</a></code> for wind.</p>
+<code>"cru.gpcc"</code>).</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">climvars_monthly_climr</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"prcp"</span>, <span class="st">"tmax"</span>, <span class="st">"tmin"</span>, <span class="st">"temp"</span>, <span class="st">"rh"</span>, <span class="st">"srad"</span>, <span class="st">"cmd"</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">climvars_monthly_climr</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"prcp"</span>, <span class="st">"tmax"</span>, <span class="st">"tmin"</span>, <span class="st">"temp"</span>, <span class="st">"rh"</span>, <span class="st">"cmd"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">monthly_weather_climr</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/prep_climate_data.html">prep_monthly_weather_climr</a></span><span class="op">(</span></span>
 <span>  vars <span class="op">=</span> <span class="va">climvars_monthly_climr</span>,</span>
@@ -371,9 +362,10 @@ colliding.</p>
 <span><span class="fu"><a href="../reference/writeClimateData.html">writeClimateData</a></span><span class="op">(</span><span class="va">daily_weather_future</span>, <span class="va">clim_file</span><span class="op">)</span></span></code></pre></div>
 <p>The same arguments are also accepted by
 <code><a href="../reference/prep_climate_data.html">prep_monthly_weather_biosim()</a></code>, which lets you pull wind
-variables (<code>ws</code>, <code>wnddir</code>) under the matching
-scenario - climr does not expose wind, so pair it with BioSIM when you
-need wind under a future projection.</p>
+(<code>ws</code>, <code>wnddir</code>) and shortwave-radiation
+(<code>srad</code>) variables under the matching scenario - climr does
+not expose either, so pair it with BioSIM when you need wind or
+radiation under a future projection.</p>
 </div>
 <div class="section level3">
 <h3 id="monthly-future-weather-climr-8-member-ensemble-ssp2-4-5">Monthly future weather (climr, 8-member ensemble + SSP2-4.5)<a class="anchor" aria-label="anchor" href="#monthly-future-weather-climr-8-member-ensemble-ssp2-4-5"></a>
@@ -385,7 +377,7 @@ exposed for convenience as <code>climr_ensemble_8</code>; see <a href="https://b
 for the rationale. SSP2-4.5 (<code>"ssp245"</code>) is the standard
 CMIP6 analogue to CMIP5 RCP 4.5:</p>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">climvars_monthly_climr</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"prcp"</span>, <span class="st">"tmax"</span>, <span class="st">"tmin"</span>, <span class="st">"temp"</span>, <span class="st">"rh"</span>, <span class="st">"srad"</span>, <span class="st">"cmd"</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">climvars_monthly_climr</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"prcp"</span>, <span class="st">"tmax"</span>, <span class="st">"tmin"</span>, <span class="st">"temp"</span>, <span class="st">"rh"</span>, <span class="st">"cmd"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">monthly_weather_climr_future</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/prep_climate_data.html">prep_monthly_weather_climr</a></span><span class="op">(</span></span>
 <span>  vars <span class="op">=</span> <span class="va">climvars_monthly_climr</span>,</span>

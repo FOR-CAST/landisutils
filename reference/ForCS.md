@@ -2,8 +2,6 @@
 
 Forest Carbon Succession (ForCS) Extension
 
-Forest Carbon Succession (ForCS) Extension
-
 ## References
 
 LANDIS-II Forest Carbon Succession (CForC) v4.0.2 User Guide
@@ -39,7 +37,7 @@ Other ForCS helpers:
 
 ## Super class
 
-[`landisutils::LandisExtension`](https://for-cast.github.io/landisutils/reference/LandisExtension.md)
+[`LandisExtension`](https://for-cast.github.io/landisutils/reference/LandisExtension.md)
 -\> `ForCS`
 
 ## Active bindings
@@ -125,7 +123,7 @@ Other ForCS helpers:
 
 ### Public methods
 
-- [`ForCS$new()`](#method-ForCS-new)
+- [`ForCS$new()`](#method-ForCS-initialize)
 
 - [`ForCS$write()`](#method-ForCS-write)
 
@@ -133,11 +131,11 @@ Other ForCS helpers:
 
 Inherited methods
 
-- [`landisutils::LandisExtension$add_file()`](https://for-cast.github.io/landisutils/reference/LandisExtension.html#method-add_file)
+- [`LandisExtension$add_file()`](https://for-cast.github.io/landisutils/reference/LandisExtension.html#method-add_file)
 
 ------------------------------------------------------------------------
 
-### Method `new()`
+### `ForCS$new()`
 
 #### Usage
 
@@ -262,7 +260,7 @@ Inherited methods
 
 ------------------------------------------------------------------------
 
-### Method [`write()`](https://rdrr.io/r/base/write.html)
+### `ForCS$write()`
 
 Write extension inputs to disk
 
@@ -272,7 +270,7 @@ Write extension inputs to disk
 
 ------------------------------------------------------------------------
 
-### Method `clone()`
+### `ForCS$clone()`
 
 The objects of this class are cloneable with this method.
 

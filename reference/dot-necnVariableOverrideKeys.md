@@ -7,7 +7,3 @@ Allowed keys in `NECNSuccession$VariableOverrides`
 ``` r
 .necnVariableOverrideKeys
 ```
-
-## Format
-
-An object of class `character` of length 6.

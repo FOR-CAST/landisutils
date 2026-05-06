@@ -13,7 +13,3 @@ name `ActEnergyDOCDepoly` is misnamed; the parser uses
 ``` r
 .dgsDammMcNIPKeys
 ```
-
-## Format
-
-An object of class `character` of length 25.

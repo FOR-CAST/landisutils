@@ -2,8 +2,6 @@
 
 Landscape Habitat Output Extension
 
-Landscape Habitat Output Extension
-
 ## References
 
 LANDIS-II Output Landscape Habitat v2 Extension User Guide
@@ -21,7 +19,7 @@ Other Landscape Habitat Output helpers:
 
 ## Super class
 
-[`landisutils::LandisExtension`](https://for-cast.github.io/landisutils/reference/LandisExtension.md)
+[`LandisExtension`](https://for-cast.github.io/landisutils/reference/LandisExtension.md)
 -\> `OutputLandscapeHabitat`
 
 ## Active bindings
@@ -87,7 +85,7 @@ Other Landscape Habitat Output helpers:
 
 ### Public methods
 
-- [`OutputLandscapeHabitat$new()`](#method-OutputLandscapeHabitat-new)
+- [`OutputLandscapeHabitat$new()`](#method-OutputLandscapeHabitat-initialize)
 
 - [`OutputLandscapeHabitat$write()`](#method-OutputLandscapeHabitat-write)
 
@@ -95,11 +93,11 @@ Other Landscape Habitat Output helpers:
 
 Inherited methods
 
-- [`landisutils::LandisExtension$add_file()`](https://for-cast.github.io/landisutils/reference/LandisExtension.html#method-add_file)
+- [`LandisExtension$add_file()`](https://for-cast.github.io/landisutils/reference/LandisExtension.html#method-add_file)
 
 ------------------------------------------------------------------------
 
-### Method `new()`
+### `OutputLandscapeHabitat$new()`
 
 #### Usage
 
@@ -200,7 +198,7 @@ Inherited methods
 
 ------------------------------------------------------------------------
 
-### Method [`write()`](https://rdrr.io/r/base/write.html)
+### `OutputLandscapeHabitat$write()`
 
 Write extension inputs to disk
 
@@ -210,7 +208,7 @@ Write extension inputs to disk
 
 ------------------------------------------------------------------------
 
-### Method `clone()`
+### `OutputLandscapeHabitat$clone()`
 
 The objects of this class are cloneable with this method.
 

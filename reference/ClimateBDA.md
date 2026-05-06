@@ -2,8 +2,6 @@
 
 Climate BDA (Biological Disturbance Agent) Extension
 
-Climate BDA (Biological Disturbance Agent) Extension
-
 ## References
 
 LANDIS-II Biological Disturbance Agent v5 Extension User Guide
@@ -27,7 +25,7 @@ Other Climate BDA helpers:
 
 ## Super class
 
-[`landisutils::LandisExtension`](https://for-cast.github.io/landisutils/reference/LandisExtension.md)
+[`LandisExtension`](https://for-cast.github.io/landisutils/reference/LandisExtension.md)
 -\> `ClimateBDA`
 
 ## Active bindings
@@ -64,7 +62,7 @@ Other Climate BDA helpers:
 
 ### Public methods
 
-- [`ClimateBDA$new()`](#method-ClimateBDA-new)
+- [`ClimateBDA$new()`](#method-ClimateBDA-initialize)
 
 - [`ClimateBDA$add_agent()`](#method-ClimateBDA-add_agent)
 
@@ -74,11 +72,11 @@ Other Climate BDA helpers:
 
 Inherited methods
 
-- [`landisutils::LandisExtension$add_file()`](https://for-cast.github.io/landisutils/reference/LandisExtension.html#method-add_file)
+- [`LandisExtension$add_file()`](https://for-cast.github.io/landisutils/reference/LandisExtension.html#method-add_file)
 
 ------------------------------------------------------------------------
 
-### Method `new()`
+### `ClimateBDA$new()`
 
 #### Usage
 
@@ -134,7 +132,7 @@ Inherited methods
 
 ------------------------------------------------------------------------
 
-### Method `add_agent()`
+### `ClimateBDA$add_agent()`
 
 #### Usage
 
@@ -148,7 +146,7 @@ Inherited methods
 
 ------------------------------------------------------------------------
 
-### Method [`write()`](https://rdrr.io/r/base/write.html)
+### `ClimateBDA$write()`
 
 Write extension inputs to disk
 
@@ -158,7 +156,7 @@ Write extension inputs to disk
 
 ------------------------------------------------------------------------
 
-### Method `clone()`
+### `ClimateBDA$clone()`
 
 The objects of this class are cloneable with this method.
 

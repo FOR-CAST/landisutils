@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.6</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.7</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,8 +41,16 @@
     </div>
 
     <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.7" id="landisutils-007">landisutils 0.0.7<a class="anchor" aria-label="anchor" href="#landisutils-007"></a></h2>
+<ul><li>
+<code><a href="../reference/prep_climate_data.html">prep_monthly_weather_climr()</a></code> no longer silently advertises <code>"srad"</code> as a supported variable. Vignette examples updated.</li>
+<li>
+<code><a href="../reference/get_elevation_rast.html">get_elevation_rast()</a></code> gained a <code>tmp_dir</code> argument (default <code>&lt;landisutils.cache.path&gt;/elevatr_tiles/</code>) so AWS Terrain Tile downloads land in the package cache instead of leaking into the R session’s global <code><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir()</a></code> (<code>elevatr</code>’s own default).</li>
+<li>climate test cleanup: a new <code>local_climate_test_cache()</code> test helper (<code>tests/testthat/helper-climate-cleanup.R</code>) routes the cache option, child-process <code>TMPDIR</code>, and the JVM <code>java.io.tmpdir</code> (used by <code>J4R</code> for <code>J4RServer*.log</code> and <code>hsperfdata_&lt;user&gt;/</code>) into the per-test <code><a href="https://withr.r-lib.org/reference/with_tempfile.html" class="external-link">withr::local_tempdir()</a></code>, and tears down any <code>future::plan(multisession)</code> on exit, so <code>BioSIM</code>/<code>climr</code>/<code>elevatr</code> fetch tests no longer accumulate <code>/tmp</code> residue across runs.</li>
+</ul></div>
+    <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.6" id="landisutils-006">landisutils 0.0.6<a class="anchor" aria-label="anchor" href="#landisutils-006"></a></h2>
-<ul><li>added a focused integration-test scenario <code>necn_scrpple</code> exercising <code>NECNSuccession</code> + <code>SocialClimateFire</code> (SCRAPPLE) plus the biomass output extensions (<code>OutputBiomass</code>, <code>OutputBiomassCommunity</code>, <code>OutputBiomassByAge</code>, <code>OutputBiomassReclass</code>); validated end-to-end on both v8 Docker images;</li>
+<ul><li>added a focused integration-test scenario <code>necn_scrpple</code> exercising <code>NECNSuccession</code> + <code>SocialClimateFire</code> plus the biomass output extensions (<code>OutputBiomass</code>, <code>OutputBiomassCommunity</code>, <code>OutputBiomassByAge</code>, <code>OutputBiomassReclass</code>); validated end-to-end on both v8 Docker images;</li>
 <li>fixed <code>OutputBiomassByAge$write()</code> emitting one <code>Species</code> line per element (the LANDIS-II parser only accepts one <code>Species</code> keyword); the species list is now joined with indented continuation lines as the format requires;</li>
 </ul></div>
     <div class="section level2">

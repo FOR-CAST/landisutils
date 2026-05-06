@@ -15,10 +15,6 @@ sensitivity than the full ensemble.
 climr_ensemble_8
 ```
 
-## Format
-
-An object of class `character` of length 8.
-
 ## Value
 
 Character vector of length 8.

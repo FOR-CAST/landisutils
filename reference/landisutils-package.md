@@ -13,3 +13,8 @@ Useful links:
 
 **Maintainer**: Alex M Chubaty <achubaty@for-cast.ca>
 ([ORCID](https://orcid.org/0000-0001-7146-8135))
+
+Authors:
+
+- Alex M Chubaty <achubaty@for-cast.ca>
+  ([ORCID](https://orcid.org/0000-0001-7146-8135))

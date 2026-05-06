@@ -9,7 +9,3 @@ are physiological parameters that vary by species.
 ``` r
 .pnetSpeciesRequiredCols
 ```
-
-## Format
-
-An object of class `character` of length 16.

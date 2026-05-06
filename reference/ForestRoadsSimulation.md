@@ -2,8 +2,6 @@
 
 Forest Roads Simulation Extension
 
-Forest Roads Simulation Extension
-
 ## References
 
 LANDIS-II Forest Roads Simulation v2 Extension User Guide
@@ -21,7 +19,7 @@ Other Forest Roads Simulation helpers:
 
 ## Super class
 
-[`landisutils::LandisExtension`](https://for-cast.github.io/landisutils/reference/LandisExtension.md)
+[`LandisExtension`](https://for-cast.github.io/landisutils/reference/LandisExtension.md)
 -\> `ForestRoadsSimulation`
 
 ## Active bindings
@@ -136,7 +134,7 @@ Other Forest Roads Simulation helpers:
 
 ### Public methods
 
-- [`ForestRoadsSimulation$new()`](#method-ForestRoadsSimulation-new)
+- [`ForestRoadsSimulation$new()`](#method-ForestRoadsSimulation-initialize)
 
 - [`ForestRoadsSimulation$write()`](#method-ForestRoadsSimulation-write)
 
@@ -144,11 +142,11 @@ Other Forest Roads Simulation helpers:
 
 Inherited methods
 
-- [`landisutils::LandisExtension$add_file()`](https://for-cast.github.io/landisutils/reference/LandisExtension.html#method-add_file)
+- [`LandisExtension$add_file()`](https://for-cast.github.io/landisutils/reference/LandisExtension.html#method-add_file)
 
 ------------------------------------------------------------------------
 
-### Method `new()`
+### `ForestRoadsSimulation$new()`
 
 #### Usage
 
@@ -290,7 +288,7 @@ Inherited methods
 
 ------------------------------------------------------------------------
 
-### Method [`write()`](https://rdrr.io/r/base/write.html)
+### `ForestRoadsSimulation$write()`
 
 Write extension inputs to disk
 
@@ -300,7 +298,7 @@ Write extension inputs to disk
 
 ------------------------------------------------------------------------
 
-### Method `clone()`
+### `ForestRoadsSimulation$clone()`
 
 The objects of this class are cloneable with this method.
 

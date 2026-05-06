@@ -2,8 +2,6 @@
 
 Epidemiological Disturbance Agents (EDA) Extension
 
-Epidemiological Disturbance Agents (EDA) Extension
-
 ## References
 
 LANDIS-II Base EDA v3 Extension User Guide
@@ -21,7 +19,7 @@ Other EDA helpers:
 
 ## Super class
 
-[`landisutils::LandisExtension`](https://for-cast.github.io/landisutils/reference/LandisExtension.md)
+[`LandisExtension`](https://for-cast.github.io/landisutils/reference/LandisExtension.md)
 -\> `EDA`
 
 ## Active bindings
@@ -51,7 +49,7 @@ Other EDA helpers:
 
 ### Public methods
 
-- [`EDA$new()`](#method-EDA-new)
+- [`EDA$new()`](#method-EDA-initialize)
 
 - [`EDA$add_agent()`](#method-EDA-add_agent)
 
@@ -61,11 +59,11 @@ Other EDA helpers:
 
 Inherited methods
 
-- [`landisutils::LandisExtension$add_file()`](https://for-cast.github.io/landisutils/reference/LandisExtension.html#method-add_file)
+- [`LandisExtension$add_file()`](https://for-cast.github.io/landisutils/reference/LandisExtension.html#method-add_file)
 
 ------------------------------------------------------------------------
 
-### Method `new()`
+### `EDA$new()`
 
 #### Usage
 
@@ -109,7 +107,7 @@ Inherited methods
 
 ------------------------------------------------------------------------
 
-### Method `add_agent()`
+### `EDA$add_agent()`
 
 #### Usage
 
@@ -123,7 +121,7 @@ Inherited methods
 
 ------------------------------------------------------------------------
 
-### Method [`write()`](https://rdrr.io/r/base/write.html)
+### `EDA$write()`
 
 Write extension inputs to disk
 
@@ -133,7 +131,7 @@ Write extension inputs to disk
 
 ------------------------------------------------------------------------
 
-### Method `clone()`
+### `EDA$clone()`
 
 The objects of this class are cloneable with this method.
 

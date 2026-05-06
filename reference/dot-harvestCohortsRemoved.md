@@ -7,7 +7,3 @@ Allowed Biomass Harvest cohort-removal methods
 ``` r
 .harvestCohortsRemoved
 ```
-
-## Format
-
-An object of class `character` of length 3.

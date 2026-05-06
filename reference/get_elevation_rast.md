@@ -9,7 +9,11 @@ Fetches an elevation raster covering `studyArea` using
 ## Usage
 
 ``` r
-get_elevation_rast(studyArea, z = 9)
+get_elevation_rast(
+  studyArea,
+  z = 9,
+  tmp_dir = file.path(.climateCachePath(), "elevatr_tiles")
+)
 ```
 
 ## Arguments
@@ -24,6 +28,14 @@ get_elevation_rast(studyArea, z = 9)
   [`elevatr::get_elev_raster()`](https://rdrr.io/pkg/elevatr/man/get_elev_raster.html);
   higher values give finer resolution. Default `9` (~250 m at
   mid-latitudes).
+
+- tmp_dir:
+
+  character. Directory for `elevatr`'s per-tile downloads. Defaults to
+  `<landisutils.cache.path>/elevatr_tiles/`, which keeps the AWS Terrain
+  Tile fragments inside the package cache instead of leaking into the R
+  session's global [`tempdir()`](https://rdrr.io/r/base/tempfile.html)
+  (`elevatr`'s own default).
 
 ## Value
 

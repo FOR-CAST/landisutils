@@ -7,7 +7,3 @@ Allowed Biomass Browse `ForageInReachMethod` values
 ``` r
 .browseForageInReachMethods
 ```
-
-## Format
-
-An object of class `character` of length 2.

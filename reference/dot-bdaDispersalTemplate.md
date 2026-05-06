@@ -7,7 +7,3 @@ Allowed Climate BDA `DispersalTemplate` values
 ``` r
 .bdaDispersalTemplate
 ```
-
-## Format
-
-An object of class `character` of length 5.

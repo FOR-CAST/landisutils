@@ -7,7 +7,3 @@ Optional columns of the PnET-Succession ecoregion-parameters input file.
 ``` r
 .pnetEcoregionOptionalCols
 ```
-
-## Format
-
-An object of class `character` of length 5.

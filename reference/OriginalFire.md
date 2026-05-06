@@ -2,8 +2,6 @@
 
 Original Fire Extension
 
-Original Fire Extension
-
 ## References
 
 LANDIS-II Original Fire v5.0 Extension User Guide
@@ -25,7 +23,7 @@ Other Original Fire helpers:
 
 ## Super class
 
-[`landisutils::LandisExtension`](https://for-cast.github.io/landisutils/reference/LandisExtension.md)
+[`LandisExtension`](https://for-cast.github.io/landisutils/reference/LandisExtension.md)
 -\> `OriginalFire`
 
 ## Active bindings
@@ -74,7 +72,7 @@ Other Original Fire helpers:
 
 ### Public methods
 
-- [`OriginalFire$new()`](#method-OriginalFire-new)
+- [`OriginalFire$new()`](#method-OriginalFire-initialize)
 
 - [`OriginalFire$write()`](#method-OriginalFire-write)
 
@@ -82,11 +80,11 @@ Other Original Fire helpers:
 
 Inherited methods
 
-- [`landisutils::LandisExtension$add_file()`](https://for-cast.github.io/landisutils/reference/LandisExtension.html#method-add_file)
+- [`LandisExtension$add_file()`](https://for-cast.github.io/landisutils/reference/LandisExtension.html#method-add_file)
 
 ------------------------------------------------------------------------
 
-### Method `new()`
+### `OriginalFire$new()`
 
 #### Usage
 
@@ -157,7 +155,7 @@ Inherited methods
 
 ------------------------------------------------------------------------
 
-### Method [`write()`](https://rdrr.io/r/base/write.html)
+### `OriginalFire$write()`
 
 Write extension inputs to disk
 
@@ -167,7 +165,7 @@ Write extension inputs to disk
 
 ------------------------------------------------------------------------
 
-### Method `clone()`
+### `OriginalFire$clone()`
 
 The objects of this class are cloneable with this method.
 

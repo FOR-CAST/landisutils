@@ -7,7 +7,3 @@ Allowed Biomass Harvest site-selection methods
 ``` r
 .harvestSiteSelection
 ```
-
-## Format
-
-An object of class `character` of length 4.

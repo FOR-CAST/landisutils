@@ -1,11 +1,5 @@
 # DGS (DAMM-McNiP, GIPL, SHAW) Succession Extension
 
-DGS (DAMM-McNiP, GIPL, SHAW) Succession Extension
-
-DGS (DAMM-McNiP, GIPL, SHAW) Succession Extension
-
-## Details
-
 R6 class representing the LANDIS-II DGS Succession (v2.0) extension's
 main input file. DGS integrates a NECN-style vegetation dynamics model
 with the DAMM-McNiP soil C/N model, the SHAW physically-based hydrology
@@ -36,7 +30,7 @@ Other DGS Succession helpers:
 
 ## Super class
 
-[`landisutils::LandisExtension`](https://for-cast.github.io/landisutils/reference/LandisExtension.md)
+[`LandisExtension`](https://for-cast.github.io/landisutils/reference/LandisExtension.md)
 -\> `DGSSuccession`
 
 ## Active bindings
@@ -141,7 +135,7 @@ Other DGS Succession helpers:
 
 ### Public methods
 
-- [`DGSSuccession$new()`](#method-DGSSuccession-new)
+- [`DGSSuccession$new()`](#method-DGSSuccession-initialize)
 
 - [`DGSSuccession$write()`](#method-DGSSuccession-write)
 
@@ -149,11 +143,11 @@ Other DGS Succession helpers:
 
 Inherited methods
 
-- [`landisutils::LandisExtension$add_file()`](https://for-cast.github.io/landisutils/reference/LandisExtension.html#method-add_file)
+- [`LandisExtension$add_file()`](https://for-cast.github.io/landisutils/reference/LandisExtension.html#method-add_file)
 
 ------------------------------------------------------------------------
 
-### Method `new()`
+### `DGSSuccession$new()`
 
 #### Usage
 
@@ -316,7 +310,7 @@ Inherited methods
 
 ------------------------------------------------------------------------
 
-### Method [`write()`](https://rdrr.io/r/base/write.html)
+### `DGSSuccession$write()`
 
 Write extension inputs to disk
 
@@ -326,7 +320,7 @@ Write extension inputs to disk
 
 ------------------------------------------------------------------------
 
-### Method `clone()`
+### `DGSSuccession$clone()`
 
 The objects of this class are cloneable with this method.
 

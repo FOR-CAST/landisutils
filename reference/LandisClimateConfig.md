@@ -18,7 +18,7 @@ Keeps track of the input files created for the climate library
 
 ### Public methods
 
-- [`LandisClimateConfig$new()`](#method-LandisClimateConfig-new)
+- [`LandisClimateConfig$new()`](#method-LandisClimateConfig-initialize)
 
 - [`LandisClimateConfig$add_file()`](#method-LandisClimateConfig-add_file)
 
@@ -26,7 +26,7 @@ Keeps track of the input files created for the climate library
 
 ------------------------------------------------------------------------
 
-### Method `new()`
+### `LandisClimateConfig$new()`
 
 #### Usage
 
@@ -40,7 +40,7 @@ Keeps track of the input files created for the climate library
 
 ------------------------------------------------------------------------
 
-### Method `add_file()`
+### `LandisClimateConfig$add_file()`
 
 #### Usage
 
@@ -54,7 +54,7 @@ Keeps track of the input files created for the climate library
 
 ------------------------------------------------------------------------
 
-### Method `clone()`
+### `LandisClimateConfig$clone()`
 
 The objects of this class are cloneable with this method.
 

@@ -8,7 +8,3 @@ Used by every LANDIS-II succession extension that exposes a
 ``` r
 .seedingAlgorithms
 ```
-
-## Format
-
-An object of class `character` of length 3.

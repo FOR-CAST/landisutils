@@ -2,8 +2,6 @@
 
 NECN Succession Extension
 
-NECN Succession Extension
-
 ## References
 
 LANDIS-II Net Ecosystem CN Succession v8 Extension User Guide
@@ -25,7 +23,7 @@ Other NECN Succession helpers:
 
 ## Super class
 
-[`landisutils::LandisExtension`](https://for-cast.github.io/landisutils/reference/LandisExtension.md)
+[`LandisExtension`](https://for-cast.github.io/landisutils/reference/LandisExtension.md)
 -\> `NECNSuccession`
 
 ## Active bindings
@@ -180,7 +178,7 @@ Other NECN Succession helpers:
 
 ### Public methods
 
-- [`NECNSuccession$new()`](#method-NECNSuccession-new)
+- [`NECNSuccession$new()`](#method-NECNSuccession-initialize)
 
 - [`NECNSuccession$write()`](#method-NECNSuccession-write)
 
@@ -188,11 +186,11 @@ Other NECN Succession helpers:
 
 Inherited methods
 
-- [`landisutils::LandisExtension$add_file()`](https://for-cast.github.io/landisutils/reference/LandisExtension.html#method-add_file)
+- [`LandisExtension$add_file()`](https://for-cast.github.io/landisutils/reference/LandisExtension.html#method-add_file)
 
 ------------------------------------------------------------------------
 
-### Method `new()`
+### `NECNSuccession$new()`
 
 #### Usage
 
@@ -407,7 +405,7 @@ Inherited methods
 
 ------------------------------------------------------------------------
 
-### Method [`write()`](https://rdrr.io/r/base/write.html)
+### `NECNSuccession$write()`
 
 Write extension inputs to disk
 
@@ -417,7 +415,7 @@ Write extension inputs to disk
 
 ------------------------------------------------------------------------
 
-### Method `clone()`
+### `NECNSuccession$clone()`
 
 The objects of this class are cloneable with this method.
 

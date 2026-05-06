@@ -12,7 +12,3 @@ are written to the extension's input file.
 ``` r
 .frsHeuristics
 ```
-
-## Format
-
-An object of class `character` of length 3.

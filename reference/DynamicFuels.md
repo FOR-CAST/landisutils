@@ -2,8 +2,6 @@
 
 Dynamic Fuel System Extension
 
-Dynamic Fuel System Extension
-
 ## References
 
 LANDIS-II Dynamic Fuel System Extension v4.0 User Guide
@@ -25,7 +23,7 @@ Other Dynamic Fuels helpers:
 
 ## Super class
 
-[`landisutils::LandisExtension`](https://for-cast.github.io/landisutils/reference/LandisExtension.md)
+[`LandisExtension`](https://for-cast.github.io/landisutils/reference/LandisExtension.md)
 -\> `DynamicFuels`
 
 ## Active bindings
@@ -76,7 +74,7 @@ Other Dynamic Fuels helpers:
 
 ### Public methods
 
-- [`DynamicFuels$new()`](#method-DynamicFuels-new)
+- [`DynamicFuels$new()`](#method-DynamicFuels-initialize)
 
 - [`DynamicFuels$write()`](#method-DynamicFuels-write)
 
@@ -84,11 +82,11 @@ Other Dynamic Fuels helpers:
 
 Inherited methods
 
-- [`landisutils::LandisExtension$add_file()`](https://for-cast.github.io/landisutils/reference/LandisExtension.html#method-add_file)
+- [`LandisExtension$add_file()`](https://for-cast.github.io/landisutils/reference/LandisExtension.html#method-add_file)
 
 ------------------------------------------------------------------------
 
-### Method `new()`
+### `DynamicFuels$new()`
 
 #### Usage
 
@@ -156,7 +154,7 @@ Inherited methods
 
 ------------------------------------------------------------------------
 
-### Method [`write()`](https://rdrr.io/r/base/write.html)
+### `DynamicFuels$write()`
 
 Write extension inputs to disk
 
@@ -166,7 +164,7 @@ Write extension inputs to disk
 
 ------------------------------------------------------------------------
 
-### Method `clone()`
+### `DynamicFuels$clone()`
 
 The objects of this class are cloneable with this method.
 

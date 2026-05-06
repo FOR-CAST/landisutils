@@ -2,8 +2,6 @@
 
 Biomass Harvest Extension
 
-Biomass Harvest Extension
-
 ## References
 
 LANDIS-II Biomass Harvest v7 Extension User Guide
@@ -27,7 +25,7 @@ Other Biomass Harvest helpers:
 
 ## Super class
 
-[`landisutils::LandisExtension`](https://for-cast.github.io/landisutils/reference/LandisExtension.md)
+[`LandisExtension`](https://for-cast.github.io/landisutils/reference/LandisExtension.md)
 -\> `BiomassHarvest`
 
 ## Active bindings
@@ -69,7 +67,7 @@ Other Biomass Harvest helpers:
 
 ### Public methods
 
-- [`BiomassHarvest$new()`](#method-BiomassHarvest-new)
+- [`BiomassHarvest$new()`](#method-BiomassHarvest-initialize)
 
 - [`BiomassHarvest$add_prescription()`](#method-BiomassHarvest-add_prescription)
 
@@ -79,11 +77,11 @@ Other Biomass Harvest helpers:
 
 Inherited methods
 
-- [`landisutils::LandisExtension$add_file()`](https://for-cast.github.io/landisutils/reference/LandisExtension.html#method-add_file)
+- [`LandisExtension$add_file()`](https://for-cast.github.io/landisutils/reference/LandisExtension.html#method-add_file)
 
 ------------------------------------------------------------------------
 
-### Method `new()`
+### `BiomassHarvest$new()`
 
 #### Usage
 
@@ -148,7 +146,7 @@ Inherited methods
 
 ------------------------------------------------------------------------
 
-### Method `add_prescription()`
+### `BiomassHarvest$add_prescription()`
 
 #### Usage
 
@@ -162,7 +160,7 @@ Inherited methods
 
 ------------------------------------------------------------------------
 
-### Method [`write()`](https://rdrr.io/r/base/write.html)
+### `BiomassHarvest$write()`
 
 Write extension inputs to disk
 
@@ -172,7 +170,7 @@ Write extension inputs to disk
 
 ------------------------------------------------------------------------
 
-### Method `clone()`
+### `BiomassHarvest$clone()`
 
 The objects of this class are cloneable with this method.
 

@@ -44,7 +44,7 @@ Keeps track of the input files created for an extension
 
 ### Public methods
 
-- [`LandisExtension$new()`](#method-LandisExtension-new)
+- [`LandisExtension$new()`](#method-LandisExtension-initialize)
 
 - [`LandisExtension$add_file()`](#method-LandisExtension-add_file)
 
@@ -52,7 +52,7 @@ Keeps track of the input files created for an extension
 
 ------------------------------------------------------------------------
 
-### Method `new()`
+### `LandisExtension$new()`
 
 #### Usage
 
@@ -86,7 +86,7 @@ Keeps track of the input files created for an extension
 
 ------------------------------------------------------------------------
 
-### Method `add_file()`
+### `LandisExtension$add_file()`
 
 #### Usage
 
@@ -100,7 +100,7 @@ Keeps track of the input files created for an extension
 
 ------------------------------------------------------------------------
 
-### Method `clone()`
+### `LandisExtension$clone()`
 
 The objects of this class are cloneable with this method.
 

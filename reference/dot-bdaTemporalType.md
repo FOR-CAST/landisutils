@@ -7,7 +7,3 @@ Allowed Climate BDA `TemporalType` values
 ``` r
 .bdaTemporalType
 ```
-
-## Format
-
-An object of class `character` of length 2.

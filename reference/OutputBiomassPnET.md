@@ -1,11 +1,5 @@
 # PnET Biomass Output Extension
 
-PnET Biomass Output Extension
-
-PnET Biomass Output Extension
-
-## Details
-
 Companion output extension to
 [PnETSuccession](https://for-cast.github.io/landisutils/reference/PnETSuccession.md);
 both share the same user guide. §11 of the v6.0 guide documents the
@@ -31,7 +25,7 @@ Other PnET Output helpers:
 
 ## Super class
 
-[`landisutils::LandisExtension`](https://for-cast.github.io/landisutils/reference/LandisExtension.md)
+[`LandisExtension`](https://for-cast.github.io/landisutils/reference/LandisExtension.md)
 -\> `OutputBiomassPnET`
 
 ## Active bindings
@@ -48,7 +42,7 @@ Other PnET Output helpers:
 
 ### Public methods
 
-- [`OutputBiomassPnET$new()`](#method-OutputBiomassPnET-new)
+- [`OutputBiomassPnET$new()`](#method-OutputBiomassPnET-initialize)
 
 - [`OutputBiomassPnET$write()`](#method-OutputBiomassPnET-write)
 
@@ -56,11 +50,11 @@ Other PnET Output helpers:
 
 Inherited methods
 
-- [`landisutils::LandisExtension$add_file()`](https://for-cast.github.io/landisutils/reference/LandisExtension.html#method-add_file)
+- [`LandisExtension$add_file()`](https://for-cast.github.io/landisutils/reference/LandisExtension.html#method-add_file)
 
 ------------------------------------------------------------------------
 
-### Method `new()`
+### `OutputBiomassPnET$new()`
 
 #### Usage
 
@@ -102,7 +96,7 @@ Inherited methods
 
 ------------------------------------------------------------------------
 
-### Method [`write()`](https://rdrr.io/r/base/write.html)
+### `OutputBiomassPnET$write()`
 
 Write extension inputs to disk
 
@@ -112,7 +106,7 @@ Write extension inputs to disk
 
 ------------------------------------------------------------------------
 
-### Method `clone()`
+### `OutputBiomassPnET$clone()`
 
 The objects of this class are cloneable with this method.
 

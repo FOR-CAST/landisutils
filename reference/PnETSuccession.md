@@ -1,11 +1,5 @@
 # PnET-Succession Extension
 
-PnET-Succession Extension
-
-PnET-Succession Extension
-
-## Details
-
 Builds the LANDIS-II PnET-Succession v6.0 extension input file
 (compatible with LANDIS-II v8). The top-level `PnET-Succession`
 parameters are written via this class' `$write()` method; auxiliary
@@ -42,7 +36,7 @@ Other PnET Succession helpers:
 
 ## Super class
 
-[`landisutils::LandisExtension`](https://for-cast.github.io/landisutils/reference/LandisExtension.md)
+[`LandisExtension`](https://for-cast.github.io/landisutils/reference/LandisExtension.md)
 -\> `PnETSuccession`
 
 ## Active bindings
@@ -112,7 +106,7 @@ Other PnET Succession helpers:
 
 ### Public methods
 
-- [`PnETSuccession$new()`](#method-PnETSuccession-new)
+- [`PnETSuccession$new()`](#method-PnETSuccession-initialize)
 
 - [`PnETSuccession$write()`](#method-PnETSuccession-write)
 
@@ -120,11 +114,11 @@ Other PnET Succession helpers:
 
 Inherited methods
 
-- [`landisutils::LandisExtension$add_file()`](https://for-cast.github.io/landisutils/reference/LandisExtension.html#method-add_file)
+- [`LandisExtension$add_file()`](https://for-cast.github.io/landisutils/reference/LandisExtension.html#method-add_file)
 
 ------------------------------------------------------------------------
 
-### Method `new()`
+### `PnETSuccession$new()`
 
 #### Usage
 
@@ -234,7 +228,7 @@ Inherited methods
 
 ------------------------------------------------------------------------
 
-### Method [`write()`](https://rdrr.io/r/base/write.html)
+### `PnETSuccession$write()`
 
 Write extension inputs to disk
 
@@ -244,7 +238,7 @@ Write extension inputs to disk
 
 ------------------------------------------------------------------------
 
-### Method `clone()`
+### `PnETSuccession$clone()`
 
 The objects of this class are cloneable with this method.
 

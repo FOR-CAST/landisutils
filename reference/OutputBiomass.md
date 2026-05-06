@@ -2,8 +2,6 @@
 
 Biomass Output Extension
 
-Biomass Output Extension
-
 ## References
 
 LANDIS-II Output Biomass v4.0 Extension User Guide
@@ -11,7 +9,7 @@ LANDIS-II Output Biomass v4.0 Extension User Guide
 
 ## Super class
 
-[`landisutils::LandisExtension`](https://for-cast.github.io/landisutils/reference/LandisExtension.md)
+[`LandisExtension`](https://for-cast.github.io/landisutils/reference/LandisExtension.md)
 -\> `OutputBiomass`
 
 ## Active bindings
@@ -40,7 +38,7 @@ LANDIS-II Output Biomass v4.0 Extension User Guide
 
 ### Public methods
 
-- [`OutputBiomass$new()`](#method-OutputBiomass-new)
+- [`OutputBiomass$new()`](#method-OutputBiomass-initialize)
 
 - [`OutputBiomass$write()`](#method-OutputBiomass-write)
 
@@ -48,11 +46,11 @@ LANDIS-II Output Biomass v4.0 Extension User Guide
 
 Inherited methods
 
-- [`landisutils::LandisExtension$add_file()`](https://for-cast.github.io/landisutils/reference/LandisExtension.html#method-add_file)
+- [`LandisExtension$add_file()`](https://for-cast.github.io/landisutils/reference/LandisExtension.html#method-add_file)
 
 ------------------------------------------------------------------------
 
-### Method `new()`
+### `OutputBiomass$new()`
 
 #### Usage
 
@@ -98,7 +96,7 @@ Inherited methods
 
 ------------------------------------------------------------------------
 
-### Method [`write()`](https://rdrr.io/r/base/write.html)
+### `OutputBiomass$write()`
 
 Write extension inputs to disk
 
@@ -108,7 +106,7 @@ Write extension inputs to disk
 
 ------------------------------------------------------------------------
 
-### Method `clone()`
+### `OutputBiomass$clone()`
 
 The objects of this class are cloneable with this method.
 

@@ -10,7 +10,3 @@ Names accepted by
 ``` r
 .pnetOutputKeywords
 ```
-
-## Format
-
-An object of class `character` of length 43.

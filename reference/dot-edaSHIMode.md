@@ -7,7 +7,3 @@ Allowed EDA agent `SHIMode` values
 ``` r
 .edaSHIMode
 ```
-
-## Format
-
-An object of class `character` of length 2.

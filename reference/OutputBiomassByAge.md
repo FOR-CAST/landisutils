@@ -2,8 +2,6 @@
 
 Biomass Output by Age Extension
 
-Biomass Output by Age Extension
-
 ## References
 
 LANDIS-II Biomass-by-Age Output v4.0 Extension User Guide
@@ -11,7 +9,7 @@ LANDIS-II Biomass-by-Age Output v4.0 Extension User Guide
 
 ## Super class
 
-[`landisutils::LandisExtension`](https://for-cast.github.io/landisutils/reference/LandisExtension.md)
+[`LandisExtension`](https://for-cast.github.io/landisutils/reference/LandisExtension.md)
 -\> `OutputBiomassByAge`
 
 ## Active bindings
@@ -28,7 +26,7 @@ LANDIS-II Biomass-by-Age Output v4.0 Extension User Guide
 
 ### Public methods
 
-- [`OutputBiomassByAge$new()`](#method-OutputBiomassByAge-new)
+- [`OutputBiomassByAge$new()`](#method-OutputBiomassByAge-initialize)
 
 - [`OutputBiomassByAge$write()`](#method-OutputBiomassByAge-write)
 
@@ -36,11 +34,11 @@ LANDIS-II Biomass-by-Age Output v4.0 Extension User Guide
 
 Inherited methods
 
-- [`landisutils::LandisExtension$add_file()`](https://for-cast.github.io/landisutils/reference/LandisExtension.html#method-add_file)
+- [`LandisExtension$add_file()`](https://for-cast.github.io/landisutils/reference/LandisExtension.html#method-add_file)
 
 ------------------------------------------------------------------------
 
-### Method `new()`
+### `OutputBiomassByAge$new()`
 
 #### Usage
 
@@ -71,7 +69,7 @@ Inherited methods
 
 ------------------------------------------------------------------------
 
-### Method [`write()`](https://rdrr.io/r/base/write.html)
+### `OutputBiomassByAge$write()`
 
 Write extension inputs to disk
 
@@ -81,7 +79,7 @@ Write extension inputs to disk
 
 ------------------------------------------------------------------------
 
-### Method `clone()`
+### `OutputBiomassByAge$clone()`
 
 The objects of this class are cloneable with this method.
 

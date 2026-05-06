@@ -7,7 +7,3 @@ Required keys for the dynamic-browser-population block
 ``` r
 .browseDynamicPopulationKeys
 ```
-
-## Format
-
-An object of class `character` of length 8.

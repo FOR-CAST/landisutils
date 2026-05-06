@@ -2,8 +2,6 @@
 
 Social-Climate-Fire Extension
 
-Social-Climate-Fire Extension
-
 ## References
 
 LANDIS-II Social-Climate-Fire v4 User Guide
@@ -29,7 +27,7 @@ Other Social Climate Fire helpers:
 
 ## Super class
 
-[`landisutils::LandisExtension`](https://for-cast.github.io/landisutils/reference/LandisExtension.md)
+[`LandisExtension`](https://for-cast.github.io/landisutils/reference/LandisExtension.md)
 -\> `SocialClimateFire`
 
 ## Active bindings
@@ -215,7 +213,7 @@ Other Social Climate Fire helpers:
 
 ### Public methods
 
-- [`SocialClimateFire$new()`](#method-SocialClimateFire-new)
+- [`SocialClimateFire$new()`](#method-SocialClimateFire-initialize)
 
 - [`SocialClimateFire$write()`](#method-SocialClimateFire-write)
 
@@ -223,11 +221,11 @@ Other Social Climate Fire helpers:
 
 Inherited methods
 
-- [`landisutils::LandisExtension$add_file()`](https://for-cast.github.io/landisutils/reference/LandisExtension.html#method-add_file)
+- [`LandisExtension$add_file()`](https://for-cast.github.io/landisutils/reference/LandisExtension.html#method-add_file)
 
 ------------------------------------------------------------------------
 
-### Method `new()`
+### `SocialClimateFire$new()`
 
 #### Usage
 
@@ -468,7 +466,7 @@ Inherited methods
 
 ------------------------------------------------------------------------
 
-### Method [`write()`](https://rdrr.io/r/base/write.html)
+### `SocialClimateFire$write()`
 
 Write extension inputs to disk
 
@@ -478,7 +476,7 @@ Write extension inputs to disk
 
 ------------------------------------------------------------------------
 
-### Method `clone()`
+### `SocialClimateFire$clone()`
 
 The objects of this class are cloneable with this method.
 

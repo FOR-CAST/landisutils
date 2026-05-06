@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.6</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.7</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -52,7 +52,7 @@
 <dd><p>Character specifying the (directory) path to the extension input files.</p></dd>
 
 
-<dt><code>files</code></dt>
+    <dt><code>files</code></dt>
 <dd><p>Character specifying the filenames of the extension input files
 (relative to <code>path</code>); the principle extension input file should be listed first.</p></dd>
 
@@ -67,7 +67,7 @@
 <code>initialize()</code> via <code>private$.LandisData</code>.</p></dd>
 
 
-<dt><code>scenarioName</code></dt>
+    <dt><code>scenarioName</code></dt>
 <dd><p>Character. The name to use when this extension is
 referenced in the scenario <code>.txt</code> file's extension list. Defaults to
 <code>LandisData</code>; subclasses set <code>private$.scenarioName</code> only when the
@@ -75,11 +75,11 @@ parser-registered name differs from the file-header name (e.g. Land
 Use Plus). Read-only.</p></dd>
 
 
-<dt><code>Timestep</code></dt>
+    <dt><code>Timestep</code></dt>
 <dd><p>Integer.</p></dd>
 
 
-<dt><code>type</code></dt>
+    <dt><code>type</code></dt>
 <dd><p>character specifying the extension type
 (must be one of: succession, disturbance, other)</p></dd>
 
@@ -91,14 +91,12 @@ Use Plus). Read-only.</p></dd>
 
 <div class="section">
 <h3 id="public-methods">Public methods<a class="anchor" aria-label="anchor" href="#public-methods"></a></h3>
-
-<ul><li><p><a href="#method-LandisExtension-new"><code>LandisExtension$new()</code></a></p></li>
+<p></p><ul><li><p><a href="#method-LandisExtension-initialize"><code>LandisExtension$new()</code></a></p></li>
 <li><p><a href="#method-LandisExtension-add_file"><code>LandisExtension$add_file()</code></a></p></li>
 <li><p><a href="#method-LandisExtension-clone"><code>LandisExtension$clone()</code></a></p></li>
-</ul></div><p></p><hr><a id="method-LandisExtension-new"></a><div class="section">
-<h3 id="method-new-">Method <code>new()</code><a class="anchor" aria-label="anchor" href="#method-new-"></a></h3>
-
-<div class="section">
+</ul></div><p></p><hr><a id="method-LandisExtension-initialize"></a><div class="section">
+<h3 id="landisextension-new-"><code>LandisExtension$new()</code><a class="anchor" aria-label="anchor" href="#landisextension-new-"></a></h3>
+<p></p><div class="section">
 <h4 id="usage">Usage<a class="anchor" aria-label="anchor" href="#usage"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va"><a href="../reference/LandisExtension.html">LandisExtension</a></span><span class="op">$</span><span class="fu">new</span><span class="op">(</span></span>
 <span>  LandisData <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -106,40 +104,34 @@ Use Plus). Read-only.</p></dd>
 <span>  path <span class="op">=</span> <span class="cn">NA_character_</span>,</span>
 <span>  Timestep <span class="op">=</span> <span class="fl">1L</span></span>
 <span><span class="op">)</span></span></code></pre></div><p></p></div>
-</div>
-
-<div class="section">
+</div><p></p><div class="section">
 <h4 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>LandisData</code></dt>
 <dd><p>Character. The extension's <code>LandisData</code> entry
 (e.g. <code>"Biomass Succession"</code>).</p></dd>
 
-
-<dt><code>type</code></dt>
+      <dt><code>type</code></dt>
 <dd><p>Character specifying the extension type
 (must be one of: succession, disturbance, other)</p></dd>
 
-
-<dt><code>path</code></dt>
+      <dt><code>path</code></dt>
 <dd><p>Character specifying the (directory) path to the extension input files.</p></dd>
 
-
-<dt><code>Timestep</code></dt>
+      <dt><code>Timestep</code></dt>
 <dd><p>Integer.</p></dd>
 
 
 </dl><p></p></div>
 </div>
 
-</div><p></p><hr><a id="method-LandisExtension-add_file"></a><div class="section">
-<h3 id="method-add-file-">Method <code>add_file()</code><a class="anchor" aria-label="anchor" href="#method-add-file-"></a></h3>
-
-<div class="section">
-<h4 id="usage-1">Usage<a class="anchor" aria-label="anchor" href="#usage-1"></a></h4>
-<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">LandisExtension</span><span class="op">$</span><span class="fu">add_file</span><span class="op">(</span><span class="va">value</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
-<div class="section">
+<p></p><hr><a id="method-LandisExtension-add_file"></a><div class="section">
+<h3 id="landisextension-add-file-"><code>LandisExtension$add_file()</code><a class="anchor" aria-label="anchor" href="#landisextension-add-file-"></a></h3>
+<p></p><div class="section">
+<h4 id="usage-1">Usage<a class="anchor" aria-label="anchor" href="#usage-1"></a></h4>
+<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">LandisExtension</span><span class="op">$</span><span class="fu">add_file</span><span class="op">(</span><span class="va">value</span><span class="op">)</span></span></code></pre></div><p></p></div>
+</div><p></p><div class="section">
 <h4 id="arguments-1">Arguments<a class="anchor" aria-label="anchor" href="#arguments-1"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>value</code></dt>
 <dd><p>if specified, the new value to append to <code>files</code></p></dd>
@@ -148,14 +140,14 @@ Use Plus). Read-only.</p></dd>
 </dl><p></p></div>
 </div>
 
-</div><p></p><hr><a id="method-LandisExtension-clone"></a><div class="section">
-<h3 id="method-clone-">Method <code>clone()</code><a class="anchor" aria-label="anchor" href="#method-clone-"></a></h3>
+</div>
+
+<p></p><hr><a id="method-LandisExtension-clone"></a><div class="section">
+<h3 id="landisextension-clone-"><code>LandisExtension$clone()</code><a class="anchor" aria-label="anchor" href="#landisextension-clone-"></a></h3>
 <p>The objects of this class are cloneable with this method.</p><div class="section">
 <h4 id="usage-2">Usage<a class="anchor" aria-label="anchor" href="#usage-2"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">LandisExtension</span><span class="op">$</span><span class="fu">clone</span><span class="op">(</span>deep <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div><p></p></div>
-</div>
-
-<div class="section">
+</div><p></p><div class="section">
 <h4 id="arguments-2">Arguments<a class="anchor" aria-label="anchor" href="#arguments-2"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>deep</code></dt>
 <dd><p>Whether to make a deep clone.</p></dd>
@@ -165,6 +157,7 @@ Use Plus). Read-only.</p></dd>
 </div>
 
 </div>
+
 
     </div>
 

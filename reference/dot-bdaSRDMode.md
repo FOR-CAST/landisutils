@@ -7,7 +7,3 @@ Allowed Climate BDA `SRDMode` values
 ``` r
 .bdaSRDMode
 ```
-
-## Format
-
-An object of class `character` of length 2.

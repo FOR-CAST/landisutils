@@ -7,7 +7,3 @@ Required `SpeciesTable` columns for the Biomass Browse extension
 ``` r
 .browseSpeciesTableCols
 ```
-
-## Format
-
-An object of class `character` of length 6.

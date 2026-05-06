@@ -2,8 +2,6 @@
 
 Cohort Statistics Extension
 
-Cohort Statistics Extension
-
 ## References
 
 LANDIS-II Cohort Statistics v4 Extension User Guide
@@ -11,7 +9,7 @@ LANDIS-II Cohort Statistics v4 Extension User Guide
 
 ## Super class
 
-[`landisutils::LandisExtension`](https://for-cast.github.io/landisutils/reference/LandisExtension.md)
+[`LandisExtension`](https://for-cast.github.io/landisutils/reference/LandisExtension.md)
 -\> `OutputCohortStats`
 
 ## Active bindings
@@ -44,7 +42,7 @@ LANDIS-II Cohort Statistics v4 Extension User Guide
 
 ### Public methods
 
-- [`OutputCohortStats$new()`](#method-OutputCohortStats-new)
+- [`OutputCohortStats$new()`](#method-OutputCohortStats-initialize)
 
 - [`OutputCohortStats$write()`](#method-OutputCohortStats-write)
 
@@ -52,11 +50,11 @@ LANDIS-II Cohort Statistics v4 Extension User Guide
 
 Inherited methods
 
-- [`landisutils::LandisExtension$add_file()`](https://for-cast.github.io/landisutils/reference/LandisExtension.html#method-add_file)
+- [`LandisExtension$add_file()`](https://for-cast.github.io/landisutils/reference/LandisExtension.html#method-add_file)
 
 ------------------------------------------------------------------------
 
-### Method `new()`
+### `OutputCohortStats$new()`
 
 #### Usage
 
@@ -109,7 +107,7 @@ Inherited methods
 
 ------------------------------------------------------------------------
 
-### Method [`write()`](https://rdrr.io/r/base/write.html)
+### `OutputCohortStats$write()`
 
 Write extension inputs to disk
 
@@ -119,7 +117,7 @@ Write extension inputs to disk
 
 ------------------------------------------------------------------------
 
-### Method `clone()`
+### `OutputCohortStats$clone()`
 
 The objects of this class are cloneable with this method.
 

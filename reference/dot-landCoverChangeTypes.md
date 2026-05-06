@@ -7,7 +7,3 @@ Allowed Land Use Plus `LandCoverChange` types
 ``` r
 .landCoverChangeTypes
 ```
-
-## Format
-
-An object of class `character` of length 3.

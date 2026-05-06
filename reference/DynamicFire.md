@@ -2,8 +2,6 @@
 
 Dynamic Fire System Extension
 
-Dynamic Fire System Extension
-
 ## References
 
 LANDIS-II Dynamic Fire System Extension v4 User Guide
@@ -36,7 +34,7 @@ Other Dynamic Fire helpers:
 
 ## Super class
 
-[`landisutils::LandisExtension`](https://for-cast.github.io/landisutils/reference/LandisExtension.md)
+[`LandisExtension`](https://for-cast.github.io/landisutils/reference/LandisExtension.md)
 -\> `DynamicFire`
 
 ## Active bindings
@@ -118,7 +116,7 @@ Other Dynamic Fire helpers:
 
 ### Public methods
 
-- [`DynamicFire$new()`](#method-DynamicFire-new)
+- [`DynamicFire$new()`](#method-DynamicFire-initialize)
 
 - [`DynamicFire$write()`](#method-DynamicFire-write)
 
@@ -126,11 +124,11 @@ Other Dynamic Fire helpers:
 
 Inherited methods
 
-- [`landisutils::LandisExtension$add_file()`](https://for-cast.github.io/landisutils/reference/LandisExtension.html#method-add_file)
+- [`LandisExtension$add_file()`](https://for-cast.github.io/landisutils/reference/LandisExtension.html#method-add_file)
 
 ------------------------------------------------------------------------
 
-### Method `new()`
+### `DynamicFire$new()`
 
 #### Usage
 
@@ -242,7 +240,7 @@ Inherited methods
 
 ------------------------------------------------------------------------
 
-### Method [`write()`](https://rdrr.io/r/base/write.html)
+### `DynamicFire$write()`
 
 Write extension inputs to disk
 
@@ -252,7 +250,7 @@ Write extension inputs to disk
 
 ------------------------------------------------------------------------
 
-### Method `clone()`
+### `DynamicFire$clone()`
 
 The objects of this class are cloneable with this method.
 

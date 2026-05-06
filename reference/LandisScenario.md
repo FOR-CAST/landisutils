@@ -27,7 +27,7 @@ Keeps track of a scenario's files and all its extensions' input files.
 
 ### Public methods
 
-- [`LandisScenario$new()`](#method-LandisScenario-new)
+- [`LandisScenario$new()`](#method-LandisScenario-initialize)
 
 - [`LandisScenario$add_file()`](#method-LandisScenario-add_file)
 
@@ -41,7 +41,7 @@ Keeps track of a scenario's files and all its extensions' input files.
 
 ------------------------------------------------------------------------
 
-### Method `new()`
+### `LandisScenario$new()`
 
 #### Usage
 
@@ -64,7 +64,7 @@ Keeps track of a scenario's files and all its extensions' input files.
 
 ------------------------------------------------------------------------
 
-### Method `add_file()`
+### `LandisScenario$add_file()`
 
 #### Usage
 
@@ -78,7 +78,7 @@ Keeps track of a scenario's files and all its extensions' input files.
 
 ------------------------------------------------------------------------
 
-### Method `list_extensions()`
+### `LandisScenario$list_extensions()`
 
 #### Usage
 
@@ -93,7 +93,7 @@ Keeps track of a scenario's files and all its extensions' input files.
 
 ------------------------------------------------------------------------
 
-### Method `list_files()`
+### `LandisScenario$list_files()`
 
 #### Usage
 
@@ -107,7 +107,7 @@ Keeps track of a scenario's files and all its extensions' input files.
 
 ------------------------------------------------------------------------
 
-### Method [`replicate()`](https://rdrr.io/r/base/lapply.html)
+### `LandisScenario$replicate()`
 
 #### Usage
 
@@ -121,7 +121,7 @@ Keeps track of a scenario's files and all its extensions' input files.
 
 ------------------------------------------------------------------------
 
-### Method `clone()`
+### `LandisScenario$clone()`
 
 The objects of this class are cloneable with this method.
 

@@ -2,8 +2,6 @@
 
 Biomass Hurricane Extension
 
-Biomass Hurricane Extension
-
 ## References
 
 LANDIS-II Biomass Hurricane v3 Extension User Guide
@@ -20,7 +18,7 @@ Other Hurricane helpers:
 
 ## Super class
 
-[`landisutils::LandisExtension`](https://for-cast.github.io/landisutils/reference/LandisExtension.md)
+[`LandisExtension`](https://for-cast.github.io/landisutils/reference/LandisExtension.md)
 -\> `Hurricane`
 
 ## Active bindings
@@ -102,7 +100,7 @@ Other Hurricane helpers:
 
 ### Public methods
 
-- [`Hurricane$new()`](#method-Hurricane-new)
+- [`Hurricane$new()`](#method-Hurricane-initialize)
 
 - [`Hurricane$write()`](#method-Hurricane-write)
 
@@ -110,11 +108,11 @@ Other Hurricane helpers:
 
 Inherited methods
 
-- [`landisutils::LandisExtension$add_file()`](https://for-cast.github.io/landisutils/reference/LandisExtension.html#method-add_file)
+- [`LandisExtension$add_file()`](https://for-cast.github.io/landisutils/reference/LandisExtension.html#method-add_file)
 
 ------------------------------------------------------------------------
 
-### Method `new()`
+### `Hurricane$new()`
 
 #### Usage
 
@@ -221,7 +219,7 @@ Inherited methods
 
 ------------------------------------------------------------------------
 
-### Method [`write()`](https://rdrr.io/r/base/write.html)
+### `Hurricane$write()`
 
 Write extension inputs to disk
 
@@ -231,7 +229,7 @@ Write extension inputs to disk
 
 ------------------------------------------------------------------------
 
-### Method `clone()`
+### `Hurricane$clone()`
 
 The objects of this class are cloneable with this method.
 
