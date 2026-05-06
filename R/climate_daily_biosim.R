@@ -11,12 +11,21 @@
 #' @param z integer zoom level passed to [elevatr::get_elev_raster()]; higher
 #'   values give finer resolution. Default `9` (~250 m at mid-latitudes).
 #'
+#' @param tmp_dir character. Directory for `elevatr`'s per-tile downloads.
+#'   Defaults to `<landisutils.cache.path>/elevatr_tiles/`, which keeps the
+#'   AWS Terrain Tile fragments inside the package cache instead of leaking
+#'   into the R session's global `tempdir()` (`elevatr`'s own default).
+#'
 #' @returns `SpatRaster` of elevations in metres, in lon-lat CRS.
 #'
 #' @seealso [create_locations_df()], [get_clim_daily()]
 #'
 #' @export
-get_elevation_rast <- function(studyArea, z = 9) {
+get_elevation_rast <- function(
+  studyArea,
+  z = 9,
+  tmp_dir = file.path(.climateCachePath(), "elevatr_tiles")
+) {
   stopifnot(
     requireNamespace("elevatr", quietly = TRUE),
     requireNamespace("sf", quietly = TRUE),
@@ -28,7 +37,15 @@ get_elevation_rast <- function(studyArea, z = 9) {
   }
   studyArea <- sf::st_transform(studyArea, crs = 4326)
 
-  elevatr::get_elev_raster(locations = studyArea, src = "aws", z = z, verbose = FALSE) |>
+  fs::dir_create(tmp_dir)
+
+  elevatr::get_elev_raster(
+    locations = studyArea,
+    src = "aws",
+    z = z,
+    tmp_dir = tmp_dir,
+    verbose = FALSE
+  ) |>
     terra::rast()
 }
 

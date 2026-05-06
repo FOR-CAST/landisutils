@@ -16,19 +16,19 @@ Character string(s) to write to the suitable LANDIS-II input file.
 Specify the \code{StandRanking} portion of a Biomass Harvest prescription
 }
 \seealso{
-Other Biomass Harvest helpers: 
+Other Biomass Harvest helpers:
 \code{\link{BiomassHarvest}},
-\code{\link{harvestPrescription}()},
-\code{\link{insertCohortsRemoved}()},
-\code{\link{insertEconomicRankTable}()},
-\code{\link{insertFireHazardTable}()},
-\code{\link{insertForestTypeTable}()},
-\code{\link{insertHarvestImplementations}()},
-\code{\link{insertMultipleRepeat}()},
-\code{\link{insertPlant}()},
-\code{\link{insertPrescription}()},
-\code{\link{insertSingleRepeat}()},
-\code{\link{insertSiteSelection}()}
+\code{\link[=harvestPrescription]{harvestPrescription()}},
+\code{\link[=insertCohortsRemoved]{insertCohortsRemoved()}},
+\code{\link[=insertEconomicRankTable]{insertEconomicRankTable()}},
+\code{\link[=insertFireHazardTable]{insertFireHazardTable()}},
+\code{\link[=insertForestTypeTable]{insertForestTypeTable()}},
+\code{\link[=insertHarvestImplementations]{insertHarvestImplementations()}},
+\code{\link[=insertMultipleRepeat]{insertMultipleRepeat()}},
+\code{\link[=insertPlant]{insertPlant()}},
+\code{\link[=insertPrescription]{insertPrescription()}},
+\code{\link[=insertSingleRepeat]{insertSingleRepeat()}},
+\code{\link[=insertSiteSelection]{insertSiteSelection()}}
 }
 \concept{Biomass Harvest helpers}
 \keyword{internal}

@@ -12,9 +12,11 @@ prepSpeciesData(df = NULL, type = NULL, path = NULL, filename = NULL)
 \item{df}{data.frame corresponding to the species data table}
 
 \item{type}{character, corresponding to one of the following types:
-- "core": generates core species data (\code{.txt}) file;
-- "fire": generates \code{.csv} version for use with fire extensions;
-- "succession": generates \code{.csv} version for use with succession extensions;}
+\itemize{
+\item "core": generates core species data (\code{.txt}) file;
+\item "fire": generates \code{.csv} version for use with fire extensions;
+\item "succession": generates \code{.csv} version for use with succession extensions;
+}}
 
 \item{path}{Character. Path specifying a directory to use for the scenario runs.}
 

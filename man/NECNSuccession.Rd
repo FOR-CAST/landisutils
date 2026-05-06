@@ -5,8 +5,6 @@
 \title{NECN Succession Extension}
 \description{
 NECN Succession Extension
-
-NECN Succession Extension
 }
 \references{
 LANDIS-II Net Ecosystem CN Succession v8 Extension User Guide
@@ -20,111 +18,110 @@ Shared scenario inputs:
 \code{\link[=prepInitialCommunities]{prepInitialCommunities()}},
 \code{\link[=prepSpeciesData]{prepSpeciesData()}}.
 
-Other NECN Succession helpers: 
-\code{\link{insertNECNFireReductionParameters}()},
-\code{\link{insertNECNHarvestReductionParameters}()},
-\code{\link{prepNECNFireReductionParameters}()}
+Other NECN Succession helpers:
+\code{\link[=insertNECNFireReductionParameters]{insertNECNFireReductionParameters()}},
+\code{\link[=insertNECNHarvestReductionParameters]{insertNECNHarvestReductionParameters()}},
+\code{\link[=prepNECNFireReductionParameters]{prepNECNFireReductionParameters()}}
 }
 \concept{NECN Succession helpers}
 \section{Super class}{
-\code{\link[landisutils:LandisExtension]{landisutils::LandisExtension}} -> \code{NECNSuccession}
+\code{\link[landisutils:LandisExtension]{LandisExtension}} -> \code{NECNSuccession}
 }
 \section{Active bindings}{
-\if{html}{\out{<div class="r6-active-bindings">}}
-\describe{
-\item{\code{SeedingAlgorithm}}{Character. Dispersal algorithm to use.
+  \if{html}{\out{<div class="r6-active-bindings">}}
+  \describe{
+    \item{\code{SeedingAlgorithm}}{Character. Dispersal algorithm to use.
 One of \code{"WardSeedDispersal"}, \code{"NoDispersal"}, \code{"UniversalDispersal"}.}
 
-\item{\code{InitialCommunitiesCSV}}{Character. Relative file path.}
+    \item{\code{InitialCommunitiesCSV}}{Character. Relative file path.}
 
-\item{\code{InitialCommunitiesMap}}{Character. Relative file path.}
+    \item{\code{InitialCommunitiesMap}}{Character. Relative file path.}
 
-\item{\code{ClimateConfigFile}}{Character. Relative file path.}
+    \item{\code{ClimateConfigFile}}{Character. Relative file path.}
 
-\item{\code{SoilMaps}}{Named list of relative file paths. Required keys: \code{SoilDepthMapName}, \code{SoilDrainMapName}, \code{SoilBaseFlowMapName}, \code{SoilStormFlowMapName}, \code{SoilFieldCapacityMapName}, \code{SoilWiltingPointMapName}, \code{SoilPercentSandMapName}, \code{SoilPercentClayMapName}, \code{InitialSOM1CsurfMapName}, \code{InitialSOM1NsurfMapName}, \code{InitialSOM1CsoilMapName}, \code{InitialSOM1NsoilMapName}, \code{InitialSOM2CMapName}, \code{InitialSOM2NMapName}, \code{InitialSOM3CMapName}, \code{InitialSOM3NMapName}, \code{InitialDeadWoodSurfaceMapName}, \code{InitialDeadCoarseRootsMapName}.}
+    \item{\code{SoilMaps}}{Named list of relative file paths. Required keys: \code{SoilDepthMapName}, \code{SoilDrainMapName}, \code{SoilBaseFlowMapName}, \code{SoilStormFlowMapName}, \code{SoilFieldCapacityMapName}, \code{SoilWiltingPointMapName}, \code{SoilPercentSandMapName}, \code{SoilPercentClayMapName}, \code{InitialSOM1CsurfMapName}, \code{InitialSOM1NsurfMapName}, \code{InitialSOM1CsoilMapName}, \code{InitialSOM1NsoilMapName}, \code{InitialSOM2CMapName}, \code{InitialSOM2NMapName}, \code{InitialSOM3CMapName}, \code{InitialSOM3NMapName}, \code{InitialDeadWoodSurfaceMapName}, \code{InitialDeadCoarseRootsMapName}.}
 
-\item{\code{OptionalClimateMaps}}{Named list of relative file paths.
+    \item{\code{OptionalClimateMaps}}{Named list of relative file paths.
 Allowed keys: \code{SlopeMapName}, \code{AspectMapName}, \code{NormalSWAMapName}, \code{NormalCWDMapName}, \code{NormalTempMapName}.}
 
-\item{\code{CalibrateMode}}{Logical, or character indicating "yes" or "no".}
+    \item{\code{CalibrateMode}}{Logical, or character indicating "yes" or "no".}
 
-\item{\code{SmokeModelOutputs}}{Logical, or character indicating "yes" or "no".}
+    \item{\code{SmokeModelOutputs}}{Logical, or character indicating "yes" or "no".}
 
-\item{\code{Write_SWA_Maps}}{Logical, or character indicating "yes" or "no".}
+    \item{\code{Write_SWA_Maps}}{Logical, or character indicating "yes" or "no".}
 
-\item{\code{Write_CWD_Maps}}{Logical, or character indicating "yes" or "no".}
+    \item{\code{Write_CWD_Maps}}{Logical, or character indicating "yes" or "no".}
 
-\item{\code{Write_Temperature_Maps}}{Logical, or character indicating "yes" or "no".}
+    \item{\code{Write_Temperature_Maps}}{Logical, or character indicating "yes" or "no".}
 
-\item{\code{Write_Species_Drought_Maps}}{Logical, or character indicating "yes" or "no".}
+    \item{\code{Write_Species_Drought_Maps}}{Logical, or character indicating "yes" or "no".}
 
-\item{\code{WaterDecayFunction}}{Character. One of \code{"Linear"} or \code{"Ratio"}.}
+    \item{\code{WaterDecayFunction}}{Character. One of \code{"Linear"} or \code{"Ratio"}.}
 
-\item{\code{ProbabilityEstablishAdjust}}{Numeric.}
+    \item{\code{ProbabilityEstablishAdjust}}{Numeric.}
 
-\item{\code{InitialMineralN}}{Numeric (g m-2).}
+    \item{\code{InitialMineralN}}{Numeric (g m-2).}
 
-\item{\code{InitialFineFuels}}{Numeric in \verb{[0, 1]}.}
+    \item{\code{InitialFineFuels}}{Numeric in \verb{[0, 1]}.}
 
-\item{\code{AtmosphericNSlope}}{Numeric.}
+    \item{\code{AtmosphericNSlope}}{Numeric.}
 
-\item{\code{AtmosphericNIntercept}}{Numeric.}
+    \item{\code{AtmosphericNIntercept}}{Numeric.}
 
-\item{\code{Latitude}}{Numeric (degrees).}
+    \item{\code{Latitude}}{Numeric (degrees).}
 
-\item{\code{DenitrificationRate}}{Numeric in \verb{[0, 1]}.}
+    \item{\code{DenitrificationRate}}{Numeric in \verb{[0, 1]}.}
 
-\item{\code{DecayRateSurf}}{Numeric in \verb{[0, 1]}.}
+    \item{\code{DecayRateSurf}}{Numeric in \verb{[0, 1]}.}
 
-\item{\code{DecayRateSOM1}}{Numeric in \verb{[0, 1]}.}
+    \item{\code{DecayRateSOM1}}{Numeric in \verb{[0, 1]}.}
 
-\item{\code{DecayRateSOM2}}{Numeric in \verb{[0, 1]}.}
+    \item{\code{DecayRateSOM2}}{Numeric in \verb{[0, 1]}.}
 
-\item{\code{DecayRateSOM3}}{Numeric in \verb{[0, 1]}.}
+    \item{\code{DecayRateSOM3}}{Numeric in \verb{[0, 1]}.}
 
-\item{\code{GrassThresholdMultiplier}}{Numeric.}
+    \item{\code{GrassThresholdMultiplier}}{Numeric.}
 
-\item{\code{OutputMaps}}{Named list. See table 3 of the user guide.
+    \item{\code{OutputMaps}}{Named list. See table 3 of the user guide.
 Allowed names: \code{ANPPMapName}, \code{ANPPMapFrequency}, \code{ANEEMapName}, \code{ANEEMapFrequency}, \code{SoilCarbonMapName}, \code{SoilNitrogenMapName}, \code{TotalCMapName}. \verb{*MapName} values are file-name
 templates and must contain the literal \code{{timestep}} placeholder
 (user guide §2.29) -- LANDIS-II replaces it with the simulation
 year, e.g. \code{"NECN/ANPP-{timestep}.tif"}.}
 
-\item{\code{CreateInputCommunityMaps}}{Logical, or character indicating "yes" or "no".}
+    \item{\code{CreateInputCommunityMaps}}{Logical, or character indicating "yes" or "no".}
 
-\item{\code{VariableOverrides}}{Named list. Allowed names: \code{Stormflow}, \code{WaterFactor1}, \code{WaterFactor2}, \code{AnaerobicFactor1}, \code{AnaerobicFactor2}, \code{AnaerobicFactor3}.}
+    \item{\code{VariableOverrides}}{Named list. Allowed names: \code{Stormflow}, \code{WaterFactor1}, \code{WaterFactor2}, \code{AnaerobicFactor1}, \code{AnaerobicFactor2}, \code{AnaerobicFactor3}.}
 
-\item{\code{SpeciesParameters}}{Character. Relative file path.}
+    \item{\code{SpeciesParameters}}{Character. Relative file path.}
 
-\item{\code{DroughtMortalityParameters}}{Character. Relative file path.}
+    \item{\code{DroughtMortalityParameters}}{Character. Relative file path.}
 
-\item{\code{FireReductionParameters}}{\code{data.frame}.}
+    \item{\code{FireReductionParameters}}{\code{data.frame}.}
 
-\item{\code{HarvestReductionParameters}}{\code{data.frame}.}
-}
-\if{html}{\out{</div>}}
+    \item{\code{HarvestReductionParameters}}{\code{data.frame}.}
+  }
+  \if{html}{\out{</div>}}
 }
 \section{Methods}{
 \subsection{Public methods}{
-\itemize{
-\item \href{#method-NECNSuccession-new}{\code{NECNSuccession$new()}}
-\item \href{#method-NECNSuccession-write}{\code{NECNSuccession$write()}}
-\item \href{#method-NECNSuccession-clone}{\code{NECNSuccession$clone()}}
+  \itemize{
+    \item \href{#method-NECNSuccession-initialize}{\code{NECNSuccession$new()}}
+    \item \href{#method-NECNSuccession-write}{\code{NECNSuccession$write()}}
+    \item \href{#method-NECNSuccession-clone}{\code{NECNSuccession$clone()}}
+  }
 }
-}
-\if{html}{\out{
-<details open><summary>Inherited methods</summary>
+\if{html}{\out{<details open><summary>Inherited methods</summary>
 <ul>
-<li><span class="pkg-link" data-pkg="landisutils" data-topic="LandisExtension" data-id="add_file"><a href='../../landisutils/html/LandisExtension.html#method-LandisExtension-add_file'><code>landisutils::LandisExtension$add_file()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="landisutils" data-topic="LandisExtension" data-id="add_file"><a href='../../landisutils/html/LandisExtension.html#method-LandisExtension-add_file'><code>LandisExtension$add_file()</code></a></span></li>
 </ul>
-</details>
-}}
+</details>}}
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-NECNSuccession-new"></a>}}
-\if{latex}{\out{\hypertarget{method-NECNSuccession-new}{}}}
-\subsection{Method \code{new()}}{
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{NECNSuccession$new(
+\if{html}{\out{<a id="method-NECNSuccession-initialize"></a>}}
+\if{latex}{\out{\hypertarget{method-NECNSuccession-initialize}{}}}
+\subsection{\code{NECNSuccession$new()}}{
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{NECNSuccession$new(
   path,
   Timestep = 10L,
   SeedingAlgorithm = NULL,
@@ -159,134 +156,106 @@ year, e.g. \code{"NECN/ANPP-{timestep}.tif"}.}
   DroughtMortalityParameters = NULL,
   FireReductionParameters = NULL,
   HarvestReductionParameters = NULL
-)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{path}}{Character. Directory path.}
-
-\item{\code{Timestep}}{Integer.}
-
-\item{\code{SeedingAlgorithm}}{Character. Dispersal algorithm to use.
+)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{path}}{Character. Directory path.}
+      \item{\code{Timestep}}{Integer.}
+      \item{\code{SeedingAlgorithm}}{Character. Dispersal algorithm to use.
 One of \code{"WardSeedDispersal"}, \code{"NoDispersal"}, \code{"UniversalDispersal"}.}
-
-\item{\code{InitialCommunitiesCSV}}{Character. Relative file path to the
+      \item{\code{InitialCommunitiesCSV}}{Character. Relative file path to the
 initial communities CSV (see §4 of the user guide).}
-
-\item{\code{InitialCommunitiesMap}}{Character. Relative file path to the
+      \item{\code{InitialCommunitiesMap}}{Character. Relative file path to the
 initial communities raster.}
-
-\item{\code{ClimateConfigFile}}{Character. Relative file path to the climate
+      \item{\code{ClimateConfigFile}}{Character. Relative file path to the climate
 library configuration file.}
-
-\item{\code{SoilMaps}}{Named list of relative file paths for required soil physical
+      \item{\code{SoilMaps}}{Named list of relative file paths for required soil physical
 and initial soil organic matter / dead wood map inputs. Keys must match
 the NECN keywords (Tables 1 and 2 of the user guide): \code{SoilDepthMapName}, \code{SoilDrainMapName}, \code{SoilBaseFlowMapName}, \code{SoilStormFlowMapName}, \code{SoilFieldCapacityMapName}, \code{SoilWiltingPointMapName}, \code{SoilPercentSandMapName}, \code{SoilPercentClayMapName}, \code{InitialSOM1CsurfMapName}, \code{InitialSOM1NsurfMapName}, \code{InitialSOM1CsoilMapName}, \code{InitialSOM1NsoilMapName}, \code{InitialSOM2CMapName}, \code{InitialSOM2NMapName}, \code{InitialSOM3CMapName}, \code{InitialSOM3NMapName}, \code{InitialDeadWoodSurfaceMapName}, \code{InitialDeadCoarseRootsMapName}.}
-
-\item{\code{OptionalClimateMaps}}{(Optional) Named list of relative file paths for
+      \item{\code{OptionalClimateMaps}}{(Optional) Named list of relative file paths for
 any of \code{SlopeMapName}, \code{AspectMapName}, \code{NormalSWAMapName},
 \code{NormalCWDMapName}, \code{NormalTempMapName}.}
-
-\item{\code{CalibrateMode}}{Logical, or character indicating "yes" or "no".}
-
-\item{\code{SmokeModelOutputs}}{Logical, or character indicating "yes" or "no".}
-
-\item{\code{Write_SWA_Maps}}{Logical, or character indicating "yes" or "no".}
-
-\item{\code{Write_CWD_Maps}}{Logical, or character indicating "yes" or "no".}
-
-\item{\code{Write_Temperature_Maps}}{Logical, or character indicating "yes" or "no".}
-
-\item{\code{Write_Species_Drought_Maps}}{Logical, or character indicating
+      \item{\code{CalibrateMode}}{Logical, or character indicating "yes" or "no".}
+      \item{\code{SmokeModelOutputs}}{Logical, or character indicating "yes" or "no".}
+      \item{\code{Write_SWA_Maps}}{Logical, or character indicating "yes" or "no".}
+      \item{\code{Write_CWD_Maps}}{Logical, or character indicating "yes" or "no".}
+      \item{\code{Write_Temperature_Maps}}{Logical, or character indicating "yes" or "no".}
+      \item{\code{Write_Species_Drought_Maps}}{Logical, or character indicating
 "yes" or "no".}
-
-\item{\code{WaterDecayFunction}}{Character. One of \code{"Linear"} or \code{"Ratio"}.}
-
-\item{\code{ProbabilityEstablishAdjust}}{Numeric. Multiplier applied to the
+      \item{\code{WaterDecayFunction}}{Character. One of \code{"Linear"} or \code{"Ratio"}.}
+      \item{\code{ProbabilityEstablishAdjust}}{Numeric. Multiplier applied to the
 probability of establishment. Default \code{1.0}.}
-
-\item{\code{InitialMineralN}}{Numeric. Initial mineral N ($g/m^2$).}
-
-\item{\code{InitialFineFuels}}{Numeric in \verb{[0, 1]}. Fraction of initial dead wood
+      \item{\code{InitialMineralN}}{Numeric. Initial mineral N ($g/m^2$).}
+      \item{\code{InitialFineFuels}}{Numeric in \verb{[0, 1]}. Fraction of initial dead wood
 allocated to fine fuels.}
-
-\item{\code{AtmosphericNSlope}}{Numeric. Slope for linear N-deposition model.}
-
-\item{\code{AtmosphericNIntercept}}{Numeric. Intercept for linear N-deposition model.}
-
-\item{\code{Latitude}}{Numeric. Study-site latitude (degrees).}
-
-\item{\code{DenitrificationRate}}{Numeric in \verb{[0, 1]}. Monthly fraction of mineral
+      \item{\code{AtmosphericNSlope}}{Numeric. Slope for linear N-deposition model.}
+      \item{\code{AtmosphericNIntercept}}{Numeric. Intercept for linear N-deposition model.}
+      \item{\code{Latitude}}{Numeric. Study-site latitude (degrees).}
+      \item{\code{DenitrificationRate}}{Numeric in \verb{[0, 1]}. Monthly fraction of mineral
 N lost through ammonia volatilization and denitrification.}
-
-\item{\code{DecayRateSurf}}{Numeric in \verb{[0, 1]}. Max decay rate of SOM1-surface pool.}
-
-\item{\code{DecayRateSOM1}}{Numeric in \verb{[0, 1]}. Max decay rate of SOM1-soil pool.}
-
-\item{\code{DecayRateSOM2}}{Numeric in \verb{[0, 1]}. Max decay rate of SOM2 (slow) pool.}
-
-\item{\code{DecayRateSOM3}}{Numeric in \verb{[0, 1]}. Max decay rate of SOM3 (passive) pool.}
-
-\item{\code{GrassThresholdMultiplier}}{(Optional) Numeric. Grass/tree competition
+      \item{\code{DecayRateSurf}}{Numeric in \verb{[0, 1]}. Max decay rate of SOM1-surface pool.}
+      \item{\code{DecayRateSOM1}}{Numeric in \verb{[0, 1]}. Max decay rate of SOM1-soil pool.}
+      \item{\code{DecayRateSOM2}}{Numeric in \verb{[0, 1]}. Max decay rate of SOM2 (slow) pool.}
+      \item{\code{DecayRateSOM3}}{Numeric in \verb{[0, 1]}. Max decay rate of SOM3 (passive) pool.}
+      \item{\code{GrassThresholdMultiplier}}{(Optional) Numeric. Grass/tree competition
 multiplier; see user guide §2.28.}
-
-\item{\code{OutputMaps}}{(Optional) Named list of optional output-map keywords and values.
+      \item{\code{OutputMaps}}{(Optional) Named list of optional output-map keywords and values.
 See table 3 of the user guide. Allowed names: \code{ANPPMapName}, \code{ANPPMapFrequency}, \code{ANEEMapName}, \code{ANEEMapFrequency}, \code{SoilCarbonMapName}, \code{SoilNitrogenMapName}, \code{TotalCMapName}.
 \verb{*MapName} values are file-name templates and must contain the literal
 \code{{timestep}} placeholder (user guide §2.29), e.g.
 \code{"NECN/ANPP-{timestep}.tif"}.}
-
-\item{\code{CreateInputCommunityMaps}}{Logical, or character indicating "yes" or "no".}
-
-\item{\code{VariableOverrides}}{(Optional) Named list of numeric override values.
+      \item{\code{CreateInputCommunityMaps}}{Logical, or character indicating "yes" or "no".}
+      \item{\code{VariableOverrides}}{(Optional) Named list of numeric override values.
 Allowed names: \code{Stormflow}, \code{WaterFactor1}, \code{WaterFactor2}, \code{AnaerobicFactor1}, \code{AnaerobicFactor2}, \code{AnaerobicFactor3}.}
-
-\item{\code{SpeciesParameters}}{Character. Relative file path to the
+      \item{\code{SpeciesParameters}}{Character. Relative file path to the
 species-parameters CSV (see §2.32, Table 4, of the user guide).}
-
-\item{\code{DroughtMortalityParameters}}{(Optional) Character. Relative file path
+      \item{\code{DroughtMortalityParameters}}{(Optional) Character. Relative file path
 to the drought-mortality-parameters CSV (see §2.33, Table 5, of
 the user guide).}
-
-\item{\code{FireReductionParameters}}{\code{data.frame} with columns \code{FireSeverity},
+      \item{\code{FireReductionParameters}}{\code{data.frame} with columns \code{FireSeverity},
 \code{CoarseDebrisReduction}, \code{FineLitterReduction}, \code{CohortWoodReduction},
 \code{CohortLeafReduction}, \code{SOMReduction}. Required even when no fire
 extension is used.}
-
-\item{\code{HarvestReductionParameters}}{(Optional) \code{data.frame} with columns
+      \item{\code{HarvestReductionParameters}}{(Optional) \code{data.frame} with columns
 \code{PrescriptionName}, \code{DeadWoodReduction}, \code{DeadLitterReduction},
 \code{CohortWoodRemoval}, \code{CohortLeafRemoval}.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
-\if{html}{\out{</div>}}
-}
-}
+
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-NECNSuccession-write"></a>}}
 \if{latex}{\out{\hypertarget{method-NECNSuccession-write}{}}}
-\subsection{Method \code{write()}}{
-Write extension inputs to disk
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{NECNSuccession$write()}\if{html}{\out{</div>}}
+\subsection{\code{NECNSuccession$write()}}{
+  Write extension inputs to disk
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{NECNSuccession$write()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-NECNSuccession-clone"></a>}}
 \if{latex}{\out{\hypertarget{method-NECNSuccession-clone}{}}}
-\subsection{Method \code{clone()}}{
-The objects of this class are cloneable with this method.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{NECNSuccession$clone(deep = FALSE)}\if{html}{\out{</div>}}
+\subsection{\code{NECNSuccession$clone()}}{
+  The objects of this class are cloneable with this method.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{NECNSuccession$clone(deep = FALSE)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{deep}}{Whether to make a deep clone.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{deep}}{Whether to make a deep clone.}
-}
-\if{html}{\out{</div>}}
-}
-}
 }

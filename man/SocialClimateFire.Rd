@@ -5,8 +5,6 @@
 \title{Social-Climate-Fire Extension}
 \description{
 Social-Climate-Fire Extension
-
-Social-Climate-Fire Extension
 }
 \examples{
 ## see vignette for usage examples
@@ -25,129 +23,128 @@ Helpers that prepare inputs for this extension:
 \code{\link[=prepGroundSlopeFile]{prepGroundSlopeFile()}},
 \code{\link[=prepUphillAzimuthMap]{prepUphillAzimuthMap()}}.
 
-Other Social Climate Fire helpers: 
-\code{\link{assemble_climate_library_file_scf}()},
-\code{\link{insertDeadWoodTable}()},
-\code{\link{insertLadderFuelSpeciesList}()},
-\code{\link{prepSuppression_CSV_File}()},
-\code{\link{prepTopographyFile}()}
+Other Social Climate Fire helpers:
+\code{\link[=assemble_climate_library_file_scf]{assemble_climate_library_file_scf()}},
+\code{\link[=insertDeadWoodTable]{insertDeadWoodTable()}},
+\code{\link[=insertLadderFuelSpeciesList]{insertLadderFuelSpeciesList()}},
+\code{\link[=prepSuppression_CSV_File]{prepSuppression_CSV_File()}},
+\code{\link[=prepTopographyFile]{prepTopographyFile()}}
 }
 \concept{Social Climate Fire helpers}
 \section{Super class}{
-\code{\link[landisutils:LandisExtension]{landisutils::LandisExtension}} -> \code{SocialClimateFire}
+\code{\link[landisutils:LandisExtension]{LandisExtension}} -> \code{SocialClimateFire}
 }
 \section{Active bindings}{
-\if{html}{\out{<div class="r6-active-bindings">}}
-\describe{
-\item{\code{TimeZeroPET}}{(Optional) Real. Potential Evapotranspiration (PET) for time zero.}
+  \if{html}{\out{<div class="r6-active-bindings">}}
+  \describe{
+    \item{\code{TimeZeroPET}}{(Optional) Real. Potential Evapotranspiration (PET) for time zero.}
 
-\item{\code{TimeZeroCWD}}{(Optional) Real. Climate Water Deficit (CWD) for time zero.}
+    \item{\code{TimeZeroCWD}}{(Optional) Real. Climate Water Deficit (CWD) for time zero.}
 
-\item{\code{Species_CSV_File}}{Character. Relative file path.}
+    \item{\code{Species_CSV_File}}{Character. Relative file path.}
 
-\item{\code{AccidentalIgnitionsMap}}{Character. Relative file path.}
+    \item{\code{AccidentalIgnitionsMap}}{Character. Relative file path.}
 
-\item{\code{DynamicAccidentalIgnitionMaps}}{(Optional) \code{data.frame} with columns \code{Year} and \code{FileName}.}
+    \item{\code{DynamicAccidentalIgnitionMaps}}{(Optional) \code{data.frame} with columns \code{Year} and \code{FileName}.}
 
-\item{\code{LightningIgnitionsMap}}{Character. Relative file path.}
+    \item{\code{LightningIgnitionsMap}}{Character. Relative file path.}
 
-\item{\code{DynamicLightningIgnitionMaps}}{(Optional) \code{data.frame} with columns \code{Year} and \code{FileName}.}
+    \item{\code{DynamicLightningIgnitionMaps}}{(Optional) \code{data.frame} with columns \code{Year} and \code{FileName}.}
 
-\item{\code{RxIgnitionsMap}}{Character. Relative file path.}
+    \item{\code{RxIgnitionsMap}}{Character. Relative file path.}
 
-\item{\code{DynamicRxIgnitionMaps}}{(Optional) \code{data.frame} with columns \code{Year} and \code{FileName}.}
+    \item{\code{DynamicRxIgnitionMaps}}{(Optional) \code{data.frame} with columns \code{Year} and \code{FileName}.}
 
-\item{\code{AccidentalSuppressionMap}}{Character. Relative file path.}
+    \item{\code{AccidentalSuppressionMap}}{Character. Relative file path.}
 
-\item{\code{LightningSuppressionMap}}{Character. Relative file path.}
+    \item{\code{LightningSuppressionMap}}{Character. Relative file path.}
 
-\item{\code{RxSuppressionMap}}{Character. Relative file path.}
+    \item{\code{RxSuppressionMap}}{Character. Relative file path.}
 
-\item{\code{DynamicAccidentalSuppressionMaps}}{(Optional) \code{data.frame} with columns \code{Year} and \code{FileName}.}
+    \item{\code{DynamicAccidentalSuppressionMaps}}{(Optional) \code{data.frame} with columns \code{Year} and \code{FileName}.}
 
-\item{\code{GroundSlopeMap}}{Character. Relative file path.}
+    \item{\code{GroundSlopeMap}}{Character. Relative file path.}
 
-\item{\code{UphillSlopeAzimuthMap}}{Character. Relative file path.}
+    \item{\code{UphillSlopeAzimuthMap}}{Character. Relative file path.}
 
-\item{\code{ClayMap}}{Character. Relative file path.}
+    \item{\code{ClayMap}}{Character. Relative file path.}
 
-\item{\code{LightningIgnitionsCoeffs}}{Real. Parameters B0 and B1 from equation 1 (Scheller et al. 2019).}
+    \item{\code{LightningIgnitionsCoeffs}}{Real. Parameters B0 and B1 from equation 1 (Scheller et al. 2019).}
 
-\item{\code{AccidentalIgnitionsCoeffs}}{Real. B0 and B1 from equation 1 (Scheller et al. 2019).}
+    \item{\code{AccidentalIgnitionsCoeffs}}{Real. B0 and B1 from equation 1 (Scheller et al. 2019).}
 
-\item{\code{IgnitionDistribution}}{Character. One of \code{"Poisson"} or \code{"ZeroInflatedPoisson"}.}
+    \item{\code{IgnitionDistribution}}{Character. One of \code{"Poisson"} or \code{"ZeroInflatedPoisson"}.}
 
-\item{\code{LightningIgnitionsBinomialCoeffs}}{Real. Parameters $b_z_0$ and $b_z_1$ from equation 2 (Scheller et al. 2019).}
+    \item{\code{LightningIgnitionsBinomialCoeffs}}{Real. Parameters $b_z_0$ and $b_z_1$ from equation 2 (Scheller et al. 2019).}
 
-\item{\code{AccidentalIgnitionsBinomialCoeffs}}{Real. Parameters $b_z_0$ and $b_z_1$ from equation 2 (Scheller et al. 2019).}
+    \item{\code{AccidentalIgnitionsBinomialCoeffs}}{Real. Parameters $b_z_0$ and $b_z_1$ from equation 2 (Scheller et al. 2019).}
 
-\item{\code{MaximumFineFuels}}{Real. Maximum amount of fine fuels ($g/m^2$).}
+    \item{\code{MaximumFineFuels}}{Real. Maximum amount of fine fuels ($g/m^2$).}
 
-\item{\code{MaximumRxWindSpeed}}{Real. Maximum wind speed ($m/s$) for prescribed fires.}
+    \item{\code{MaximumRxWindSpeed}}{Real. Maximum wind speed ($m/s$) for prescribed fires.}
 
-\item{\code{MaximumRxFireWeatherIndex}}{(Optional) Real. Maximum Fire Weather Index (FWI) for prescribed fires.}
+    \item{\code{MaximumRxFireWeatherIndex}}{(Optional) Real. Maximum Fire Weather Index (FWI) for prescribed fires.}
 
-\item{\code{MinimumRxFireWeatherIndex}}{(Optional) Real. Minimum Fire Weather Index (FWI) for prescribed fires.}
+    \item{\code{MinimumRxFireWeatherIndex}}{(Optional) Real. Minimum Fire Weather Index (FWI) for prescribed fires.}
 
-\item{\code{MaximumRxTemperature}}{(Optional) Real. Maximum temperature for prescribed fires.}
+    \item{\code{MaximumRxTemperature}}{(Optional) Real. Maximum temperature for prescribed fires.}
 
-\item{\code{MinimumRxRelativeHumidity}}{(Optional) Real. Minimum relative humidity for prescribed fires.}
+    \item{\code{MinimumRxRelativeHumidity}}{(Optional) Real. Minimum relative humidity for prescribed fires.}
 
-\item{\code{MaximumRxFireIntensity}}{Integer. Maximum allowable fire intensity for prescribed fires.}
+    \item{\code{MaximumRxFireIntensity}}{Integer. Maximum allowable fire intensity for prescribed fires.}
 
-\item{\code{NumberRxAnnualFires}}{Integer. Number of prescribed fires attempted per year.}
+    \item{\code{NumberRxAnnualFires}}{Integer. Number of prescribed fires attempted per year.}
 
-\item{\code{NumberRxDailyFires}}{Integer. Number of prescribed fires attempted per day.}
+    \item{\code{NumberRxDailyFires}}{Integer. Number of prescribed fires attempted per day.}
 
-\item{\code{FirstDayRxFires}}{Integer. First Julian day in which a prescribed fire can begin.}
+    \item{\code{FirstDayRxFires}}{Integer. First Julian day in which a prescribed fire can begin.}
 
-\item{\code{LastDayRxFires}}{Integer. Last Julian day in which a prescribed fire can begin.}
+    \item{\code{LastDayRxFires}}{Integer. Last Julian day in which a prescribed fire can begin.}
 
-\item{\code{TargetRxSize}}{Real. Maximum size for prescribed fire ($ha$).}
+    \item{\code{TargetRxSize}}{Real. Maximum size for prescribed fire ($ha$).}
 
-\item{\code{RxZonesMap}}{(Optional) Character. Relative file path.}
+    \item{\code{RxZonesMap}}{(Optional) Character. Relative file path.}
 
-\item{\code{MaximumSpreadAreaCoeffs}}{Real. Parameters B0, B1, B2 from equation 4 (Scheller et al. 2019).}
+    \item{\code{MaximumSpreadAreaCoeffs}}{Real. Parameters B0, B1, B2 from equation 4 (Scheller et al. 2019).}
 
-\item{\code{SpreadProbabilityCoeffs}}{Real. Parameters B0, B1, B2 from equation 3 (Scheller et al. 2019).}
+    \item{\code{SpreadProbabilityCoeffs}}{Real. Parameters B0, B1, B2 from equation 3 (Scheller et al. 2019).}
 
-\item{\code{SiteMortalityCoeffs}}{Real. Parameters B0, B1, B2, B3, B4, B5, B6 from equation 7 (Scheller et al. 2019).}
+    \item{\code{SiteMortalityCoeffs}}{Real. Parameters B0, B1, B2, B3, B4, B5, B6 from equation 7 (Scheller et al. 2019).}
 
-\item{\code{CohortMortalityCoeffs}}{Real. Parameters B0, B1, B2 from equation 10 (Scheller et al. 2019).}
+    \item{\code{CohortMortalityCoeffs}}{Real. Parameters B0, B1, B2 from equation 10 (Scheller et al. 2019).}
 
-\item{\code{LadderFuelMaxAge}}{Integer. Maximum age for ladder fuels.}
+    \item{\code{LadderFuelMaxAge}}{Integer. Maximum age for ladder fuels.}
 
-\item{\code{LadderFuelSpeciesList}}{Character. Vector of species codes considered to be ladder fuels.}
+    \item{\code{LadderFuelSpeciesList}}{Character. Vector of species codes considered to be ladder fuels.}
 
-\item{\code{SuppressionMaxWindSpeed}}{Real. Maximum wind speed ($m/s$) for fire suppression.}
+    \item{\code{SuppressionMaxWindSpeed}}{Real. Maximum wind speed ($m/s$) for fire suppression.}
 
-\item{\code{Suppression_CSV_File}}{Character. Relative file path.}
+    \item{\code{Suppression_CSV_File}}{Character. Relative file path.}
 
-\item{\code{DeadWoodTable}}{\code{data.frame} with columns \code{Species} and \code{Age}.}
-}
-\if{html}{\out{</div>}}
+    \item{\code{DeadWoodTable}}{\code{data.frame} with columns \code{Species} and \code{Age}.}
+  }
+  \if{html}{\out{</div>}}
 }
 \section{Methods}{
 \subsection{Public methods}{
-\itemize{
-\item \href{#method-SocialClimateFire-new}{\code{SocialClimateFire$new()}}
-\item \href{#method-SocialClimateFire-write}{\code{SocialClimateFire$write()}}
-\item \href{#method-SocialClimateFire-clone}{\code{SocialClimateFire$clone()}}
+  \itemize{
+    \item \href{#method-SocialClimateFire-initialize}{\code{SocialClimateFire$new()}}
+    \item \href{#method-SocialClimateFire-write}{\code{SocialClimateFire$write()}}
+    \item \href{#method-SocialClimateFire-clone}{\code{SocialClimateFire$clone()}}
+  }
 }
-}
-\if{html}{\out{
-<details open><summary>Inherited methods</summary>
+\if{html}{\out{<details open><summary>Inherited methods</summary>
 <ul>
-<li><span class="pkg-link" data-pkg="landisutils" data-topic="LandisExtension" data-id="add_file"><a href='../../landisutils/html/LandisExtension.html#method-LandisExtension-add_file'><code>landisutils::LandisExtension$add_file()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="landisutils" data-topic="LandisExtension" data-id="add_file"><a href='../../landisutils/html/LandisExtension.html#method-LandisExtension-add_file'><code>LandisExtension$add_file()</code></a></span></li>
 </ul>
-</details>
-}}
+</details>}}
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-SocialClimateFire-new"></a>}}
-\if{latex}{\out{\hypertarget{method-SocialClimateFire-new}{}}}
-\subsection{Method \code{new()}}{
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{SocialClimateFire$new(
+\if{html}{\out{<a id="method-SocialClimateFire-initialize"></a>}}
+\if{latex}{\out{\hypertarget{method-SocialClimateFire-initialize}{}}}
+\subsection{\code{SocialClimateFire$new()}}{
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{SocialClimateFire$new(
   path,
   Timestep = 1,
   TimeZeroPET = NULL,
@@ -193,130 +190,91 @@ Other Social Climate Fire helpers:
   SuppressionMaxWindSpeed = NULL,
   Suppression_CSV_File = NULL,
   DeadWoodTable = NULL
-)}\if{html}{\out{</div>}}
+)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{path}}{Character. Directory path.}
+      \item{\code{Timestep}}{Integer. Not used (see extension user guide).}
+      \item{\code{TimeZeroPET}}{(Optional) Real. Potential Evapotranspiration (PET) for time zero.}
+      \item{\code{TimeZeroCWD}}{(Optional) Real. Climate Water Deficit (CWD) for time zero.}
+      \item{\code{Species_CSV_File}}{Character. Relative file path.}
+      \item{\code{AccidentalIgnitionsMap}}{Character. Relative file path.}
+      \item{\code{DynamicAccidentalIgnitionMaps}}{(Optional) \code{data.frame}.}
+      \item{\code{LightningIgnitionsMap}}{Character. Relative file path.}
+      \item{\code{DynamicLightningIgnitionMaps}}{(Optional) \code{data.frame}.}
+      \item{\code{RxIgnitionsMap}}{Character. Relative file path.}
+      \item{\code{DynamicRxIgnitionMaps}}{(Optional) \code{data.frame}.}
+      \item{\code{AccidentalSuppressionMap}}{Character. Relative file path.}
+      \item{\code{LightningSuppressionMap}}{Character. Relative file path.}
+      \item{\code{RxSuppressionMap}}{Character. Relative file path.}
+      \item{\code{DynamicAccidentalSuppressionMaps}}{(Optional) \code{data.frame}.}
+      \item{\code{GroundSlopeMap}}{Character. Relative file path.}
+      \item{\code{UphillSlopeAzimuthMap}}{Character. Relative file path.}
+      \item{\code{ClayMap}}{Character. Relative file path.}
+      \item{\code{LightningIgnitionsCoeffs}}{Real. Parameters B0 and B1 from equation 1 (Scheller et al. 2019).}
+      \item{\code{AccidentalIgnitionsCoeffs}}{Real. B0 and B1 from equation 1 (Scheller et al. 2019).}
+      \item{\code{IgnitionDistribution}}{Character. One of \code{"Poisson"} or \code{"ZeroInflatedPoisson"}.}
+      \item{\code{LightningIgnitionsBinomialCoeffs}}{Real. Parameters $b_z_0$ and $b_z_1$ from equation 2 (Scheller et al. 2019).}
+      \item{\code{AccidentalIgnitionsBinomialCoeffs}}{Real. Parameters $b_z_0$ and $b_z_1$ from equation 2 (Scheller et al. 2019).}
+      \item{\code{MaximumFineFuels}}{Real. Maximum amount of fine fuels ($g/m^2$).}
+      \item{\code{MaximumRxWindSpeed}}{Real. Maximum wind speed ($m/s$) for prescribed fires.}
+      \item{\code{MaximumRxFireWeatherIndex}}{(Optional) Real. Maximum Fire Weather Index (FWI) for prescribed fires.}
+      \item{\code{MinimumRxFireWeatherIndex}}{(Optional) Real. Minimum Fire Weather Index (FWI) for prescribed fires.}
+      \item{\code{MaximumRxTemperature}}{(Optional) Real. Maximum temperature for prescribed fires.}
+      \item{\code{MinimumRxRelativeHumidity}}{(Optional) Real. Minimum relative humidity for prescribed fires.}
+      \item{\code{MaximumRxFireIntensity}}{Integer. Maximum allowable fire intensity for prescribed fires.}
+      \item{\code{NumberRxAnnualFires}}{Integer. Number of prescribed fires attempted per year.}
+      \item{\code{NumberRxDailyFires}}{Integer. Number of prescribed fires attempted per day.}
+      \item{\code{FirstDayRxFires}}{Integer. First Julian day in which a prescribed fire can begin.}
+      \item{\code{LastDayRxFires}}{Integer. Last Julian day in which a prescribed fire can begin.}
+      \item{\code{TargetRxSize}}{Real. Maximum size for prescribed fire ($ha$).}
+      \item{\code{RxZonesMap}}{(Optional) Character. Relative file path.}
+      \item{\code{MaximumSpreadAreaCoeffs}}{Real. Parameters B0, B1, B2 from equation 4 (Scheller et al. 2019).}
+      \item{\code{SpreadProbabilityCoeffs}}{Real. Parameters B0, B1, B2 from equation 3 (Scheller et al. 2019).}
+      \item{\code{SiteMortalityCoeffs}}{Real. Parameters B0, B1, B2, B3, B4, B5, B6 from equation 7 (Scheller et al. 2019).}
+      \item{\code{CohortMortalityCoeffs}}{Real. Parameters B0, B1, B2 from equation 10 (Scheller et al. 2019).}
+      \item{\code{LadderFuelMaxAge}}{Integer. Maximum age for ladder fuels.}
+      \item{\code{LadderFuelSpeciesList}}{Character. Vector of species codes considered to be ladder fuels.}
+      \item{\code{SuppressionMaxWindSpeed}}{Real. Maximum wind speed ($m/s$) for fire suppression.}
+      \item{\code{Suppression_CSV_File}}{Character. Relative file path.}
+      \item{\code{DeadWoodTable}}{\code{data.frame}.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{path}}{Character. Directory path.}
-
-\item{\code{Timestep}}{Integer. Not used (see extension user guide).}
-
-\item{\code{TimeZeroPET}}{(Optional) Real. Potential Evapotranspiration (PET) for time zero.}
-
-\item{\code{TimeZeroCWD}}{(Optional) Real. Climate Water Deficit (CWD) for time zero.}
-
-\item{\code{Species_CSV_File}}{Character. Relative file path.}
-
-\item{\code{AccidentalIgnitionsMap}}{Character. Relative file path.}
-
-\item{\code{DynamicAccidentalIgnitionMaps}}{(Optional) \code{data.frame}.}
-
-\item{\code{LightningIgnitionsMap}}{Character. Relative file path.}
-
-\item{\code{DynamicLightningIgnitionMaps}}{(Optional) \code{data.frame}.}
-
-\item{\code{RxIgnitionsMap}}{Character. Relative file path.}
-
-\item{\code{DynamicRxIgnitionMaps}}{(Optional) \code{data.frame}.}
-
-\item{\code{AccidentalSuppressionMap}}{Character. Relative file path.}
-
-\item{\code{LightningSuppressionMap}}{Character. Relative file path.}
-
-\item{\code{RxSuppressionMap}}{Character. Relative file path.}
-
-\item{\code{DynamicAccidentalSuppressionMaps}}{(Optional) \code{data.frame}.}
-
-\item{\code{GroundSlopeMap}}{Character. Relative file path.}
-
-\item{\code{UphillSlopeAzimuthMap}}{Character. Relative file path.}
-
-\item{\code{ClayMap}}{Character. Relative file path.}
-
-\item{\code{LightningIgnitionsCoeffs}}{Real. Parameters B0 and B1 from equation 1 (Scheller et al. 2019).}
-
-\item{\code{AccidentalIgnitionsCoeffs}}{Real. B0 and B1 from equation 1 (Scheller et al. 2019).}
-
-\item{\code{IgnitionDistribution}}{Character. One of \code{"Poisson"} or \code{"ZeroInflatedPoisson"}.}
-
-\item{\code{LightningIgnitionsBinomialCoeffs}}{Real. Parameters $b_z_0$ and $b_z_1$ from equation 2 (Scheller et al. 2019).}
-
-\item{\code{AccidentalIgnitionsBinomialCoeffs}}{Real. Parameters $b_z_0$ and $b_z_1$ from equation 2 (Scheller et al. 2019).}
-
-\item{\code{MaximumFineFuels}}{Real. Maximum amount of fine fuels ($g/m^2$).}
-
-\item{\code{MaximumRxWindSpeed}}{Real. Maximum wind speed ($m/s$) for prescribed fires.}
-
-\item{\code{MaximumRxFireWeatherIndex}}{(Optional) Real. Maximum Fire Weather Index (FWI) for prescribed fires.}
-
-\item{\code{MinimumRxFireWeatherIndex}}{(Optional) Real. Minimum Fire Weather Index (FWI) for prescribed fires.}
-
-\item{\code{MaximumRxTemperature}}{(Optional) Real. Maximum temperature for prescribed fires.}
-
-\item{\code{MinimumRxRelativeHumidity}}{(Optional) Real. Minimum relative humidity for prescribed fires.}
-
-\item{\code{MaximumRxFireIntensity}}{Integer. Maximum allowable fire intensity for prescribed fires.}
-
-\item{\code{NumberRxAnnualFires}}{Integer. Number of prescribed fires attempted per year.}
-
-\item{\code{NumberRxDailyFires}}{Integer. Number of prescribed fires attempted per day.}
-
-\item{\code{FirstDayRxFires}}{Integer. First Julian day in which a prescribed fire can begin.}
-
-\item{\code{LastDayRxFires}}{Integer. Last Julian day in which a prescribed fire can begin.}
-
-\item{\code{TargetRxSize}}{Real. Maximum size for prescribed fire ($ha$).}
-
-\item{\code{RxZonesMap}}{(Optional) Character. Relative file path.}
-
-\item{\code{MaximumSpreadAreaCoeffs}}{Real. Parameters B0, B1, B2 from equation 4 (Scheller et al. 2019).}
-
-\item{\code{SpreadProbabilityCoeffs}}{Real. Parameters B0, B1, B2 from equation 3 (Scheller et al. 2019).}
-
-\item{\code{SiteMortalityCoeffs}}{Real. Parameters B0, B1, B2, B3, B4, B5, B6 from equation 7 (Scheller et al. 2019).}
-
-\item{\code{CohortMortalityCoeffs}}{Real. Parameters B0, B1, B2 from equation 10 (Scheller et al. 2019).}
-
-\item{\code{LadderFuelMaxAge}}{Integer. Maximum age for ladder fuels.}
-
-\item{\code{LadderFuelSpeciesList}}{Character. Vector of species codes considered to be ladder fuels.}
-
-\item{\code{SuppressionMaxWindSpeed}}{Real. Maximum wind speed ($m/s$) for fire suppression.}
-
-\item{\code{Suppression_CSV_File}}{Character. Relative file path.}
-
-\item{\code{DeadWoodTable}}{\code{data.frame}.}
-}
-\if{html}{\out{</div>}}
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-SocialClimateFire-write"></a>}}
 \if{latex}{\out{\hypertarget{method-SocialClimateFire-write}{}}}
-\subsection{Method \code{write()}}{
-Write extension inputs to disk
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{SocialClimateFire$write()}\if{html}{\out{</div>}}
+\subsection{\code{SocialClimateFire$write()}}{
+  Write extension inputs to disk
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{SocialClimateFire$write()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-SocialClimateFire-clone"></a>}}
 \if{latex}{\out{\hypertarget{method-SocialClimateFire-clone}{}}}
-\subsection{Method \code{clone()}}{
-The objects of this class are cloneable with this method.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{SocialClimateFire$clone(deep = FALSE)}\if{html}{\out{</div>}}
+\subsection{\code{SocialClimateFire$clone()}}{
+  The objects of this class are cloneable with this method.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{SocialClimateFire$clone(deep = FALSE)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{deep}}{Whether to make a deep clone.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{deep}}{Whether to make a deep clone.}
-}
-\if{html}{\out{</div>}}
-}
-}
 }

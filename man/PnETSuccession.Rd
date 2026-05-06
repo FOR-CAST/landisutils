@@ -4,11 +4,6 @@
 \alias{PnETSuccession}
 \title{PnET-Succession Extension}
 \description{
-PnET-Succession Extension
-
-PnET-Succession Extension
-}
-\details{
 Builds the LANDIS-II PnET-Succession v6.0 extension input file
 (compatible with LANDIS-II v8). The top-level \code{PnET-Succession} parameters
 are written via this class' \verb{$write()} method; auxiliary inputs (PnET
@@ -32,76 +27,75 @@ Shared scenario inputs:
 \code{\link[=prepClimateConfig]{prepClimateConfig()}},
 \code{\link[=prepInitialCommunities]{prepInitialCommunities()}}.
 
-Other PnET Succession helpers: 
-\code{\link{defaultPnETDisturbanceReductions}()},
-\code{\link{prepPNEToutputsites}()},
-\code{\link{prepPnETClimateFile}()},
-\code{\link{prepPnETDisturbanceReductions}()},
-\code{\link{prepPnETEcoregionParameters}()},
-\code{\link{prepPnETGenericParameters}()},
-\code{\link{prepPnETSpeciesParameters}()}
+Other PnET Succession helpers:
+\code{\link[=defaultPnETDisturbanceReductions]{defaultPnETDisturbanceReductions()}},
+\code{\link[=prepPNEToutputsites]{prepPNEToutputsites()}},
+\code{\link[=prepPnETClimateFile]{prepPnETClimateFile()}},
+\code{\link[=prepPnETDisturbanceReductions]{prepPnETDisturbanceReductions()}},
+\code{\link[=prepPnETEcoregionParameters]{prepPnETEcoregionParameters()}},
+\code{\link[=prepPnETGenericParameters]{prepPnETGenericParameters()}},
+\code{\link[=prepPnETSpeciesParameters]{prepPnETSpeciesParameters()}}
 }
 \concept{PnET Succession helpers}
 \section{Super class}{
-\code{\link[landisutils:LandisExtension]{landisutils::LandisExtension}} -> \code{PnETSuccession}
+\code{\link[landisutils:LandisExtension]{LandisExtension}} -> \code{PnETSuccession}
 }
 \section{Active bindings}{
-\if{html}{\out{<div class="r6-active-bindings">}}
-\describe{
-\item{\code{StartYear}}{Integer. Climate year in which the simulation begins.}
+  \if{html}{\out{<div class="r6-active-bindings">}}
+  \describe{
+    \item{\code{StartYear}}{Integer. Climate year in which the simulation begins.}
 
-\item{\code{SeedingAlgorithm}}{Character. Dispersal algorithm to use.
+    \item{\code{SeedingAlgorithm}}{Character. Dispersal algorithm to use.
 One of \code{"WardSeedDispersal"}, \code{"NoDispersal"}, \code{"UniversalDispersal"}.}
 
-\item{\code{Latitude}}{Numeric (optional). Degrees.}
+    \item{\code{Latitude}}{Numeric (optional). Degrees.}
 
-\item{\code{PNEToutputsites}}{Character (optional). Relative file path.}
+    \item{\code{PNEToutputsites}}{Character (optional). Relative file path.}
 
-\item{\code{InitialCommunities}}{Character. Relative file path.}
+    \item{\code{InitialCommunities}}{Character. Relative file path.}
 
-\item{\code{InitialCommunitiesMap}}{Character. Relative file path.}
+    \item{\code{InitialCommunitiesMap}}{Character. Relative file path.}
 
-\item{\code{LitterMap}}{Character (optional). Relative file path.}
+    \item{\code{LitterMap}}{Character (optional). Relative file path.}
 
-\item{\code{WoodyDebrisMap}}{Character (optional). Relative file path.}
+    \item{\code{WoodyDebrisMap}}{Character (optional). Relative file path.}
 
-\item{\code{PnETGenericParameters}}{Character (optional). Relative file path.}
+    \item{\code{PnETGenericParameters}}{Character (optional). Relative file path.}
 
-\item{\code{PnETSpeciesParameters}}{Character. Relative file path.}
+    \item{\code{PnETSpeciesParameters}}{Character. Relative file path.}
 
-\item{\code{EcoregionParameters}}{Character. Relative file path.}
+    \item{\code{EcoregionParameters}}{Character. Relative file path.}
 
-\item{\code{DisturbanceReductions}}{Character (optional). Relative file path.}
+    \item{\code{DisturbanceReductions}}{Character (optional). Relative file path.}
 
-\item{\code{ClimateConfigFile}}{Character (optional). Relative file path.}
+    \item{\code{ClimateConfigFile}}{Character (optional). Relative file path.}
 
-\item{\code{SaxtonAndRawlsParameters}}{Character (optional). Relative file path.}
+    \item{\code{SaxtonAndRawlsParameters}}{Character (optional). Relative file path.}
 
-\item{\code{CohortBinSize}}{Integer (optional). Must be \verb{>= Timestep}.}
-}
-\if{html}{\out{</div>}}
+    \item{\code{CohortBinSize}}{Integer (optional). Must be \verb{>= Timestep}.}
+  }
+  \if{html}{\out{</div>}}
 }
 \section{Methods}{
 \subsection{Public methods}{
-\itemize{
-\item \href{#method-PnETSuccession-new}{\code{PnETSuccession$new()}}
-\item \href{#method-PnETSuccession-write}{\code{PnETSuccession$write()}}
-\item \href{#method-PnETSuccession-clone}{\code{PnETSuccession$clone()}}
+  \itemize{
+    \item \href{#method-PnETSuccession-initialize}{\code{PnETSuccession$new()}}
+    \item \href{#method-PnETSuccession-write}{\code{PnETSuccession$write()}}
+    \item \href{#method-PnETSuccession-clone}{\code{PnETSuccession$clone()}}
+  }
 }
-}
-\if{html}{\out{
-<details open><summary>Inherited methods</summary>
+\if{html}{\out{<details open><summary>Inherited methods</summary>
 <ul>
-<li><span class="pkg-link" data-pkg="landisutils" data-topic="LandisExtension" data-id="add_file"><a href='../../landisutils/html/LandisExtension.html#method-LandisExtension-add_file'><code>landisutils::LandisExtension$add_file()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="landisutils" data-topic="LandisExtension" data-id="add_file"><a href='../../landisutils/html/LandisExtension.html#method-LandisExtension-add_file'><code>LandisExtension$add_file()</code></a></span></li>
 </ul>
-</details>
-}}
+</details>}}
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-PnETSuccession-new"></a>}}
-\if{latex}{\out{\hypertarget{method-PnETSuccession-new}{}}}
-\subsection{Method \code{new()}}{
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{PnETSuccession$new(
+\if{html}{\out{<a id="method-PnETSuccession-initialize"></a>}}
+\if{latex}{\out{\hypertarget{method-PnETSuccession-initialize}{}}}
+\subsection{\code{PnETSuccession$new()}}{
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{PnETSuccession$new(
   path = NULL,
   Timestep = 10L,
   StartYear = NULL,
@@ -119,89 +113,78 @@ One of \code{"WardSeedDispersal"}, \code{"NoDispersal"}, \code{"UniversalDispers
   ClimateConfigFile = NULL,
   SaxtonAndRawlsParameters = NULL,
   CohortBinSize = NULL
-)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{path}}{Character. Directory path.}
-
-\item{\code{Timestep}}{Integer. Succession timestep in years (recommended <= 10).}
-
-\item{\code{StartYear}}{Integer. Climate year in which the simulation begins.}
-
-\item{\code{SeedingAlgorithm}}{Character. Dispersal algorithm to use.
+)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{path}}{Character. Directory path.}
+      \item{\code{Timestep}}{Integer. Succession timestep in years (recommended <= 10).}
+      \item{\code{StartYear}}{Integer. Climate year in which the simulation begins.}
+      \item{\code{SeedingAlgorithm}}{Character. Dispersal algorithm to use.
 One of \code{"WardSeedDispersal"}, \code{"NoDispersal"}, \code{"UniversalDispersal"}.}
-
-\item{\code{Latitude}}{(Optional) Numeric. Global study-site latitude in degrees.
+      \item{\code{Latitude}}{(Optional) Numeric. Global study-site latitude in degrees.
 Can alternatively be set per-ecoregion in the \code{EcoregionParameters} file.}
-
-\item{\code{PNEToutputsites}}{(Optional) Character. Relative file path to the
+      \item{\code{PNEToutputsites}}{(Optional) Character. Relative file path to the
 \code{PNEToutputsites} input file (see §12 of the user guide).}
-
-\item{\code{InitialCommunities}}{Character. Relative file path to the
+      \item{\code{InitialCommunities}}{Character. Relative file path to the
 initial communities CSV (see §4 of the user guide).}
-
-\item{\code{InitialCommunitiesMap}}{Character. Relative file path to the
+      \item{\code{InitialCommunitiesMap}}{Character. Relative file path to the
 initial communities raster.}
-
-\item{\code{LitterMap}}{(Optional) Character. Relative file path to the
+      \item{\code{LitterMap}}{(Optional) Character. Relative file path to the
 initial leaf litter map ($g/m^2$).}
-
-\item{\code{WoodyDebrisMap}}{(Optional) Character. Relative file path to the
+      \item{\code{WoodyDebrisMap}}{(Optional) Character. Relative file path to the
 initial dead woody debris map ($g/m^2$).}
-
-\item{\code{PnETGenericParameters}}{(Optional) Character. Relative file path
+      \item{\code{PnETGenericParameters}}{(Optional) Character. Relative file path
 to the PnET generic parameters file (§7).}
-
-\item{\code{PnETSpeciesParameters}}{Character. Relative file path to the PnET
+      \item{\code{PnETSpeciesParameters}}{Character. Relative file path to the PnET
 species parameters file (§8).}
-
-\item{\code{EcoregionParameters}}{Character. Relative file path to the PnET
+      \item{\code{EcoregionParameters}}{Character. Relative file path to the PnET
 ecoregion parameters file (§9).}
-
-\item{\code{DisturbanceReductions}}{(Optional) Character. Relative file path
+      \item{\code{DisturbanceReductions}}{(Optional) Character. Relative file path
 to the disturbance reductions file (§10).}
-
-\item{\code{ClimateConfigFile}}{(Optional) Character. Relative file path to
+      \item{\code{ClimateConfigFile}}{(Optional) Character. Relative file path to
 the LANDIS-II climate library configuration file. When omitted, the
 climate file(s) referenced from \code{EcoregionParameters} are used.}
-
-\item{\code{SaxtonAndRawlsParameters}}{(Optional) Character. Relative file
+      \item{\code{SaxtonAndRawlsParameters}}{(Optional) Character. Relative file
 path to an override Saxton-and-Rawls soil parameter file.}
-
-\item{\code{CohortBinSize}}{(Optional) Integer. Number of years represented
+      \item{\code{CohortBinSize}}{(Optional) Integer. Number of years represented
 by an age cohort; must be \verb{>= Timestep}.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
-\if{html}{\out{</div>}}
-}
-}
+
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-PnETSuccession-write"></a>}}
 \if{latex}{\out{\hypertarget{method-PnETSuccession-write}{}}}
-\subsection{Method \code{write()}}{
-Write extension inputs to disk
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{PnETSuccession$write()}\if{html}{\out{</div>}}
+\subsection{\code{PnETSuccession$write()}}{
+  Write extension inputs to disk
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{PnETSuccession$write()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-PnETSuccession-clone"></a>}}
 \if{latex}{\out{\hypertarget{method-PnETSuccession-clone}{}}}
-\subsection{Method \code{clone()}}{
-The objects of this class are cloneable with this method.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{PnETSuccession$clone(deep = FALSE)}\if{html}{\out{</div>}}
+\subsection{\code{PnETSuccession$clone()}}{
+  The objects of this class are cloneable with this method.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{PnETSuccession$clone(deep = FALSE)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{deep}}{Whether to make a deep clone.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{deep}}{Whether to make a deep clone.}
-}
-\if{html}{\out{</div>}}
-}
-}
 }

@@ -5,8 +5,6 @@
 \title{Biomass Output Extension}
 \description{
 Biomass Output Extension
-
-Biomass Output Extension
 }
 \examples{
 output_biomass <- OutputBiomass$new(
@@ -28,44 +26,43 @@ LANDIS-II Output Biomass v4.0 Extension User Guide
 }
 \concept{Biomass Output helpers}
 \section{Super class}{
-\code{\link[landisutils:LandisExtension]{landisutils::LandisExtension}} -> \code{OutputBiomass}
+\code{\link[landisutils:LandisExtension]{LandisExtension}} -> \code{OutputBiomass}
 }
 \section{Active bindings}{
-\if{html}{\out{<div class="r6-active-bindings">}}
-\describe{
-\item{\code{MakeTable}}{Logical, or character indicating "yes" or "no".}
+  \if{html}{\out{<div class="r6-active-bindings">}}
+  \describe{
+    \item{\code{MakeTable}}{Logical, or character indicating "yes" or "no".}
 
-\item{\code{Species}}{Character vector of species names, or "all".}
+    \item{\code{Species}}{Character vector of species names, or "all".}
 
-\item{\code{LiveMapNames}}{Character. File pattern for writing outputs to disk.}
+    \item{\code{LiveMapNames}}{Character. File pattern for writing outputs to disk.}
 
-\item{\code{DeadPools}}{Character. One of "woody", "non-woody", or "both".}
+    \item{\code{DeadPools}}{Character. One of "woody", "non-woody", or "both".}
 
-\item{\code{DeadMapNames}}{Character. File pattern for writing outputs to disk.}
-}
-\if{html}{\out{</div>}}
+    \item{\code{DeadMapNames}}{Character. File pattern for writing outputs to disk.}
+  }
+  \if{html}{\out{</div>}}
 }
 \section{Methods}{
 \subsection{Public methods}{
-\itemize{
-\item \href{#method-OutputBiomass-new}{\code{OutputBiomass$new()}}
-\item \href{#method-OutputBiomass-write}{\code{OutputBiomass$write()}}
-\item \href{#method-OutputBiomass-clone}{\code{OutputBiomass$clone()}}
+  \itemize{
+    \item \href{#method-OutputBiomass-initialize}{\code{OutputBiomass$new()}}
+    \item \href{#method-OutputBiomass-write}{\code{OutputBiomass$write()}}
+    \item \href{#method-OutputBiomass-clone}{\code{OutputBiomass$clone()}}
+  }
 }
-}
-\if{html}{\out{
-<details open><summary>Inherited methods</summary>
+\if{html}{\out{<details open><summary>Inherited methods</summary>
 <ul>
-<li><span class="pkg-link" data-pkg="landisutils" data-topic="LandisExtension" data-id="add_file"><a href='../../landisutils/html/LandisExtension.html#method-LandisExtension-add_file'><code>landisutils::LandisExtension$add_file()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="landisutils" data-topic="LandisExtension" data-id="add_file"><a href='../../landisutils/html/LandisExtension.html#method-LandisExtension-add_file'><code>LandisExtension$add_file()</code></a></span></li>
 </ul>
-</details>
-}}
+</details>}}
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-OutputBiomass-new"></a>}}
-\if{latex}{\out{\hypertarget{method-OutputBiomass-new}{}}}
-\subsection{Method \code{new()}}{
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{OutputBiomass$new(
+\if{html}{\out{<a id="method-OutputBiomass-initialize"></a>}}
+\if{latex}{\out{\hypertarget{method-OutputBiomass-initialize}{}}}
+\subsection{\code{OutputBiomass$new()}}{
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{OutputBiomass$new(
   path = NULL,
   Timestep = 10L,
   MakeTable = NULL,
@@ -73,54 +70,53 @@ LANDIS-II Output Biomass v4.0 Extension User Guide
   LiveMapNames = NULL,
   DeadPools = "both",
   DeadMapNames = NULL
-)}\if{html}{\out{</div>}}
+)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{path}}{Character. Directory path.}
+      \item{\code{Timestep}}{Integer.}
+      \item{\code{MakeTable}}{Logical, or character indicating "yes" or "no".}
+      \item{\code{Species}}{Character vector of species names, or "all".}
+      \item{\code{LiveMapNames}}{Character. File pattern for writing outputs to disk.}
+      \item{\code{DeadPools}}{Character. One of "woody", "non-woody", or "both".}
+      \item{\code{DeadMapNames}}{Character. File pattern for writing outputs to disk.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{path}}{Character. Directory path.}
-
-\item{\code{Timestep}}{Integer.}
-
-\item{\code{MakeTable}}{Logical, or character indicating "yes" or "no".}
-
-\item{\code{Species}}{Character vector of species names, or "all".}
-
-\item{\code{LiveMapNames}}{Character. File pattern for writing outputs to disk.}
-
-\item{\code{DeadPools}}{Character. One of "woody", "non-woody", or "both".}
-
-\item{\code{DeadMapNames}}{Character. File pattern for writing outputs to disk.}
-}
-\if{html}{\out{</div>}}
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-OutputBiomass-write"></a>}}
 \if{latex}{\out{\hypertarget{method-OutputBiomass-write}{}}}
-\subsection{Method \code{write()}}{
-Write extension inputs to disk
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{OutputBiomass$write()}\if{html}{\out{</div>}}
+\subsection{\code{OutputBiomass$write()}}{
+  Write extension inputs to disk
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{OutputBiomass$write()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-OutputBiomass-clone"></a>}}
 \if{latex}{\out{\hypertarget{method-OutputBiomass-clone}{}}}
-\subsection{Method \code{clone()}}{
-The objects of this class are cloneable with this method.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{OutputBiomass$clone(deep = FALSE)}\if{html}{\out{</div>}}
+\subsection{\code{OutputBiomass$clone()}}{
+  The objects of this class are cloneable with this method.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{OutputBiomass$clone(deep = FALSE)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{deep}}{Whether to make a deep clone.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{deep}}{Whether to make a deep clone.}
-}
-\if{html}{\out{</div>}}
-}
-}
 }

@@ -19,13 +19,13 @@ Character. The relative path to the written file.
 Write a per-agent EDA input file
 }
 \seealso{
-Other EDA helpers: 
+Other EDA helpers:
 \code{\link{EDA}},
-\code{\link{edaAgent}()},
-\code{\link{insertEDADisturbanceModifiers}()},
-\code{\link{insertEDAIgnoredSpecies}()},
-\code{\link{insertEDAInputFiles}()},
-\code{\link{insertEDASpeciesParameters}()}
+\code{\link[=edaAgent]{edaAgent()}},
+\code{\link[=insertEDADisturbanceModifiers]{insertEDADisturbanceModifiers()}},
+\code{\link[=insertEDAIgnoredSpecies]{insertEDAIgnoredSpecies()}},
+\code{\link[=insertEDAInputFiles]{insertEDAInputFiles()}},
+\code{\link[=insertEDASpeciesParameters]{insertEDASpeciesParameters()}}
 }
 \concept{EDA helpers}
 \keyword{internal}

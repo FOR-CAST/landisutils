@@ -5,104 +5,103 @@
 \title{Biomass Reclassification Output Extension}
 \description{
 Biomass Reclassification Output Extension
-
-Biomass Reclassification Output Extension
 }
 \references{
 LANDIS-II Output Biomass Reclassification v4 Extension User Guide
 \url{https://github.com/LANDIS-II-Foundation/Extension-Output-Biomass-Reclass/blob/master/docs/LANDIS-II\%20Biomass\%20Reclass\%20Output\%20v4\%20User\%20Guide.pdf}
 }
 \seealso{
-Other Biomass Reclass Output helpers: 
-\code{\link{insertReclassMaps}()}
+Other Biomass Reclass Output helpers:
+\code{\link[=insertReclassMaps]{insertReclassMaps()}}
 }
 \concept{Biomass Reclass Output helpers}
 \section{Super class}{
-\code{\link[landisutils:LandisExtension]{landisutils::LandisExtension}} -> \code{OutputBiomassReclass}
+\code{\link[landisutils:LandisExtension]{LandisExtension}} -> \code{OutputBiomassReclass}
 }
 \section{Active bindings}{
-\if{html}{\out{<div class="r6-active-bindings">}}
-\describe{
-\item{\code{ReclassMaps}}{Nested named list. See \verb{$initialize()} for the expected
+  \if{html}{\out{<div class="r6-active-bindings">}}
+  \describe{
+    \item{\code{ReclassMaps}}{Nested named list. See \verb{$initialize()} for the expected
 structure.}
 
-\item{\code{MapFileNames}}{Character. Output filename pattern; must contain
+    \item{\code{MapFileNames}}{Character. Output filename pattern; must contain
 \code{{reclass-map-name}} and \code{{timestep}}.}
-}
-\if{html}{\out{</div>}}
+  }
+  \if{html}{\out{</div>}}
 }
 \section{Methods}{
 \subsection{Public methods}{
-\itemize{
-\item \href{#method-OutputBiomassReclass-new}{\code{OutputBiomassReclass$new()}}
-\item \href{#method-OutputBiomassReclass-write}{\code{OutputBiomassReclass$write()}}
-\item \href{#method-OutputBiomassReclass-clone}{\code{OutputBiomassReclass$clone()}}
+  \itemize{
+    \item \href{#method-OutputBiomassReclass-initialize}{\code{OutputBiomassReclass$new()}}
+    \item \href{#method-OutputBiomassReclass-write}{\code{OutputBiomassReclass$write()}}
+    \item \href{#method-OutputBiomassReclass-clone}{\code{OutputBiomassReclass$clone()}}
+  }
 }
-}
-\if{html}{\out{
-<details open><summary>Inherited methods</summary>
+\if{html}{\out{<details open><summary>Inherited methods</summary>
 <ul>
-<li><span class="pkg-link" data-pkg="landisutils" data-topic="LandisExtension" data-id="add_file"><a href='../../landisutils/html/LandisExtension.html#method-LandisExtension-add_file'><code>landisutils::LandisExtension$add_file()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="landisutils" data-topic="LandisExtension" data-id="add_file"><a href='../../landisutils/html/LandisExtension.html#method-LandisExtension-add_file'><code>LandisExtension$add_file()</code></a></span></li>
 </ul>
-</details>
-}}
+</details>}}
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-OutputBiomassReclass-new"></a>}}
-\if{latex}{\out{\hypertarget{method-OutputBiomassReclass-new}{}}}
-\subsection{Method \code{new()}}{
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{OutputBiomassReclass$new(
+\if{html}{\out{<a id="method-OutputBiomassReclass-initialize"></a>}}
+\if{latex}{\out{\hypertarget{method-OutputBiomassReclass-initialize}{}}}
+\subsection{\code{OutputBiomassReclass$new()}}{
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{OutputBiomassReclass$new(
   path = NULL,
   Timestep = 10L,
   ReclassMaps = NULL,
   MapFileNames = NULL
-)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{path}}{Character. Directory path.}
-
-\item{\code{Timestep}}{Integer.}
-
-\item{\code{ReclassMaps}}{Nested named list. Top-level names are reclassification
+)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{path}}{Character. Directory path.}
+      \item{\code{Timestep}}{Integer.}
+      \item{\code{ReclassMaps}}{Nested named list. Top-level names are reclassification
 map names (no spaces). Each element is itself a named list whose names
 are forest types and whose values are character vectors of species codes.
 Species prefixed with \code{-} are subtracted from the forest type's
 dominance value. See user guide §2.3.}
-
-\item{\code{MapFileNames}}{Character. Output-map filename pattern; must contain
+      \item{\code{MapFileNames}}{Character. Output-map filename pattern; must contain
 the literals \code{{reclass-map-name}} and \code{{timestep}}.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
-\if{html}{\out{</div>}}
-}
-}
+
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-OutputBiomassReclass-write"></a>}}
 \if{latex}{\out{\hypertarget{method-OutputBiomassReclass-write}{}}}
-\subsection{Method \code{write()}}{
-Write extension inputs to disk
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{OutputBiomassReclass$write()}\if{html}{\out{</div>}}
+\subsection{\code{OutputBiomassReclass$write()}}{
+  Write extension inputs to disk
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{OutputBiomassReclass$write()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-OutputBiomassReclass-clone"></a>}}
 \if{latex}{\out{\hypertarget{method-OutputBiomassReclass-clone}{}}}
-\subsection{Method \code{clone()}}{
-The objects of this class are cloneable with this method.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{OutputBiomassReclass$clone(deep = FALSE)}\if{html}{\out{</div>}}
+\subsection{\code{OutputBiomassReclass$clone()}}{
+  The objects of this class are cloneable with this method.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{OutputBiomassReclass$clone(deep = FALSE)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{deep}}{Whether to make a deep clone.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{deep}}{Whether to make a deep clone.}
-}
-\if{html}{\out{</div>}}
-}
-}
 }

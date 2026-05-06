@@ -17,12 +17,12 @@ Character string(s) to write to the suitable LANDIS-II input file.
 Specify Dynamic Fuel Extension's Fuel Types Table
 }
 \seealso{
-Other Dynamic Fuels helpers: 
+Other Dynamic Fuels helpers:
 \code{\link{DynamicFuels}},
-\code{\link{insertDisturbanceConversionTable}()},
-\code{\link{insertEcoregionTable}()},
-\code{\link{insertSpeciesFuelCoefficients}()},
-\code{\link{prepDisturbanceConversionTable}()},
-\code{\link{prepFuelTypesTable}()}
+\code{\link[=insertDisturbanceConversionTable]{insertDisturbanceConversionTable()}},
+\code{\link[=insertEcoregionTable]{insertEcoregionTable()}},
+\code{\link[=insertSpeciesFuelCoefficients]{insertSpeciesFuelCoefficients()}},
+\code{\link[=prepDisturbanceConversionTable]{prepDisturbanceConversionTable()}},
+\code{\link[=prepFuelTypesTable]{prepFuelTypesTable()}}
 }
 \concept{Dynamic Fuels helpers}

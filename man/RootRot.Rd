@@ -5,8 +5,6 @@
 \title{Root Rot Extension}
 \description{
 Root Rot Extension
-
-Root Rot Extension
 }
 \section{LANDIS-II v8 compatibility}{
 
@@ -24,83 +22,82 @@ LANDIS-II Root Rot v1.0 Extension User Guide
 \url{https://github.com/LANDIS-II-Foundation/Extension-Root-Rot/blob/master/Docs/LANDIS-II\%20Root\%20Rot\%20v1.0\%20User\%20Guide.pdf}
 }
 \seealso{
-Other Root Rot helpers: 
-\code{\link{insertRootRotSpeciesSusceptibility}()}
+Other Root Rot helpers:
+\code{\link[=insertRootRotSpeciesSusceptibility]{insertRootRotSpeciesSusceptibility()}}
 }
 \concept{Root Rot helpers}
 \section{Super class}{
-\code{\link[landisutils:LandisExtension]{landisutils::LandisExtension}} -> \code{RootRot}
+\code{\link[landisutils:LandisExtension]{LandisExtension}} -> \code{RootRot}
 }
 \section{Active bindings}{
-\if{html}{\out{<div class="r6-active-bindings">}}
-\describe{
-\item{\code{Pathogen}}{(Optional) Character. Annotated alongside the header.}
+  \if{html}{\out{<div class="r6-active-bindings">}}
+  \describe{
+    \item{\code{Pathogen}}{(Optional) Character. Annotated alongside the header.}
 
-\item{\code{InputMap}}{(Optional) Character. Initial infection raster path.}
+    \item{\code{InputMap}}{(Optional) Character. Initial infection raster path.}
 
-\item{\code{SpeciesSusceptibility}}{\code{data.frame} with columns \code{Species},
+    \item{\code{SpeciesSusceptibility}}{\code{data.frame} with columns \code{Species},
 \code{Index1}, \code{Index2}.}
 
-\item{\code{LethalTemp}}{Numeric \verb{<= 0} (°C). Minimum air temperature below
+    \item{\code{LethalTemp}}{Numeric \verb{<= 0} (°C). Minimum air temperature below
 which the pathogen cannot survive.}
 
-\item{\code{MinSoilTemp}}{Numeric (°C). Minimum soil temperature below which
+    \item{\code{MinSoilTemp}}{Numeric (°C). Minimum soil temperature below which
 the pathogen cannot transition Uninfected -> Infected.}
 
-\item{\code{PhWet}}{Numeric. Pressure head (wet condition threshold).}
+    \item{\code{PhWet}}{Numeric. Pressure head (wet condition threshold).}
 
-\item{\code{PhDry}}{Numeric. Pressure head (dry condition threshold).}
+    \item{\code{PhDry}}{Numeric. Pressure head (dry condition threshold).}
 
-\item{\code{PhMax}}{Numeric. Pressure head (maximum threshold).}
+    \item{\code{PhMax}}{Numeric. Pressure head (maximum threshold).}
 
-\item{\code{MinProbID}}{Numeric in \verb{[0, 1]}.}
+    \item{\code{MinProbID}}{Numeric in \verb{[0, 1]}.}
 
-\item{\code{MaxProbDI}}{Numeric in \verb{[0, 1]}.}
+    \item{\code{MaxProbDI}}{Numeric in \verb{[0, 1]}.}
 
-\item{\code{OutputMapName}}{Character. Infection-status output raster pattern;
+    \item{\code{OutputMapName}}{Character. Infection-status output raster pattern;
 must contain \code{{timestep}}.}
 
-\item{\code{TOLDMapName}}{Character. Time-of-Last-Disease output raster
+    \item{\code{TOLDMapName}}{Character. Time-of-Last-Disease output raster
 pattern; must contain \code{{timestep}}.}
 
-\item{\code{LethalTempMapName}}{Character. Lethal-temperature output raster
+    \item{\code{LethalTempMapName}}{Character. Lethal-temperature output raster
 pattern; must contain \code{{timestep}}.}
 
-\item{\code{TotalBiomassRemovedMapName}}{Character. Total biomass-removed
+    \item{\code{TotalBiomassRemovedMapName}}{Character. Total biomass-removed
 output pattern; must contain \code{{timestep}}.}
 
-\item{\code{SpeciesBiomassRemovedMapName}}{Character. Per-species biomass-
+    \item{\code{SpeciesBiomassRemovedMapName}}{Character. Per-species biomass-
 removed output pattern; must contain \code{{species}} and \code{{timestep}}.}
 
-\item{\code{EventLog}}{(Optional) Character. Relative file path for the
+    \item{\code{EventLog}}{(Optional) Character. Relative file path for the
 events CSV log; \code{NULL} disables.}
 
-\item{\code{SummaryLog}}{(Optional) Character. Relative file path for the
+    \item{\code{SummaryLog}}{(Optional) Character. Relative file path for the
 summary CSV log; \code{NULL} disables.}
-}
-\if{html}{\out{</div>}}
+  }
+  \if{html}{\out{</div>}}
 }
 \section{Methods}{
 \subsection{Public methods}{
-\itemize{
-\item \href{#method-RootRot-new}{\code{RootRot$new()}}
-\item \href{#method-RootRot-write}{\code{RootRot$write()}}
-\item \href{#method-RootRot-clone}{\code{RootRot$clone()}}
+  \itemize{
+    \item \href{#method-RootRot-initialize}{\code{RootRot$new()}}
+    \item \href{#method-RootRot-write}{\code{RootRot$write()}}
+    \item \href{#method-RootRot-clone}{\code{RootRot$clone()}}
+  }
 }
-}
-\if{html}{\out{
-<details open><summary>Inherited methods</summary>
+\if{html}{\out{<details open><summary>Inherited methods</summary>
 <ul>
-<li><span class="pkg-link" data-pkg="landisutils" data-topic="LandisExtension" data-id="add_file"><a href='../../landisutils/html/LandisExtension.html#method-LandisExtension-add_file'><code>landisutils::LandisExtension$add_file()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="landisutils" data-topic="LandisExtension" data-id="add_file"><a href='../../landisutils/html/LandisExtension.html#method-LandisExtension-add_file'><code>LandisExtension$add_file()</code></a></span></li>
 </ul>
-</details>
-}}
+</details>}}
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-RootRot-new"></a>}}
-\if{latex}{\out{\hypertarget{method-RootRot-new}{}}}
-\subsection{Method \code{new()}}{
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{RootRot$new(
+\if{html}{\out{<a id="method-RootRot-initialize"></a>}}
+\if{latex}{\out{\hypertarget{method-RootRot-initialize}{}}}
+\subsection{\code{RootRot$new()}}{
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{RootRot$new(
   path,
   Timestep = NULL,
   Pathogen = NULL,
@@ -120,88 +117,78 @@ summary CSV log; \code{NULL} disables.}
   SpeciesBiomassRemovedMapName = NULL,
   EventLog = "rootrot/events.csv",
   SummaryLog = "rootrot/summary.csv"
-)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{path}}{Character. Directory path.}
-
-\item{\code{Timestep}}{Integer. Years between updates.}
-
-\item{\code{Pathogen}}{(Optional) Character. Pathogen name to annotate alongside
+)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{path}}{Character. Directory path.}
+      \item{\code{Timestep}}{Integer. Years between updates.}
+      \item{\code{Pathogen}}{(Optional) Character. Pathogen name to annotate alongside
 the \code{LandisData} header (e.g. \code{"Phytophthora cinnamomi"}).}
-
-\item{\code{InputMap}}{(Optional) Character. Initial infection raster path.
+      \item{\code{InputMap}}{(Optional) Character. Initial infection raster path.
 When omitted, the model assumes all cells begin Uninfected.}
-
-\item{\code{SpeciesSusceptibility}}{\code{data.frame} with columns \code{Species},
+      \item{\code{SpeciesSusceptibility}}{\code{data.frame} with columns \code{Species},
 \code{Index1} (initial susceptibility), \code{Index2} (secondary susceptibility);
 both indices in \verb{[0, 1]}.}
-
-\item{\code{LethalTemp}}{Numeric \verb{<= 0} (°C). Minimum air temperature below
+      \item{\code{LethalTemp}}{Numeric \verb{<= 0} (°C). Minimum air temperature below
 which the pathogen cannot survive.}
-
-\item{\code{MinSoilTemp}}{Numeric (°C). Minimum soil temperature below which
+      \item{\code{MinSoilTemp}}{Numeric (°C). Minimum soil temperature below which
 the pathogen cannot transition Uninfected → Infected.}
-
-\item{\code{PhWet, PhDry, PhMax}}{Numeric \verb{> 0} (m). Pressure-head thresholds:
+      \item{\code{PhWet, PhDry, PhMax}}{Numeric \verb{> 0} (m). Pressure-head thresholds:
 wet, dry, and extremely-dry conditions.}
-
-\item{\code{MinProbID, MaxProbDI}}{Numeric in \verb{[0, 1]}. Min infection→diseased
+      \item{\code{MinProbID, MaxProbDI}}{Numeric in \verb{[0, 1]}. Min infection→diseased
 probability and max diseased→infected probability.}
-
-\item{\code{OutputMapName}}{(Optional) Character. Infection-status output
+      \item{\code{OutputMapName}}{(Optional) Character. Infection-status output
 raster pattern; must contain \code{{timestep}}.}
-
-\item{\code{TOLDMapName}}{(Optional) Character. Time-of-Last-Disease output
+      \item{\code{TOLDMapName}}{(Optional) Character. Time-of-Last-Disease output
 raster pattern; must contain \code{{timestep}}.}
-
-\item{\code{LethalTempMapName}}{(Optional) Character. Lethal-temperature
+      \item{\code{LethalTempMapName}}{(Optional) Character. Lethal-temperature
 output raster pattern; must contain \code{{timestep}}.}
-
-\item{\code{TotalBiomassRemovedMapName}}{(Optional) Character. Total biomass-
+      \item{\code{TotalBiomassRemovedMapName}}{(Optional) Character. Total biomass-
 removed output raster pattern; must contain \code{{timestep}}.}
-
-\item{\code{SpeciesBiomassRemovedMapName}}{(Optional) Character. Per-species
+      \item{\code{SpeciesBiomassRemovedMapName}}{(Optional) Character. Per-species
 biomass-removed output raster pattern; must contain both \code{{species}}
 and \code{{timestep}}.}
-
-\item{\code{EventLog}}{(Optional) Character. Relative file path for the events
+      \item{\code{EventLog}}{(Optional) Character. Relative file path for the events
 CSV log; pass \code{NULL} to disable.}
-
-\item{\code{SummaryLog}}{(Optional) Character. Relative file path for the
+      \item{\code{SummaryLog}}{(Optional) Character. Relative file path for the
 summary CSV log; pass \code{NULL} to disable.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
-\if{html}{\out{</div>}}
-}
-}
+
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-RootRot-write"></a>}}
 \if{latex}{\out{\hypertarget{method-RootRot-write}{}}}
-\subsection{Method \code{write()}}{
-Write extension inputs to disk
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{RootRot$write()}\if{html}{\out{</div>}}
+\subsection{\code{RootRot$write()}}{
+  Write extension inputs to disk
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{RootRot$write()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-RootRot-clone"></a>}}
 \if{latex}{\out{\hypertarget{method-RootRot-clone}{}}}
-\subsection{Method \code{clone()}}{
-The objects of this class are cloneable with this method.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{RootRot$clone(deep = FALSE)}\if{html}{\out{</div>}}
+\subsection{\code{RootRot$clone()}}{
+  The objects of this class are cloneable with this method.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{RootRot$clone(deep = FALSE)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{deep}}{Whether to make a deep clone.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{deep}}{Whether to make a deep clone.}
-}
-\if{html}{\out{</div>}}
-}
-}
 }

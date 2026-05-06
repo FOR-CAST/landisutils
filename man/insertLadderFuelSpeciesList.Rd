@@ -16,12 +16,12 @@ Character string(s) to write to the suitable LANDIS-II input file.
 Specify \code{LadderFuelSpeciesList} for Social-Climate-Fire extension
 }
 \seealso{
-Other Social Climate Fire helpers: 
+Other Social Climate Fire helpers:
 \code{\link{SocialClimateFire}},
-\code{\link{assemble_climate_library_file_scf}()},
-\code{\link{insertDeadWoodTable}()},
-\code{\link{prepSuppression_CSV_File}()},
-\code{\link{prepTopographyFile}()}
+\code{\link[=assemble_climate_library_file_scf]{assemble_climate_library_file_scf()}},
+\code{\link[=insertDeadWoodTable]{insertDeadWoodTable()}},
+\code{\link[=prepSuppression_CSV_File]{prepSuppression_CSV_File()}},
+\code{\link[=prepTopographyFile]{prepTopographyFile()}}
 }
 \concept{Social Climate Fire helpers}
 \keyword{internal}

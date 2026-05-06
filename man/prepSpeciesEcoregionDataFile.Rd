@@ -19,17 +19,17 @@ created as a side effect of the function.
 Create Species Ecoregion Data File
 }
 \seealso{
-Other Biomass Succession helpers: 
+Other Biomass Succession helpers:
 \code{\link{BiomassSuccession}},
-\code{\link{insertEcoregionParameters}()},
-\code{\link{insertFireReductionParameters}()},
-\code{\link{insertHarvestReductionParameters}()},
-\code{\link{insertMinRelativeBiomass}()},
-\code{\link{insertSpeciesEcoregionDataFile}()},
-\code{\link{insertSufficientLight}()},
-\code{\link{prepEcoregionParameters}()},
-\code{\link{prepFireReductionParameters}()},
-\code{\link{prepHarvestReductionParameters}()},
-\code{\link{prepMinRelativeBiomass}()}
+\code{\link[=insertEcoregionParameters]{insertEcoregionParameters()}},
+\code{\link[=insertFireReductionParameters]{insertFireReductionParameters()}},
+\code{\link[=insertHarvestReductionParameters]{insertHarvestReductionParameters()}},
+\code{\link[=insertMinRelativeBiomass]{insertMinRelativeBiomass()}},
+\code{\link[=insertSpeciesEcoregionDataFile]{insertSpeciesEcoregionDataFile()}},
+\code{\link[=insertSufficientLight]{insertSufficientLight()}},
+\code{\link[=prepEcoregionParameters]{prepEcoregionParameters()}},
+\code{\link[=prepFireReductionParameters]{prepFireReductionParameters()}},
+\code{\link[=prepHarvestReductionParameters]{prepHarvestReductionParameters()}},
+\code{\link[=prepMinRelativeBiomass]{prepMinRelativeBiomass()}}
 }
 \concept{Biomass Succession helpers}

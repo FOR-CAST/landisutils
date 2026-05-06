@@ -5,93 +5,90 @@
 \title{Linear Wind Disturbance Extension}
 \description{
 Linear Wind Disturbance Extension
-
-Linear Wind Disturbance Extension
 }
 \references{
 LANDIS-II Linear Wind Disturbance v3 Extension User Guide
 \url{https://github.com/LANDIS-II-Foundation/Extension-LinearWind/blob/master/docs/LANDIS-II\%20Linear\%20Wind\%20v3\%20User\%20Guide.pdf}
 }
 \seealso{
-Other Linear Wind helpers: 
-\code{\link{defaultLinearWindSeverities}()},
-\code{\link{insertLinearWindEcoregionModifiers}()},
-\code{\link{insertLinearWindIntensityTable}()},
-\code{\link{insertLinearWindSeverities}()},
-\code{\link{insertWindDirectionTable}()}
+Other Linear Wind helpers:
+\code{\link[=defaultLinearWindSeverities]{defaultLinearWindSeverities()}},
+\code{\link[=insertLinearWindEcoregionModifiers]{insertLinearWindEcoregionModifiers()}},
+\code{\link[=insertLinearWindIntensityTable]{insertLinearWindIntensityTable()}},
+\code{\link[=insertLinearWindSeverities]{insertLinearWindSeverities()}},
+\code{\link[=insertWindDirectionTable]{insertWindDirectionTable()}}
 }
 \concept{Linear Wind helpers}
 \section{Super class}{
-\code{\link[landisutils:LandisExtension]{landisutils::LandisExtension}} -> \code{LinearWind}
+\code{\link[landisutils:LandisExtension]{LandisExtension}} -> \code{LinearWind}
 }
 \section{Active bindings}{
-\if{html}{\out{<div class="r6-active-bindings">}}
-\describe{
-\item{\code{NumEventsMean}}{Numeric. Mean number of events per 40,000 km^2 per year.}
+  \if{html}{\out{<div class="r6-active-bindings">}}
+  \describe{
+    \item{\code{NumEventsMean}}{Numeric. Mean number of events per 40,000 km^2 per year.}
 
-\item{\code{NumEventsStDev}}{Numeric. Standard deviation of number of events.}
+    \item{\code{NumEventsStDev}}{Numeric. Standard deviation of number of events.}
 
-\item{\code{TornadoLengthLambda}}{Numeric. Weibull lambda for tornado length (km).}
+    \item{\code{TornadoLengthLambda}}{Numeric. Weibull lambda for tornado length (km).}
 
-\item{\code{TornadoLengthAlpha}}{Numeric. Weibull alpha for tornado length (km).}
+    \item{\code{TornadoLengthAlpha}}{Numeric. Weibull alpha for tornado length (km).}
 
-\item{\code{TornadoWidth}}{Numeric. Mean width of tornado events (km).}
+    \item{\code{TornadoWidth}}{Numeric. Mean width of tornado events (km).}
 
-\item{\code{TornadoIntensityTable}}{Numeric vector of 5 percentages (sum 100) for intensity
+    \item{\code{TornadoIntensityTable}}{Numeric vector of 5 percentages (sum 100) for intensity
 classes \verb{0.2, 0.4, 0.6, 0.8, 1.0}.}
 
-\item{\code{TornadoProp}}{Numeric. Proportion of events that are tornadoes (0-1).}
+    \item{\code{TornadoProp}}{Numeric. Proportion of events that are tornadoes (0-1).}
 
-\item{\code{DerechoLengthLambda}}{Numeric. Weibull lambda for derecho length (km).}
+    \item{\code{DerechoLengthLambda}}{Numeric. Weibull lambda for derecho length (km).}
 
-\item{\code{DerechoLengthAlpha}}{Numeric. Weibull alpha for derecho length (km).}
+    \item{\code{DerechoLengthAlpha}}{Numeric. Weibull alpha for derecho length (km).}
 
-\item{\code{DerechoWidth}}{Numeric. Mean width of derecho events (km).}
+    \item{\code{DerechoWidth}}{Numeric. Mean width of derecho events (km).}
 
-\item{\code{DerechoIntensityTable}}{Numeric vector of 5 percentages (sum 100) for intensity
+    \item{\code{DerechoIntensityTable}}{Numeric vector of 5 percentages (sum 100) for intensity
 classes \verb{0.2, 0.4, 0.6, 0.8, 1.0}.}
 
-\item{\code{PropIntensityVar}}{Numeric. Variability in wind intensity within an event (0-1).}
+    \item{\code{PropIntensityVar}}{Numeric. Variability in wind intensity within an event (0-1).}
 
-\item{\code{WindDirectionTable}}{Numeric vector of 4 percentages (sum 100) for directions
+    \item{\code{WindDirectionTable}}{Numeric vector of 4 percentages (sum 100) for directions
 \verb{N-S, NE-SW, E-W, SE-NW}.}
 
-\item{\code{EcoregionModifiers}}{\code{data.frame} with columns \code{Ecoregion}, \code{Modifier}.}
+    \item{\code{EcoregionModifiers}}{\code{data.frame} with columns \code{Ecoregion}, \code{Modifier}.}
 
-\item{\code{WindSeverities}}{\code{data.frame} with columns \code{Severity}, \code{LowerAge},
+    \item{\code{WindSeverities}}{\code{data.frame} with columns \code{Severity}, \code{LowerAge},
 \code{UpperAge}, \code{WindspeedMortalityThreshold}.}
 
-\item{\code{IntensityMapNames}}{Character. File pattern for wind intensity output maps;
+    \item{\code{IntensityMapNames}}{Character. File pattern for wind intensity output maps;
 must contain the literal \code{{timestep}} placeholder.}
 
-\item{\code{SeverityMapNames}}{Character. File pattern for wind severity output maps;
+    \item{\code{SeverityMapNames}}{Character. File pattern for wind severity output maps;
 must contain the literal \code{{timestep}} placeholder.}
 
-\item{\code{LogFile}}{Character. Relative file path.}
-}
-\if{html}{\out{</div>}}
+    \item{\code{LogFile}}{Character. Relative file path.}
+  }
+  \if{html}{\out{</div>}}
 }
 \section{Methods}{
 \subsection{Public methods}{
-\itemize{
-\item \href{#method-LinearWind-new}{\code{LinearWind$new()}}
-\item \href{#method-LinearWind-write}{\code{LinearWind$write()}}
-\item \href{#method-LinearWind-clone}{\code{LinearWind$clone()}}
+  \itemize{
+    \item \href{#method-LinearWind-initialize}{\code{LinearWind$new()}}
+    \item \href{#method-LinearWind-write}{\code{LinearWind$write()}}
+    \item \href{#method-LinearWind-clone}{\code{LinearWind$clone()}}
+  }
 }
-}
-\if{html}{\out{
-<details open><summary>Inherited methods</summary>
+\if{html}{\out{<details open><summary>Inherited methods</summary>
 <ul>
-<li><span class="pkg-link" data-pkg="landisutils" data-topic="LandisExtension" data-id="add_file"><a href='../../landisutils/html/LandisExtension.html#method-LandisExtension-add_file'><code>landisutils::LandisExtension$add_file()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="landisutils" data-topic="LandisExtension" data-id="add_file"><a href='../../landisutils/html/LandisExtension.html#method-LandisExtension-add_file'><code>LandisExtension$add_file()</code></a></span></li>
 </ul>
-</details>
-}}
+</details>}}
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-LinearWind-new"></a>}}
-\if{latex}{\out{\hypertarget{method-LinearWind-new}{}}}
-\subsection{Method \code{new()}}{
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{LinearWind$new(
+\if{html}{\out{<a id="method-LinearWind-initialize"></a>}}
+\if{latex}{\out{\hypertarget{method-LinearWind-initialize}{}}}
+\subsection{\code{LinearWind$new()}}{
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{LinearWind$new(
   path,
   Timestep = NULL,
   NumEventsMean = NULL,
@@ -112,91 +109,77 @@ must contain the literal \code{{timestep}} placeholder.}
   IntensityMapNames = NULL,
   SeverityMapNames = NULL,
   LogFile = "linearwind/log.csv"
-)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{path}}{Character. Directory path.}
-
-\item{\code{Timestep}}{Integer. Years.}
-
-\item{\code{NumEventsMean}}{Numeric. Mean number of wind events per 40,000 km^2 per year.}
-
-\item{\code{NumEventsStDev}}{Numeric. Standard deviation of number of wind events.}
-
-\item{\code{TornadoLengthLambda}}{Numeric. Weibull lambda for tornado event length (km).}
-
-\item{\code{TornadoLengthAlpha}}{Numeric. Weibull alpha for tornado event length (km).}
-
-\item{\code{TornadoWidth}}{Numeric. Mean width of tornado events (km).}
-
-\item{\code{TornadoIntensityTable}}{Numeric vector of length 5 giving the percentage of
+)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{path}}{Character. Directory path.}
+      \item{\code{Timestep}}{Integer. Years.}
+      \item{\code{NumEventsMean}}{Numeric. Mean number of wind events per 40,000 km^2 per year.}
+      \item{\code{NumEventsStDev}}{Numeric. Standard deviation of number of wind events.}
+      \item{\code{TornadoLengthLambda}}{Numeric. Weibull lambda for tornado event length (km).}
+      \item{\code{TornadoLengthAlpha}}{Numeric. Weibull alpha for tornado event length (km).}
+      \item{\code{TornadoWidth}}{Numeric. Mean width of tornado events (km).}
+      \item{\code{TornadoIntensityTable}}{Numeric vector of length 5 giving the percentage of
 tornado events with maximum intensity in each class \verb{0.2, 0.4, 0.6, 0.8, 1.0};
 must sum to 100.}
-
-\item{\code{TornadoProp}}{Numeric. Proportion of events that are tornadoes (0-1);
+      \item{\code{TornadoProp}}{Numeric. Proportion of events that are tornadoes (0-1);
 the remainder are derechos.}
-
-\item{\code{DerechoLengthLambda}}{Numeric. Weibull lambda for derecho event length (km).}
-
-\item{\code{DerechoLengthAlpha}}{Numeric. Weibull alpha for derecho event length (km).}
-
-\item{\code{DerechoWidth}}{Numeric. Mean width of derecho events (km).}
-
-\item{\code{DerechoIntensityTable}}{Numeric vector of length 5 giving the percentage of
+      \item{\code{DerechoLengthLambda}}{Numeric. Weibull lambda for derecho event length (km).}
+      \item{\code{DerechoLengthAlpha}}{Numeric. Weibull alpha for derecho event length (km).}
+      \item{\code{DerechoWidth}}{Numeric. Mean width of derecho events (km).}
+      \item{\code{DerechoIntensityTable}}{Numeric vector of length 5 giving the percentage of
 derecho events with maximum intensity in each class \verb{0.2, 0.4, 0.6, 0.8, 1.0};
 must sum to 100.}
-
-\item{\code{PropIntensityVar}}{Numeric. Variability in wind intensity within an event (0-1).}
-
-\item{\code{WindDirectionTable}}{Numeric vector of length 4 giving the percentage of events
+      \item{\code{PropIntensityVar}}{Numeric. Variability in wind intensity within an event (0-1).}
+      \item{\code{WindDirectionTable}}{Numeric vector of length 4 giving the percentage of events
 with primary direction \verb{N-S, NE-SW, E-W, SE-NW}; must sum to 100.}
-
-\item{\code{EcoregionModifiers}}{\code{data.frame} with columns \code{Ecoregion}, \code{Modifier}
+      \item{\code{EcoregionModifiers}}{\code{data.frame} with columns \code{Ecoregion}, \code{Modifier}
 (\code{Modifier} in \verb{[-1, 1]}); optional.}
-
-\item{\code{WindSeverities}}{\code{data.frame} with columns \code{Severity}, \code{LowerAge},
+      \item{\code{WindSeverities}}{\code{data.frame} with columns \code{Severity}, \code{LowerAge},
 \code{UpperAge}, \code{WindspeedMortalityThreshold}; rows must be ordered by decreasing
 \code{Severity}. Defaults to \code{\link[=defaultLinearWindSeverities]{defaultLinearWindSeverities()}}.}
-
-\item{\code{IntensityMapNames}}{Character. File pattern for wind intensity output maps;
+      \item{\code{IntensityMapNames}}{Character. File pattern for wind intensity output maps;
 must contain the literal \code{{timestep}} placeholder.}
-
-\item{\code{SeverityMapNames}}{Character. File pattern for wind severity output maps;
+      \item{\code{SeverityMapNames}}{Character. File pattern for wind severity output maps;
 must contain the literal \code{{timestep}} placeholder.}
+      \item{\code{LogFile}}{Character. Relative file path.}
+    }
+    \if{html}{\out{</div>}}
+  }
+}
 
-\item{\code{LogFile}}{Character. Relative file path.}
-}
-\if{html}{\out{</div>}}
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-LinearWind-write"></a>}}
 \if{latex}{\out{\hypertarget{method-LinearWind-write}{}}}
-\subsection{Method \code{write()}}{
-Write extension inputs to disk
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{LinearWind$write()}\if{html}{\out{</div>}}
+\subsection{\code{LinearWind$write()}}{
+  Write extension inputs to disk
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{LinearWind$write()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-LinearWind-clone"></a>}}
 \if{latex}{\out{\hypertarget{method-LinearWind-clone}{}}}
-\subsection{Method \code{clone()}}{
-The objects of this class are cloneable with this method.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{LinearWind$clone(deep = FALSE)}\if{html}{\out{</div>}}
+\subsection{\code{LinearWind$clone()}}{
+  The objects of this class are cloneable with this method.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{LinearWind$clone(deep = FALSE)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{deep}}{Whether to make a deep clone.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{deep}}{Whether to make a deep clone.}
-}
-\if{html}{\out{</div>}}
-}
-}
 }

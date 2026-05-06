@@ -5,8 +5,6 @@
 \title{Wildlife Habitat Output Extension}
 \description{
 Wildlife Habitat Output Extension
-
-Wildlife Habitat Output Extension
 }
 \references{
 LANDIS-II Output Wildlife Habitat v3 Extension User Guide
@@ -15,99 +13,99 @@ LANDIS-II Output Wildlife Habitat v3 Extension User Guide
 \seealso{
 \code{\link[=suitabilityFile]{suitabilityFile()}} (also used by \link{OutputLocalHabitat}).
 
-Other Wildlife Habitat Output helpers: 
-\code{\link{insertSuitabilityFiles}()},
-\code{\link{suitabilityFile}()}
+Other Wildlife Habitat Output helpers:
+\code{\link[=insertSuitabilityFiles]{insertSuitabilityFiles()}},
+\code{\link[=suitabilityFile]{suitabilityFile()}}
 }
 \concept{Wildlife Habitat Output helpers}
 \section{Super class}{
-\code{\link[landisutils:LandisExtension]{landisutils::LandisExtension}} -> \code{OutputWildlifeHabitat}
+\code{\link[landisutils:LandisExtension]{LandisExtension}} -> \code{OutputWildlifeHabitat}
 }
 \section{Active bindings}{
-\if{html}{\out{<div class="r6-active-bindings">}}
-\describe{
-\item{\code{OutputTimestep}}{Integer. Output frequency (years); must be \verb{>= Timestep}.}
+  \if{html}{\out{<div class="r6-active-bindings">}}
+  \describe{
+    \item{\code{OutputTimestep}}{Integer. Output frequency (years); must be \verb{>= Timestep}.}
 
-\item{\code{MapFileNames}}{Character. Output filename pattern; must contain
+    \item{\code{MapFileNames}}{Character. Output filename pattern; must contain
 \code{{wildlifeName}} and \code{{timestep}}.}
 
-\item{\code{SuitabilityFiles}}{List of \code{SuitabilityFile} objects, or a
+    \item{\code{SuitabilityFiles}}{List of \code{SuitabilityFile} objects, or a
 character vector of relative filenames (auto-wrapped).}
-}
-\if{html}{\out{</div>}}
+  }
+  \if{html}{\out{</div>}}
 }
 \section{Methods}{
 \subsection{Public methods}{
-\itemize{
-\item \href{#method-OutputWildlifeHabitat-new}{\code{OutputWildlifeHabitat$new()}}
-\item \href{#method-OutputWildlifeHabitat-write}{\code{OutputWildlifeHabitat$write()}}
-\item \href{#method-OutputWildlifeHabitat-clone}{\code{OutputWildlifeHabitat$clone()}}
+  \itemize{
+    \item \href{#method-OutputWildlifeHabitat-initialize}{\code{OutputWildlifeHabitat$new()}}
+    \item \href{#method-OutputWildlifeHabitat-write}{\code{OutputWildlifeHabitat$write()}}
+    \item \href{#method-OutputWildlifeHabitat-clone}{\code{OutputWildlifeHabitat$clone()}}
+  }
 }
-}
-\if{html}{\out{
-<details open><summary>Inherited methods</summary>
+\if{html}{\out{<details open><summary>Inherited methods</summary>
 <ul>
-<li><span class="pkg-link" data-pkg="landisutils" data-topic="LandisExtension" data-id="add_file"><a href='../../landisutils/html/LandisExtension.html#method-LandisExtension-add_file'><code>landisutils::LandisExtension$add_file()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="landisutils" data-topic="LandisExtension" data-id="add_file"><a href='../../landisutils/html/LandisExtension.html#method-LandisExtension-add_file'><code>LandisExtension$add_file()</code></a></span></li>
 </ul>
-</details>
-}}
+</details>}}
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-OutputWildlifeHabitat-new"></a>}}
-\if{latex}{\out{\hypertarget{method-OutputWildlifeHabitat-new}{}}}
-\subsection{Method \code{new()}}{
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{OutputWildlifeHabitat$new(
+\if{html}{\out{<a id="method-OutputWildlifeHabitat-initialize"></a>}}
+\if{latex}{\out{\hypertarget{method-OutputWildlifeHabitat-initialize}{}}}
+\subsection{\code{OutputWildlifeHabitat$new()}}{
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{OutputWildlifeHabitat$new(
   path,
   Timestep = 1L,
   OutputTimestep = NULL,
   MapFileNames = NULL,
   SuitabilityFiles = list()
-)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{path}}{Character. Directory path.}
-
-\item{\code{Timestep}}{Integer. Inner simulation interval (years).}
-
-\item{\code{OutputTimestep}}{Integer. Output frequency (years); must be \verb{>= Timestep}.}
-
-\item{\code{MapFileNames}}{Character. Output filename pattern; must contain
+)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{path}}{Character. Directory path.}
+      \item{\code{Timestep}}{Integer. Inner simulation interval (years).}
+      \item{\code{OutputTimestep}}{Integer. Output frequency (years); must be \verb{>= Timestep}.}
+      \item{\code{MapFileNames}}{Character. Output filename pattern; must contain
 the literals \code{{wildlifeName}} and \code{{timestep}}.}
-
-\item{\code{SuitabilityFiles}}{List of \code{SuitabilityFile} sub-objects (see
+      \item{\code{SuitabilityFiles}}{List of \code{SuitabilityFile} sub-objects (see
 \code{\link[=suitabilityFile]{suitabilityFile()}}) or a character vector of filenames (auto-wrapped).}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
-\if{html}{\out{</div>}}
-}
-}
+
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-OutputWildlifeHabitat-write"></a>}}
 \if{latex}{\out{\hypertarget{method-OutputWildlifeHabitat-write}{}}}
-\subsection{Method \code{write()}}{
-Write extension inputs to disk
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{OutputWildlifeHabitat$write()}\if{html}{\out{</div>}}
+\subsection{\code{OutputWildlifeHabitat$write()}}{
+  Write extension inputs to disk
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{OutputWildlifeHabitat$write()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-OutputWildlifeHabitat-clone"></a>}}
 \if{latex}{\out{\hypertarget{method-OutputWildlifeHabitat-clone}{}}}
-\subsection{Method \code{clone()}}{
-The objects of this class are cloneable with this method.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{OutputWildlifeHabitat$clone(deep = FALSE)}\if{html}{\out{</div>}}
+\subsection{\code{OutputWildlifeHabitat$clone()}}{
+  The objects of this class are cloneable with this method.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{OutputWildlifeHabitat$clone(deep = FALSE)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{deep}}{Whether to make a deep clone.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{deep}}{Whether to make a deep clone.}
-}
-\if{html}{\out{</div>}}
-}
-}
 }

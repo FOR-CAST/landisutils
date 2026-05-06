@@ -16,13 +16,13 @@ Character string(s) to write to the suitable LANDIS-II input file.
 Specify a single \code{LandCoverChange} block within a \code{LandUse}
 }
 \seealso{
-Other Land Use Plus helpers: 
+Other Land Use Plus helpers:
 \code{\link{LandUsePlus}},
-\code{\link{cohortSelector}()},
-\code{\link{insertCohortSelector}()},
-\code{\link{insertLandUseType}()},
-\code{\link{landCoverChange}()},
-\code{\link{landUseType}()}
+\code{\link[=cohortSelector]{cohortSelector()}},
+\code{\link[=insertCohortSelector]{insertCohortSelector()}},
+\code{\link[=insertLandUseType]{insertLandUseType()}},
+\code{\link[=landCoverChange]{landCoverChange()}},
+\code{\link[=landUseType]{landUseType()}}
 }
 \concept{Land Use Plus helpers}
 \keyword{internal}

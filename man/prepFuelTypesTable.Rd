@@ -17,12 +17,12 @@ Natural Resources Canada. 2019. Fire Behavior Prediction System Fuel Type Descri
 \url{https://cwfis.cfs.nrcan.gc.ca/background/fueltypes/c1}
 }
 \seealso{
-Other Dynamic Fuels helpers: 
+Other Dynamic Fuels helpers:
 \code{\link{DynamicFuels}},
-\code{\link{insertDisturbanceConversionTable}()},
-\code{\link{insertEcoregionTable}()},
-\code{\link{insertFuelTypesTable}()},
-\code{\link{insertSpeciesFuelCoefficients}()},
-\code{\link{prepDisturbanceConversionTable}()}
+\code{\link[=insertDisturbanceConversionTable]{insertDisturbanceConversionTable()}},
+\code{\link[=insertEcoregionTable]{insertEcoregionTable()}},
+\code{\link[=insertFuelTypesTable]{insertFuelTypesTable()}},
+\code{\link[=insertSpeciesFuelCoefficients]{insertSpeciesFuelCoefficients()}},
+\code{\link[=prepDisturbanceConversionTable]{prepDisturbanceConversionTable()}}
 }
 \concept{Dynamic Fuels helpers}

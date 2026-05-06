@@ -38,26 +38,26 @@ Character file path.
 \seealso{
 Used by \link{DynamicFire} and \link{SocialClimateFire}.
 
-Other Dynamic Fire helpers: 
+Other Dynamic Fire helpers:
 \code{\link{DynamicFire}},
-\code{\link{defaultFuelTypeTable}()},
-\code{\link{insertBuildUpIndex}()},
-\code{\link{insertFireSizesTable}()},
-\code{\link{insertFuelTypeTable}()},
-\code{\link{insertGroundSlopeFile}()},
-\code{\link{insertSeasonTable}()},
-\code{\link{insertUphillSlopeAzimuthMap}()},
-\code{\link{prepDynamicEcoregionTable}()},
-\code{\link{prepDynamicWeatherTable}()},
-\code{\link{prepFireSizesTable}()},
-\code{\link{prepInitialWeatherDatabase}()}
+\code{\link[=defaultFuelTypeTable]{defaultFuelTypeTable()}},
+\code{\link[=insertBuildUpIndex]{insertBuildUpIndex()}},
+\code{\link[=insertFireSizesTable]{insertFireSizesTable()}},
+\code{\link[=insertFuelTypeTable]{insertFuelTypeTable()}},
+\code{\link[=insertGroundSlopeFile]{insertGroundSlopeFile()}},
+\code{\link[=insertSeasonTable]{insertSeasonTable()}},
+\code{\link[=insertUphillSlopeAzimuthMap]{insertUphillSlopeAzimuthMap()}},
+\code{\link[=prepDynamicEcoregionTable]{prepDynamicEcoregionTable()}},
+\code{\link[=prepDynamicWeatherTable]{prepDynamicWeatherTable()}},
+\code{\link[=prepFireSizesTable]{prepFireSizesTable()}},
+\code{\link[=prepInitialWeatherDatabase]{prepInitialWeatherDatabase()}}
 
-Other Social Climate Fire helpers: 
+Other Social Climate Fire helpers:
 \code{\link{SocialClimateFire}},
-\code{\link{assemble_climate_library_file_scf}()},
-\code{\link{insertDeadWoodTable}()},
-\code{\link{insertLadderFuelSpeciesList}()},
-\code{\link{prepSuppression_CSV_File}()}
+\code{\link[=assemble_climate_library_file_scf]{assemble_climate_library_file_scf()}},
+\code{\link[=insertDeadWoodTable]{insertDeadWoodTable()}},
+\code{\link[=insertLadderFuelSpeciesList]{insertLadderFuelSpeciesList()}},
+\code{\link[=prepSuppression_CSV_File]{prepSuppression_CSV_File()}}
 }
 \concept{Dynamic Fire helpers}
 \concept{Social Climate Fire helpers}

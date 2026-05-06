@@ -5,8 +5,6 @@
 \title{Original Fire Extension}
 \description{
 Original Fire Extension
-
-Original Fire Extension
 }
 \references{
 LANDIS-II Original Fire v5.0 Extension User Guide
@@ -17,64 +15,63 @@ Helpers that prepare inputs for this extension:
 \code{\link[=prepFireRegionParametersTable]{prepFireRegionParametersTable()}},
 \code{\link[=prepInitialFireRegionsMap]{prepInitialFireRegionsMap()}}.
 
-Other Original Fire helpers: 
-\code{\link{defaultFuelCurveTable}()},
-\code{\link{insertFireRegionParametersTable}()},
-\code{\link{insertFuelCurveTable}()},
-\code{\link{insertWindCurveTable}()},
-\code{\link{prepFireRegionParametersTable}()},
-\code{\link{prepInitialFireRegionsMap}()}
+Other Original Fire helpers:
+\code{\link[=defaultFuelCurveTable]{defaultFuelCurveTable()}},
+\code{\link[=insertFireRegionParametersTable]{insertFireRegionParametersTable()}},
+\code{\link[=insertFuelCurveTable]{insertFuelCurveTable()}},
+\code{\link[=insertWindCurveTable]{insertWindCurveTable()}},
+\code{\link[=prepFireRegionParametersTable]{prepFireRegionParametersTable()}},
+\code{\link[=prepInitialFireRegionsMap]{prepInitialFireRegionsMap()}}
 }
 \concept{Original Fire helpers}
 \section{Super class}{
-\code{\link[landisutils:LandisExtension]{landisutils::LandisExtension}} -> \code{OriginalFire}
+\code{\link[landisutils:LandisExtension]{LandisExtension}} -> \code{OriginalFire}
 }
 \section{Active bindings}{
-\if{html}{\out{<div class="r6-active-bindings">}}
-\describe{
-\item{\code{Species_CSV_File}}{Character. Relative file path.}
+  \if{html}{\out{<div class="r6-active-bindings">}}
+  \describe{
+    \item{\code{Species_CSV_File}}{Character. Relative file path.}
 
-\item{\code{FireRegionParametersTable}}{\code{data.frame}.}
+    \item{\code{FireRegionParametersTable}}{\code{data.frame}.}
 
-\item{\code{InitialFireRegionsMap}}{Character. Relative file path.}
+    \item{\code{InitialFireRegionsMap}}{Character. Relative file path.}
 
-\item{\code{DynamicFireRegionTable}}{\code{data.frame}.}
+    \item{\code{DynamicFireRegionTable}}{\code{data.frame}.}
 
-\item{\code{FuelCurveTable}}{\code{data.frame}.}
+    \item{\code{FuelCurveTable}}{\code{data.frame}.}
 
-\item{\code{WindCurveTable}}{\code{data.frame}.}
+    \item{\code{WindCurveTable}}{\code{data.frame}.}
 
-\item{\code{FireDamageTable}}{\code{data.frame}.}
+    \item{\code{FireDamageTable}}{\code{data.frame}.}
 
-\item{\code{MapNames}}{Character. File pattern for writing outputs to disk.}
+    \item{\code{MapNames}}{Character. File pattern for writing outputs to disk.}
 
-\item{\code{LogFile}}{Character. Relative file path.}
+    \item{\code{LogFile}}{Character. Relative file path.}
 
-\item{\code{SummaryLogFile}}{Character. Relative file path.}
-}
-\if{html}{\out{</div>}}
+    \item{\code{SummaryLogFile}}{Character. Relative file path.}
+  }
+  \if{html}{\out{</div>}}
 }
 \section{Methods}{
 \subsection{Public methods}{
-\itemize{
-\item \href{#method-OriginalFire-new}{\code{OriginalFire$new()}}
-\item \href{#method-OriginalFire-write}{\code{OriginalFire$write()}}
-\item \href{#method-OriginalFire-clone}{\code{OriginalFire$clone()}}
+  \itemize{
+    \item \href{#method-OriginalFire-initialize}{\code{OriginalFire$new()}}
+    \item \href{#method-OriginalFire-write}{\code{OriginalFire$write()}}
+    \item \href{#method-OriginalFire-clone}{\code{OriginalFire$clone()}}
+  }
 }
-}
-\if{html}{\out{
-<details open><summary>Inherited methods</summary>
+\if{html}{\out{<details open><summary>Inherited methods</summary>
 <ul>
-<li><span class="pkg-link" data-pkg="landisutils" data-topic="LandisExtension" data-id="add_file"><a href='../../landisutils/html/LandisExtension.html#method-LandisExtension-add_file'><code>landisutils::LandisExtension$add_file()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="landisutils" data-topic="LandisExtension" data-id="add_file"><a href='../../landisutils/html/LandisExtension.html#method-LandisExtension-add_file'><code>LandisExtension$add_file()</code></a></span></li>
 </ul>
-</details>
-}}
+</details>}}
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-OriginalFire-new"></a>}}
-\if{latex}{\out{\hypertarget{method-OriginalFire-new}{}}}
-\subsection{Method \code{new()}}{
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{OriginalFire$new(
+\if{html}{\out{<a id="method-OriginalFire-initialize"></a>}}
+\if{latex}{\out{\hypertarget{method-OriginalFire-initialize}{}}}
+\subsection{\code{OriginalFire$new()}}{
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{OriginalFire$new(
   path,
   Timestep = NULL,
   Species_CSV_File = NULL,
@@ -87,64 +84,58 @@ Other Original Fire helpers:
   MapNames = NULL,
   LogFile = "fire/log.csv",
   SummaryLogFile = "fire/summary-log.csv"
-)}\if{html}{\out{</div>}}
+)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{path}}{Character. Directory path.}
+      \item{\code{Timestep}}{Integer.}
+      \item{\code{Species_CSV_File}}{Character. Relative file path.}
+      \item{\code{FireRegionParametersTable}}{\code{data.frame}.}
+      \item{\code{InitialFireRegionsMap}}{\code{SpatRaster}.}
+      \item{\code{DynamicFireRegionTable}}{\code{data.frame}.}
+      \item{\code{FuelCurveTable}}{\code{data.frame}.}
+      \item{\code{WindCurveTable}}{\code{data.frame}.}
+      \item{\code{FireDamageTable}}{\code{data.frame}.}
+      \item{\code{MapNames}}{Character. File pattern for writing outputs to disk.}
+      \item{\code{LogFile}}{Character. Relative file path.}
+      \item{\code{SummaryLogFile}}{Character. Relative file path.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{path}}{Character. Directory path.}
-
-\item{\code{Timestep}}{Integer.}
-
-\item{\code{Species_CSV_File}}{Character. Relative file path.}
-
-\item{\code{FireRegionParametersTable}}{\code{data.frame}.}
-
-\item{\code{InitialFireRegionsMap}}{\code{SpatRaster}.}
-
-\item{\code{DynamicFireRegionTable}}{\code{data.frame}.}
-
-\item{\code{FuelCurveTable}}{\code{data.frame}.}
-
-\item{\code{WindCurveTable}}{\code{data.frame}.}
-
-\item{\code{FireDamageTable}}{\code{data.frame}.}
-
-\item{\code{MapNames}}{Character. File pattern for writing outputs to disk.}
-
-\item{\code{LogFile}}{Character. Relative file path.}
-
-\item{\code{SummaryLogFile}}{Character. Relative file path.}
-}
-\if{html}{\out{</div>}}
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-OriginalFire-write"></a>}}
 \if{latex}{\out{\hypertarget{method-OriginalFire-write}{}}}
-\subsection{Method \code{write()}}{
-Write extension inputs to disk
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{OriginalFire$write()}\if{html}{\out{</div>}}
+\subsection{\code{OriginalFire$write()}}{
+  Write extension inputs to disk
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{OriginalFire$write()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-OriginalFire-clone"></a>}}
 \if{latex}{\out{\hypertarget{method-OriginalFire-clone}{}}}
-\subsection{Method \code{clone()}}{
-The objects of this class are cloneable with this method.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{OriginalFire$clone(deep = FALSE)}\if{html}{\out{</div>}}
+\subsection{\code{OriginalFire$clone()}}{
+  The objects of this class are cloneable with this method.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{OriginalFire$clone(deep = FALSE)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{deep}}{Whether to make a deep clone.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{deep}}{Whether to make a deep clone.}
-}
-\if{html}{\out{</div>}}
-}
-}
 }

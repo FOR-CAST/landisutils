@@ -16,17 +16,17 @@ Character string(s) to write to the suitable LANDIS-II input file.
 Specify \code{SpeciesEcoregionData} File
 }
 \seealso{
-Other Biomass Succession helpers: 
+Other Biomass Succession helpers:
 \code{\link{BiomassSuccession}},
-\code{\link{insertEcoregionParameters}()},
-\code{\link{insertFireReductionParameters}()},
-\code{\link{insertHarvestReductionParameters}()},
-\code{\link{insertMinRelativeBiomass}()},
-\code{\link{insertSufficientLight}()},
-\code{\link{prepEcoregionParameters}()},
-\code{\link{prepFireReductionParameters}()},
-\code{\link{prepHarvestReductionParameters}()},
-\code{\link{prepMinRelativeBiomass}()},
-\code{\link{prepSpeciesEcoregionDataFile}()}
+\code{\link[=insertEcoregionParameters]{insertEcoregionParameters()}},
+\code{\link[=insertFireReductionParameters]{insertFireReductionParameters()}},
+\code{\link[=insertHarvestReductionParameters]{insertHarvestReductionParameters()}},
+\code{\link[=insertMinRelativeBiomass]{insertMinRelativeBiomass()}},
+\code{\link[=insertSufficientLight]{insertSufficientLight()}},
+\code{\link[=prepEcoregionParameters]{prepEcoregionParameters()}},
+\code{\link[=prepFireReductionParameters]{prepFireReductionParameters()}},
+\code{\link[=prepHarvestReductionParameters]{prepHarvestReductionParameters()}},
+\code{\link[=prepMinRelativeBiomass]{prepMinRelativeBiomass()}},
+\code{\link[=prepSpeciesEcoregionDataFile]{prepSpeciesEcoregionDataFile()}}
 }
 \concept{Biomass Succession helpers}

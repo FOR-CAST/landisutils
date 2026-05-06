@@ -4,11 +4,6 @@
 \alias{DGSSuccession}
 \title{DGS (DAMM-McNiP, GIPL, SHAW) Succession Extension}
 \description{
-DGS (DAMM-McNiP, GIPL, SHAW) Succession Extension
-
-DGS (DAMM-McNiP, GIPL, SHAW) Succession Extension
-}
-\details{
 R6 class representing the LANDIS-II DGS Succession (v2.0) extension's
 main input file. DGS integrates a NECN-style vegetation dynamics model
 with the DAMM-McNiP soil C/N model, the SHAW physically-based hydrology
@@ -29,85 +24,84 @@ Shared scenario inputs:
 \code{\link[=prepInitialCommunities]{prepInitialCommunities()}},
 \code{\link[=prepSpeciesData]{prepSpeciesData()}}.
 
-Other DGS Succession helpers: 
-\code{\link{defaultDGSDammMcNIPParameters}()},
-\code{\link{insertDGSFireReductionParameters}()},
-\code{\link{insertDGSHarvestReductionParameters}()},
-\code{\link{prepDGSFireReductionParameters}()}
+Other DGS Succession helpers:
+\code{\link[=defaultDGSDammMcNIPParameters]{defaultDGSDammMcNIPParameters()}},
+\code{\link[=insertDGSFireReductionParameters]{insertDGSFireReductionParameters()}},
+\code{\link[=insertDGSHarvestReductionParameters]{insertDGSHarvestReductionParameters()}},
+\code{\link[=prepDGSFireReductionParameters]{prepDGSFireReductionParameters()}}
 }
 \concept{DGS Succession helpers}
 \section{Super class}{
-\code{\link[landisutils:LandisExtension]{landisutils::LandisExtension}} -> \code{DGSSuccession}
+\code{\link[landisutils:LandisExtension]{LandisExtension}} -> \code{DGSSuccession}
 }
 \section{Active bindings}{
-\if{html}{\out{<div class="r6-active-bindings">}}
-\describe{
-\item{\code{CalibrateMode}}{Logical, or character indicating "yes" or "no".}
+  \if{html}{\out{<div class="r6-active-bindings">}}
+  \describe{
+    \item{\code{CalibrateMode}}{Logical, or character indicating "yes" or "no".}
 
-\item{\code{ClimateConfigFile}}{Character. Relative file path.}
+    \item{\code{ClimateConfigFile}}{Character. Relative file path.}
 
-\item{\code{AtmosphericNSlope}}{Numeric.}
+    \item{\code{AtmosphericNSlope}}{Numeric.}
 
-\item{\code{AtmosphericNIntercept}}{Numeric.}
+    \item{\code{AtmosphericNIntercept}}{Numeric.}
 
-\item{\code{InitialCommunities}}{Character. Relative file path.}
+    \item{\code{InitialCommunities}}{Character. Relative file path.}
 
-\item{\code{InitialCommunitiesMap}}{Character. Relative file path.}
+    \item{\code{InitialCommunitiesMap}}{Character. Relative file path.}
 
-\item{\code{Latitude}}{Numeric (degrees).}
+    \item{\code{Latitude}}{Numeric (degrees).}
 
-\item{\code{ShawGiplConfigFile}}{Character. Relative file path.}
+    \item{\code{ShawGiplConfigFile}}{Character. Relative file path.}
 
-\item{\code{ShawGiplFiles}}{Character vector of relative file paths.}
+    \item{\code{ShawGiplFiles}}{Character vector of relative file paths.}
 
-\item{\code{SoilMaps}}{Named list of relative file paths. Required keys:
+    \item{\code{SoilMaps}}{Named list of relative file paths. Required keys:
 \code{SoilDepthMapName}, \code{SoilDrainMapName}, \code{SoilBaseFlowMapName}, \code{SoilStormFlowMapName}, \code{SoilFieldCapacityMapName}, \code{SoilWiltingPointMapName}, \code{SoilPercentSandMapName}, \code{SoilPercentClayMapName}, \code{SoilBulkDensityMapName}, \code{SoilParticleDensityMapName}, \code{InitialSOC_PrimaryMapName}, \code{InitialSON_PrimaryMapName}, \code{InitialDeadWoodSurfaceMapName}, \code{InitialDeadCoarseRootsMapName}.}
 
-\item{\code{InitialFineFuels}}{Numeric in \verb{[0, 1]}.}
+    \item{\code{InitialFineFuels}}{Numeric in \verb{[0, 1]}.}
 
-\item{\code{InitialMineralN}}{Numeric (g m-2).}
+    \item{\code{InitialMineralN}}{Numeric (g m-2).}
 
-\item{\code{DenitrificationRate}}{Numeric in \verb{[0, 1]}.}
+    \item{\code{DenitrificationRate}}{Numeric in \verb{[0, 1]}.}
 
-\item{\code{WaterDecayFunction}}{Character. One of \code{"Linear"} or \code{"Ratio"}.}
+    \item{\code{WaterDecayFunction}}{Character. One of \code{"Linear"} or \code{"Ratio"}.}
 
-\item{\code{DammMcNIPParameters}}{Named list of numeric scalar parameters.
+    \item{\code{DammMcNIPParameters}}{Named list of numeric scalar parameters.
 Required keys: \code{InitialMicrobialC}, \code{InitialMicrobialN}, \code{InitialEnzymeConc}, \code{ActEnergySOMDepoly}, \code{ActEnergyDOCUptake}, \code{ExpConstSOMDepoly}, \code{ExpConstDOCUptake}, \code{FractionSOMUnprotect}, \code{CNEnzymes}, \code{KmSOMDepoly}, \code{KmDOCUptake}, \code{EnzTurnRate}, \code{MicrobialTurnRate}, \code{CarbonUseEfficiency}, \code{PropEnzymeSOM}, \code{PropCEnzymeProduction}, \code{PropNEnzymeProduction}, \code{FractDeadMicrobialBiomassSOM}, \code{MMConstantO2}, \code{DiffConstantO2}, \code{DiffConstantSOMLiquid}, \code{FractionVolumeO2}, \code{DOCFraction}, \code{DONFraction}, \code{FractionLitterToDOC}.}
 
-\item{\code{SeedingAlgorithm}}{Character. Dispersal algorithm to use.
+    \item{\code{SeedingAlgorithm}}{Character. Dispersal algorithm to use.
 One of \code{"WardSeedDispersal"}, \code{"NoDispersal"}, \code{"UniversalDispersal"}.}
 
-\item{\code{ProbabilityEstablishAdjust}}{Numeric. Default \code{1.0}.}
+    \item{\code{ProbabilityEstablishAdjust}}{Numeric. Default \code{1.0}.}
 
-\item{\code{SpeciesParameters}}{Character. Relative file path.}
+    \item{\code{SpeciesParameters}}{Character. Relative file path.}
 
-\item{\code{FireReductionParameters}}{\code{data.frame}.}
+    \item{\code{FireReductionParameters}}{\code{data.frame}.}
 
-\item{\code{HarvestReductionParameters}}{\code{data.frame}.}
-}
-\if{html}{\out{</div>}}
+    \item{\code{HarvestReductionParameters}}{\code{data.frame}.}
+  }
+  \if{html}{\out{</div>}}
 }
 \section{Methods}{
 \subsection{Public methods}{
-\itemize{
-\item \href{#method-DGSSuccession-new}{\code{DGSSuccession$new()}}
-\item \href{#method-DGSSuccession-write}{\code{DGSSuccession$write()}}
-\item \href{#method-DGSSuccession-clone}{\code{DGSSuccession$clone()}}
+  \itemize{
+    \item \href{#method-DGSSuccession-initialize}{\code{DGSSuccession$new()}}
+    \item \href{#method-DGSSuccession-write}{\code{DGSSuccession$write()}}
+    \item \href{#method-DGSSuccession-clone}{\code{DGSSuccession$clone()}}
+  }
 }
-}
-\if{html}{\out{
-<details open><summary>Inherited methods</summary>
+\if{html}{\out{<details open><summary>Inherited methods</summary>
 <ul>
-<li><span class="pkg-link" data-pkg="landisutils" data-topic="LandisExtension" data-id="add_file"><a href='../../landisutils/html/LandisExtension.html#method-LandisExtension-add_file'><code>landisutils::LandisExtension$add_file()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="landisutils" data-topic="LandisExtension" data-id="add_file"><a href='../../landisutils/html/LandisExtension.html#method-LandisExtension-add_file'><code>LandisExtension$add_file()</code></a></span></li>
 </ul>
-</details>
-}}
+</details>}}
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-DGSSuccession-new"></a>}}
-\if{latex}{\out{\hypertarget{method-DGSSuccession-new}{}}}
-\subsection{Method \code{new()}}{
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{DGSSuccession$new(
+\if{html}{\out{<a id="method-DGSSuccession-initialize"></a>}}
+\if{latex}{\out{\hypertarget{method-DGSSuccession-initialize}{}}}
+\subsection{\code{DGSSuccession$new()}}{
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{DGSSuccession$new(
   path,
   Timestep = 1L,
   CalibrateMode = NULL,
@@ -130,115 +124,99 @@ One of \code{"WardSeedDispersal"}, \code{"NoDispersal"}, \code{"UniversalDispers
   SpeciesParameters = NULL,
   FireReductionParameters = NULL,
   HarvestReductionParameters = NULL
-)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{path}}{Character. Directory path for the extension input files.}
-
-\item{\code{Timestep}}{Integer (years).}
-
-\item{\code{CalibrateMode}}{Logical, or character indicating "yes" or "no".
+)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{path}}{Character. Directory path for the extension input files.}
+      \item{\code{Timestep}}{Integer (years).}
+      \item{\code{CalibrateMode}}{Logical, or character indicating "yes" or "no".
 When \code{TRUE}, an additional \code{DGS-calibrate-log.csv} is produced;
 intended for single-cell runs only.}
-
-\item{\code{ClimateConfigFile}}{Character. Relative file path to the climate
+      \item{\code{ClimateConfigFile}}{Character. Relative file path to the climate
 library configuration file (see §2.4 of the user guide).}
-
-\item{\code{AtmosphericNSlope}}{Numeric. Slope for the linear N-deposition
+      \item{\code{AtmosphericNSlope}}{Numeric. Slope for the linear N-deposition
 model (\verb{Total N = AtmosphericNSlope * precipitation + AtmosphericNIntercept}).
 The user-guide prose refers to this as \code{AtmosNslope}, but the
 parser keyword is \code{AtmosphericNSlope}.}
-
-\item{\code{AtmosphericNIntercept}}{Numeric. Intercept for the linear
+      \item{\code{AtmosphericNIntercept}}{Numeric. Intercept for the linear
 N-deposition model. The user-guide prose calls this \code{AtmosNinter},
 but the parser keyword is \code{AtmosphericNIntercept}.}
-
-\item{\code{InitialCommunities}}{Character. Relative file path to the initial
+      \item{\code{InitialCommunities}}{Character. Relative file path to the initial
 communities text file (see §7 of the user guide).}
-
-\item{\code{InitialCommunitiesMap}}{Character. Relative file path to the
+      \item{\code{InitialCommunitiesMap}}{Character. Relative file path to the
 initial communities raster.}
-
-\item{\code{Latitude}}{Numeric. Study-site latitude (degrees).}
-
-\item{\code{ShawGiplConfigFile}}{Character. Relative file path to the
+      \item{\code{Latitude}}{Numeric. Study-site latitude (degrees).}
+      \item{\code{ShawGiplConfigFile}}{Character. Relative file path to the
 SHAW/GIPL configuration file that names the SHAW/GIPL input files
 (see §3 of the user guide).}
-
-\item{\code{ShawGiplFiles}}{(Optional) Character vector of additional SHAW/GIPL
+      \item{\code{ShawGiplFiles}}{(Optional) Character vector of additional SHAW/GIPL
 input files (e.g., \code{ListThus}, \code{ShawGeneralInputs}, \code{ShawPlantTypes},
 \code{ShawSoilTypes}, \code{GiplProperties}, \code{Unfrozen.txt}) to register so
 the scenario can collect them.}
-
-\item{\code{SoilMaps}}{Named list of relative file paths for the required soil
+      \item{\code{SoilMaps}}{Named list of relative file paths for the required soil
 physical and initial soil C/N / dead-wood map inputs. Required keys:
 \code{SoilDepthMapName}, \code{SoilDrainMapName}, \code{SoilBaseFlowMapName}, \code{SoilStormFlowMapName}, \code{SoilFieldCapacityMapName}, \code{SoilWiltingPointMapName}, \code{SoilPercentSandMapName}, \code{SoilPercentClayMapName}, \code{SoilBulkDensityMapName}, \code{SoilParticleDensityMapName}, \code{InitialSOC_PrimaryMapName}, \code{InitialSON_PrimaryMapName}, \code{InitialDeadWoodSurfaceMapName}, \code{InitialDeadCoarseRootsMapName}.}
-
-\item{\code{InitialFineFuels}}{Numeric in \verb{[0, 1]}. Fraction of initial dead
+      \item{\code{InitialFineFuels}}{Numeric in \verb{[0, 1]}. Fraction of initial dead
 wood allocated to fine fuels.}
-
-\item{\code{InitialMineralN}}{Numeric. Initial mineral N ($g/m^2$).}
-
-\item{\code{DenitrificationRate}}{Numeric in \verb{[0, 1]}. Monthly fraction of
+      \item{\code{InitialMineralN}}{Numeric. Initial mineral N ($g/m^2$).}
+      \item{\code{DenitrificationRate}}{Numeric in \verb{[0, 1]}. Monthly fraction of
 mineral N lost through volatilization and denitrification.}
-
-\item{\code{WaterDecayFunction}}{Character. One of \code{"Linear"} or \code{"Ratio"}.}
-
-\item{\code{DammMcNIPParameters}}{Named list of numeric scalar parameters for
+      \item{\code{WaterDecayFunction}}{Character. One of \code{"Linear"} or \code{"Ratio"}.}
+      \item{\code{DammMcNIPParameters}}{Named list of numeric scalar parameters for
 the DAMM-McNiP soil C/N block. Required keys (all must be supplied):
 \code{InitialMicrobialC}, \code{InitialMicrobialN}, \code{InitialEnzymeConc}, \code{ActEnergySOMDepoly}, \code{ActEnergyDOCUptake}, \code{ExpConstSOMDepoly}, \code{ExpConstDOCUptake}, \code{FractionSOMUnprotect}, \code{CNEnzymes}, \code{KmSOMDepoly}, \code{KmDOCUptake}, \code{EnzTurnRate}, \code{MicrobialTurnRate}, \code{CarbonUseEfficiency}, \code{PropEnzymeSOM}, \code{PropCEnzymeProduction}, \code{PropNEnzymeProduction}, \code{FractDeadMicrobialBiomassSOM}, \code{MMConstantO2}, \code{DiffConstantO2}, \code{DiffConstantSOMLiquid}, \code{FractionVolumeO2}, \code{DOCFraction}, \code{DONFraction}, \code{FractionLitterToDOC}.}
-
-\item{\code{SeedingAlgorithm}}{Character. Dispersal algorithm to use.
+      \item{\code{SeedingAlgorithm}}{Character. Dispersal algorithm to use.
 One of \code{"WardSeedDispersal"}, \code{"NoDispersal"}, \code{"UniversalDispersal"}.}
-
-\item{\code{ProbabilityEstablishAdjust}}{Numeric. Multiplier applied to the
+      \item{\code{ProbabilityEstablishAdjust}}{Numeric. Multiplier applied to the
 probability of establishment. Default \code{1.0}.}
-
-\item{\code{SpeciesParameters}}{Character. Relative file path to the
+      \item{\code{SpeciesParameters}}{Character. Relative file path to the
 species-parameters CSV (see §2.54 of the user guide).}
-
-\item{\code{FireReductionParameters}}{\code{data.frame} with columns
+      \item{\code{FireReductionParameters}}{\code{data.frame} with columns
 \code{FireSeverity}, \code{CoarseDebrisReduction}, \code{FineLitterReduction},
 \code{CohortWoodReduction}, \code{CohortLeafReduction}, \code{OrganicHorizonReduction}.
 Required even when no fire extension is used.}
-
-\item{\code{HarvestReductionParameters}}{(Optional) \code{data.frame} with columns
+      \item{\code{HarvestReductionParameters}}{(Optional) \code{data.frame} with columns
 \code{PrescriptionName}, \code{DeadWoodReduction}, \code{DeadLitterReduction},
 \code{SOMReduction}, \code{CohortWoodRemoval}, \code{CohortLeafRemoval}. The
 \code{SOMReduction} column is required by the parser even though the
 user guide (§2.56) does not list it.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
-\if{html}{\out{</div>}}
-}
-}
+
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-DGSSuccession-write"></a>}}
 \if{latex}{\out{\hypertarget{method-DGSSuccession-write}{}}}
-\subsection{Method \code{write()}}{
-Write extension inputs to disk
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{DGSSuccession$write()}\if{html}{\out{</div>}}
+\subsection{\code{DGSSuccession$write()}}{
+  Write extension inputs to disk
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{DGSSuccession$write()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-DGSSuccession-clone"></a>}}
 \if{latex}{\out{\hypertarget{method-DGSSuccession-clone}{}}}
-\subsection{Method \code{clone()}}{
-The objects of this class are cloneable with this method.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{DGSSuccession$clone(deep = FALSE)}\if{html}{\out{</div>}}
+\subsection{\code{DGSSuccession$clone()}}{
+  The objects of this class are cloneable with this method.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{DGSSuccession$clone(deep = FALSE)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{deep}}{Whether to make a deep clone.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{deep}}{Whether to make a deep clone.}
-}
-\if{html}{\out{</div>}}
-}
-}
 }

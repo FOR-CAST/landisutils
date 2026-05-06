@@ -18,10 +18,10 @@ LANDIS-II DGS v2.0 single-cell Alaska test input
 (\code{testing/Core8-DGS_version2.0/DGS_Succession_AKinput_020725.txt}).
 }
 \seealso{
-Other DGS Succession helpers: 
+Other DGS Succession helpers:
 \code{\link{DGSSuccession}},
-\code{\link{insertDGSFireReductionParameters}()},
-\code{\link{insertDGSHarvestReductionParameters}()},
-\code{\link{prepDGSFireReductionParameters}()}
+\code{\link[=insertDGSFireReductionParameters]{insertDGSFireReductionParameters()}},
+\code{\link[=insertDGSHarvestReductionParameters]{insertDGSHarvestReductionParameters()}},
+\code{\link[=prepDGSFireReductionParameters]{prepDGSFireReductionParameters()}}
 }
 \concept{DGS Succession helpers}

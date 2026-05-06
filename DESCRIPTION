@@ -1,6 +1,6 @@
 Package: landisutils
 Title: Utilities for running LANDIS-II simulations
-Version: 0.0.6
+Version: 0.0.7
 Authors@R: 
     person(c("Alex", "M"), "Chubaty", , "achubaty@for-cast.ca", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0001-7146-8135"))
@@ -74,7 +74,6 @@ Encoding: UTF-8
 Language: en-US
 LazyData: true
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.3
 Collate:
     'LandisClimateConfig.R'
     'LandisExtension.R'
@@ -126,3 +125,4 @@ Collate:
     'species.R'
     'utils.R'
     'zzz.R'
+Config/roxygen2/version: 8.0.0

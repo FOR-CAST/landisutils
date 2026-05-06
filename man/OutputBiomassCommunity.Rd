@@ -5,8 +5,6 @@
 \title{Biomass Community Output Extension}
 \description{
 Biomass Community Output Extension
-
-Biomass Community Output Extension
 }
 \examples{
 bio_community <- OutputBiomassCommunity$new(path = tempdir(), Timestep = 10)
@@ -19,66 +17,69 @@ LANDIS-II Output Biomass Community v3 Extension User Guide
 }
 \concept{Biomass Community Output helpers}
 \section{Super class}{
-\code{\link[landisutils:LandisExtension]{landisutils::LandisExtension}} -> \code{OutputBiomassCommunity}
+\code{\link[landisutils:LandisExtension]{LandisExtension}} -> \code{OutputBiomassCommunity}
 }
 \section{Methods}{
 \subsection{Public methods}{
-\itemize{
-\item \href{#method-OutputBiomassCommunity-new}{\code{OutputBiomassCommunity$new()}}
-\item \href{#method-OutputBiomassCommunity-write}{\code{OutputBiomassCommunity$write()}}
-\item \href{#method-OutputBiomassCommunity-clone}{\code{OutputBiomassCommunity$clone()}}
+  \itemize{
+    \item \href{#method-OutputBiomassCommunity-initialize}{\code{OutputBiomassCommunity$new()}}
+    \item \href{#method-OutputBiomassCommunity-write}{\code{OutputBiomassCommunity$write()}}
+    \item \href{#method-OutputBiomassCommunity-clone}{\code{OutputBiomassCommunity$clone()}}
+  }
 }
-}
-\if{html}{\out{
-<details open><summary>Inherited methods</summary>
+\if{html}{\out{<details open><summary>Inherited methods</summary>
 <ul>
-<li><span class="pkg-link" data-pkg="landisutils" data-topic="LandisExtension" data-id="add_file"><a href='../../landisutils/html/LandisExtension.html#method-LandisExtension-add_file'><code>landisutils::LandisExtension$add_file()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="landisutils" data-topic="LandisExtension" data-id="add_file"><a href='../../landisutils/html/LandisExtension.html#method-LandisExtension-add_file'><code>LandisExtension$add_file()</code></a></span></li>
 </ul>
-</details>
-}}
+</details>}}
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-OutputBiomassCommunity-new"></a>}}
-\if{latex}{\out{\hypertarget{method-OutputBiomassCommunity-new}{}}}
-\subsection{Method \code{new()}}{
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{OutputBiomassCommunity$new(path, Timestep = 10L)}\if{html}{\out{</div>}}
+\if{html}{\out{<a id="method-OutputBiomassCommunity-initialize"></a>}}
+\if{latex}{\out{\hypertarget{method-OutputBiomassCommunity-initialize}{}}}
+\subsection{\code{OutputBiomassCommunity$new()}}{
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{OutputBiomassCommunity$new(path, Timestep = 10L)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{path}}{Character. Directory path.}
+      \item{\code{Timestep}}{Integer. Years between community snapshots.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{path}}{Character. Directory path.}
-
-\item{\code{Timestep}}{Integer. Years between community snapshots.}
-}
-\if{html}{\out{</div>}}
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-OutputBiomassCommunity-write"></a>}}
 \if{latex}{\out{\hypertarget{method-OutputBiomassCommunity-write}{}}}
-\subsection{Method \code{write()}}{
-Write extension inputs to disk
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{OutputBiomassCommunity$write()}\if{html}{\out{</div>}}
+\subsection{\code{OutputBiomassCommunity$write()}}{
+  Write extension inputs to disk
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{OutputBiomassCommunity$write()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-OutputBiomassCommunity-clone"></a>}}
 \if{latex}{\out{\hypertarget{method-OutputBiomassCommunity-clone}{}}}
-\subsection{Method \code{clone()}}{
-The objects of this class are cloneable with this method.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{OutputBiomassCommunity$clone(deep = FALSE)}\if{html}{\out{</div>}}
+\subsection{\code{OutputBiomassCommunity$clone()}}{
+  The objects of this class are cloneable with this method.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{OutputBiomassCommunity$clone(deep = FALSE)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{deep}}{Whether to make a deep clone.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{deep}}{Whether to make a deep clone.}
-}
-\if{html}{\out{</div>}}
-}
-}
 }

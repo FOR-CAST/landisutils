@@ -7,103 +7,106 @@
 Keeps track of the input files created for an extension
 }
 \section{Public fields}{
-\if{html}{\out{<div class="r6-fields">}}
-\describe{
-\item{\code{path}}{Character specifying the (directory) path to the extension input files.}
+  \if{html}{\out{<div class="r6-fields">}}
+  \describe{
+    \item{\code{path}}{Character specifying the (directory) path to the extension input files.}
 
-\item{\code{files}}{Character specifying the filenames of the extension input files
+    \item{\code{files}}{Character specifying the filenames of the extension input files
 (relative to \code{path}); the principle extension input file should be listed first.}
-}
-\if{html}{\out{</div>}}
+  }
+  \if{html}{\out{</div>}}
 }
 \section{Active bindings}{
-\if{html}{\out{<div class="r6-active-bindings">}}
-\describe{
-\item{\code{LandisData}}{Character. The extension's \code{LandisData} entry
+  \if{html}{\out{<div class="r6-active-bindings">}}
+  \describe{
+    \item{\code{LandisData}}{Character. The extension's \code{LandisData} entry
 (e.g. \code{"Biomass Succession"}). Read-only; set by each subclass's
 \code{initialize()} via \code{private$.LandisData}.}
 
-\item{\code{scenarioName}}{Character. The name to use when this extension is
+    \item{\code{scenarioName}}{Character. The name to use when this extension is
 referenced in the scenario \code{.txt} file's extension list. Defaults to
 \code{LandisData}; subclasses set \code{private$.scenarioName} only when the
 parser-registered name differs from the file-header name (e.g. Land
 Use Plus). Read-only.}
 
-\item{\code{Timestep}}{Integer.}
+    \item{\code{Timestep}}{Integer.}
 
-\item{\code{type}}{character specifying the extension type
+    \item{\code{type}}{character specifying the extension type
 (must be one of: succession, disturbance, other)}
-}
-\if{html}{\out{</div>}}
+  }
+  \if{html}{\out{</div>}}
 }
 \section{Methods}{
 \subsection{Public methods}{
-\itemize{
-\item \href{#method-LandisExtension-new}{\code{LandisExtension$new()}}
-\item \href{#method-LandisExtension-add_file}{\code{LandisExtension$add_file()}}
-\item \href{#method-LandisExtension-clone}{\code{LandisExtension$clone()}}
-}
+  \itemize{
+    \item \href{#method-LandisExtension-initialize}{\code{LandisExtension$new()}}
+    \item \href{#method-LandisExtension-add_file}{\code{LandisExtension$add_file()}}
+    \item \href{#method-LandisExtension-clone}{\code{LandisExtension$clone()}}
+  }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-LandisExtension-new"></a>}}
-\if{latex}{\out{\hypertarget{method-LandisExtension-new}{}}}
-\subsection{Method \code{new()}}{
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{LandisExtension$new(
+\if{html}{\out{<a id="method-LandisExtension-initialize"></a>}}
+\if{latex}{\out{\hypertarget{method-LandisExtension-initialize}{}}}
+\subsection{\code{LandisExtension$new()}}{
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{LandisExtension$new(
   LandisData = NULL,
   type = NA_character_,
   path = NA_character_,
   Timestep = 1L
-)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{LandisData}}{Character. The extension's \code{LandisData} entry
+)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{LandisData}}{Character. The extension's \code{LandisData} entry
 (e.g. \code{"Biomass Succession"}).}
-
-\item{\code{type}}{Character specifying the extension type
+      \item{\code{type}}{Character specifying the extension type
 (must be one of: succession, disturbance, other)}
+      \item{\code{path}}{Character specifying the (directory) path to the extension input files.}
+      \item{\code{Timestep}}{Integer.}
+    }
+    \if{html}{\out{</div>}}
+  }
+}
 
-\item{\code{path}}{Character specifying the (directory) path to the extension input files.}
-
-\item{\code{Timestep}}{Integer.}
-}
-\if{html}{\out{</div>}}
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-LandisExtension-add_file"></a>}}
 \if{latex}{\out{\hypertarget{method-LandisExtension-add_file}{}}}
-\subsection{Method \code{add_file()}}{
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{LandisExtension$add_file(value)}\if{html}{\out{</div>}}
+\subsection{\code{LandisExtension$add_file()}}{
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{LandisExtension$add_file(value)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{value}}{if specified, the new value to append to \code{files}}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{value}}{if specified, the new value to append to \code{files}}
-}
-\if{html}{\out{</div>}}
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-LandisExtension-clone"></a>}}
 \if{latex}{\out{\hypertarget{method-LandisExtension-clone}{}}}
-\subsection{Method \code{clone()}}{
-The objects of this class are cloneable with this method.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{LandisExtension$clone(deep = FALSE)}\if{html}{\out{</div>}}
+\subsection{\code{LandisExtension$clone()}}{
+  The objects of this class are cloneable with this method.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{LandisExtension$clone(deep = FALSE)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{deep}}{Whether to make a deep clone.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{deep}}{Whether to make a deep clone.}
-}
-\if{html}{\out{</div>}}
-}
-}
 }

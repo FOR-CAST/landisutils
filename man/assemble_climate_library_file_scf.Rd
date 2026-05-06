@@ -73,11 +73,11 @@ An assessment of differences in gridded precipitation datasets in complex terrai
 \code{\link[=assemble_climate_library_file]{assemble_climate_library_file()}}, \code{\link[=get_clim_daily]{get_clim_daily()}},
 \code{\link[=writeClimateData]{writeClimateData()}}
 
-Other Social Climate Fire helpers: 
+Other Social Climate Fire helpers:
 \code{\link{SocialClimateFire}},
-\code{\link{insertDeadWoodTable}()},
-\code{\link{insertLadderFuelSpeciesList}()},
-\code{\link{prepSuppression_CSV_File}()},
-\code{\link{prepTopographyFile}()}
+\code{\link[=insertDeadWoodTable]{insertDeadWoodTable()}},
+\code{\link[=insertLadderFuelSpeciesList]{insertLadderFuelSpeciesList()}},
+\code{\link[=prepSuppression_CSV_File]{prepSuppression_CSV_File()}},
+\code{\link[=prepTopographyFile]{prepTopographyFile()}}
 }
 \concept{Social Climate Fire helpers}

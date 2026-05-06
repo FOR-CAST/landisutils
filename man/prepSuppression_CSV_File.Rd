@@ -21,11 +21,11 @@ created as a side effect of the function.
 Prepare \code{Suppression_CSV_File} for Social-Climate-Fire extension
 }
 \seealso{
-Other Social Climate Fire helpers: 
+Other Social Climate Fire helpers:
 \code{\link{SocialClimateFire}},
-\code{\link{assemble_climate_library_file_scf}()},
-\code{\link{insertDeadWoodTable}()},
-\code{\link{insertLadderFuelSpeciesList}()},
-\code{\link{prepTopographyFile}()}
+\code{\link[=assemble_climate_library_file_scf]{assemble_climate_library_file_scf()}},
+\code{\link[=insertDeadWoodTable]{insertDeadWoodTable()}},
+\code{\link[=insertLadderFuelSpeciesList]{insertLadderFuelSpeciesList()}},
+\code{\link[=prepTopographyFile]{prepTopographyFile()}}
 }
 \concept{Social Climate Fire helpers}

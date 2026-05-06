@@ -4,11 +4,6 @@
 \alias{OutputBiomassPnET}
 \title{PnET Biomass Output Extension}
 \description{
-PnET Biomass Output Extension
-
-PnET Biomass Output Extension
-}
-\details{
 Companion output extension to \link{PnETSuccession}; both share the same user
 guide. §11 of the v6.0 guide documents the \verb{LandisData "Output-PnET"}
 input file format and the supported output keywords (e.g. \code{Biomass},
@@ -24,89 +19,90 @@ covers the Output-PnET input file)
 \link{PnETSuccession} (this extension's required succession backend; output
 fields here consume PnET-specific cohort state).
 
-Other PnET Output helpers: 
-\code{\link{defaultPnETOutputFiles}()}
+Other PnET Output helpers:
+\code{\link[=defaultPnETOutputFiles]{defaultPnETOutputFiles()}}
 }
 \concept{PnET Output helpers}
 \section{Super class}{
-\code{\link[landisutils:LandisExtension]{landisutils::LandisExtension}} -> \code{OutputBiomassPnET}
+\code{\link[landisutils:LandisExtension]{LandisExtension}} -> \code{OutputBiomassPnET}
 }
 \section{Active bindings}{
-\if{html}{\out{<div class="r6-active-bindings">}}
-\describe{
-\item{\code{Species}}{Character vector of species codes, or \code{"all"} / \code{"none"}.}
+  \if{html}{\out{<div class="r6-active-bindings">}}
+  \describe{
+    \item{\code{Species}}{Character vector of species codes, or \code{"all"} / \code{"none"}.}
 
-\item{\code{Outputs}}{Named list mapping LANDIS-II output keywords to file
+    \item{\code{Outputs}}{Named list mapping LANDIS-II output keywords to file
 patterns.}
-}
-\if{html}{\out{</div>}}
+  }
+  \if{html}{\out{</div>}}
 }
 \section{Methods}{
 \subsection{Public methods}{
-\itemize{
-\item \href{#method-OutputBiomassPnET-new}{\code{OutputBiomassPnET$new()}}
-\item \href{#method-OutputBiomassPnET-write}{\code{OutputBiomassPnET$write()}}
-\item \href{#method-OutputBiomassPnET-clone}{\code{OutputBiomassPnET$clone()}}
+  \itemize{
+    \item \href{#method-OutputBiomassPnET-initialize}{\code{OutputBiomassPnET$new()}}
+    \item \href{#method-OutputBiomassPnET-write}{\code{OutputBiomassPnET$write()}}
+    \item \href{#method-OutputBiomassPnET-clone}{\code{OutputBiomassPnET$clone()}}
+  }
 }
-}
-\if{html}{\out{
-<details open><summary>Inherited methods</summary>
+\if{html}{\out{<details open><summary>Inherited methods</summary>
 <ul>
-<li><span class="pkg-link" data-pkg="landisutils" data-topic="LandisExtension" data-id="add_file"><a href='../../landisutils/html/LandisExtension.html#method-LandisExtension-add_file'><code>landisutils::LandisExtension$add_file()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="landisutils" data-topic="LandisExtension" data-id="add_file"><a href='../../landisutils/html/LandisExtension.html#method-LandisExtension-add_file'><code>LandisExtension$add_file()</code></a></span></li>
 </ul>
-</details>
-}}
+</details>}}
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-OutputBiomassPnET-new"></a>}}
-\if{latex}{\out{\hypertarget{method-OutputBiomassPnET-new}{}}}
-\subsection{Method \code{new()}}{
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{OutputBiomassPnET$new(path, Timestep = NULL, Species = "all", Outputs = NULL)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{path}}{Character. Directory path.}
-
-\item{\code{Timestep}}{Integer. Years between output snapshots.}
-
-\item{\code{Species}}{Character vector of species codes, or \code{"all"} / \code{"none"}.}
-
-\item{\code{Outputs}}{Named list mapping LANDIS-II output keywords (any of
+\if{html}{\out{<a id="method-OutputBiomassPnET-initialize"></a>}}
+\if{latex}{\out{\hypertarget{method-OutputBiomassPnET-initialize}{}}}
+\subsection{\code{OutputBiomassPnET$new()}}{
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{OutputBiomassPnET$new(path, Timestep = NULL, Species = "all", Outputs = NULL)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{path}}{Character. Directory path.}
+      \item{\code{Timestep}}{Integer. Years between output snapshots.}
+      \item{\code{Species}}{Character vector of species codes, or \code{"all"} / \code{"none"}.}
+      \item{\code{Outputs}}{Named list mapping LANDIS-II output keywords (any of
 \code{Biomass}, \code{BelowgroundBiomass}, \code{WoodBiomass}, \code{FoliageBiomass}, \code{RootBiomass}, \code{WoodySenescence}, \code{FoliageSenescence}, \code{AgeDistribution}, \code{CohortsPerSpecies}, \code{CohortBalance}, \code{LeafAreaIndex}, \code{MonthlyAvgLAI}, \code{Water}, \code{MonthlyAvgWater}, \code{MonthlyEvap}, \code{MonthlyInterception}, \code{MonthlyActualTrans}, \code{MonthlyPotentialTrans}, \code{MonthlyPotentialEvap}, \code{MonthlyLeakage}, \code{MonthlyRunoff}, \code{MonthlyAET}, \code{AET}, \code{AETAvg}, \code{PET}, \code{AnnualPsn}, \code{MonthlyNetPsn}, \code{MonthlyGrossPsn}, \code{MonthlyFolResp}, \code{MonthlyMaintResp}, \code{NSC}, \code{WoodyDebris}, \code{Litter}, \code{SubCanopyPAR}, \code{Albedo}, \code{MonthlyActiveLayerDepth}, \code{MonthlyFrostDepth}, \code{MonthlyAvgSnowPack}, \code{EstablishmentTable}, \code{EstablishmentProbability}, \code{Establishment}, \code{MortalityTable}, \code{SiteMossDepth}) to character file
 patterns. Each pattern may contain \code{{timestep}}, \code{{species}},
 \code{{month}}, or \code{{year}} placeholders depending on the keyword.
 Use \code{defaultPnETOutputFiles()} for a sensible default set.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
-\if{html}{\out{</div>}}
-}
-}
+
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-OutputBiomassPnET-write"></a>}}
 \if{latex}{\out{\hypertarget{method-OutputBiomassPnET-write}{}}}
-\subsection{Method \code{write()}}{
-Write extension inputs to disk
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{OutputBiomassPnET$write()}\if{html}{\out{</div>}}
+\subsection{\code{OutputBiomassPnET$write()}}{
+  Write extension inputs to disk
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{OutputBiomassPnET$write()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-OutputBiomassPnET-clone"></a>}}
 \if{latex}{\out{\hypertarget{method-OutputBiomassPnET-clone}{}}}
-\subsection{Method \code{clone()}}{
-The objects of this class are cloneable with this method.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{OutputBiomassPnET$clone(deep = FALSE)}\if{html}{\out{</div>}}
+\subsection{\code{OutputBiomassPnET$clone()}}{
+  The objects of this class are cloneable with this method.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{OutputBiomassPnET$clone(deep = FALSE)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{deep}}{Whether to make a deep clone.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{deep}}{Whether to make a deep clone.}
-}
-\if{html}{\out{</div>}}
-}
-}
 }

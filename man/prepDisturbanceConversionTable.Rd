@@ -13,12 +13,12 @@ data.frame for use with \code{\link[=insertDisturbanceConversionTable]{insertDis
 Create Dynamic Fire Extension's Disturbance Conversion Table
 }
 \seealso{
-Other Dynamic Fuels helpers: 
+Other Dynamic Fuels helpers:
 \code{\link{DynamicFuels}},
-\code{\link{insertDisturbanceConversionTable}()},
-\code{\link{insertEcoregionTable}()},
-\code{\link{insertFuelTypesTable}()},
-\code{\link{insertSpeciesFuelCoefficients}()},
-\code{\link{prepFuelTypesTable}()}
+\code{\link[=insertDisturbanceConversionTable]{insertDisturbanceConversionTable()}},
+\code{\link[=insertEcoregionTable]{insertEcoregionTable()}},
+\code{\link[=insertFuelTypesTable]{insertFuelTypesTable()}},
+\code{\link[=insertSpeciesFuelCoefficients]{insertSpeciesFuelCoefficients()}},
+\code{\link[=prepFuelTypesTable]{prepFuelTypesTable()}}
 }
 \concept{Dynamic Fuels helpers}

@@ -16,7 +16,7 @@ Character string(s) to write to the suitable LANDIS-II input file.
 Specify the \code{SpeciesSusceptibility} block for the Root Rot extension
 }
 \seealso{
-Other Root Rot helpers: 
+Other Root Rot helpers:
 \code{\link{RootRot}}
 }
 \concept{Root Rot helpers}

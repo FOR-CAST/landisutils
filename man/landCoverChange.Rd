@@ -24,12 +24,12 @@ One \code{landCoverChange()} describes what happens to existing tree cohorts
 on a site that transitions to (or remains in) a particular land use.
 }
 \seealso{
-Other Land Use Plus helpers: 
+Other Land Use Plus helpers:
 \code{\link{LandUsePlus}},
-\code{\link{cohortSelector}()},
-\code{\link{insertCohortSelector}()},
-\code{\link{insertLandCoverChange}()},
-\code{\link{insertLandUseType}()},
-\code{\link{landUseType}()}
+\code{\link[=cohortSelector]{cohortSelector()}},
+\code{\link[=insertCohortSelector]{insertCohortSelector()}},
+\code{\link[=insertLandCoverChange]{insertLandCoverChange()}},
+\code{\link[=insertLandUseType]{insertLandUseType()}},
+\code{\link[=landUseType]{landUseType()}}
 }
 \concept{Land Use Plus helpers}

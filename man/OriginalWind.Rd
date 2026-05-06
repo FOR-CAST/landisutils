@@ -5,8 +5,6 @@
 \title{Original Wind Extension}
 \description{
 Original Wind Extension
-
-Original Wind Extension
 }
 \references{
 LANDIS-II Original Wind v4.1 Extension User Guide
@@ -16,55 +14,54 @@ LANDIS-II Original Wind v4.1 Extension User Guide
 Helpers that prepare inputs for this extension:
 \code{\link[=prepWindEventParametersTable]{prepWindEventParametersTable()}}.
 
-Other Original Wind helpers: 
-\code{\link{defaultWindSeverities}()},
-\code{\link{insertWindEventParametersTable}()},
-\code{\link{insertWindSeverities}()},
-\code{\link{prepWindEventParametersTable}()}
+Other Original Wind helpers:
+\code{\link[=defaultWindSeverities]{defaultWindSeverities()}},
+\code{\link[=insertWindEventParametersTable]{insertWindEventParametersTable()}},
+\code{\link[=insertWindSeverities]{insertWindSeverities()}},
+\code{\link[=prepWindEventParametersTable]{prepWindEventParametersTable()}}
 }
 \concept{Original Wind helpers}
 \section{Super class}{
-\code{\link[landisutils:LandisExtension]{landisutils::LandisExtension}} -> \code{OriginalWind}
+\code{\link[landisutils:LandisExtension]{LandisExtension}} -> \code{OriginalWind}
 }
 \section{Active bindings}{
-\if{html}{\out{<div class="r6-active-bindings">}}
-\describe{
-\item{\code{WindEventParametersTable}}{\code{data.frame} with columns \code{Ecoregion},
+  \if{html}{\out{<div class="r6-active-bindings">}}
+  \describe{
+    \item{\code{WindEventParametersTable}}{\code{data.frame} with columns \code{Ecoregion},
 \code{MaxSize}, \code{MeanSize}, \code{MinSize}, \code{WindRotationPeriod}.}
 
-\item{\code{WindSeverities}}{\code{data.frame} with columns \code{Severity}, \code{LowerAge},
+    \item{\code{WindSeverities}}{\code{data.frame} with columns \code{Severity}, \code{LowerAge},
 \code{UpperAge}, \code{MortalityProbability}.}
 
-\item{\code{MapNames}}{Character. File pattern for writing outputs to disk;
+    \item{\code{MapNames}}{Character. File pattern for writing outputs to disk;
 must contain \code{{timestep}}.}
 
-\item{\code{SummaryLogFile}}{Character. Relative file path.}
+    \item{\code{SummaryLogFile}}{Character. Relative file path.}
 
-\item{\code{EventLogFile}}{Character. Relative file path.}
-}
-\if{html}{\out{</div>}}
+    \item{\code{EventLogFile}}{Character. Relative file path.}
+  }
+  \if{html}{\out{</div>}}
 }
 \section{Methods}{
 \subsection{Public methods}{
-\itemize{
-\item \href{#method-OriginalWind-new}{\code{OriginalWind$new()}}
-\item \href{#method-OriginalWind-write}{\code{OriginalWind$write()}}
-\item \href{#method-OriginalWind-clone}{\code{OriginalWind$clone()}}
+  \itemize{
+    \item \href{#method-OriginalWind-initialize}{\code{OriginalWind$new()}}
+    \item \href{#method-OriginalWind-write}{\code{OriginalWind$write()}}
+    \item \href{#method-OriginalWind-clone}{\code{OriginalWind$clone()}}
+  }
 }
-}
-\if{html}{\out{
-<details open><summary>Inherited methods</summary>
+\if{html}{\out{<details open><summary>Inherited methods</summary>
 <ul>
-<li><span class="pkg-link" data-pkg="landisutils" data-topic="LandisExtension" data-id="add_file"><a href='../../landisutils/html/LandisExtension.html#method-LandisExtension-add_file'><code>landisutils::LandisExtension$add_file()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="landisutils" data-topic="LandisExtension" data-id="add_file"><a href='../../landisutils/html/LandisExtension.html#method-LandisExtension-add_file'><code>LandisExtension$add_file()</code></a></span></li>
 </ul>
-</details>
-}}
+</details>}}
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-OriginalWind-new"></a>}}
-\if{latex}{\out{\hypertarget{method-OriginalWind-new}{}}}
-\subsection{Method \code{new()}}{
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{OriginalWind$new(
+\if{html}{\out{<a id="method-OriginalWind-initialize"></a>}}
+\if{latex}{\out{\hypertarget{method-OriginalWind-initialize}{}}}
+\subsection{\code{OriginalWind$new()}}{
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{OriginalWind$new(
   path,
   Timestep = NULL,
   WindEventParametersTable = NULL,
@@ -72,59 +69,58 @@ must contain \code{{timestep}}.}
   MapNames = NULL,
   SummaryLogFile = "wind/summary-log.csv",
   EventLogFile = "wind/event-log.csv"
-)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{path}}{Character. Directory path.}
-
-\item{\code{Timestep}}{Integer.}
-
-\item{\code{WindEventParametersTable}}{\code{data.frame} with columns \code{Ecoregion},
+)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{path}}{Character. Directory path.}
+      \item{\code{Timestep}}{Integer.}
+      \item{\code{WindEventParametersTable}}{\code{data.frame} with columns \code{Ecoregion},
 \code{MaxSize}, \code{MeanSize}, \code{MinSize}, \code{WindRotationPeriod}
 (see \code{\link[=prepWindEventParametersTable]{prepWindEventParametersTable()}}).}
-
-\item{\code{WindSeverities}}{\code{data.frame} with columns \code{Severity}, \code{LowerAge},
+      \item{\code{WindSeverities}}{\code{data.frame} with columns \code{Severity}, \code{LowerAge},
 \code{UpperAge}, \code{MortalityProbability}; rows must be ordered by decreasing
 \code{Severity}. Defaults to \code{\link[=defaultWindSeverities]{defaultWindSeverities()}}.}
-
-\item{\code{MapNames}}{Character. File pattern for writing outputs to disk;
+      \item{\code{MapNames}}{Character. File pattern for writing outputs to disk;
 must contain \code{{timestep}}.}
+      \item{\code{SummaryLogFile}}{Character. Relative file path.}
+      \item{\code{EventLogFile}}{Character. Relative file path.}
+    }
+    \if{html}{\out{</div>}}
+  }
+}
 
-\item{\code{SummaryLogFile}}{Character. Relative file path.}
-
-\item{\code{EventLogFile}}{Character. Relative file path.}
-}
-\if{html}{\out{</div>}}
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-OriginalWind-write"></a>}}
 \if{latex}{\out{\hypertarget{method-OriginalWind-write}{}}}
-\subsection{Method \code{write()}}{
-Write extension inputs to disk
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{OriginalWind$write()}\if{html}{\out{</div>}}
+\subsection{\code{OriginalWind$write()}}{
+  Write extension inputs to disk
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{OriginalWind$write()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-OriginalWind-clone"></a>}}
 \if{latex}{\out{\hypertarget{method-OriginalWind-clone}{}}}
-\subsection{Method \code{clone()}}{
-The objects of this class are cloneable with this method.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{OriginalWind$clone(deep = FALSE)}\if{html}{\out{</div>}}
+\subsection{\code{OriginalWind$clone()}}{
+  The objects of this class are cloneable with this method.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{OriginalWind$clone(deep = FALSE)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{deep}}{Whether to make a deep clone.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{deep}}{Whether to make a deep clone.}
-}
-\if{html}{\out{</div>}}
-}
-}
 }

@@ -74,12 +74,12 @@ vary widely between pathogens; supply them verbatim via \code{extraClimateLines}
 rather than modelling each one as an active binding.
 }
 \seealso{
-Other EDA helpers: 
+Other EDA helpers:
 \code{\link{EDA}},
-\code{\link{insertEDADisturbanceModifiers}()},
-\code{\link{insertEDAIgnoredSpecies}()},
-\code{\link{insertEDAInputFiles}()},
-\code{\link{insertEDASpeciesParameters}()},
-\code{\link{writeEDAAgentFile}()}
+\code{\link[=insertEDADisturbanceModifiers]{insertEDADisturbanceModifiers()}},
+\code{\link[=insertEDAIgnoredSpecies]{insertEDAIgnoredSpecies()}},
+\code{\link[=insertEDAInputFiles]{insertEDAInputFiles()}},
+\code{\link[=insertEDASpeciesParameters]{insertEDASpeciesParameters()}},
+\code{\link[=writeEDAAgentFile]{writeEDAAgentFile()}}
 }
 \concept{EDA helpers}

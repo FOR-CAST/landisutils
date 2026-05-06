@@ -18,10 +18,10 @@ dropped.}
 Prepare Original Wind \code{WindEventParametersTable}
 }
 \seealso{
-Other Original Wind helpers: 
+Other Original Wind helpers:
 \code{\link{OriginalWind}},
-\code{\link{defaultWindSeverities}()},
-\code{\link{insertWindEventParametersTable}()},
-\code{\link{insertWindSeverities}()}
+\code{\link[=defaultWindSeverities]{defaultWindSeverities()}},
+\code{\link[=insertWindEventParametersTable]{insertWindEventParametersTable()}},
+\code{\link[=insertWindSeverities]{insertWindSeverities()}}
 }
 \concept{Original Wind helpers}

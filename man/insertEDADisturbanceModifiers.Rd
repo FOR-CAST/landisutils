@@ -17,13 +17,13 @@ Character string(s) to write to the suitable LANDIS-II input file.
 Specify the optional \code{DisturbanceModifiers} table for an EDA agent
 }
 \seealso{
-Other EDA helpers: 
+Other EDA helpers:
 \code{\link{EDA}},
-\code{\link{edaAgent}()},
-\code{\link{insertEDAIgnoredSpecies}()},
-\code{\link{insertEDAInputFiles}()},
-\code{\link{insertEDASpeciesParameters}()},
-\code{\link{writeEDAAgentFile}()}
+\code{\link[=edaAgent]{edaAgent()}},
+\code{\link[=insertEDAIgnoredSpecies]{insertEDAIgnoredSpecies()}},
+\code{\link[=insertEDAInputFiles]{insertEDAInputFiles()}},
+\code{\link[=insertEDASpeciesParameters]{insertEDASpeciesParameters()}},
+\code{\link[=writeEDAAgentFile]{writeEDAAgentFile()}}
 }
 \concept{EDA helpers}
 \keyword{internal}

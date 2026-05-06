@@ -28,8 +28,7 @@ testthat::test_that("BioSIM daily-climate pipeline produces wide LANDIS-II table
   testthat::skip_if_not_installed("sf")
   testthat::skip_if_offline()
 
-  tmp_pth <- withr::local_tempdir("test_climate_biosim_")
-  withr::local_options(landisutils.cache.path = tmp_pth)
+  tmp_pth <- local_climate_test_cache("test_climate_biosim_")
 
   ecoregionPolys <- landisutils::test_ecoregionPolys
   clim_years <- 2018L
@@ -57,8 +56,7 @@ testthat::test_that("assemble_climate_library_file_scf() produces SCF-shaped Var
   testthat::skip_if_not_installed("sf")
   testthat::skip_if_offline()
 
-  tmp_pth <- withr::local_tempdir("test_climate_biosim_scf_")
-  withr::local_options(landisutils.cache.path = tmp_pth)
+  tmp_pth <- local_climate_test_cache("test_climate_biosim_scf_")
 
   ecoregionPolys <- landisutils::test_ecoregionPolys
   clim_years <- 2018L
@@ -111,8 +109,7 @@ testthat::test_that("BioSIM monthly-climate pipeline produces wide LANDIS-II tab
   testthat::skip_if_not_installed("sf")
   testthat::skip_if_offline()
 
-  tmp_pth <- withr::local_tempdir("test_climate_biosim_monthly_")
-  withr::local_options(landisutils.cache.path = tmp_pth)
+  tmp_pth <- local_climate_test_cache("test_climate_biosim_monthly_")
 
   ecoregionPolys <- landisutils::test_ecoregionPolys
   clim_years <- 2018L
@@ -153,8 +150,7 @@ testthat::test_that("climr monthly-climate pipeline produces wide LANDIS-II tabl
   testthat::skip_if_not_installed("withr")
   testthat::skip_if_offline()
 
-  tmp_pth <- withr::local_tempdir("test_climate_climr_")
-  withr::local_options(landisutils.cache.path = tmp_pth)
+  tmp_pth <- local_climate_test_cache("test_climate_climr_")
 
   ecoregionPolys <- landisutils::test_ecoregionPolys
   clim_years <- 2018L
@@ -185,8 +181,7 @@ testthat::test_that("BioSIM daily future-scenario pipeline namespaces cache and 
   testthat::skip_if_offline()
   testthat::skip_if_not(exists("test_ecoregionPolys", envir = asNamespace("landisutils")))
 
-  tmp_pth <- withr::local_tempdir("test_climate_biosim_future_")
-  withr::local_options(landisutils.cache.path = tmp_pth)
+  tmp_pth <- local_climate_test_cache("test_climate_biosim_future_")
 
   ecoregionPolys <- landisutils::test_ecoregionPolys
   clim_years <- 2041L
@@ -319,8 +314,7 @@ testthat::test_that("climr projection-mode pipeline produces wide LANDIS-II tabl
   testthat::skip_if_not_installed("withr")
   testthat::skip_if_offline()
 
-  tmp_pth <- withr::local_tempdir("test_climate_climr_future_")
-  withr::local_options(landisutils.cache.path = tmp_pth)
+  tmp_pth <- local_climate_test_cache("test_climate_climr_future_")
 
   ecoregionPolys <- landisutils::test_ecoregionPolys
   clim_years <- 2041L
@@ -369,6 +363,33 @@ testthat::test_that("climr wrapper rejects wind variables with a clear error", {
   )
 })
 
+testthat::test_that("climr wrapper rejects shortwave-radiation (srad) with a clear error", {
+  testthat::skip_if_not_installed("climr")
+
+  ## climr exposes Eref (Hargreaves reference evapotranspiration), not Rad;
+  ## requesting `srad` must surface immediately rather than failing later
+  ## inside climr::downscale() with a missing-column error.
+  testthat::expect_error(
+    prep_monthly_weather_climr(
+      vars = "srad",
+      years = 2018L,
+      studyArea = landisutils::test_ecoregionPolys,
+      id = "PolyID"
+    ),
+    "climr does not provide wind or shortwave-radiation"
+  )
+
+  testthat::expect_error(
+    prep_monthly_weather_climr(
+      vars = c("prcp", "srad", "ws"),
+      years = 2018L,
+      studyArea = landisutils::test_ecoregionPolys,
+      id = "PolyID"
+    ),
+    "srad.*ws|ws.*srad"
+  )
+})
+
 testthat::test_that("Climate inputs are properly created", {
   skip("incomplete") ## legacy AppEEARS workflow; not exercised by the BioSIM refactor
 
@@ -376,7 +397,7 @@ testthat::test_that("Climate inputs are properly created", {
   testthat::skip_if_not_installed("withr")
   testthat::skip_if_not_installed("zonal")
 
-  tmp_pth <- withr::local_tempdir("test_climate_")
+  tmp_pth <- local_climate_test_cache("test_climate_")
 
   ## ecoregion polygons
   ecoregionPolys <- landisutils::test_ecoregionPolys

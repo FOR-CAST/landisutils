@@ -5,8 +5,6 @@
 \title{Dynamic Fire System Extension}
 \description{
 Dynamic Fire System Extension
-
-Dynamic Fire System Extension
 }
 \examples{
 ## see vignette for usage examples
@@ -26,87 +24,86 @@ Helpers that prepare inputs for this extension:
 \code{\link[=prepInitialWeatherDatabase]{prepInitialWeatherDatabase()}},
 \code{\link[=prepDynamicWeatherTable]{prepDynamicWeatherTable()}}.
 
-Other Dynamic Fire helpers: 
-\code{\link{defaultFuelTypeTable}()},
-\code{\link{insertBuildUpIndex}()},
-\code{\link{insertFireSizesTable}()},
-\code{\link{insertFuelTypeTable}()},
-\code{\link{insertGroundSlopeFile}()},
-\code{\link{insertSeasonTable}()},
-\code{\link{insertUphillSlopeAzimuthMap}()},
-\code{\link{prepDynamicEcoregionTable}()},
-\code{\link{prepDynamicWeatherTable}()},
-\code{\link{prepFireSizesTable}()},
-\code{\link{prepInitialWeatherDatabase}()},
-\code{\link{prepTopographyFile}()}
+Other Dynamic Fire helpers:
+\code{\link[=defaultFuelTypeTable]{defaultFuelTypeTable()}},
+\code{\link[=insertBuildUpIndex]{insertBuildUpIndex()}},
+\code{\link[=insertFireSizesTable]{insertFireSizesTable()}},
+\code{\link[=insertFuelTypeTable]{insertFuelTypeTable()}},
+\code{\link[=insertGroundSlopeFile]{insertGroundSlopeFile()}},
+\code{\link[=insertSeasonTable]{insertSeasonTable()}},
+\code{\link[=insertUphillSlopeAzimuthMap]{insertUphillSlopeAzimuthMap()}},
+\code{\link[=prepDynamicEcoregionTable]{prepDynamicEcoregionTable()}},
+\code{\link[=prepDynamicWeatherTable]{prepDynamicWeatherTable()}},
+\code{\link[=prepFireSizesTable]{prepFireSizesTable()}},
+\code{\link[=prepInitialWeatherDatabase]{prepInitialWeatherDatabase()}},
+\code{\link[=prepTopographyFile]{prepTopographyFile()}}
 }
 \concept{Dynamic Fire helpers}
 \section{Super class}{
-\code{\link[landisutils:LandisExtension]{landisutils::LandisExtension}} -> \code{DynamicFire}
+\code{\link[landisutils:LandisExtension]{LandisExtension}} -> \code{DynamicFire}
 }
 \section{Active bindings}{
-\if{html}{\out{<div class="r6-active-bindings">}}
-\describe{
-\item{\code{Species_CSV_File}}{Character. Relative file path.}
+  \if{html}{\out{<div class="r6-active-bindings">}}
+  \describe{
+    \item{\code{Species_CSV_File}}{Character. Relative file path.}
 
-\item{\code{EventSizeType}}{Character. One of "size_based" or "duration_based".}
+    \item{\code{EventSizeType}}{Character. One of "size_based" or "duration_based".}
 
-\item{\code{BuildUpIndex}}{Logical, or character indicating "yes" or "no".}
+    \item{\code{BuildUpIndex}}{Logical, or character indicating "yes" or "no".}
 
-\item{\code{WeatherRandomizer}}{(Optional) Integer \verb{[0,4]} controlling the strength of the
+    \item{\code{WeatherRandomizer}}{(Optional) Integer \verb{[0,4]} controlling the strength of the
 linkage between fire size/duration distribution and weather distribution.}
 
-\item{\code{FireSizesTable}}{\code{data.frame}.}
+    \item{\code{FireSizesTable}}{\code{data.frame}.}
 
-\item{\code{InitialFireEcoregionsMap}}{Character. Relative file path.}
+    \item{\code{InitialFireEcoregionsMap}}{Character. Relative file path.}
 
-\item{\code{DynamicEcoregionTable}}{\code{data.frame}.}
+    \item{\code{DynamicEcoregionTable}}{\code{data.frame}.}
 
-\item{\code{GroundSlopeFile}}{Character. Relative file path.}
+    \item{\code{GroundSlopeFile}}{Character. Relative file path.}
 
-\item{\code{UphillSlopeAzimuthMap}}{Character. Relative file path.}
+    \item{\code{UphillSlopeAzimuthMap}}{Character. Relative file path.}
 
-\item{\code{SeasonTable}}{\code{data.frame}.}
+    \item{\code{SeasonTable}}{\code{data.frame}.}
 
-\item{\code{InitialWeatherDatabase}}{Character. Relative file path.}
+    \item{\code{InitialWeatherDatabase}}{Character. Relative file path.}
 
-\item{\code{DynamicWeatherTable}}{\code{data.frame}.}
+    \item{\code{DynamicWeatherTable}}{\code{data.frame}.}
 
-\item{\code{FuelTypeTable}}{\code{data.frame}.}
+    \item{\code{FuelTypeTable}}{\code{data.frame}.}
 
-\item{\code{SeverityCalibrationFactor}}{Numeric.}
+    \item{\code{SeverityCalibrationFactor}}{Numeric.}
 
-\item{\code{FireDamageTable}}{\code{data.frame}.}
+    \item{\code{FireDamageTable}}{\code{data.frame}.}
 
-\item{\code{MapNames}}{Character. File pattern for writing outputs to disk.}
+    \item{\code{MapNames}}{Character. File pattern for writing outputs to disk.}
 
-\item{\code{LogFile}}{Character. Relative file path.}
+    \item{\code{LogFile}}{Character. Relative file path.}
 
-\item{\code{SummaryLogFile}}{Character. Relative file path.}
-}
-\if{html}{\out{</div>}}
+    \item{\code{SummaryLogFile}}{Character. Relative file path.}
+  }
+  \if{html}{\out{</div>}}
 }
 \section{Methods}{
 \subsection{Public methods}{
-\itemize{
-\item \href{#method-DynamicFire-new}{\code{DynamicFire$new()}}
-\item \href{#method-DynamicFire-write}{\code{DynamicFire$write()}}
-\item \href{#method-DynamicFire-clone}{\code{DynamicFire$clone()}}
+  \itemize{
+    \item \href{#method-DynamicFire-initialize}{\code{DynamicFire$new()}}
+    \item \href{#method-DynamicFire-write}{\code{DynamicFire$write()}}
+    \item \href{#method-DynamicFire-clone}{\code{DynamicFire$clone()}}
+  }
 }
-}
-\if{html}{\out{
-<details open><summary>Inherited methods</summary>
+\if{html}{\out{<details open><summary>Inherited methods</summary>
 <ul>
-<li><span class="pkg-link" data-pkg="landisutils" data-topic="LandisExtension" data-id="add_file"><a href='../../landisutils/html/LandisExtension.html#method-LandisExtension-add_file'><code>landisutils::LandisExtension$add_file()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="landisutils" data-topic="LandisExtension" data-id="add_file"><a href='../../landisutils/html/LandisExtension.html#method-LandisExtension-add_file'><code>LandisExtension$add_file()</code></a></span></li>
 </ul>
-</details>
-}}
+</details>}}
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-DynamicFire-new"></a>}}
-\if{latex}{\out{\hypertarget{method-DynamicFire-new}{}}}
-\subsection{Method \code{new()}}{
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{DynamicFire$new(
+\if{html}{\out{<a id="method-DynamicFire-initialize"></a>}}
+\if{latex}{\out{\hypertarget{method-DynamicFire-initialize}{}}}
+\subsection{\code{DynamicFire$new()}}{
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{DynamicFire$new(
   path,
   Timestep = 10,
   Species_CSV_File = NULL,
@@ -127,82 +124,68 @@ linkage between fire size/duration distribution and weather distribution.}
   MapNames = NULL,
   LogFile = "fire/log.csv",
   SummaryLogFile = "fire/summary-log.csv"
-)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{path}}{Character. Directory path.}
-
-\item{\code{Timestep}}{Integer.}
-
-\item{\code{Species_CSV_File}}{Character. Relative file path to the
+)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{path}}{Character. Directory path.}
+      \item{\code{Timestep}}{Integer.}
+      \item{\code{Species_CSV_File}}{Character. Relative file path to the
 per-species fire-coefficient CSV (must precede \code{EventSizeType} in
 the emitted config).}
-
-\item{\code{EventSizeType}}{Character. One of "size_based" or "duration_based".}
-
-\item{\code{BuildUpIndex}}{Logical, or character indicating "yes" or "no".}
-
-\item{\code{WeatherRandomizer}}{Integer \verb{[0, 4]}.}
-
-\item{\code{FireSizesTable}}{\code{data.frame}.}
-
-\item{\code{InitialFireEcoregionsMap}}{Character. Relative file path.}
-
-\item{\code{DynamicEcoregionTable}}{\code{data.frame}.}
-
-\item{\code{GroundSlopeFile}}{Character. Relative file path.}
-
-\item{\code{UphillSlopeAzimuthMap}}{Character. Relative file path.}
-
-\item{\code{SeasonTable}}{\code{data.frame}.}
-
-\item{\code{InitialWeatherDatabase}}{Character. Relative file path.}
-
-\item{\code{DynamicWeatherTable}}{\code{data.frame}.}
-
-\item{\code{FuelTypeTable}}{\code{data.frame}.}
-
-\item{\code{SeverityCalibrationFactor}}{\code{data.frame}.}
-
-\item{\code{FireDamageTable}}{\code{data.frame}.}
-
-\item{\code{MapNames}}{Character. File pattern for writing outputs to disk.}
-
-\item{\code{LogFile}}{Character. Relative file path.}
-
-\item{\code{SummaryLogFile}}{Character. Relative file path.}
+      \item{\code{EventSizeType}}{Character. One of "size_based" or "duration_based".}
+      \item{\code{BuildUpIndex}}{Logical, or character indicating "yes" or "no".}
+      \item{\code{WeatherRandomizer}}{Integer \verb{[0, 4]}.}
+      \item{\code{FireSizesTable}}{\code{data.frame}.}
+      \item{\code{InitialFireEcoregionsMap}}{Character. Relative file path.}
+      \item{\code{DynamicEcoregionTable}}{\code{data.frame}.}
+      \item{\code{GroundSlopeFile}}{Character. Relative file path.}
+      \item{\code{UphillSlopeAzimuthMap}}{Character. Relative file path.}
+      \item{\code{SeasonTable}}{\code{data.frame}.}
+      \item{\code{InitialWeatherDatabase}}{Character. Relative file path.}
+      \item{\code{DynamicWeatherTable}}{\code{data.frame}.}
+      \item{\code{FuelTypeTable}}{\code{data.frame}.}
+      \item{\code{SeverityCalibrationFactor}}{\code{data.frame}.}
+      \item{\code{FireDamageTable}}{\code{data.frame}.}
+      \item{\code{MapNames}}{Character. File pattern for writing outputs to disk.}
+      \item{\code{LogFile}}{Character. Relative file path.}
+      \item{\code{SummaryLogFile}}{Character. Relative file path.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
-\if{html}{\out{</div>}}
-}
-}
+
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-DynamicFire-write"></a>}}
 \if{latex}{\out{\hypertarget{method-DynamicFire-write}{}}}
-\subsection{Method \code{write()}}{
-Write extension inputs to disk
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{DynamicFire$write()}\if{html}{\out{</div>}}
+\subsection{\code{DynamicFire$write()}}{
+  Write extension inputs to disk
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{DynamicFire$write()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-DynamicFire-clone"></a>}}
 \if{latex}{\out{\hypertarget{method-DynamicFire-clone}{}}}
-\subsection{Method \code{clone()}}{
-The objects of this class are cloneable with this method.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{DynamicFire$clone(deep = FALSE)}\if{html}{\out{</div>}}
+\subsection{\code{DynamicFire$clone()}}{
+  The objects of this class are cloneable with this method.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{DynamicFire$clone(deep = FALSE)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{deep}}{Whether to make a deep clone.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{deep}}{Whether to make a deep clone.}
-}
-\if{html}{\out{</div>}}
-}
-}
 }

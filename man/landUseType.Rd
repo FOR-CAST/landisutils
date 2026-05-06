@@ -39,12 +39,12 @@ unique \code{name} and \code{mapCode}, an \code{allowHarvest} flag, an optional
 blocks describing what happens to existing trees.
 }
 \seealso{
-Other Land Use Plus helpers: 
+Other Land Use Plus helpers:
 \code{\link{LandUsePlus}},
-\code{\link{cohortSelector}()},
-\code{\link{insertCohortSelector}()},
-\code{\link{insertLandCoverChange}()},
-\code{\link{insertLandUseType}()},
-\code{\link{landCoverChange}()}
+\code{\link[=cohortSelector]{cohortSelector()}},
+\code{\link[=insertCohortSelector]{insertCohortSelector()}},
+\code{\link[=insertLandCoverChange]{insertLandCoverChange()}},
+\code{\link[=insertLandUseType]{insertLandUseType()}},
+\code{\link[=landCoverChange]{landCoverChange()}}
 }
 \concept{Land Use Plus helpers}

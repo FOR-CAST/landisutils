@@ -19,12 +19,12 @@ Emits 5 rows with intensity class labels \verb{0.2, 0.4, 0.6, 0.8, 1.0} and the
 supplied percentages (which must sum to 100).
 }
 \seealso{
-Other Linear Wind helpers: 
+Other Linear Wind helpers:
 \code{\link{LinearWind}},
-\code{\link{defaultLinearWindSeverities}()},
-\code{\link{insertLinearWindEcoregionModifiers}()},
-\code{\link{insertLinearWindSeverities}()},
-\code{\link{insertWindDirectionTable}()}
+\code{\link[=defaultLinearWindSeverities]{defaultLinearWindSeverities()}},
+\code{\link[=insertLinearWindEcoregionModifiers]{insertLinearWindEcoregionModifiers()}},
+\code{\link[=insertLinearWindSeverities]{insertLinearWindSeverities()}},
+\code{\link[=insertWindDirectionTable]{insertWindDirectionTable()}}
 }
 \concept{Linear Wind helpers}
 \keyword{internal}

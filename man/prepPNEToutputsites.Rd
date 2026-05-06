@@ -40,13 +40,13 @@ requested. Two coordinate forms are supported:
 }
 }
 \seealso{
-Other PnET Succession helpers: 
+Other PnET Succession helpers:
 \code{\link{PnETSuccession}},
-\code{\link{defaultPnETDisturbanceReductions}()},
-\code{\link{prepPnETClimateFile}()},
-\code{\link{prepPnETDisturbanceReductions}()},
-\code{\link{prepPnETEcoregionParameters}()},
-\code{\link{prepPnETGenericParameters}()},
-\code{\link{prepPnETSpeciesParameters}()}
+\code{\link[=defaultPnETDisturbanceReductions]{defaultPnETDisturbanceReductions()}},
+\code{\link[=prepPnETClimateFile]{prepPnETClimateFile()}},
+\code{\link[=prepPnETDisturbanceReductions]{prepPnETDisturbanceReductions()}},
+\code{\link[=prepPnETEcoregionParameters]{prepPnETEcoregionParameters()}},
+\code{\link[=prepPnETGenericParameters]{prepPnETGenericParameters()}},
+\code{\link[=prepPnETSpeciesParameters]{prepPnETSpeciesParameters()}}
 }
 \concept{PnET Succession helpers}

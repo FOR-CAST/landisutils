@@ -126,18 +126,18 @@ Returns a validated prescription specification. One or more of these is passed
 to \link{BiomassHarvest} via \code{Prescriptions}.
 }
 \seealso{
-Other Biomass Harvest helpers: 
+Other Biomass Harvest helpers:
 \code{\link{BiomassHarvest}},
-\code{\link{insertCohortsRemoved}()},
-\code{\link{insertEconomicRankTable}()},
-\code{\link{insertFireHazardTable}()},
-\code{\link{insertForestTypeTable}()},
-\code{\link{insertHarvestImplementations}()},
-\code{\link{insertMultipleRepeat}()},
-\code{\link{insertPlant}()},
-\code{\link{insertPrescription}()},
-\code{\link{insertSingleRepeat}()},
-\code{\link{insertSiteSelection}()},
-\code{\link{insertStandRanking}()}
+\code{\link[=insertCohortsRemoved]{insertCohortsRemoved()}},
+\code{\link[=insertEconomicRankTable]{insertEconomicRankTable()}},
+\code{\link[=insertFireHazardTable]{insertFireHazardTable()}},
+\code{\link[=insertForestTypeTable]{insertForestTypeTable()}},
+\code{\link[=insertHarvestImplementations]{insertHarvestImplementations()}},
+\code{\link[=insertMultipleRepeat]{insertMultipleRepeat()}},
+\code{\link[=insertPlant]{insertPlant()}},
+\code{\link[=insertPrescription]{insertPrescription()}},
+\code{\link[=insertSingleRepeat]{insertSingleRepeat()}},
+\code{\link[=insertSiteSelection]{insertSiteSelection()}},
+\code{\link[=insertStandRanking]{insertStandRanking()}}
 }
 \concept{Biomass Harvest helpers}

@@ -19,12 +19,12 @@ created as a side effect of the function.
 Create Original Fire \code{InitialFireRegionsMap}
 }
 \seealso{
-Other Original Fire helpers: 
+Other Original Fire helpers:
 \code{\link{OriginalFire}},
-\code{\link{defaultFuelCurveTable}()},
-\code{\link{insertFireRegionParametersTable}()},
-\code{\link{insertFuelCurveTable}()},
-\code{\link{insertWindCurveTable}()},
-\code{\link{prepFireRegionParametersTable}()}
+\code{\link[=defaultFuelCurveTable]{defaultFuelCurveTable()}},
+\code{\link[=insertFireRegionParametersTable]{insertFireRegionParametersTable()}},
+\code{\link[=insertFuelCurveTable]{insertFuelCurveTable()}},
+\code{\link[=insertWindCurveTable]{insertWindCurveTable()}},
+\code{\link[=prepFireRegionParametersTable]{prepFireRegionParametersTable()}}
 }
 \concept{Original Fire helpers}

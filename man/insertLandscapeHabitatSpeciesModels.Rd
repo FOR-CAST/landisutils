@@ -18,13 +18,13 @@ Character string(s) to write to the suitable LANDIS-II input file.
 Specify the \code{SpeciesModels} block for the Landscape Habitat extension
 }
 \seealso{
-Other Landscape Habitat Output helpers: 
+Other Landscape Habitat Output helpers:
 \code{\link{OutputLandscapeHabitat}},
-\code{\link{insertLandscapeHabitatClimateVariables}()},
-\code{\link{insertLandscapeHabitatDerivedLocalVariables}()},
-\code{\link{insertLandscapeHabitatDistanceVariables}()},
-\code{\link{insertLandscapeHabitatLocalVariables}()},
-\code{\link{insertLandscapeHabitatNeighborhoodVariables}()}
+\code{\link[=insertLandscapeHabitatClimateVariables]{insertLandscapeHabitatClimateVariables()}},
+\code{\link[=insertLandscapeHabitatDerivedLocalVariables]{insertLandscapeHabitatDerivedLocalVariables()}},
+\code{\link[=insertLandscapeHabitatDistanceVariables]{insertLandscapeHabitatDistanceVariables()}},
+\code{\link[=insertLandscapeHabitatLocalVariables]{insertLandscapeHabitatLocalVariables()}},
+\code{\link[=insertLandscapeHabitatNeighborhoodVariables]{insertLandscapeHabitatNeighborhoodVariables()}}
 }
 \concept{Landscape Habitat Output helpers}
 \keyword{internal}

@@ -16,5 +16,5 @@ Character string(s) specifying suitable LANDIS-II input file(s),
 created as a side effect of the function.
 }
 \description{
-Simple wrapper around \code{\link[utils:write.table]{utils::write.csv()}}.
+Simple wrapper around \code{\link[utils:write.csv]{utils::write.csv()}}.
 }

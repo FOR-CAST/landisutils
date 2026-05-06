@@ -14,7 +14,7 @@ Covers the most commonly enabled outputs (matches the example in the
 upstream \code{OneCellSimulation/biomass.output.txt}).
 }
 \seealso{
-Other PnET Output helpers: 
+Other PnET Output helpers:
 \code{\link{OutputBiomassPnET}}
 }
 \concept{PnET Output helpers}

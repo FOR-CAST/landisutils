@@ -19,10 +19,10 @@ Character string(s) to write to the suitable LANDIS-II input file.
 Specify NECN Succession \code{HarvestReductionParameters} table
 }
 \seealso{
-Other NECN Succession helpers: 
+Other NECN Succession helpers:
 \code{\link{NECNSuccession}},
-\code{\link{insertNECNFireReductionParameters}()},
-\code{\link{prepNECNFireReductionParameters}()}
+\code{\link[=insertNECNFireReductionParameters]{insertNECNFireReductionParameters()}},
+\code{\link[=prepNECNFireReductionParameters]{prepNECNFireReductionParameters()}}
 }
 \concept{NECN Succession helpers}
 \keyword{internal}

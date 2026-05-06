@@ -18,7 +18,7 @@ Character string(s) to write to the suitable LANDIS-II input file.
 Specify the \code{ReclassMaps} block for the Output Biomass Reclass extension
 }
 \seealso{
-Other Biomass Reclass Output helpers: 
+Other Biomass Reclass Output helpers:
 \code{\link{OutputBiomassReclass}}
 }
 \concept{Biomass Reclass Output helpers}

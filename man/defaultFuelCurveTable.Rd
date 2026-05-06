@@ -18,12 +18,12 @@ defaultFuelCurveTable(frp)
 Create sample Fuel Curve Table
 }
 \seealso{
-Other Original Fire helpers: 
+Other Original Fire helpers:
 \code{\link{OriginalFire}},
-\code{\link{insertFireRegionParametersTable}()},
-\code{\link{insertFuelCurveTable}()},
-\code{\link{insertWindCurveTable}()},
-\code{\link{prepFireRegionParametersTable}()},
-\code{\link{prepInitialFireRegionsMap}()}
+\code{\link[=insertFireRegionParametersTable]{insertFireRegionParametersTable()}},
+\code{\link[=insertFuelCurveTable]{insertFuelCurveTable()}},
+\code{\link[=insertWindCurveTable]{insertWindCurveTable()}},
+\code{\link[=prepFireRegionParametersTable]{prepFireRegionParametersTable()}},
+\code{\link[=prepInitialFireRegionsMap]{prepInitialFireRegionsMap()}}
 }
 \concept{Original Fire helpers}

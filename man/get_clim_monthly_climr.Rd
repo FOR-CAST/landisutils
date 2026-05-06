@@ -18,7 +18,7 @@ get_clim_monthly_climr(
 }
 \arguments{
 \item{year}{integer single calendar year to fetch. In projection mode, must
-lie within \code{\link[climr:data-option-lists]{climr::list_gcm_ssp_years()}}.}
+lie within \code{\link[climr:list_gcm_ssp_years]{climr::list_gcm_ssp_years()}}.}
 
 \item{xyz}{\code{data.frame} with columns \code{lon}, \code{lat}, \code{elev}, \code{id} (one row per
 cell). See \code{.climr_build_xyz()} (internal) or build manually.}
@@ -40,11 +40,11 @@ dataset is written. Default uses the package climate cache
 (\code{getOption("landisutils.cache.path")}).}
 
 \item{gcms}{character vector of CMIP6 GCM names (subset of
-\code{\link[climr:data-option-lists]{climr::list_gcms()}}). When \code{NULL} (default), runs in observational mode.
+\code{\link[climr:list_gcms]{climr::list_gcms()}}). When \code{NULL} (default), runs in observational mode.
 When set, runs in projection mode and \code{ssps} is required.}
 
 \item{ssps}{character vector of CMIP6 SSP names (subset of
-\code{\link[climr:data-option-lists]{climr::list_ssps()}}, e.g. \code{"ssp245"}). Required when \code{gcms} is set.}
+\code{\link[climr:list_ssps]{climr::list_ssps()}}, e.g. \code{"ssp245"}). Required when \code{gcms} is set.}
 
 \item{max_run}{integer number of ensemble runs per GCM to fetch. With
 \code{ensemble_mean = TRUE} (climr's default and what we use), \code{max_run = 0L}
@@ -77,7 +77,7 @@ averaged (with \code{ensemble_mean = TRUE}, climr's default).}
 Per the climr API, the climr cache itself is configured by setting
 \code{options("climr.cache.path" = ...)} (climr GitHub issue 274). The orchestrator
 \code{\link[=prep_monthly_weather_climr]{prep_monthly_weather_climr()}} sets a sensible default via
-\code{\link[withr:with_options]{withr::local_options()}} for the duration of a call; if you call this
+\code{\link[withr:local_options]{withr::local_options()}} for the duration of a call; if you call this
 helper directly you should do the same.
 }
 \section{Topographic considerations}{

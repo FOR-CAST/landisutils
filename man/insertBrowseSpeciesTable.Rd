@@ -16,9 +16,9 @@ Character string(s) to write to the suitable LANDIS-II input file.
 Specify the \code{SpeciesTable} block for the Biomass Browse extension
 }
 \seealso{
-Other Biomass Browse helpers: 
+Other Biomass Browse helpers:
 \code{\link{BiomassBrowse}},
-\code{\link{insertBrowseDynamicPopulation}()}
+\code{\link[=insertBrowseDynamicPopulation]{insertBrowseDynamicPopulation()}}
 }
 \concept{Biomass Browse helpers}
 \keyword{internal}

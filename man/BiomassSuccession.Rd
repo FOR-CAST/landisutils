@@ -5,8 +5,6 @@
 \title{Biomass Succession Extension}
 \description{
 Biomass Succession Extension
-
-Biomass Succession Extension
 }
 \references{
 LANDIS-II Biomass Succession v7 Extension User Guide
@@ -24,76 +22,75 @@ Shared scenario inputs:
 \code{\link[=prepInitialCommunities]{prepInitialCommunities()}},
 \code{\link[=prepSpeciesData]{prepSpeciesData()}}.
 
-Other Biomass Succession helpers: 
-\code{\link{insertEcoregionParameters}()},
-\code{\link{insertFireReductionParameters}()},
-\code{\link{insertHarvestReductionParameters}()},
-\code{\link{insertMinRelativeBiomass}()},
-\code{\link{insertSpeciesEcoregionDataFile}()},
-\code{\link{insertSufficientLight}()},
-\code{\link{prepEcoregionParameters}()},
-\code{\link{prepFireReductionParameters}()},
-\code{\link{prepHarvestReductionParameters}()},
-\code{\link{prepMinRelativeBiomass}()},
-\code{\link{prepSpeciesEcoregionDataFile}()}
+Other Biomass Succession helpers:
+\code{\link[=insertEcoregionParameters]{insertEcoregionParameters()}},
+\code{\link[=insertFireReductionParameters]{insertFireReductionParameters()}},
+\code{\link[=insertHarvestReductionParameters]{insertHarvestReductionParameters()}},
+\code{\link[=insertMinRelativeBiomass]{insertMinRelativeBiomass()}},
+\code{\link[=insertSpeciesEcoregionDataFile]{insertSpeciesEcoregionDataFile()}},
+\code{\link[=insertSufficientLight]{insertSufficientLight()}},
+\code{\link[=prepEcoregionParameters]{prepEcoregionParameters()}},
+\code{\link[=prepFireReductionParameters]{prepFireReductionParameters()}},
+\code{\link[=prepHarvestReductionParameters]{prepHarvestReductionParameters()}},
+\code{\link[=prepMinRelativeBiomass]{prepMinRelativeBiomass()}},
+\code{\link[=prepSpeciesEcoregionDataFile]{prepSpeciesEcoregionDataFile()}}
 }
 \concept{Biomass Succession helpers}
 \section{Super class}{
-\code{\link[landisutils:LandisExtension]{landisutils::LandisExtension}} -> \code{BiomassSuccession}
+\code{\link[landisutils:LandisExtension]{LandisExtension}} -> \code{BiomassSuccession}
 }
 \section{Active bindings}{
-\if{html}{\out{<div class="r6-active-bindings">}}
-\describe{
-\item{\code{SeedingAlgorithm}}{Character. Dispersal algorithm to use.
+  \if{html}{\out{<div class="r6-active-bindings">}}
+  \describe{
+    \item{\code{SeedingAlgorithm}}{Character. Dispersal algorithm to use.
 One of \code{"WardSeedDispersal"}, \code{"NoDispersal"}, \code{"UniversalDispersal"}.}
 
-\item{\code{InitialCommunitiesFiles}}{Character. Relative file paths.}
+    \item{\code{InitialCommunitiesFiles}}{Character. Relative file paths.}
 
-\item{\code{ClimateConfigFile}}{Character. Relative file path.}
+    \item{\code{ClimateConfigFile}}{Character. Relative file path.}
 
-\item{\code{CalibrateMode}}{Logical, or character indicating "yes" or "no".}
+    \item{\code{CalibrateMode}}{Logical, or character indicating "yes" or "no".}
 
-\item{\code{SpinupCohorts}}{Logical, or character indicating "yes" or "no".}
+    \item{\code{SpinupCohorts}}{Logical, or character indicating "yes" or "no".}
 
-\item{\code{SpinupMortalityFraction}}{Real.}
+    \item{\code{SpinupMortalityFraction}}{Real.}
 
-\item{\code{MinRelativeBiomass}}{\code{data.frame}.}
+    \item{\code{MinRelativeBiomass}}{\code{data.frame}.}
 
-\item{\code{SufficientLight}}{\code{data.frame}.}
+    \item{\code{SufficientLight}}{\code{data.frame}.}
 
-\item{\code{SpeciesDataFile}}{Character. Relative file path.}
+    \item{\code{SpeciesDataFile}}{Character. Relative file path.}
 
-\item{\code{EcoregionParameters}}{\code{data.frame}.}
+    \item{\code{EcoregionParameters}}{\code{data.frame}.}
 
-\item{\code{SpeciesEcoregionDataFile}}{Character. Relative file path.}
+    \item{\code{SpeciesEcoregionDataFile}}{Character. Relative file path.}
 
-\item{\code{FireReductionParameters}}{\code{data.frame}.}
+    \item{\code{FireReductionParameters}}{\code{data.frame}.}
 
-\item{\code{HarvestReductionParameters}}{\code{data.frame}.}
-}
-\if{html}{\out{</div>}}
+    \item{\code{HarvestReductionParameters}}{\code{data.frame}.}
+  }
+  \if{html}{\out{</div>}}
 }
 \section{Methods}{
 \subsection{Public methods}{
-\itemize{
-\item \href{#method-BiomassSuccession-new}{\code{BiomassSuccession$new()}}
-\item \href{#method-BiomassSuccession-write}{\code{BiomassSuccession$write()}}
-\item \href{#method-BiomassSuccession-clone}{\code{BiomassSuccession$clone()}}
+  \itemize{
+    \item \href{#method-BiomassSuccession-initialize}{\code{BiomassSuccession$new()}}
+    \item \href{#method-BiomassSuccession-write}{\code{BiomassSuccession$write()}}
+    \item \href{#method-BiomassSuccession-clone}{\code{BiomassSuccession$clone()}}
+  }
 }
-}
-\if{html}{\out{
-<details open><summary>Inherited methods</summary>
+\if{html}{\out{<details open><summary>Inherited methods</summary>
 <ul>
-<li><span class="pkg-link" data-pkg="landisutils" data-topic="LandisExtension" data-id="add_file"><a href='../../landisutils/html/LandisExtension.html#method-LandisExtension-add_file'><code>landisutils::LandisExtension$add_file()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="landisutils" data-topic="LandisExtension" data-id="add_file"><a href='../../landisutils/html/LandisExtension.html#method-LandisExtension-add_file'><code>LandisExtension$add_file()</code></a></span></li>
 </ul>
-</details>
-}}
+</details>}}
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-BiomassSuccession-new"></a>}}
-\if{latex}{\out{\hypertarget{method-BiomassSuccession-new}{}}}
-\subsection{Method \code{new()}}{
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{BiomassSuccession$new(
+\if{html}{\out{<a id="method-BiomassSuccession-initialize"></a>}}
+\if{latex}{\out{\hypertarget{method-BiomassSuccession-initialize}{}}}
+\subsection{\code{BiomassSuccession$new()}}{
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{BiomassSuccession$new(
   path = NULL,
   Timestep = 10L,
   SeedingAlgorithm = NULL,
@@ -109,71 +106,62 @@ One of \code{"WardSeedDispersal"}, \code{"NoDispersal"}, \code{"UniversalDispers
   SpeciesEcoregionDataFile = NULL,
   FireReductionParameters = NULL,
   HarvestReductionParameters = NULL
-)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{path}}{Character. Directory path.}
-
-\item{\code{Timestep}}{Integer.}
-
-\item{\code{SeedingAlgorithm}}{Character. Dispersal algorithm to use.
+)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{path}}{Character. Directory path.}
+      \item{\code{Timestep}}{Integer.}
+      \item{\code{SeedingAlgorithm}}{Character. Dispersal algorithm to use.
 One of \code{"WardSeedDispersal"}, \code{"NoDispersal"}, \code{"UniversalDispersal"}.}
-
-\item{\code{InitialCommunitiesFiles}}{Character. Relative file paths.}
-
-\item{\code{ClimateConfigFile}}{Character. Relative file path.}
-
-\item{\code{CalibrateMode}}{Logical, or character indicating "yes" or "no".}
-
-\item{\code{SpinupCohorts}}{Logical, or character indicating "yes" or "no".}
-
-\item{\code{SpinupMortalityFraction}}{Real.}
-
-\item{\code{MinRelativeBiomass}}{\code{data.frame}.}
-
-\item{\code{SufficientLight}}{\code{data.frame}.}
-
-\item{\code{SpeciesDataFile}}{Character. Relative file path.}
-
-\item{\code{EcoregionParameters}}{\code{data.frame}.}
-
-\item{\code{SpeciesEcoregionDataFile}}{Character. Relative file path.}
-
-\item{\code{FireReductionParameters}}{\code{data.frame}.}
-
-\item{\code{HarvestReductionParameters}}{\code{data.frame}.}
+      \item{\code{InitialCommunitiesFiles}}{Character. Relative file paths.}
+      \item{\code{ClimateConfigFile}}{Character. Relative file path.}
+      \item{\code{CalibrateMode}}{Logical, or character indicating "yes" or "no".}
+      \item{\code{SpinupCohorts}}{Logical, or character indicating "yes" or "no".}
+      \item{\code{SpinupMortalityFraction}}{Real.}
+      \item{\code{MinRelativeBiomass}}{\code{data.frame}.}
+      \item{\code{SufficientLight}}{\code{data.frame}.}
+      \item{\code{SpeciesDataFile}}{Character. Relative file path.}
+      \item{\code{EcoregionParameters}}{\code{data.frame}.}
+      \item{\code{SpeciesEcoregionDataFile}}{Character. Relative file path.}
+      \item{\code{FireReductionParameters}}{\code{data.frame}.}
+      \item{\code{HarvestReductionParameters}}{\code{data.frame}.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
-\if{html}{\out{</div>}}
-}
-}
+
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-BiomassSuccession-write"></a>}}
 \if{latex}{\out{\hypertarget{method-BiomassSuccession-write}{}}}
-\subsection{Method \code{write()}}{
-Write extension inputs to disk
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{BiomassSuccession$write()}\if{html}{\out{</div>}}
+\subsection{\code{BiomassSuccession$write()}}{
+  Write extension inputs to disk
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{BiomassSuccession$write()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-BiomassSuccession-clone"></a>}}
 \if{latex}{\out{\hypertarget{method-BiomassSuccession-clone}{}}}
-\subsection{Method \code{clone()}}{
-The objects of this class are cloneable with this method.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{BiomassSuccession$clone(deep = FALSE)}\if{html}{\out{</div>}}
+\subsection{\code{BiomassSuccession$clone()}}{
+  The objects of this class are cloneable with this method.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{BiomassSuccession$clone(deep = FALSE)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{deep}}{Whether to make a deep clone.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{deep}}{Whether to make a deep clone.}
-}
-\if{html}{\out{</div>}}
-}
-}
 }

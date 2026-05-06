@@ -17,19 +17,19 @@ Class 1 is hardwired to 0.0 in LANDIS-II, so only classes 2 and 3 are
 written.
 }
 \seealso{
-Other Climate BDA helpers: 
+Other Climate BDA helpers:
 \code{\link{ClimateBDA}},
-\code{\link{bdaAgent}()},
-\code{\link{insertAgentHeader}()},
-\code{\link{insertBDAInputFiles}()},
-\code{\link{insertBDASpeciesParameters}()},
-\code{\link{insertDispersal}()},
-\code{\link{insertDisturbanceModifiers}()},
-\code{\link{insertEcoregionModifiers}()},
-\code{\link{insertIgnoredSpecies}()},
-\code{\link{insertNeighborhood}()},
-\code{\link{insertOutbreakPattern}()},
-\code{\link{writeAgentFile}()}
+\code{\link[=bdaAgent]{bdaAgent()}},
+\code{\link[=insertAgentHeader]{insertAgentHeader()}},
+\code{\link[=insertBDAInputFiles]{insertBDAInputFiles()}},
+\code{\link[=insertBDASpeciesParameters]{insertBDASpeciesParameters()}},
+\code{\link[=insertDispersal]{insertDispersal()}},
+\code{\link[=insertDisturbanceModifiers]{insertDisturbanceModifiers()}},
+\code{\link[=insertEcoregionModifiers]{insertEcoregionModifiers()}},
+\code{\link[=insertIgnoredSpecies]{insertIgnoredSpecies()}},
+\code{\link[=insertNeighborhood]{insertNeighborhood()}},
+\code{\link[=insertOutbreakPattern]{insertOutbreakPattern()}},
+\code{\link[=writeAgentFile]{writeAgentFile()}}
 }
 \concept{Climate BDA helpers}
 \keyword{internal}

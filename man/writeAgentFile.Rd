@@ -21,19 +21,19 @@ block.
 Write a per-agent Climate BDA input file
 }
 \seealso{
-Other Climate BDA helpers: 
+Other Climate BDA helpers:
 \code{\link{ClimateBDA}},
-\code{\link{bdaAgent}()},
-\code{\link{insertAgentHeader}()},
-\code{\link{insertBDAInputFiles}()},
-\code{\link{insertBDASpeciesParameters}()},
-\code{\link{insertDispersal}()},
-\code{\link{insertDisturbanceModifiers}()},
-\code{\link{insertEcoregionModifiers}()},
-\code{\link{insertIgnoredSpecies}()},
-\code{\link{insertIntensityClasses}()},
-\code{\link{insertNeighborhood}()},
-\code{\link{insertOutbreakPattern}()}
+\code{\link[=bdaAgent]{bdaAgent()}},
+\code{\link[=insertAgentHeader]{insertAgentHeader()}},
+\code{\link[=insertBDAInputFiles]{insertBDAInputFiles()}},
+\code{\link[=insertBDASpeciesParameters]{insertBDASpeciesParameters()}},
+\code{\link[=insertDispersal]{insertDispersal()}},
+\code{\link[=insertDisturbanceModifiers]{insertDisturbanceModifiers()}},
+\code{\link[=insertEcoregionModifiers]{insertEcoregionModifiers()}},
+\code{\link[=insertIgnoredSpecies]{insertIgnoredSpecies()}},
+\code{\link[=insertIntensityClasses]{insertIntensityClasses()}},
+\code{\link[=insertNeighborhood]{insertNeighborhood()}},
+\code{\link[=insertOutbreakPattern]{insertOutbreakPattern()}}
 }
 \concept{Climate BDA helpers}
 \keyword{internal}

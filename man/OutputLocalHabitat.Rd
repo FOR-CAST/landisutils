@@ -5,107 +5,105 @@
 \title{Local Habitat Suitability Output Extension}
 \description{
 Local Habitat Suitability Output Extension
-
-Local Habitat Suitability Output Extension
 }
 \references{
 LANDIS-II Local Habitat Suitability Output v3 Extension User Guide
 \url{https://github.com/LANDIS-II-Foundation/Extension-Local-Habitat-Suitability-Output/blob/master/docs/LANDIS-II\%20Local\%20Habitat\%20Suitability\%20Output\%20v3\%20User\%20Guide.pdf}
 }
 \seealso{
-Other Local Habitat Output helpers: 
-\code{\link{insertSuitabilityFiles}()},
-\code{\link{suitabilityFile}()}
+Other Local Habitat Output helpers:
+\code{\link[=insertSuitabilityFiles]{insertSuitabilityFiles()}},
+\code{\link[=suitabilityFile]{suitabilityFile()}}
 }
 \concept{Local Habitat Output helpers}
 \section{Super class}{
-\code{\link[landisutils:LandisExtension]{landisutils::LandisExtension}} -> \code{OutputLocalHabitat}
+\code{\link[landisutils:LandisExtension]{LandisExtension}} -> \code{OutputLocalHabitat}
 }
 \section{Active bindings}{
-\if{html}{\out{<div class="r6-active-bindings">}}
-\describe{
-\item{\code{OutputTimestep}}{Integer. Output frequency (years); must be \verb{>= Timestep}.}
+  \if{html}{\out{<div class="r6-active-bindings">}}
+  \describe{
+    \item{\code{OutputTimestep}}{Integer. Output frequency (years); must be \verb{>= Timestep}.}
 
-\item{\code{MapFileNames}}{Character. Output filename pattern; must contain
+    \item{\code{MapFileNames}}{Character. Output filename pattern; must contain
 \code{{HabitatName}} and \code{{timestep}}.}
 
-\item{\code{SuitabilityFiles}}{List of \code{SuitabilityFile} objects, or a
+    \item{\code{SuitabilityFiles}}{List of \code{SuitabilityFile} objects, or a
 character vector of relative filenames (auto-wrapped).}
-}
-\if{html}{\out{</div>}}
+  }
+  \if{html}{\out{</div>}}
 }
 \section{Methods}{
 \subsection{Public methods}{
-\itemize{
-\item \href{#method-OutputLocalHabitat-new}{\code{OutputLocalHabitat$new()}}
-\item \href{#method-OutputLocalHabitat-write}{\code{OutputLocalHabitat$write()}}
-\item \href{#method-OutputLocalHabitat-clone}{\code{OutputLocalHabitat$clone()}}
+  \itemize{
+    \item \href{#method-OutputLocalHabitat-initialize}{\code{OutputLocalHabitat$new()}}
+    \item \href{#method-OutputLocalHabitat-write}{\code{OutputLocalHabitat$write()}}
+    \item \href{#method-OutputLocalHabitat-clone}{\code{OutputLocalHabitat$clone()}}
+  }
 }
-}
-\if{html}{\out{
-<details open><summary>Inherited methods</summary>
+\if{html}{\out{<details open><summary>Inherited methods</summary>
 <ul>
-<li><span class="pkg-link" data-pkg="landisutils" data-topic="LandisExtension" data-id="add_file"><a href='../../landisutils/html/LandisExtension.html#method-LandisExtension-add_file'><code>landisutils::LandisExtension$add_file()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="landisutils" data-topic="LandisExtension" data-id="add_file"><a href='../../landisutils/html/LandisExtension.html#method-LandisExtension-add_file'><code>LandisExtension$add_file()</code></a></span></li>
 </ul>
-</details>
-}}
+</details>}}
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-OutputLocalHabitat-new"></a>}}
-\if{latex}{\out{\hypertarget{method-OutputLocalHabitat-new}{}}}
-\subsection{Method \code{new()}}{
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{OutputLocalHabitat$new(
+\if{html}{\out{<a id="method-OutputLocalHabitat-initialize"></a>}}
+\if{latex}{\out{\hypertarget{method-OutputLocalHabitat-initialize}{}}}
+\subsection{\code{OutputLocalHabitat$new()}}{
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{OutputLocalHabitat$new(
   path,
   Timestep = 1L,
   OutputTimestep = NULL,
   MapFileNames = NULL,
   SuitabilityFiles = list()
-)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{path}}{Character. Directory path.}
-
-\item{\code{Timestep}}{Integer. Inner simulation interval (years).}
-
-\item{\code{OutputTimestep}}{Integer. Output frequency (years); must be \verb{>= Timestep}.}
-
-\item{\code{MapFileNames}}{Character. Output filename pattern; must contain
+)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{path}}{Character. Directory path.}
+      \item{\code{Timestep}}{Integer. Inner simulation interval (years).}
+      \item{\code{OutputTimestep}}{Integer. Output frequency (years); must be \verb{>= Timestep}.}
+      \item{\code{MapFileNames}}{Character. Output filename pattern; must contain
 the literals \code{{HabitatName}} and \code{{timestep}}.}
-
-\item{\code{SuitabilityFiles}}{List of \code{SuitabilityFile} sub-objects (see
+      \item{\code{SuitabilityFiles}}{List of \code{SuitabilityFile} sub-objects (see
 \code{\link[=suitabilityFile]{suitabilityFile()}}) or a character vector of filenames (auto-wrapped).}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
-\if{html}{\out{</div>}}
-}
-}
+
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-OutputLocalHabitat-write"></a>}}
 \if{latex}{\out{\hypertarget{method-OutputLocalHabitat-write}{}}}
-\subsection{Method \code{write()}}{
-Write extension inputs to disk
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{OutputLocalHabitat$write()}\if{html}{\out{</div>}}
+\subsection{\code{OutputLocalHabitat$write()}}{
+  Write extension inputs to disk
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{OutputLocalHabitat$write()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-OutputLocalHabitat-clone"></a>}}
 \if{latex}{\out{\hypertarget{method-OutputLocalHabitat-clone}{}}}
-\subsection{Method \code{clone()}}{
-The objects of this class are cloneable with this method.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{OutputLocalHabitat$clone(deep = FALSE)}\if{html}{\out{</div>}}
+\subsection{\code{OutputLocalHabitat$clone()}}{
+  The objects of this class are cloneable with this method.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{OutputLocalHabitat$clone(deep = FALSE)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{deep}}{Whether to make a deep clone.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{deep}}{Whether to make a deep clone.}
-}
-\if{html}{\out{</div>}}
-}
-}
 }

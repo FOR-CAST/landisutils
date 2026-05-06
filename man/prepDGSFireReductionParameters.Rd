@@ -20,10 +20,10 @@ Defaults adapted from the LANDIS-II DGS Succession v2.0 user guide; users
 should tune to their study system.
 }
 \seealso{
-Other DGS Succession helpers: 
+Other DGS Succession helpers:
 \code{\link{DGSSuccession}},
-\code{\link{defaultDGSDammMcNIPParameters}()},
-\code{\link{insertDGSFireReductionParameters}()},
-\code{\link{insertDGSHarvestReductionParameters}()}
+\code{\link[=defaultDGSDammMcNIPParameters]{defaultDGSDammMcNIPParameters()}},
+\code{\link[=insertDGSFireReductionParameters]{insertDGSFireReductionParameters()}},
+\code{\link[=insertDGSHarvestReductionParameters]{insertDGSHarvestReductionParameters()}}
 }
 \concept{DGS Succession helpers}

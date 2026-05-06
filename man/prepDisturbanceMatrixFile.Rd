@@ -36,22 +36,22 @@ data.frame
 Prepare \code{DisturbanceMatrixFile} for Forest Carbon Succession (ForCS) extension
 }
 \seealso{
-Other ForCS helpers: 
+Other ForCS helpers:
 \code{\link{ForCS}},
-\code{\link{insertANPPTimeSeries}()},
-\code{\link{insertAvailableLightBiomass}()},
-\code{\link{insertDOMPools}()},
-\code{\link{insertEcoSppDOMParameters}()},
-\code{\link{insertEstablishProbabilities}()},
-\code{\link{insertForCSMapControl}()},
-\code{\link{insertForCSProportions}()},
-\code{\link{insertLightEstablishmentTable}()},
-\code{\link{insertMaxBiomassTimeSeries}()},
-\code{\link{insertOutputTables}()},
-\code{\link{insertRootDynamics}()},
-\code{\link{insertSpeciesParameters}()},
-\code{\link{insertSpinUp}()},
-\code{\link{prepClimateFile}()},
-\code{\link{prepSnagFile}()}
+\code{\link[=insertANPPTimeSeries]{insertANPPTimeSeries()}},
+\code{\link[=insertAvailableLightBiomass]{insertAvailableLightBiomass()}},
+\code{\link[=insertDOMPools]{insertDOMPools()}},
+\code{\link[=insertEcoSppDOMParameters]{insertEcoSppDOMParameters()}},
+\code{\link[=insertEstablishProbabilities]{insertEstablishProbabilities()}},
+\code{\link[=insertForCSMapControl]{insertForCSMapControl()}},
+\code{\link[=insertForCSProportions]{insertForCSProportions()}},
+\code{\link[=insertLightEstablishmentTable]{insertLightEstablishmentTable()}},
+\code{\link[=insertMaxBiomassTimeSeries]{insertMaxBiomassTimeSeries()}},
+\code{\link[=insertOutputTables]{insertOutputTables()}},
+\code{\link[=insertRootDynamics]{insertRootDynamics()}},
+\code{\link[=insertSpeciesParameters]{insertSpeciesParameters()}},
+\code{\link[=insertSpinUp]{insertSpinUp()}},
+\code{\link[=prepClimateFile]{prepClimateFile()}},
+\code{\link[=prepSnagFile]{prepSnagFile()}}
 }
 \concept{ForCS helpers}

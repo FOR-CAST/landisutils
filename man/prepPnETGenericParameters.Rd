@@ -30,13 +30,13 @@ user guide). Any parameter omitted falls back to the defaults provided in
 parameter names: \code{MaxCanopyLayers}, \code{LayerThreshRatio}, \code{PARunits}, \code{IMAX}, \code{DVPD1}, \code{DVPD2}, \code{BFolResp}, \code{MaintResp}, \code{TOroot}, \code{TOwood}, \code{Q10}, \code{FolLignin}, \code{KWdLit}, \code{InitialNSC}, \code{CFracBiomass}, \code{PrecipEvents}, \code{PrecipEventsWithReplacement}, \code{ETExtCoeff}, \code{RETCropCoeff}, \code{PreventEstablishment}, \code{Wythers}, \code{DTEMP}, \code{MaxPest}, \code{AmaxFrac}, \code{InvertPest}, \code{SoilIceDepth}, \code{LeakageFrostDepth}, \code{FrostFactor}, \code{InitialCommunitiesSpinup}, \code{SpinupWaterStress}, \code{Parallel}, \code{CohortStacking}, \code{CanopySumScale}, \code{CO2HalfSatEff}.
 }
 \seealso{
-Other PnET Succession helpers: 
+Other PnET Succession helpers:
 \code{\link{PnETSuccession}},
-\code{\link{defaultPnETDisturbanceReductions}()},
-\code{\link{prepPNEToutputsites}()},
-\code{\link{prepPnETClimateFile}()},
-\code{\link{prepPnETDisturbanceReductions}()},
-\code{\link{prepPnETEcoregionParameters}()},
-\code{\link{prepPnETSpeciesParameters}()}
+\code{\link[=defaultPnETDisturbanceReductions]{defaultPnETDisturbanceReductions()}},
+\code{\link[=prepPNEToutputsites]{prepPNEToutputsites()}},
+\code{\link[=prepPnETClimateFile]{prepPnETClimateFile()}},
+\code{\link[=prepPnETDisturbanceReductions]{prepPnETDisturbanceReductions()}},
+\code{\link[=prepPnETEcoregionParameters]{prepPnETEcoregionParameters()}},
+\code{\link[=prepPnETSpeciesParameters]{prepPnETSpeciesParameters()}}
 }
 \concept{PnET Succession helpers}

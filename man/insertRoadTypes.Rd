@@ -21,13 +21,13 @@ Column emission depends on whether the parent extension's
 \code{SimulationOfWoodFlux} and \code{SimulationOfRoadAging} are enabled.
 }
 \seealso{
-Other Forest Roads Simulation helpers: 
+Other Forest Roads Simulation helpers:
 \code{\link{ForestRoadsSimulation}},
-\code{\link{elevationCostRange}()},
-\code{\link{exitRoadType}()},
-\code{\link{insertElevationCosts}()},
-\code{\link{insertExitRoadTypes}()},
-\code{\link{roadType}()}
+\code{\link[=elevationCostRange]{elevationCostRange()}},
+\code{\link[=exitRoadType]{exitRoadType()}},
+\code{\link[=insertElevationCosts]{insertElevationCosts()}},
+\code{\link[=insertExitRoadTypes]{insertExitRoadTypes()}},
+\code{\link[=roadType]{roadType()}}
 }
 \concept{Forest Roads Simulation helpers}
 \keyword{internal}

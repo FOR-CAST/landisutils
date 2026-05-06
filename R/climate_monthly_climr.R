@@ -8,7 +8,6 @@
   tmin = "Tmin",
   temp = "Tave",
   rh = "RH",
-  srad = "Rad",
   cmd = "CMD"
 )
 
@@ -19,13 +18,15 @@
   Tmin = "Tmin",
   Tave = "temp",
   RH = "RH",
-  Rad = "SWR",
   CMD = "CMD"
 )
 
-## climr does not expose wind variables; reject these with a clear error so
-## users are pointed at `prep_monthly_weather_biosim()` instead.
-.climr_unsupported <- c("ws", "wnddir")
+## climr does not expose wind or shortwave-radiation variables; reject these
+## with a clear error so users are pointed at `prep_monthly_weather_biosim()`
+## instead. Note: climr's `Eref` (Hargreaves reference evapotranspiration, mm)
+## is not a valid stand-in for shortwave radiation (MJ/m^2) and must not be
+## silently substituted.
+.climr_unsupported <- c("ws", "wnddir", "srad")
 
 #' bcgov-recommended eight-member climr GCM ensemble
 #'
@@ -392,7 +393,7 @@ prep_monthly_weather_climr <- function(
   bad <- intersect(vars, .climr_unsupported)
   if (length(bad)) {
     stop(
-      "climr does not provide wind variables: ",
+      "climr does not provide wind or shortwave-radiation variables: ",
       glue::glue_collapse(bad, sep = ", "),
       ". Use prep_monthly_weather_biosim() instead."
     )

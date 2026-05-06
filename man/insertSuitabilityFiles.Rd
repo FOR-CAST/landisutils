@@ -16,13 +16,13 @@ Character string(s) to write to the suitable LANDIS-II input file.
 Emits the \code{SuitabilityFiles} keyword followed by one path per line.
 }
 \seealso{
-Other Local Habitat Output helpers: 
+Other Local Habitat Output helpers:
 \code{\link{OutputLocalHabitat}},
-\code{\link{suitabilityFile}()}
+\code{\link[=suitabilityFile]{suitabilityFile()}}
 
-Other Wildlife Habitat Output helpers: 
+Other Wildlife Habitat Output helpers:
 \code{\link{OutputWildlifeHabitat}},
-\code{\link{suitabilityFile}()}
+\code{\link[=suitabilityFile]{suitabilityFile()}}
 }
 \concept{Local Habitat Output helpers}
 \concept{Wildlife Habitat Output helpers}

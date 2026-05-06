@@ -83,13 +83,13 @@ One of \code{"climatena"} or \code{"cru.gpcc"}. Default \code{"climatena"}. Only
 by \code{\link[=prep_monthly_weather_climr]{prep_monthly_weather_climr()}} in observational mode.}
 
 \item{gcms}{character vector of CMIP6 GCM names (subset of
-\code{\link[climr:data-option-lists]{climr::list_gcms()}}). When \code{NULL} (default), \code{\link[=prep_monthly_weather_climr]{prep_monthly_weather_climr()}}
+\code{\link[climr:list_gcms]{climr::list_gcms()}}). When \code{NULL} (default), \code{\link[=prep_monthly_weather_climr]{prep_monthly_weather_climr()}}
 runs in observational mode; when set, in projection mode. The
 bcgov-recommended eight-member ensemble is exposed as
 \code{\link{climr_ensemble_8}}. Only used by \code{\link[=prep_monthly_weather_climr]{prep_monthly_weather_climr()}}.}
 
 \item{ssps}{character vector of CMIP6 SSP names (subset of
-\code{\link[climr:data-option-lists]{climr::list_ssps()}}, e.g. \code{"ssp245"}). Required when \code{gcms} is set. Only
+\code{\link[climr:list_ssps]{climr::list_ssps()}}, e.g. \code{"ssp245"}). Required when \code{gcms} is set. Only
 used by \code{\link[=prep_monthly_weather_climr]{prep_monthly_weather_climr()}}.}
 
 \item{max_run}{integer number of ensemble runs per GCM to fetch from climr
@@ -200,7 +200,7 @@ in projection mode using \code{gcm_ssp_years = years}. The bcgov-recommended
 eight-member ensemble subset is exposed as the package constant
 \code{\link{climr_ensemble_8}}; pass \code{gcms = climr_ensemble_8} to use it.
 \code{\link[=assemble_climate_library_file_monthly_climr]{assemble_climate_library_file_monthly_climr()}} averages over GCMs and SSPs
-to give a single LANDIS-II-compatible value per \verb{(Year, Month, EcoID, Variable)}. See \code{\link[climr:data-option-lists]{climr::list_gcms()}}, \code{\link[climr:data-option-lists]{climr::list_ssps()}} for the full
+to give a single LANDIS-II-compatible value per \verb{(Year, Month, EcoID, Variable)}. See \code{\link[climr:list_gcms]{climr::list_gcms()}}, \code{\link[climr:list_ssps]{climr::list_ssps()}} for the full
 choice sets.
 }
 

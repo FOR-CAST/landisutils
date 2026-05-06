@@ -5,8 +5,6 @@
 \title{Biomass Output by Age Extension}
 \description{
 Biomass Output by Age Extension
-
-Biomass Output by Age Extension
 }
 \examples{
 biomass_by_age <- OutputBiomassByAge$new(
@@ -30,84 +28,85 @@ LANDIS-II Biomass-by-Age Output v4.0 Extension User Guide
 }
 \concept{Biomass-by-Age Output helpers}
 \section{Super class}{
-\code{\link[landisutils:LandisExtension]{landisutils::LandisExtension}} -> \code{OutputBiomassByAge}
+\code{\link[landisutils:LandisExtension]{LandisExtension}} -> \code{OutputBiomassByAge}
 }
 \section{Active bindings}{
-\if{html}{\out{<div class="r6-active-bindings">}}
-\describe{
-\item{\code{MapNames}}{Character. File pattern for writing outputs to disk.}
+  \if{html}{\out{<div class="r6-active-bindings">}}
+  \describe{
+    \item{\code{MapNames}}{Character. File pattern for writing outputs to disk.}
 
-\item{\code{Species}}{Character vector of species names with age classes.}
-}
-\if{html}{\out{</div>}}
+    \item{\code{Species}}{Character vector of species names with age classes.}
+  }
+  \if{html}{\out{</div>}}
 }
 \section{Methods}{
 \subsection{Public methods}{
-\itemize{
-\item \href{#method-OutputBiomassByAge-new}{\code{OutputBiomassByAge$new()}}
-\item \href{#method-OutputBiomassByAge-write}{\code{OutputBiomassByAge$write()}}
-\item \href{#method-OutputBiomassByAge-clone}{\code{OutputBiomassByAge$clone()}}
+  \itemize{
+    \item \href{#method-OutputBiomassByAge-initialize}{\code{OutputBiomassByAge$new()}}
+    \item \href{#method-OutputBiomassByAge-write}{\code{OutputBiomassByAge$write()}}
+    \item \href{#method-OutputBiomassByAge-clone}{\code{OutputBiomassByAge$clone()}}
+  }
 }
-}
-\if{html}{\out{
-<details open><summary>Inherited methods</summary>
+\if{html}{\out{<details open><summary>Inherited methods</summary>
 <ul>
-<li><span class="pkg-link" data-pkg="landisutils" data-topic="LandisExtension" data-id="add_file"><a href='../../landisutils/html/LandisExtension.html#method-LandisExtension-add_file'><code>landisutils::LandisExtension$add_file()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="landisutils" data-topic="LandisExtension" data-id="add_file"><a href='../../landisutils/html/LandisExtension.html#method-LandisExtension-add_file'><code>LandisExtension$add_file()</code></a></span></li>
 </ul>
-</details>
-}}
+</details>}}
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-OutputBiomassByAge-new"></a>}}
-\if{latex}{\out{\hypertarget{method-OutputBiomassByAge-new}{}}}
-\subsection{Method \code{new()}}{
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{OutputBiomassByAge$new(
+\if{html}{\out{<a id="method-OutputBiomassByAge-initialize"></a>}}
+\if{latex}{\out{\hypertarget{method-OutputBiomassByAge-initialize}{}}}
+\subsection{\code{OutputBiomassByAge$new()}}{
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{OutputBiomassByAge$new(
   path = NULL,
   Timestep = 10L,
   MapNames = NULL,
   Species = NULL
-)}\if{html}{\out{</div>}}
+)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{path}}{Character. Directory path.}
+      \item{\code{Timestep}}{Integer.}
+      \item{\code{MapNames}}{Character. File pattern for writing outputs to disk.}
+      \item{\code{Species}}{Character vector of species names with age classes.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{path}}{Character. Directory path.}
-
-\item{\code{Timestep}}{Integer.}
-
-\item{\code{MapNames}}{Character. File pattern for writing outputs to disk.}
-
-\item{\code{Species}}{Character vector of species names with age classes.}
-}
-\if{html}{\out{</div>}}
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-OutputBiomassByAge-write"></a>}}
 \if{latex}{\out{\hypertarget{method-OutputBiomassByAge-write}{}}}
-\subsection{Method \code{write()}}{
-Write extension inputs to disk
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{OutputBiomassByAge$write()}\if{html}{\out{</div>}}
+\subsection{\code{OutputBiomassByAge$write()}}{
+  Write extension inputs to disk
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{OutputBiomassByAge$write()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-OutputBiomassByAge-clone"></a>}}
 \if{latex}{\out{\hypertarget{method-OutputBiomassByAge-clone}{}}}
-\subsection{Method \code{clone()}}{
-The objects of this class are cloneable with this method.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{OutputBiomassByAge$clone(deep = FALSE)}\if{html}{\out{</div>}}
+\subsection{\code{OutputBiomassByAge$clone()}}{
+  The objects of this class are cloneable with this method.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{OutputBiomassByAge$clone(deep = FALSE)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{deep}}{Whether to make a deep clone.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{deep}}{Whether to make a deep clone.}
-}
-\if{html}{\out{</div>}}
-}
-}
 }

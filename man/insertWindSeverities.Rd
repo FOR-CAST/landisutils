@@ -17,11 +17,11 @@ Character string(s) to write to the suitable LANDIS-II input file.
 Specify the \code{WindSeverities} table for the Original Wind extension
 }
 \seealso{
-Other Original Wind helpers: 
+Other Original Wind helpers:
 \code{\link{OriginalWind}},
-\code{\link{defaultWindSeverities}()},
-\code{\link{insertWindEventParametersTable}()},
-\code{\link{prepWindEventParametersTable}()}
+\code{\link[=defaultWindSeverities]{defaultWindSeverities()}},
+\code{\link[=insertWindEventParametersTable]{insertWindEventParametersTable()}},
+\code{\link[=prepWindEventParametersTable]{prepWindEventParametersTable()}}
 }
 \concept{Original Wind helpers}
 \keyword{internal}

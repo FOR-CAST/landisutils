@@ -16,13 +16,13 @@ Character string(s) to write to the suitable LANDIS-II input file.
 Specify the \code{RoadTypesForExitingWood} table for the Forest Roads extension
 }
 \seealso{
-Other Forest Roads Simulation helpers: 
+Other Forest Roads Simulation helpers:
 \code{\link{ForestRoadsSimulation}},
-\code{\link{elevationCostRange}()},
-\code{\link{exitRoadType}()},
-\code{\link{insertElevationCosts}()},
-\code{\link{insertRoadTypes}()},
-\code{\link{roadType}()}
+\code{\link[=elevationCostRange]{elevationCostRange()}},
+\code{\link[=exitRoadType]{exitRoadType()}},
+\code{\link[=insertElevationCosts]{insertElevationCosts()}},
+\code{\link[=insertRoadTypes]{insertRoadTypes()}},
+\code{\link[=roadType]{roadType()}}
 }
 \concept{Forest Roads Simulation helpers}
 \keyword{internal}

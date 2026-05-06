@@ -5,8 +5,6 @@
 \title{Forest Carbon Succession (ForCS) Extension}
 \description{
 Forest Carbon Succession (ForCS) Extension
-
-Forest Carbon Succession (ForCS) Extension
 }
 \examples{
 ## See vignette for example usage
@@ -25,93 +23,92 @@ Shared scenario inputs:
 \code{\link[=prepInitialCommunities]{prepInitialCommunities()}},
 \code{\link[=prepSpeciesData]{prepSpeciesData()}}.
 
-Other ForCS helpers: 
-\code{\link{insertANPPTimeSeries}()},
-\code{\link{insertAvailableLightBiomass}()},
-\code{\link{insertDOMPools}()},
-\code{\link{insertEcoSppDOMParameters}()},
-\code{\link{insertEstablishProbabilities}()},
-\code{\link{insertForCSMapControl}()},
-\code{\link{insertForCSProportions}()},
-\code{\link{insertLightEstablishmentTable}()},
-\code{\link{insertMaxBiomassTimeSeries}()},
-\code{\link{insertOutputTables}()},
-\code{\link{insertRootDynamics}()},
-\code{\link{insertSpeciesParameters}()},
-\code{\link{insertSpinUp}()},
-\code{\link{prepClimateFile}()},
-\code{\link{prepDisturbanceMatrixFile}()},
-\code{\link{prepSnagFile}()}
+Other ForCS helpers:
+\code{\link[=insertANPPTimeSeries]{insertANPPTimeSeries()}},
+\code{\link[=insertAvailableLightBiomass]{insertAvailableLightBiomass()}},
+\code{\link[=insertDOMPools]{insertDOMPools()}},
+\code{\link[=insertEcoSppDOMParameters]{insertEcoSppDOMParameters()}},
+\code{\link[=insertEstablishProbabilities]{insertEstablishProbabilities()}},
+\code{\link[=insertForCSMapControl]{insertForCSMapControl()}},
+\code{\link[=insertForCSProportions]{insertForCSProportions()}},
+\code{\link[=insertLightEstablishmentTable]{insertLightEstablishmentTable()}},
+\code{\link[=insertMaxBiomassTimeSeries]{insertMaxBiomassTimeSeries()}},
+\code{\link[=insertOutputTables]{insertOutputTables()}},
+\code{\link[=insertRootDynamics]{insertRootDynamics()}},
+\code{\link[=insertSpeciesParameters]{insertSpeciesParameters()}},
+\code{\link[=insertSpinUp]{insertSpinUp()}},
+\code{\link[=prepClimateFile]{prepClimateFile()}},
+\code{\link[=prepDisturbanceMatrixFile]{prepDisturbanceMatrixFile()}},
+\code{\link[=prepSnagFile]{prepSnagFile()}}
 }
 \concept{ForCS helpers}
 \section{Super class}{
-\code{\link[landisutils:LandisExtension]{landisutils::LandisExtension}} -> \code{ForCS}
+\code{\link[landisutils:LandisExtension]{LandisExtension}} -> \code{ForCS}
 }
 \section{Active bindings}{
-\if{html}{\out{<div class="r6-active-bindings">}}
-\describe{
-\item{\code{SeedingAlgorithm}}{Character. Dispersal algorithm to use.
+  \if{html}{\out{<div class="r6-active-bindings">}}
+  \describe{
+    \item{\code{SeedingAlgorithm}}{Character. Dispersal algorithm to use.
 One of \code{"WardSeedDispersal"}, \code{"NoDispersal"}, \code{"UniversalDispersal"}.}
 
-\item{\code{ForCSClimateFile}}{Character. Relative file path.}
+    \item{\code{ForCSClimateFile}}{Character. Relative file path.}
 
-\item{\code{InitialCommunitiesFiles}}{Character. Relative file paths.}
+    \item{\code{InitialCommunitiesFiles}}{Character. Relative file paths.}
 
-\item{\code{DisturbanceMatrixFile}}{Character. Relative file path.}
+    \item{\code{DisturbanceMatrixFile}}{Character. Relative file path.}
 
-\item{\code{SnagFile}}{(Optional) Character. Relative file path.}
+    \item{\code{SnagFile}}{(Optional) Character. Relative file path.}
 
-\item{\code{OutputTables}}{\code{data.frame}.}
+    \item{\code{OutputTables}}{\code{data.frame}.}
 
-\item{\code{ForCSMapControl}}{\code{data.frame}.}
+    \item{\code{ForCSMapControl}}{\code{data.frame}.}
 
-\item{\code{MapOutputInterval}}{Integer.}
+    \item{\code{MapOutputInterval}}{Integer.}
 
-\item{\code{SpinUp}}{\code{data.frame}.}
+    \item{\code{SpinUp}}{\code{data.frame}.}
 
-\item{\code{AvailableLightBiomass}}{\code{data.frame}.}
+    \item{\code{AvailableLightBiomass}}{\code{data.frame}.}
 
-\item{\code{LightEstablishmentTable}}{\code{data.frame}.}
+    \item{\code{LightEstablishmentTable}}{\code{data.frame}.}
 
-\item{\code{SpeciesParameters}}{\code{data.frame}.}
+    \item{\code{SpeciesParameters}}{\code{data.frame}.}
 
-\item{\code{DOMPools}}{\code{data.frame}.}
+    \item{\code{DOMPools}}{\code{data.frame}.}
 
-\item{\code{EcoSppDOMParameters}}{\code{data.frame}.}
+    \item{\code{EcoSppDOMParameters}}{\code{data.frame}.}
 
-\item{\code{ForCSProportions}}{\code{data.frame}.}
+    \item{\code{ForCSProportions}}{\code{data.frame}.}
 
-\item{\code{ANPPTimeSeries}}{\code{data.frame}.}
+    \item{\code{ANPPTimeSeries}}{\code{data.frame}.}
 
-\item{\code{MaxBiomassTimeSeries}}{\code{data.frame}.}
+    \item{\code{MaxBiomassTimeSeries}}{\code{data.frame}.}
 
-\item{\code{EstablishProbabilities}}{\code{data.frame}.}
+    \item{\code{EstablishProbabilities}}{\code{data.frame}.}
 
-\item{\code{RootDynamics}}{\code{data.frame}.}
-}
-\if{html}{\out{</div>}}
+    \item{\code{RootDynamics}}{\code{data.frame}.}
+  }
+  \if{html}{\out{</div>}}
 }
 \section{Methods}{
 \subsection{Public methods}{
-\itemize{
-\item \href{#method-ForCS-new}{\code{ForCS$new()}}
-\item \href{#method-ForCS-write}{\code{ForCS$write()}}
-\item \href{#method-ForCS-clone}{\code{ForCS$clone()}}
+  \itemize{
+    \item \href{#method-ForCS-initialize}{\code{ForCS$new()}}
+    \item \href{#method-ForCS-write}{\code{ForCS$write()}}
+    \item \href{#method-ForCS-clone}{\code{ForCS$clone()}}
+  }
 }
-}
-\if{html}{\out{
-<details open><summary>Inherited methods</summary>
+\if{html}{\out{<details open><summary>Inherited methods</summary>
 <ul>
-<li><span class="pkg-link" data-pkg="landisutils" data-topic="LandisExtension" data-id="add_file"><a href='../../landisutils/html/LandisExtension.html#method-LandisExtension-add_file'><code>landisutils::LandisExtension$add_file()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="landisutils" data-topic="LandisExtension" data-id="add_file"><a href='../../landisutils/html/LandisExtension.html#method-LandisExtension-add_file'><code>LandisExtension$add_file()</code></a></span></li>
 </ul>
-</details>
-}}
+</details>}}
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-ForCS-new"></a>}}
-\if{latex}{\out{\hypertarget{method-ForCS-new}{}}}
-\subsection{Method \code{new()}}{
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ForCS$new(
+\if{html}{\out{<a id="method-ForCS-initialize"></a>}}
+\if{latex}{\out{\hypertarget{method-ForCS-initialize}{}}}
+\subsection{\code{ForCS$new()}}{
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{ForCS$new(
   path,
   Timestep = 1,
   SeedingAlgorithm = NULL,
@@ -133,91 +130,76 @@ One of \code{"WardSeedDispersal"}, \code{"NoDispersal"}, \code{"UniversalDispers
   MaxBiomassTimeSeries = NULL,
   EstablishProbabilities = NULL,
   RootDynamics = NULL
-)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{path}}{Character. Directory path.}
-
-\item{\code{Timestep}}{Integer.}
-
-\item{\code{SeedingAlgorithm}}{Character. Dispersal algorithm to use.
+)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{path}}{Character. Directory path.}
+      \item{\code{Timestep}}{Integer.}
+      \item{\code{SeedingAlgorithm}}{Character. Dispersal algorithm to use.
 One of \code{"WardSeedDispersal"}, \code{"NoDispersal"}, \code{"UniversalDispersal"}.}
-
-\item{\code{ForCSClimateFile}}{Character. Relative file path. Mean-annual-temperature
+      \item{\code{ForCSClimateFile}}{Character. Relative file path. Mean-annual-temperature
 climate file specific to ForCS (see \code{\link[=prepClimateFile]{prepClimateFile()}}).}
-
-\item{\code{InitialCommunitiesFiles}}{Character. Two-element vector of relative
+      \item{\code{InitialCommunitiesFiles}}{Character. Two-element vector of relative
 file paths: the initial-communities text/CSV and the initial-communities
 raster.}
-
-\item{\code{DisturbanceMatrixFile}}{Character. Relative file path.}
-
-\item{\code{SnagFile}}{(Optional) Character. Relative file path. May be \code{NULL}.}
-
-\item{\code{OutputTables}}{\code{data.frame} corresponding to \code{ForCSOutput} (one row,
+      \item{\code{DisturbanceMatrixFile}}{Character. Relative file path.}
+      \item{\code{SnagFile}}{(Optional) Character. Relative file path. May be \code{NULL}.}
+      \item{\code{OutputTables}}{\code{data.frame} corresponding to \code{ForCSOutput} (one row,
 four columns: Biomass, DOM_Pools, Fluxes, Summary intervals).}
-
-\item{\code{ForCSMapControl}}{\code{data.frame} (one row, seven columns: \code{BiomassC},
+      \item{\code{ForCSMapControl}}{\code{data.frame} (one row, seven columns: \code{BiomassC},
 \code{SDOMC}, \code{NBP}, \code{NEP}, \code{NPP}, \code{RH}, \code{ToFPS} toggles).}
-
-\item{\code{MapOutputInterval}}{Integer. Map output interval (years).}
-
-\item{\code{SpinUp}}{\code{data.frame} (one row, four columns: On/Off Flag,
+      \item{\code{MapOutputInterval}}{Integer. Map output interval (years).}
+      \item{\code{SpinUp}}{\code{data.frame} (one row, four columns: On/Off Flag,
 Biomass Spin-up Flag, Tolerance \%, Max Iterations).}
-
-\item{\code{AvailableLightBiomass}}{\code{data.frame}.}
-
-\item{\code{LightEstablishmentTable}}{\code{data.frame}.}
-
-\item{\code{SpeciesParameters}}{\code{data.frame} with 10 columns: \code{Species},
+      \item{\code{AvailableLightBiomass}}{\code{data.frame}.}
+      \item{\code{LightEstablishmentTable}}{\code{data.frame}.}
+      \item{\code{SpeciesParameters}}{\code{data.frame} with 10 columns: \code{Species},
 \code{LeafLong}, \code{MortalShape}, \code{MerchMinAge}, \code{MerchCurveA}, \code{MerchCurveB},
 \code{PropNonMerchToFastAG}, \code{GrowthShape}, \code{ShadeTolerance}, \code{FireTolerance}.}
-
-\item{\code{DOMPools}}{\code{data.frame}.}
-
-\item{\code{EcoSppDOMParameters}}{\code{data.frame}.}
-
-\item{\code{ForCSProportions}}{\code{data.frame}.}
-
-\item{\code{ANPPTimeSeries}}{\code{data.frame}.}
-
-\item{\code{MaxBiomassTimeSeries}}{\code{data.frame}.}
-
-\item{\code{EstablishProbabilities}}{\code{data.frame}.}
-
-\item{\code{RootDynamics}}{\code{data.frame}.}
+      \item{\code{DOMPools}}{\code{data.frame}.}
+      \item{\code{EcoSppDOMParameters}}{\code{data.frame}.}
+      \item{\code{ForCSProportions}}{\code{data.frame}.}
+      \item{\code{ANPPTimeSeries}}{\code{data.frame}.}
+      \item{\code{MaxBiomassTimeSeries}}{\code{data.frame}.}
+      \item{\code{EstablishProbabilities}}{\code{data.frame}.}
+      \item{\code{RootDynamics}}{\code{data.frame}.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
-\if{html}{\out{</div>}}
-}
-}
+
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-ForCS-write"></a>}}
 \if{latex}{\out{\hypertarget{method-ForCS-write}{}}}
-\subsection{Method \code{write()}}{
-Write extension inputs to disk
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ForCS$write()}\if{html}{\out{</div>}}
+\subsection{\code{ForCS$write()}}{
+  Write extension inputs to disk
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{ForCS$write()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-ForCS-clone"></a>}}
 \if{latex}{\out{\hypertarget{method-ForCS-clone}{}}}
-\subsection{Method \code{clone()}}{
-The objects of this class are cloneable with this method.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ForCS$clone(deep = FALSE)}\if{html}{\out{</div>}}
+\subsection{\code{ForCS$clone()}}{
+  The objects of this class are cloneable with this method.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{ForCS$clone(deep = FALSE)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{deep}}{Whether to make a deep clone.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{deep}}{Whether to make a deep clone.}
-}
-\if{html}{\out{</div>}}
-}
-}
 }

@@ -18,12 +18,12 @@ A list of class \code{"ExitRoadType"}.
 Construct an exit road type (where wood leaves the landscape)
 }
 \seealso{
-Other Forest Roads Simulation helpers: 
+Other Forest Roads Simulation helpers:
 \code{\link{ForestRoadsSimulation}},
-\code{\link{elevationCostRange}()},
-\code{\link{insertElevationCosts}()},
-\code{\link{insertExitRoadTypes}()},
-\code{\link{insertRoadTypes}()},
-\code{\link{roadType}()}
+\code{\link[=elevationCostRange]{elevationCostRange()}},
+\code{\link[=insertElevationCosts]{insertElevationCosts()}},
+\code{\link[=insertExitRoadTypes]{insertExitRoadTypes()}},
+\code{\link[=insertRoadTypes]{insertRoadTypes()}},
+\code{\link[=roadType]{roadType()}}
 }
 \concept{Forest Roads Simulation helpers}

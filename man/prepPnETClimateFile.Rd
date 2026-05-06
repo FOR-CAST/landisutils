@@ -27,13 +27,13 @@ in use. The first line is a header; subsequent lines are monthly
 observations in chronological order. Ozone (\code{O3}) is optional.
 }
 \seealso{
-Other PnET Succession helpers: 
+Other PnET Succession helpers:
 \code{\link{PnETSuccession}},
-\code{\link{defaultPnETDisturbanceReductions}()},
-\code{\link{prepPNEToutputsites}()},
-\code{\link{prepPnETDisturbanceReductions}()},
-\code{\link{prepPnETEcoregionParameters}()},
-\code{\link{prepPnETGenericParameters}()},
-\code{\link{prepPnETSpeciesParameters}()}
+\code{\link[=defaultPnETDisturbanceReductions]{defaultPnETDisturbanceReductions()}},
+\code{\link[=prepPNEToutputsites]{prepPNEToutputsites()}},
+\code{\link[=prepPnETDisturbanceReductions]{prepPnETDisturbanceReductions()}},
+\code{\link[=prepPnETEcoregionParameters]{prepPnETEcoregionParameters()}},
+\code{\link[=prepPnETGenericParameters]{prepPnETGenericParameters()}},
+\code{\link[=prepPnETSpeciesParameters]{prepPnETSpeciesParameters()}}
 }
 \concept{PnET Succession helpers}

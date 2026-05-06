@@ -16,10 +16,10 @@ Character string(s) to write to the suitable LANDIS-II input file.
 Specify NECN Succession \code{FireReductionParameters} table
 }
 \seealso{
-Other NECN Succession helpers: 
+Other NECN Succession helpers:
 \code{\link{NECNSuccession}},
-\code{\link{insertNECNHarvestReductionParameters}()},
-\code{\link{prepNECNFireReductionParameters}()}
+\code{\link[=insertNECNHarvestReductionParameters]{insertNECNHarvestReductionParameters()}},
+\code{\link[=prepNECNFireReductionParameters]{prepNECNFireReductionParameters()}}
 }
 \concept{NECN Succession helpers}
 \keyword{internal}

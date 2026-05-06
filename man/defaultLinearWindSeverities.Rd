@@ -14,11 +14,11 @@ defaultLinearWindSeverities()
 Matches the example in the LANDIS-II Linear Wind Disturbance v3 User Guide.
 }
 \seealso{
-Other Linear Wind helpers: 
+Other Linear Wind helpers:
 \code{\link{LinearWind}},
-\code{\link{insertLinearWindEcoregionModifiers}()},
-\code{\link{insertLinearWindIntensityTable}()},
-\code{\link{insertLinearWindSeverities}()},
-\code{\link{insertWindDirectionTable}()}
+\code{\link[=insertLinearWindEcoregionModifiers]{insertLinearWindEcoregionModifiers()}},
+\code{\link[=insertLinearWindIntensityTable]{insertLinearWindIntensityTable()}},
+\code{\link[=insertLinearWindSeverities]{insertLinearWindSeverities()}},
+\code{\link[=insertWindDirectionTable]{insertWindDirectionTable()}}
 }
 \concept{Linear Wind helpers}

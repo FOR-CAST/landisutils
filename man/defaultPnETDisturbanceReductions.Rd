@@ -18,13 +18,13 @@ study system. The first column (\code{Pool}) names the dead-pool reduction,
 drawn from \link{.pnetDisturbancePools}.
 }
 \seealso{
-Other PnET Succession helpers: 
+Other PnET Succession helpers:
 \code{\link{PnETSuccession}},
-\code{\link{prepPNEToutputsites}()},
-\code{\link{prepPnETClimateFile}()},
-\code{\link{prepPnETDisturbanceReductions}()},
-\code{\link{prepPnETEcoregionParameters}()},
-\code{\link{prepPnETGenericParameters}()},
-\code{\link{prepPnETSpeciesParameters}()}
+\code{\link[=prepPNEToutputsites]{prepPNEToutputsites()}},
+\code{\link[=prepPnETClimateFile]{prepPnETClimateFile()}},
+\code{\link[=prepPnETDisturbanceReductions]{prepPnETDisturbanceReductions()}},
+\code{\link[=prepPnETEcoregionParameters]{prepPnETEcoregionParameters()}},
+\code{\link[=prepPnETGenericParameters]{prepPnETGenericParameters()}},
+\code{\link[=prepPnETSpeciesParameters]{prepPnETSpeciesParameters()}}
 }
 \concept{PnET Succession helpers}

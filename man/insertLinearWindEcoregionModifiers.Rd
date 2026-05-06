@@ -16,12 +16,12 @@ Character string(s) to write to the suitable LANDIS-II input file.
 Ecoregions not in the table are assigned a modifier of 0 (no modification).
 }
 \seealso{
-Other Linear Wind helpers: 
+Other Linear Wind helpers:
 \code{\link{LinearWind}},
-\code{\link{defaultLinearWindSeverities}()},
-\code{\link{insertLinearWindIntensityTable}()},
-\code{\link{insertLinearWindSeverities}()},
-\code{\link{insertWindDirectionTable}()}
+\code{\link[=defaultLinearWindSeverities]{defaultLinearWindSeverities()}},
+\code{\link[=insertLinearWindIntensityTable]{insertLinearWindIntensityTable()}},
+\code{\link[=insertLinearWindSeverities]{insertLinearWindSeverities()}},
+\code{\link[=insertWindDirectionTable]{insertWindDirectionTable()}}
 }
 \concept{Linear Wind helpers}
 \keyword{internal}

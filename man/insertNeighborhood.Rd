@@ -16,19 +16,19 @@ Character string(s) to write to the suitable LANDIS-II input file.
 Specify the neighborhood-resource block of a Climate BDA agent file
 }
 \seealso{
-Other Climate BDA helpers: 
+Other Climate BDA helpers:
 \code{\link{ClimateBDA}},
-\code{\link{bdaAgent}()},
-\code{\link{insertAgentHeader}()},
-\code{\link{insertBDAInputFiles}()},
-\code{\link{insertBDASpeciesParameters}()},
-\code{\link{insertDispersal}()},
-\code{\link{insertDisturbanceModifiers}()},
-\code{\link{insertEcoregionModifiers}()},
-\code{\link{insertIgnoredSpecies}()},
-\code{\link{insertIntensityClasses}()},
-\code{\link{insertOutbreakPattern}()},
-\code{\link{writeAgentFile}()}
+\code{\link[=bdaAgent]{bdaAgent()}},
+\code{\link[=insertAgentHeader]{insertAgentHeader()}},
+\code{\link[=insertBDAInputFiles]{insertBDAInputFiles()}},
+\code{\link[=insertBDASpeciesParameters]{insertBDASpeciesParameters()}},
+\code{\link[=insertDispersal]{insertDispersal()}},
+\code{\link[=insertDisturbanceModifiers]{insertDisturbanceModifiers()}},
+\code{\link[=insertEcoregionModifiers]{insertEcoregionModifiers()}},
+\code{\link[=insertIgnoredSpecies]{insertIgnoredSpecies()}},
+\code{\link[=insertIntensityClasses]{insertIntensityClasses()}},
+\code{\link[=insertOutbreakPattern]{insertOutbreakPattern()}},
+\code{\link[=writeAgentFile]{writeAgentFile()}}
 }
 \concept{Climate BDA helpers}
 \keyword{internal}

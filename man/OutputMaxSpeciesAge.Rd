@@ -5,8 +5,6 @@
 \title{Max Species Age Extension}
 \description{
 Max Species Age Extension
-
-Max Species Age Extension
 }
 \examples{
 max_species_age <- OutputMaxSpeciesAge$new(
@@ -25,79 +23,80 @@ LANDIS-II Output Max Species Age v4 Extension User Guide
 }
 \concept{Max Species Age Output helpers}
 \section{Super class}{
-\code{\link[landisutils:LandisExtension]{landisutils::LandisExtension}} -> \code{OutputMaxSpeciesAge}
+\code{\link[landisutils:LandisExtension]{LandisExtension}} -> \code{OutputMaxSpeciesAge}
 }
 \section{Active bindings}{
-\if{html}{\out{<div class="r6-active-bindings">}}
-\describe{
-\item{\code{MapNames}}{Character. File pattern for writing outputs to disk.}
+  \if{html}{\out{<div class="r6-active-bindings">}}
+  \describe{
+    \item{\code{MapNames}}{Character. File pattern for writing outputs to disk.}
 
-\item{\code{Species}}{Character vector of species names, or "all".}
-}
-\if{html}{\out{</div>}}
+    \item{\code{Species}}{Character vector of species names, or "all".}
+  }
+  \if{html}{\out{</div>}}
 }
 \section{Methods}{
 \subsection{Public methods}{
-\itemize{
-\item \href{#method-OutputMaxSpeciesAge-new}{\code{OutputMaxSpeciesAge$new()}}
-\item \href{#method-OutputMaxSpeciesAge-write}{\code{OutputMaxSpeciesAge$write()}}
-\item \href{#method-OutputMaxSpeciesAge-clone}{\code{OutputMaxSpeciesAge$clone()}}
+  \itemize{
+    \item \href{#method-OutputMaxSpeciesAge-initialize}{\code{OutputMaxSpeciesAge$new()}}
+    \item \href{#method-OutputMaxSpeciesAge-write}{\code{OutputMaxSpeciesAge$write()}}
+    \item \href{#method-OutputMaxSpeciesAge-clone}{\code{OutputMaxSpeciesAge$clone()}}
+  }
 }
-}
-\if{html}{\out{
-<details open><summary>Inherited methods</summary>
+\if{html}{\out{<details open><summary>Inherited methods</summary>
 <ul>
-<li><span class="pkg-link" data-pkg="landisutils" data-topic="LandisExtension" data-id="add_file"><a href='../../landisutils/html/LandisExtension.html#method-LandisExtension-add_file'><code>landisutils::LandisExtension$add_file()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="landisutils" data-topic="LandisExtension" data-id="add_file"><a href='../../landisutils/html/LandisExtension.html#method-LandisExtension-add_file'><code>LandisExtension$add_file()</code></a></span></li>
 </ul>
-</details>
-}}
+</details>}}
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-OutputMaxSpeciesAge-new"></a>}}
-\if{latex}{\out{\hypertarget{method-OutputMaxSpeciesAge-new}{}}}
-\subsection{Method \code{new()}}{
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{OutputMaxSpeciesAge$new(path, Timestep = 10, MapNames = NULL, Species = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<a id="method-OutputMaxSpeciesAge-initialize"></a>}}
+\if{latex}{\out{\hypertarget{method-OutputMaxSpeciesAge-initialize}{}}}
+\subsection{\code{OutputMaxSpeciesAge$new()}}{
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{OutputMaxSpeciesAge$new(path, Timestep = 10, MapNames = NULL, Species = NULL)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{path}}{Character. Directory path.}
+      \item{\code{Timestep}}{Integer.}
+      \item{\code{MapNames}}{Character. File pattern for writing outputs to disk.}
+      \item{\code{Species}}{Character vector of species names, or "all".}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{path}}{Character. Directory path.}
-
-\item{\code{Timestep}}{Integer.}
-
-\item{\code{MapNames}}{Character. File pattern for writing outputs to disk.}
-
-\item{\code{Species}}{Character vector of species names, or "all".}
-}
-\if{html}{\out{</div>}}
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-OutputMaxSpeciesAge-write"></a>}}
 \if{latex}{\out{\hypertarget{method-OutputMaxSpeciesAge-write}{}}}
-\subsection{Method \code{write()}}{
-Write extension inputs to disk
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{OutputMaxSpeciesAge$write()}\if{html}{\out{</div>}}
+\subsection{\code{OutputMaxSpeciesAge$write()}}{
+  Write extension inputs to disk
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{OutputMaxSpeciesAge$write()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-OutputMaxSpeciesAge-clone"></a>}}
 \if{latex}{\out{\hypertarget{method-OutputMaxSpeciesAge-clone}{}}}
-\subsection{Method \code{clone()}}{
-The objects of this class are cloneable with this method.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{OutputMaxSpeciesAge$clone(deep = FALSE)}\if{html}{\out{</div>}}
+\subsection{\code{OutputMaxSpeciesAge$clone()}}{
+  The objects of this class are cloneable with this method.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{OutputMaxSpeciesAge$clone(deep = FALSE)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{deep}}{Whether to make a deep clone.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{deep}}{Whether to make a deep clone.}
-}
-\if{html}{\out{</div>}}
-}
-}
 }

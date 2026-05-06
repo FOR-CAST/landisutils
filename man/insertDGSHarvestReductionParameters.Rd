@@ -22,11 +22,11 @@ column is required even though it is not listed in user-guide
 §2.56.
 }
 \seealso{
-Other DGS Succession helpers: 
+Other DGS Succession helpers:
 \code{\link{DGSSuccession}},
-\code{\link{defaultDGSDammMcNIPParameters}()},
-\code{\link{insertDGSFireReductionParameters}()},
-\code{\link{prepDGSFireReductionParameters}()}
+\code{\link[=defaultDGSDammMcNIPParameters]{defaultDGSDammMcNIPParameters()}},
+\code{\link[=insertDGSFireReductionParameters]{insertDGSFireReductionParameters()}},
+\code{\link[=prepDGSFireReductionParameters]{prepDGSFireReductionParameters()}}
 }
 \concept{DGS Succession helpers}
 \keyword{internal}

@@ -31,13 +31,13 @@ One row per active ecoregion. Required columns are listed in
 top-level \code{ClimateConfigFile} is not in use.
 }
 \seealso{
-Other PnET Succession helpers: 
+Other PnET Succession helpers:
 \code{\link{PnETSuccession}},
-\code{\link{defaultPnETDisturbanceReductions}()},
-\code{\link{prepPNEToutputsites}()},
-\code{\link{prepPnETClimateFile}()},
-\code{\link{prepPnETDisturbanceReductions}()},
-\code{\link{prepPnETGenericParameters}()},
-\code{\link{prepPnETSpeciesParameters}()}
+\code{\link[=defaultPnETDisturbanceReductions]{defaultPnETDisturbanceReductions()}},
+\code{\link[=prepPNEToutputsites]{prepPNEToutputsites()}},
+\code{\link[=prepPnETClimateFile]{prepPnETClimateFile()}},
+\code{\link[=prepPnETDisturbanceReductions]{prepPnETDisturbanceReductions()}},
+\code{\link[=prepPnETGenericParameters]{prepPnETGenericParameters()}},
+\code{\link[=prepPnETSpeciesParameters]{prepPnETSpeciesParameters()}}
 }
 \concept{PnET Succession helpers}

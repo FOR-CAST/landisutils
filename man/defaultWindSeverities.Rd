@@ -14,10 +14,10 @@ defaultWindSeverities()
 Matches the example in the LANDIS-II Original Wind v4.1 User Guide.
 }
 \seealso{
-Other Original Wind helpers: 
+Other Original Wind helpers:
 \code{\link{OriginalWind}},
-\code{\link{insertWindEventParametersTable}()},
-\code{\link{insertWindSeverities}()},
-\code{\link{prepWindEventParametersTable}()}
+\code{\link[=insertWindEventParametersTable]{insertWindEventParametersTable()}},
+\code{\link[=insertWindSeverities]{insertWindSeverities()}},
+\code{\link[=prepWindEventParametersTable]{prepWindEventParametersTable()}}
 }
 \concept{Original Wind helpers}

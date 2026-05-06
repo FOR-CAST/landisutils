@@ -16,11 +16,11 @@ Character string(s) to write to the suitable LANDIS-II input file.
 Specify DGS Succession \code{FireReductionParameters} table
 }
 \seealso{
-Other DGS Succession helpers: 
+Other DGS Succession helpers:
 \code{\link{DGSSuccession}},
-\code{\link{defaultDGSDammMcNIPParameters}()},
-\code{\link{insertDGSHarvestReductionParameters}()},
-\code{\link{prepDGSFireReductionParameters}()}
+\code{\link[=defaultDGSDammMcNIPParameters]{defaultDGSDammMcNIPParameters()}},
+\code{\link[=insertDGSHarvestReductionParameters]{insertDGSHarvestReductionParameters()}},
+\code{\link[=prepDGSFireReductionParameters]{prepDGSFireReductionParameters()}}
 }
 \concept{DGS Succession helpers}
 \keyword{internal}

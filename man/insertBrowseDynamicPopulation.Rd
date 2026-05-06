@@ -19,9 +19,9 @@ Emits the keyword \code{DynamicPopulation} followed by \code{RMin}, \code{RMax},
 \code{character(0)} when \code{dyn} is \code{NULL}.
 }
 \seealso{
-Other Biomass Browse helpers: 
+Other Biomass Browse helpers:
 \code{\link{BiomassBrowse}},
-\code{\link{insertBrowseSpeciesTable}()}
+\code{\link[=insertBrowseSpeciesTable]{insertBrowseSpeciesTable()}}
 }
 \concept{Biomass Browse helpers}
 \keyword{internal}

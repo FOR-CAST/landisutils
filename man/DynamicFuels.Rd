@@ -5,8 +5,6 @@
 \title{Dynamic Fuel System Extension}
 \description{
 Dynamic Fuel System Extension
-
-Dynamic Fuel System Extension
 }
 \references{
 LANDIS-II Dynamic Fuel System Extension v4.0 User Guide
@@ -17,66 +15,65 @@ Helpers that prepare inputs for this extension:
 \code{\link[=prepFuelTypesTable]{prepFuelTypesTable()}},
 \code{\link[=prepDisturbanceConversionTable]{prepDisturbanceConversionTable()}}.
 
-Other Dynamic Fuels helpers: 
-\code{\link{insertDisturbanceConversionTable}()},
-\code{\link{insertEcoregionTable}()},
-\code{\link{insertFuelTypesTable}()},
-\code{\link{insertSpeciesFuelCoefficients}()},
-\code{\link{prepDisturbanceConversionTable}()},
-\code{\link{prepFuelTypesTable}()}
+Other Dynamic Fuels helpers:
+\code{\link[=insertDisturbanceConversionTable]{insertDisturbanceConversionTable()}},
+\code{\link[=insertEcoregionTable]{insertEcoregionTable()}},
+\code{\link[=insertFuelTypesTable]{insertFuelTypesTable()}},
+\code{\link[=insertSpeciesFuelCoefficients]{insertSpeciesFuelCoefficients()}},
+\code{\link[=prepDisturbanceConversionTable]{prepDisturbanceConversionTable()}},
+\code{\link[=prepFuelTypesTable]{prepFuelTypesTable()}}
 }
 \concept{Dynamic Fuels helpers}
 \section{Super class}{
-\code{\link[landisutils:LandisExtension]{landisutils::LandisExtension}} -> \code{DynamicFuels}
+\code{\link[landisutils:LandisExtension]{LandisExtension}} -> \code{DynamicFuels}
 }
 \section{Active bindings}{
-\if{html}{\out{<div class="r6-active-bindings">}}
-\describe{
-\item{\code{SpeciesFuelCoefficients}}{\code{data.frame}.}
+  \if{html}{\out{<div class="r6-active-bindings">}}
+  \describe{
+    \item{\code{SpeciesFuelCoefficients}}{\code{data.frame}.}
 
-\item{\code{HardwoodMaximum}}{Integer.}
+    \item{\code{HardwoodMaximum}}{Integer.}
 
-\item{\code{DeadFirMaxAge}}{Integer. The duration of influence for the BDA extension's dead conifer index.}
+    \item{\code{DeadFirMaxAge}}{Integer. The duration of influence for the BDA extension's dead conifer index.}
 
-\item{\code{FuelTypes}}{\code{data.frame}. See \code{\link[=prepFuelTypesTable]{prepFuelTypesTable()}}.}
+    \item{\code{FuelTypes}}{\code{data.frame}. See \code{\link[=prepFuelTypesTable]{prepFuelTypesTable()}}.}
 
-\item{\code{EcoregionTable}}{\code{data.frame}.}
+    \item{\code{EcoregionTable}}{\code{data.frame}.}
 
-\item{\code{DisturbanceConversionTable}}{\code{data.frame}.}
+    \item{\code{DisturbanceConversionTable}}{\code{data.frame}.}
 
-\item{\code{MapFileNames}}{Character. File pattern for writing outputs to disk;
+    \item{\code{MapFileNames}}{Character. File pattern for writing outputs to disk;
 must contain the literal \code{{timestep}} placeholder (the only variable
 the upstream Dynamic Fuels \code{MapNames} parser knows -- see \code{MapFileNames.cs}).}
 
-\item{\code{PctConiferFileName}}{Character. File pattern for writing outputs to disk;
+    \item{\code{PctConiferFileName}}{Character. File pattern for writing outputs to disk;
 must contain the literal \code{{timestep}} placeholder.}
 
-\item{\code{PctDeadFirFileName}}{Character. File pattern for writing outputs to disk;
+    \item{\code{PctDeadFirFileName}}{Character. File pattern for writing outputs to disk;
 must contain the literal \code{{timestep}} placeholder.}
-}
-\if{html}{\out{</div>}}
+  }
+  \if{html}{\out{</div>}}
 }
 \section{Methods}{
 \subsection{Public methods}{
-\itemize{
-\item \href{#method-DynamicFuels-new}{\code{DynamicFuels$new()}}
-\item \href{#method-DynamicFuels-write}{\code{DynamicFuels$write()}}
-\item \href{#method-DynamicFuels-clone}{\code{DynamicFuels$clone()}}
+  \itemize{
+    \item \href{#method-DynamicFuels-initialize}{\code{DynamicFuels$new()}}
+    \item \href{#method-DynamicFuels-write}{\code{DynamicFuels$write()}}
+    \item \href{#method-DynamicFuels-clone}{\code{DynamicFuels$clone()}}
+  }
 }
-}
-\if{html}{\out{
-<details open><summary>Inherited methods</summary>
+\if{html}{\out{<details open><summary>Inherited methods</summary>
 <ul>
-<li><span class="pkg-link" data-pkg="landisutils" data-topic="LandisExtension" data-id="add_file"><a href='../../landisutils/html/LandisExtension.html#method-LandisExtension-add_file'><code>landisutils::LandisExtension$add_file()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="landisutils" data-topic="LandisExtension" data-id="add_file"><a href='../../landisutils/html/LandisExtension.html#method-LandisExtension-add_file'><code>LandisExtension$add_file()</code></a></span></li>
 </ul>
-</details>
-}}
+</details>}}
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-DynamicFuels-new"></a>}}
-\if{latex}{\out{\hypertarget{method-DynamicFuels-new}{}}}
-\subsection{Method \code{new()}}{
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{DynamicFuels$new(
+\if{html}{\out{<a id="method-DynamicFuels-initialize"></a>}}
+\if{latex}{\out{\hypertarget{method-DynamicFuels-initialize}{}}}
+\subsection{\code{DynamicFuels$new()}}{
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{DynamicFuels$new(
   path,
   Timestep = 10,
   SpeciesFuelCoefficients = NULL,
@@ -88,62 +85,57 @@ must contain the literal \code{{timestep}} placeholder.}
   MapFileNames = NULL,
   PctConiferFileName = NULL,
   PctDeadFirFileName = NULL
-)}\if{html}{\out{</div>}}
+)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{path}}{Character. Directory path.}
+      \item{\code{Timestep}}{Integer.}
+      \item{\code{SpeciesFuelCoefficients}}{\code{data.frame}.}
+      \item{\code{HardwoodMaximum}}{Integer.}
+      \item{\code{DeadFirMaxAge}}{Integer. The duration of influence for the BDA extension's dead conifer index.}
+      \item{\code{FuelTypes}}{\code{data.frame}. See \code{\link[=prepFuelTypesTable]{prepFuelTypesTable()}}.}
+      \item{\code{EcoregionTable}}{\code{data.frame}.}
+      \item{\code{DisturbanceConversionTable}}{\code{data.frame}.}
+      \item{\code{MapFileNames}}{Character. File pattern for writing outputs to disk.}
+      \item{\code{PctConiferFileName}}{Character. File pattern for writing outputs to disk.}
+      \item{\code{PctDeadFirFileName}}{Character. File pattern for writing outputs to disk.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{path}}{Character. Directory path.}
-
-\item{\code{Timestep}}{Integer.}
-
-\item{\code{SpeciesFuelCoefficients}}{\code{data.frame}.}
-
-\item{\code{HardwoodMaximum}}{Integer.}
-
-\item{\code{DeadFirMaxAge}}{Integer. The duration of influence for the BDA extension's dead conifer index.}
-
-\item{\code{FuelTypes}}{\code{data.frame}. See \code{\link[=prepFuelTypesTable]{prepFuelTypesTable()}}.}
-
-\item{\code{EcoregionTable}}{\code{data.frame}.}
-
-\item{\code{DisturbanceConversionTable}}{\code{data.frame}.}
-
-\item{\code{MapFileNames}}{Character. File pattern for writing outputs to disk.}
-
-\item{\code{PctConiferFileName}}{Character. File pattern for writing outputs to disk.}
-
-\item{\code{PctDeadFirFileName}}{Character. File pattern for writing outputs to disk.}
-}
-\if{html}{\out{</div>}}
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-DynamicFuels-write"></a>}}
 \if{latex}{\out{\hypertarget{method-DynamicFuels-write}{}}}
-\subsection{Method \code{write()}}{
-Write extension inputs to disk
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{DynamicFuels$write()}\if{html}{\out{</div>}}
+\subsection{\code{DynamicFuels$write()}}{
+  Write extension inputs to disk
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{DynamicFuels$write()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-DynamicFuels-clone"></a>}}
 \if{latex}{\out{\hypertarget{method-DynamicFuels-clone}{}}}
-\subsection{Method \code{clone()}}{
-The objects of this class are cloneable with this method.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{DynamicFuels$clone(deep = FALSE)}\if{html}{\out{</div>}}
+\subsection{\code{DynamicFuels$clone()}}{
+  The objects of this class are cloneable with this method.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{DynamicFuels$clone(deep = FALSE)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{deep}}{Whether to make a deep clone.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{deep}}{Whether to make a deep clone.}
-}
-\if{html}{\out{</div>}}
-}
-}
 }

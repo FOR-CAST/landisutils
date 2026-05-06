@@ -5,8 +5,6 @@
 \title{Cohort Statistics Extension}
 \description{
 Cohort Statistics Extension
-
-Cohort Statistics Extension
 }
 \examples{
 # cohort_statistics <- OutputCohortStats$new(
@@ -26,46 +24,45 @@ LANDIS-II Cohort Statistics v4 Extension User Guide
 }
 \concept{Cohort Statistics Output helpers}
 \section{Super class}{
-\code{\link[landisutils:LandisExtension]{landisutils::LandisExtension}} -> \code{OutputCohortStats}
+\code{\link[landisutils:LandisExtension]{LandisExtension}} -> \code{OutputCohortStats}
 }
 \section{Active bindings}{
-\if{html}{\out{<div class="r6-active-bindings">}}
-\describe{
-\item{\code{SpeciesAgeStats}}{Named character vector specifying the \code{stats} and \code{species}.}
+  \if{html}{\out{<div class="r6-active-bindings">}}
+  \describe{
+    \item{\code{SpeciesAgeStats}}{Named character vector specifying the \code{stats} and \code{species}.}
 
-\item{\code{SpeciesAgeMapNames}}{Character. File pattern for writing outputs to disk.}
+    \item{\code{SpeciesAgeMapNames}}{Character. File pattern for writing outputs to disk.}
 
-\item{\code{SiteAgeStats}}{Named character vector specifying the \code{stats}.}
+    \item{\code{SiteAgeStats}}{Named character vector specifying the \code{stats}.}
 
-\item{\code{SiteAgeMapNames}}{Character. File pattern for writing outputs to disk.}
+    \item{\code{SiteAgeMapNames}}{Character. File pattern for writing outputs to disk.}
 
-\item{\code{SiteSpeciesStats}}{Named character vector specifying the \code{stats}.}
+    \item{\code{SiteSpeciesStats}}{Named character vector specifying the \code{stats}.}
 
-\item{\code{SiteSpeciesMapNames}}{Character. File pattern for writing outputs to disk.}
-}
-\if{html}{\out{</div>}}
+    \item{\code{SiteSpeciesMapNames}}{Character. File pattern for writing outputs to disk.}
+  }
+  \if{html}{\out{</div>}}
 }
 \section{Methods}{
 \subsection{Public methods}{
-\itemize{
-\item \href{#method-OutputCohortStats-new}{\code{OutputCohortStats$new()}}
-\item \href{#method-OutputCohortStats-write}{\code{OutputCohortStats$write()}}
-\item \href{#method-OutputCohortStats-clone}{\code{OutputCohortStats$clone()}}
+  \itemize{
+    \item \href{#method-OutputCohortStats-initialize}{\code{OutputCohortStats$new()}}
+    \item \href{#method-OutputCohortStats-write}{\code{OutputCohortStats$write()}}
+    \item \href{#method-OutputCohortStats-clone}{\code{OutputCohortStats$clone()}}
+  }
 }
-}
-\if{html}{\out{
-<details open><summary>Inherited methods</summary>
+\if{html}{\out{<details open><summary>Inherited methods</summary>
 <ul>
-<li><span class="pkg-link" data-pkg="landisutils" data-topic="LandisExtension" data-id="add_file"><a href='../../landisutils/html/LandisExtension.html#method-LandisExtension-add_file'><code>landisutils::LandisExtension$add_file()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="landisutils" data-topic="LandisExtension" data-id="add_file"><a href='../../landisutils/html/LandisExtension.html#method-LandisExtension-add_file'><code>LandisExtension$add_file()</code></a></span></li>
 </ul>
-</details>
-}}
+</details>}}
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-OutputCohortStats-new"></a>}}
-\if{latex}{\out{\hypertarget{method-OutputCohortStats-new}{}}}
-\subsection{Method \code{new()}}{
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{OutputCohortStats$new(
+\if{html}{\out{<a id="method-OutputCohortStats-initialize"></a>}}
+\if{latex}{\out{\hypertarget{method-OutputCohortStats-initialize}{}}}
+\subsection{\code{OutputCohortStats$new()}}{
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{OutputCohortStats$new(
   path = NULL,
   Timestep = 10L,
   SpeciesAgeMapNames = NULL,
@@ -74,59 +71,57 @@ LANDIS-II Cohort Statistics v4 Extension User Guide
   SiteAgeStats = list(stats = NULL),
   SiteSpeciesMapNames = NULL,
   SiteSpeciesStats = list(stats = NULL)
-)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{path}}{Character. Directory path.}
-
-\item{\code{Timestep}}{Integer.}
-
-\item{\code{SpeciesAgeMapNames}}{Character. File pattern for writing outputs to disk.}
-
-\item{\code{SpeciesAgeStats}}{Named list specifying the \code{species} and \code{stats}
+)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{path}}{Character. Directory path.}
+      \item{\code{Timestep}}{Integer.}
+      \item{\code{SpeciesAgeMapNames}}{Character. File pattern for writing outputs to disk.}
+      \item{\code{SpeciesAgeStats}}{Named list specifying the \code{species} and \code{stats}
 (e.g., \code{list(species = c("querrub", "pinustro"), stats = c("MAX", "MIN"))})}
-
-\item{\code{SiteAgeMapNames}}{Character. File pattern for writing outputs to disk.}
-
-\item{\code{SiteAgeStats}}{Named list specifying the \code{stats}
+      \item{\code{SiteAgeMapNames}}{Character. File pattern for writing outputs to disk.}
+      \item{\code{SiteAgeStats}}{Named list specifying the \code{stats}
 (e.g., \code{list(stats = c("MAX", "RICH"))})}
-
-\item{\code{SiteSpeciesMapNames}}{Character. File pattern for writing outputs to disk.}
-
-\item{\code{SiteSpeciesStats}}{Named list specifying the \code{stats}
+      \item{\code{SiteSpeciesMapNames}}{Character. File pattern for writing outputs to disk.}
+      \item{\code{SiteSpeciesStats}}{Named list specifying the \code{stats}
 (e.g., \code{list(stats = c("RICH"))}).}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
-\if{html}{\out{</div>}}
-}
-}
+
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-OutputCohortStats-write"></a>}}
 \if{latex}{\out{\hypertarget{method-OutputCohortStats-write}{}}}
-\subsection{Method \code{write()}}{
-Write extension inputs to disk
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{OutputCohortStats$write()}\if{html}{\out{</div>}}
+\subsection{\code{OutputCohortStats$write()}}{
+  Write extension inputs to disk
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{OutputCohortStats$write()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-OutputCohortStats-clone"></a>}}
 \if{latex}{\out{\hypertarget{method-OutputCohortStats-clone}{}}}
-\subsection{Method \code{clone()}}{
-The objects of this class are cloneable with this method.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{OutputCohortStats$clone(deep = FALSE)}\if{html}{\out{</div>}}
+\subsection{\code{OutputCohortStats$clone()}}{
+  The objects of this class are cloneable with this method.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{OutputCohortStats$clone(deep = FALSE)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{deep}}{Whether to make a deep clone.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{deep}}{Whether to make a deep clone.}
-}
-\if{html}{\out{</div>}}
-}
-}
 }

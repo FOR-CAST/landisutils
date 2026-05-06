@@ -20,9 +20,9 @@ Defaults adapted from the LANDIS-II NECN Succession v8 user guide; users
 should tune to their study system.
 }
 \seealso{
-Other NECN Succession helpers: 
+Other NECN Succession helpers:
 \code{\link{NECNSuccession}},
-\code{\link{insertNECNFireReductionParameters}()},
-\code{\link{insertNECNHarvestReductionParameters}()}
+\code{\link[=insertNECNFireReductionParameters]{insertNECNFireReductionParameters()}},
+\code{\link[=insertNECNHarvestReductionParameters]{insertNECNHarvestReductionParameters()}}
 }
 \concept{NECN Succession helpers}

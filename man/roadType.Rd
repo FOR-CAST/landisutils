@@ -33,12 +33,12 @@ A list of class \code{"RoadType"}.
 Construct a non-exit road type
 }
 \seealso{
-Other Forest Roads Simulation helpers: 
+Other Forest Roads Simulation helpers:
 \code{\link{ForestRoadsSimulation}},
-\code{\link{elevationCostRange}()},
-\code{\link{exitRoadType}()},
-\code{\link{insertElevationCosts}()},
-\code{\link{insertExitRoadTypes}()},
-\code{\link{insertRoadTypes}()}
+\code{\link[=elevationCostRange]{elevationCostRange()}},
+\code{\link[=exitRoadType]{exitRoadType()}},
+\code{\link[=insertElevationCosts]{insertElevationCosts()}},
+\code{\link[=insertExitRoadTypes]{insertExitRoadTypes()}},
+\code{\link[=insertRoadTypes]{insertRoadTypes()}}
 }
 \concept{Forest Roads Simulation helpers}

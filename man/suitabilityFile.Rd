@@ -18,13 +18,13 @@ Wraps a path to a habitat-suitability definition file. Used by
 \link{OutputLocalHabitat} and \link{OutputWildlifeHabitat}.
 }
 \seealso{
-Other Local Habitat Output helpers: 
+Other Local Habitat Output helpers:
 \code{\link{OutputLocalHabitat}},
-\code{\link{insertSuitabilityFiles}()}
+\code{\link[=insertSuitabilityFiles]{insertSuitabilityFiles()}}
 
-Other Wildlife Habitat Output helpers: 
+Other Wildlife Habitat Output helpers:
 \code{\link{OutputWildlifeHabitat}},
-\code{\link{insertSuitabilityFiles}()}
+\code{\link[=insertSuitabilityFiles]{insertSuitabilityFiles()}}
 }
 \concept{Local Habitat Output helpers}
 \concept{Wildlife Habitat Output helpers}

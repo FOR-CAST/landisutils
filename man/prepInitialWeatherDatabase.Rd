@@ -21,18 +21,18 @@ created as a side effect of the function.
 Create Dynamic Fire Extension's Initial Weather Database
 }
 \seealso{
-Other Dynamic Fire helpers: 
+Other Dynamic Fire helpers:
 \code{\link{DynamicFire}},
-\code{\link{defaultFuelTypeTable}()},
-\code{\link{insertBuildUpIndex}()},
-\code{\link{insertFireSizesTable}()},
-\code{\link{insertFuelTypeTable}()},
-\code{\link{insertGroundSlopeFile}()},
-\code{\link{insertSeasonTable}()},
-\code{\link{insertUphillSlopeAzimuthMap}()},
-\code{\link{prepDynamicEcoregionTable}()},
-\code{\link{prepDynamicWeatherTable}()},
-\code{\link{prepFireSizesTable}()},
-\code{\link{prepTopographyFile}()}
+\code{\link[=defaultFuelTypeTable]{defaultFuelTypeTable()}},
+\code{\link[=insertBuildUpIndex]{insertBuildUpIndex()}},
+\code{\link[=insertFireSizesTable]{insertFireSizesTable()}},
+\code{\link[=insertFuelTypeTable]{insertFuelTypeTable()}},
+\code{\link[=insertGroundSlopeFile]{insertGroundSlopeFile()}},
+\code{\link[=insertSeasonTable]{insertSeasonTable()}},
+\code{\link[=insertUphillSlopeAzimuthMap]{insertUphillSlopeAzimuthMap()}},
+\code{\link[=prepDynamicEcoregionTable]{prepDynamicEcoregionTable()}},
+\code{\link[=prepDynamicWeatherTable]{prepDynamicWeatherTable()}},
+\code{\link[=prepFireSizesTable]{prepFireSizesTable()}},
+\code{\link[=prepTopographyFile]{prepTopographyFile()}}
 }
 \concept{Dynamic Fire helpers}

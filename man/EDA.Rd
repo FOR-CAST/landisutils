@@ -5,136 +5,135 @@
 \title{Epidemiological Disturbance Agents (EDA) Extension}
 \description{
 Epidemiological Disturbance Agents (EDA) Extension
-
-Epidemiological Disturbance Agents (EDA) Extension
 }
 \references{
 LANDIS-II Base EDA v3 Extension User Guide
 \url{https://github.com/LANDIS-II-Foundation/Extension-Base-EDA/blob/master/docs/LANDIS-II\%20Base\%20EDA\%20v3\%20User\%20Guide.pdf}
 }
 \seealso{
-Other EDA helpers: 
-\code{\link{edaAgent}()},
-\code{\link{insertEDADisturbanceModifiers}()},
-\code{\link{insertEDAIgnoredSpecies}()},
-\code{\link{insertEDAInputFiles}()},
-\code{\link{insertEDASpeciesParameters}()},
-\code{\link{writeEDAAgentFile}()}
+Other EDA helpers:
+\code{\link[=edaAgent]{edaAgent()}},
+\code{\link[=insertEDADisturbanceModifiers]{insertEDADisturbanceModifiers()}},
+\code{\link[=insertEDAIgnoredSpecies]{insertEDAIgnoredSpecies()}},
+\code{\link[=insertEDAInputFiles]{insertEDAInputFiles()}},
+\code{\link[=insertEDASpeciesParameters]{insertEDASpeciesParameters()}},
+\code{\link[=writeEDAAgentFile]{writeEDAAgentFile()}}
 }
 \concept{EDA helpers}
 \section{Super class}{
-\code{\link[landisutils:LandisExtension]{landisutils::LandisExtension}} -> \code{EDA}
+\code{\link[landisutils:LandisExtension]{LandisExtension}} -> \code{EDA}
 }
 \section{Active bindings}{
-\if{html}{\out{<div class="r6-active-bindings">}}
-\describe{
-\item{\code{Agents}}{List of \code{EDAAgent} objects.}
+  \if{html}{\out{<div class="r6-active-bindings">}}
+  \describe{
+    \item{\code{Agents}}{List of \code{EDAAgent} objects.}
 
-\item{\code{MapNames}}{Character. Output map filename pattern; must contain
+    \item{\code{MapNames}}{Character. Output map filename pattern; must contain
 the literal \code{{agentName}} and \code{{timestep}} placeholders -- LANDIS-II
 replaces them with the agent name and simulation year, e.g.
 \code{"eda/{agentName}-{timestep}.tif"}.}
 
-\item{\code{MORTMapNames}}{(Optional) Character. Mortality output map filename
+    \item{\code{MORTMapNames}}{(Optional) Character. Mortality output map filename
 pattern; must contain the literal \code{{agentName}} and \code{{timestep}}
 placeholders, e.g. \code{"eda/{agentName}-MORT-{timestep}.tif"}.}
 
-\item{\code{LogFile}}{Character. Relative file path.}
-}
-\if{html}{\out{</div>}}
+    \item{\code{LogFile}}{Character. Relative file path.}
+  }
+  \if{html}{\out{</div>}}
 }
 \section{Methods}{
 \subsection{Public methods}{
-\itemize{
-\item \href{#method-EDA-new}{\code{EDA$new()}}
-\item \href{#method-EDA-add_agent}{\code{EDA$add_agent()}}
-\item \href{#method-EDA-write}{\code{EDA$write()}}
-\item \href{#method-EDA-clone}{\code{EDA$clone()}}
+  \itemize{
+    \item \href{#method-EDA-initialize}{\code{EDA$new()}}
+    \item \href{#method-EDA-add_agent}{\code{EDA$add_agent()}}
+    \item \href{#method-EDA-write}{\code{EDA$write()}}
+    \item \href{#method-EDA-clone}{\code{EDA$clone()}}
+  }
 }
-}
-\if{html}{\out{
-<details open><summary>Inherited methods</summary>
+\if{html}{\out{<details open><summary>Inherited methods</summary>
 <ul>
-<li><span class="pkg-link" data-pkg="landisutils" data-topic="LandisExtension" data-id="add_file"><a href='../../landisutils/html/LandisExtension.html#method-LandisExtension-add_file'><code>landisutils::LandisExtension$add_file()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="landisutils" data-topic="LandisExtension" data-id="add_file"><a href='../../landisutils/html/LandisExtension.html#method-LandisExtension-add_file'><code>LandisExtension$add_file()</code></a></span></li>
 </ul>
-</details>
-}}
+</details>}}
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-EDA-new"></a>}}
-\if{latex}{\out{\hypertarget{method-EDA-new}{}}}
-\subsection{Method \code{new()}}{
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{EDA$new(
+\if{html}{\out{<a id="method-EDA-initialize"></a>}}
+\if{latex}{\out{\hypertarget{method-EDA-initialize}{}}}
+\subsection{\code{EDA$new()}}{
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{EDA$new(
   path,
   Timestep = NULL,
   Agents = list(),
   MapNames = NULL,
   MORTMapNames = NULL,
   LogFile = "eda/eda-log.csv"
-)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{path}}{Character. Directory path.}
-
-\item{\code{Timestep}}{Integer. Years between updates.}
-
-\item{\code{Agents}}{List of \code{EDAAgent} objects (see \code{\link[=edaAgent]{edaAgent()}}).}
-
-\item{\code{MapNames}}{Character. Output map filename pattern; must contain
+)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{path}}{Character. Directory path.}
+      \item{\code{Timestep}}{Integer. Years between updates.}
+      \item{\code{Agents}}{List of \code{EDAAgent} objects (see \code{\link[=edaAgent]{edaAgent()}}).}
+      \item{\code{MapNames}}{Character. Output map filename pattern; must contain
 the literal \code{{agentName}} and \code{{timestep}} placeholders.}
-
-\item{\code{MORTMapNames}}{(Optional) Character. Mortality output map filename
+      \item{\code{MORTMapNames}}{(Optional) Character. Mortality output map filename
 pattern; must contain the literal \code{{agentName}} and \code{{timestep}} placeholders.}
+      \item{\code{LogFile}}{Character. Relative file path for the EDA CSV log.}
+    }
+    \if{html}{\out{</div>}}
+  }
+}
 
-\item{\code{LogFile}}{Character. Relative file path for the EDA CSV log.}
-}
-\if{html}{\out{</div>}}
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-EDA-add_agent"></a>}}
 \if{latex}{\out{\hypertarget{method-EDA-add_agent}{}}}
-\subsection{Method \code{add_agent()}}{
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{EDA$add_agent(value)}\if{html}{\out{</div>}}
+\subsection{\code{EDA$add_agent()}}{
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{EDA$add_agent(value)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{value}}{\code{EDAAgent} object to append to \verb{$Agents}.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{value}}{\code{EDAAgent} object to append to \verb{$Agents}.}
-}
-\if{html}{\out{</div>}}
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-EDA-write"></a>}}
 \if{latex}{\out{\hypertarget{method-EDA-write}{}}}
-\subsection{Method \code{write()}}{
-Write extension inputs to disk
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{EDA$write()}\if{html}{\out{</div>}}
+\subsection{\code{EDA$write()}}{
+  Write extension inputs to disk
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{EDA$write()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-EDA-clone"></a>}}
 \if{latex}{\out{\hypertarget{method-EDA-clone}{}}}
-\subsection{Method \code{clone()}}{
-The objects of this class are cloneable with this method.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{EDA$clone(deep = FALSE)}\if{html}{\out{</div>}}
+\subsection{\code{EDA$clone()}}{
+  The objects of this class are cloneable with this method.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{EDA$clone(deep = FALSE)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{deep}}{Whether to make a deep clone.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{deep}}{Whether to make a deep clone.}
-}
-\if{html}{\out{</div>}}
-}
-}
 }

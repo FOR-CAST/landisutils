@@ -17,12 +17,12 @@ Character string(s) to write to the suitable LANDIS-II input file.
 Specify the \code{WindDirectionTable} for the Linear Wind extension
 }
 \seealso{
-Other Linear Wind helpers: 
+Other Linear Wind helpers:
 \code{\link{LinearWind}},
-\code{\link{defaultLinearWindSeverities}()},
-\code{\link{insertLinearWindEcoregionModifiers}()},
-\code{\link{insertLinearWindIntensityTable}()},
-\code{\link{insertLinearWindSeverities}()}
+\code{\link[=defaultLinearWindSeverities]{defaultLinearWindSeverities()}},
+\code{\link[=insertLinearWindEcoregionModifiers]{insertLinearWindEcoregionModifiers()}},
+\code{\link[=insertLinearWindIntensityTable]{insertLinearWindIntensityTable()}},
+\code{\link[=insertLinearWindSeverities]{insertLinearWindSeverities()}}
 }
 \concept{Linear Wind helpers}
 \keyword{internal}

@@ -5,89 +5,86 @@
 \title{Biomass Hurricane Extension}
 \description{
 Biomass Hurricane Extension
-
-Biomass Hurricane Extension
 }
 \references{
 LANDIS-II Biomass Hurricane v3 Extension User Guide
 \url{https://github.com/LANDIS-II-Foundation/Extension-Biomass-Hurricane/blob/master/docs/LANDIS-II\%20Biomass\%20Hurricane\%20v3\%20User\%20Guide.pdf}
 }
 \seealso{
-Other Hurricane helpers: 
-\code{\link{defaultHurricaneMortalityCurve}()},
-\code{\link{insertExposureMaps}()},
-\code{\link{insertStormOccurrenceProbabilities}()},
-\code{\link{insertWindSpeedVulnerabilities}()},
-\code{\link{windSpeedVulnerability}()}
+Other Hurricane helpers:
+\code{\link[=defaultHurricaneMortalityCurve]{defaultHurricaneMortalityCurve()}},
+\code{\link[=insertExposureMaps]{insertExposureMaps()}},
+\code{\link[=insertStormOccurrenceProbabilities]{insertStormOccurrenceProbabilities()}},
+\code{\link[=insertWindSpeedVulnerabilities]{insertWindSpeedVulnerabilities()}},
+\code{\link[=windSpeedVulnerability]{windSpeedVulnerability()}}
 }
 \concept{Hurricane helpers}
 \section{Super class}{
-\code{\link[landisutils:LandisExtension]{landisutils::LandisExtension}} -> \code{Hurricane}
+\code{\link[landisutils:LandisExtension]{LandisExtension}} -> \code{Hurricane}
 }
 \section{Active bindings}{
-\if{html}{\out{<div class="r6-active-bindings">}}
-\describe{
-\item{\code{InputUnitsEnglish}}{Character \code{"yes"} / \code{"no"}.}
+  \if{html}{\out{<div class="r6-active-bindings">}}
+  \describe{
+    \item{\code{InputUnitsEnglish}}{Character \code{"yes"} / \code{"no"}.}
 
-\item{\code{HurricaneRandomNumberSeed}}{Integer.}
+    \item{\code{HurricaneRandomNumberSeed}}{Integer.}
 
-\item{\code{StormOccurrenceProbabilities}}{\code{data.frame} with columns \code{Storms},
+    \item{\code{StormOccurrenceProbabilities}}{\code{data.frame} with columns \code{Storms},
 \code{Probability}.}
 
-\item{\code{LowBoundLandfallWindSpeed}}{Numeric.}
+    \item{\code{LowBoundLandfallWindSpeed}}{Numeric.}
 
-\item{\code{ModeLandfallWindSpeed}}{Numeric.}
+    \item{\code{ModeLandfallWindSpeed}}{Numeric.}
 
-\item{\code{HighBoundLandfallWindSpeed}}{Numeric.}
+    \item{\code{HighBoundLandfallWindSpeed}}{Numeric.}
 
-\item{\code{CoastalSlope}}{Numeric.}
+    \item{\code{CoastalSlope}}{Numeric.}
 
-\item{\code{MeanStormIntersectionX}}{Numeric.}
+    \item{\code{MeanStormIntersectionX}}{Numeric.}
 
-\item{\code{MeanStormIntersectionY}}{Numeric.}
+    \item{\code{MeanStormIntersectionY}}{Numeric.}
 
-\item{\code{LandfallSigma}}{Numeric.}
+    \item{\code{LandfallSigma}}{Numeric.}
 
-\item{\code{StormDirectionMu}}{Numeric.}
+    \item{\code{StormDirectionMu}}{Numeric.}
 
-\item{\code{StormDirectionSigma}}{Numeric.}
+    \item{\code{StormDirectionSigma}}{Numeric.}
 
-\item{\code{MinimumWindSpeedforDamage}}{Numeric.}
+    \item{\code{MinimumWindSpeedforDamage}}{Numeric.}
 
-\item{\code{ExposureMaps}}{\code{data.frame} with columns \code{Degree}, \code{MapName}.}
+    \item{\code{ExposureMaps}}{\code{data.frame} with columns \code{Degree}, \code{MapName}.}
 
-\item{\code{WindSpeedVulnerabilities}}{List of \code{WindSpeedVulnerability} objects.}
+    \item{\code{WindSpeedVulnerabilities}}{List of \code{WindSpeedVulnerability} objects.}
 
-\item{\code{MapNames}}{Character. Output filename pattern; must contain
+    \item{\code{MapNames}}{Character. Output filename pattern; must contain
 \code{{timestep}}. Including \code{{stormNumber}} is recommended.}
 
-\item{\code{LogFile}}{Character. Relative path.}
+    \item{\code{LogFile}}{Character. Relative path.}
 
-\item{\code{WindReductionTableCSV}}{Character. Relative path.}
-}
-\if{html}{\out{</div>}}
+    \item{\code{WindReductionTableCSV}}{Character. Relative path.}
+  }
+  \if{html}{\out{</div>}}
 }
 \section{Methods}{
 \subsection{Public methods}{
-\itemize{
-\item \href{#method-Hurricane-new}{\code{Hurricane$new()}}
-\item \href{#method-Hurricane-write}{\code{Hurricane$write()}}
-\item \href{#method-Hurricane-clone}{\code{Hurricane$clone()}}
+  \itemize{
+    \item \href{#method-Hurricane-initialize}{\code{Hurricane$new()}}
+    \item \href{#method-Hurricane-write}{\code{Hurricane$write()}}
+    \item \href{#method-Hurricane-clone}{\code{Hurricane$clone()}}
+  }
 }
-}
-\if{html}{\out{
-<details open><summary>Inherited methods</summary>
+\if{html}{\out{<details open><summary>Inherited methods</summary>
 <ul>
-<li><span class="pkg-link" data-pkg="landisutils" data-topic="LandisExtension" data-id="add_file"><a href='../../landisutils/html/LandisExtension.html#method-LandisExtension-add_file'><code>landisutils::LandisExtension$add_file()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="landisutils" data-topic="LandisExtension" data-id="add_file"><a href='../../landisutils/html/LandisExtension.html#method-LandisExtension-add_file'><code>LandisExtension$add_file()</code></a></span></li>
 </ul>
-</details>
-}}
+</details>}}
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-Hurricane-new"></a>}}
-\if{latex}{\out{\hypertarget{method-Hurricane-new}{}}}
-\subsection{Method \code{new()}}{
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Hurricane$new(
+\if{html}{\out{<a id="method-Hurricane-initialize"></a>}}
+\if{latex}{\out{\hypertarget{method-Hurricane-initialize}{}}}
+\subsection{\code{Hurricane$new()}}{
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Hurricane$new(
   path,
   Timestep = NULL,
   InputUnitsEnglish = FALSE,
@@ -108,88 +105,78 @@ Other Hurricane helpers:
   MapNames = NULL,
   LogFile = "hurricane/hurricane-log.csv",
   WindReductionTableCSV = NULL
-)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{path}}{Character. Directory path.}
-
-\item{\code{Timestep}}{Integer. Years.}
-
-\item{\code{InputUnitsEnglish}}{Logical (or \code{"yes"}/\code{"no"}). When \code{TRUE},
+)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{path}}{Character. Directory path.}
+      \item{\code{Timestep}}{Integer. Years.}
+      \item{\code{InputUnitsEnglish}}{Logical (or \code{"yes"}/\code{"no"}). When \code{TRUE},
 wind speeds are in mph; otherwise km/h.}
-
-\item{\code{HurricaneRandomNumberSeed}}{Optional integer. Seed for the
+      \item{\code{HurricaneRandomNumberSeed}}{Optional integer. Seed for the
 hurricane-specific RNG; lets hurricanes vary independently of the
 Core RNG. Omit to fall back to the Core seed.}
-
-\item{\code{StormOccurrenceProbabilities}}{\code{data.frame} with columns
+      \item{\code{StormOccurrenceProbabilities}}{\code{data.frame} with columns
 \code{Storms} (integer) and \code{Probability} (numeric); the probabilities
 must sum to \code{1.0}.}
-
-\item{\code{LowBoundLandfallWindSpeed, ModeLandfallWindSpeed, HighBoundLandfallWindSpeed}}{Numeric. Landfall wind-speed distribution parameters (units per
+      \item{\code{LowBoundLandfallWindSpeed, ModeLandfallWindSpeed, HighBoundLandfallWindSpeed}}{Numeric. Landfall wind-speed distribution parameters (units per
 \code{InputUnitsEnglish}).}
-
-\item{\code{CoastalSlope}}{Numeric. Slope factor relative to landscape.}
-
-\item{\code{MeanStormIntersectionX, MeanStormIntersectionY}}{Numeric. Mean
+      \item{\code{CoastalSlope}}{Numeric. Slope factor relative to landscape.}
+      \item{\code{MeanStormIntersectionX, MeanStormIntersectionY}}{Numeric. Mean
 storm-centre coordinates.}
-
-\item{\code{LandfallSigma}}{Numeric. Variance of landfalls around the mean.}
-
-\item{\code{StormDirectionMu, StormDirectionSigma}}{Numeric. Mean and standard
+      \item{\code{LandfallSigma}}{Numeric. Variance of landfalls around the mean.}
+      \item{\code{StormDirectionMu, StormDirectionSigma}}{Numeric. Mean and standard
 deviation of storm direction (degrees).}
-
-\item{\code{MinimumWindSpeedforDamage}}{Numeric. Damage threshold; should
+      \item{\code{MinimumWindSpeedforDamage}}{Numeric. Damage threshold; should
 match the smallest wind threshold in \code{WindSpeedVulnerabilities}.}
-
-\item{\code{ExposureMaps}}{\code{data.frame} with columns \code{Degree} (integer) and
+      \item{\code{ExposureMaps}}{\code{data.frame} with columns \code{Degree} (integer) and
 \code{MapName} (character).}
-
-\item{\code{WindSpeedVulnerabilities}}{List of \code{WindSpeedVulnerability}
+      \item{\code{WindSpeedVulnerabilities}}{List of \code{WindSpeedVulnerability}
 sub-objects (see \code{\link[=windSpeedVulnerability]{windSpeedVulnerability()}}).}
-
-\item{\code{MapNames}}{Character. Output filename pattern; must contain
+      \item{\code{MapNames}}{Character. Output filename pattern; must contain
 the literal \code{{timestep}}. Including \code{{stormNumber}} is recommended
 so per-storm maps within a timestep do not overwrite one another.}
-
-\item{\code{LogFile}}{Character. Relative file path for the CSV log.}
-
-\item{\code{WindReductionTableCSV}}{Optional character. Relative path to a
+      \item{\code{LogFile}}{Character. Relative file path for the CSV log.}
+      \item{\code{WindReductionTableCSV}}{Optional character. Relative path to a
 wind-reduction-factor CSV (links to the Output Cohort Statistics
 \code{Evenness} calculation). Omit to disable structure-based wind-speed
 reduction.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
-\if{html}{\out{</div>}}
-}
-}
+
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Hurricane-write"></a>}}
 \if{latex}{\out{\hypertarget{method-Hurricane-write}{}}}
-\subsection{Method \code{write()}}{
-Write extension inputs to disk
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Hurricane$write()}\if{html}{\out{</div>}}
+\subsection{\code{Hurricane$write()}}{
+  Write extension inputs to disk
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Hurricane$write()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Hurricane-clone"></a>}}
 \if{latex}{\out{\hypertarget{method-Hurricane-clone}{}}}
-\subsection{Method \code{clone()}}{
-The objects of this class are cloneable with this method.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Hurricane$clone(deep = FALSE)}\if{html}{\out{</div>}}
+\subsection{\code{Hurricane$clone()}}{
+  The objects of this class are cloneable with this method.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Hurricane$clone(deep = FALSE)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{deep}}{Whether to make a deep clone.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{deep}}{Whether to make a deep clone.}
-}
-\if{html}{\out{</div>}}
-}
-}
 }

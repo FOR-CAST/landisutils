@@ -4,7 +4,11 @@
 \alias{get_elevation_rast}
 \title{Get an elevation raster for a study area}
 \usage{
-get_elevation_rast(studyArea, z = 9)
+get_elevation_rast(
+  studyArea,
+  z = 9,
+  tmp_dir = file.path(.climateCachePath(), "elevatr_tiles")
+)
 }
 \arguments{
 \item{studyArea}{\code{sf} or \code{SpatVector} polygons object delineating the area
@@ -12,6 +16,11 @@ of interest.}
 
 \item{z}{integer zoom level passed to \code{\link[elevatr:get_elev_raster]{elevatr::get_elev_raster()}}; higher
 values give finer resolution. Default \code{9} (~250 m at mid-latitudes).}
+
+\item{tmp_dir}{character. Directory for \code{elevatr}'s per-tile downloads.
+Defaults to \verb{<landisutils.cache.path>/elevatr_tiles/}, which keeps the
+AWS Terrain Tile fragments inside the package cache instead of leaking
+into the R session's global \code{tempdir()} (\code{elevatr}'s own default).}
 }
 \value{
 \code{SpatRaster} of elevations in metres, in lon-lat CRS.

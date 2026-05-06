@@ -16,12 +16,12 @@ Character string(s) to write to the suitable LANDIS-II input file.
 Specify the \code{StormOccurrenceProbabilities} block for the Hurricane extension
 }
 \seealso{
-Other Hurricane helpers: 
+Other Hurricane helpers:
 \code{\link{Hurricane}},
-\code{\link{defaultHurricaneMortalityCurve}()},
-\code{\link{insertExposureMaps}()},
-\code{\link{insertWindSpeedVulnerabilities}()},
-\code{\link{windSpeedVulnerability}()}
+\code{\link[=defaultHurricaneMortalityCurve]{defaultHurricaneMortalityCurve()}},
+\code{\link[=insertExposureMaps]{insertExposureMaps()}},
+\code{\link[=insertWindSpeedVulnerabilities]{insertWindSpeedVulnerabilities()}},
+\code{\link[=windSpeedVulnerability]{windSpeedVulnerability()}}
 }
 \concept{Hurricane helpers}
 \keyword{internal}

@@ -15,11 +15,11 @@ Matches the Trevor / Sitka example used in the upstream \code{Core8-Hurricane3.0
 test input.
 }
 \seealso{
-Other Hurricane helpers: 
+Other Hurricane helpers:
 \code{\link{Hurricane}},
-\code{\link{insertExposureMaps}()},
-\code{\link{insertStormOccurrenceProbabilities}()},
-\code{\link{insertWindSpeedVulnerabilities}()},
-\code{\link{windSpeedVulnerability}()}
+\code{\link[=insertExposureMaps]{insertExposureMaps()}},
+\code{\link[=insertStormOccurrenceProbabilities]{insertStormOccurrenceProbabilities()}},
+\code{\link[=insertWindSpeedVulnerabilities]{insertWindSpeedVulnerabilities()}},
+\code{\link[=windSpeedVulnerability]{windSpeedVulnerability()}}
 }
 \concept{Hurricane helpers}

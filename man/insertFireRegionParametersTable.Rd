@@ -16,12 +16,12 @@ Character string(s) to write to the suitable LANDIS-II input file.
 Specify Fire Region Parameters Table
 }
 \seealso{
-Other Original Fire helpers: 
+Other Original Fire helpers:
 \code{\link{OriginalFire}},
-\code{\link{defaultFuelCurveTable}()},
-\code{\link{insertFuelCurveTable}()},
-\code{\link{insertWindCurveTable}()},
-\code{\link{prepFireRegionParametersTable}()},
-\code{\link{prepInitialFireRegionsMap}()}
+\code{\link[=defaultFuelCurveTable]{defaultFuelCurveTable()}},
+\code{\link[=insertFuelCurveTable]{insertFuelCurveTable()}},
+\code{\link[=insertWindCurveTable]{insertWindCurveTable()}},
+\code{\link[=prepFireRegionParametersTable]{prepFireRegionParametersTable()}},
+\code{\link[=prepInitialFireRegionsMap]{prepInitialFireRegionsMap()}}
 }
 \concept{Original Fire helpers}
