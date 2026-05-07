@@ -203,6 +203,7 @@ get_clim_monthly_climr <- function(
         obs_years = year,
         obs_ts_dataset = obs_ts_dataset,
         vars = needed_codes,
+        return_refperiod = FALSE,
         cache = TRUE
       )
     } else {
@@ -220,6 +221,15 @@ get_clim_monthly_climr <- function(
     }
 
     df <- as.data.frame(raw)
+
+    ## climr::downscale() always returns one row per cell for the reference
+    ## period (PERIOD = "1961_1990", DATASET = NA) alongside the requested
+    ## year row. Filter to only the annual rows before writing, so that the
+    ## Arrow cache stores one row per cell/month/variable/year.
+    if ("PERIOD" %in% names(df)) {
+      df <- df[df$PERIOD == as.character(year), , drop = FALSE]
+    }
+
     missing_cols <- setdiff(needed_codes, names(df))
     if (length(missing_cols)) {
       stop(
