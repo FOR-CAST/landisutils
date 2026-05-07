@@ -1,5 +1,10 @@
 # Changelog
 
+## landisutils 0.0.8
+
+- fix issue with `climr` returning reference period rows - filter these
+  when assembling data;
+
 ## landisutils 0.0.7
 
 - [`prep_monthly_weather_climr()`](https://for-cast.github.io/landisutils/reference/prep_climate_data.md)
