@@ -11,7 +11,8 @@ collapseSpp <- function(x) {
 #' @note Ideally, the user should reduce the number of cohorts upstream
 #'       (i.e., in `Biomass_borealDataPrep`), to ensure consistency of all data inputs.
 #'
-#' @param cohortData A `data.table` containing cohort information (see \pkg{LandR})
+#' @param cohortData A `data.table` with columns `pixelGroup`, `speciesCode`,
+#'   `age`, `B`, and `ecoregionGroup` describing cohort composition per pixel group
 #'
 #' @param pixelGroupMap A `SpatRaster` identifying the locations of the pixel groups in `cohortData`
 #'
@@ -42,7 +43,8 @@ simplifyCohorts <- function(cohortData, pixelGroupMap, ageBin = 20) {
 
 #' Create `InitialCommunities` and `InitialCommunitiesMap` Files
 #'
-#' @param cohortData A `data.table` containing cohort information (see \pkg{LandR})
+#' @param cohortData A `data.table` with columns `pixelGroup`, `speciesCode`,
+#'   `age`, `B`, and `ecoregionGroup` describing cohort composition per pixel group
 #'
 #' @param pixelGroupMap A `SpatRaster` identifying the locations of the pixel groups in `cohortData`
 #'

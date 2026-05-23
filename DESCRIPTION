@@ -1,6 +1,6 @@
 Package: landisutils
 Title: Utilities for running LANDIS-II simulations
-Version: 0.0.9
+Version: 0.0.10
 Authors@R: 
     person(c("Alex", "M"), "Chubaty", , "achubaty@for-cast.ca", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0001-7146-8135"))
@@ -40,15 +40,9 @@ Suggests:
     future.apply,
     keyring,
     knitr,
-    LandR,
-    map,
     purrr,
-    reproducible,
     rmarkdown,
-    scfmutils,
     sf,
-    SpaDES.core,
-    SpaDES.tools,
     spelling,
     targets,
     testthat (>= 3.0.0),
@@ -62,13 +56,7 @@ Remotes:
     cffdrs=cffdrs/cffdrs_r,
     mikejohnson51/climateR,
     mikejohnson51/zonal,
-    BioSIM=RNCan/BioSimClient_R,
-    PredictiveEcology/LandR@development,
-    PredictiveEcology/map@development,
-    PredictiveEcology/reproducible@development,
-    PredictiveEcology/scfmutils@development,
-    PredictiveEcology/SpaDES.core@development,
-    PredictiveEcology/SpaDES.tools@development
+    BioSIM=RNCan/BioSimClient_R
 Config/testthat/edition: 3
 Config/testthat/parallel: true
 Encoding: UTF-8

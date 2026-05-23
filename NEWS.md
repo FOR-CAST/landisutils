@@ -1,3 +1,9 @@
+# landisutils 0.0.10
+
+* Remove unused PredictiveEcology packages: `LandR`, `SpaDES.core`,
+  `SpaDES.tools`, `reproducible`, `scfmutils`, and `map` -- due to broken
+  dependency resolution.
+
 # landisutils 0.0.9
 
 * `landis_run()`: fix inverted `stopifnot()` guard — the function previously

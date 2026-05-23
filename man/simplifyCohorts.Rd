@@ -7,7 +7,8 @@
 simplifyCohorts(cohortData, pixelGroupMap, ageBin = 20)
 }
 \arguments{
-\item{cohortData}{A \code{data.table} containing cohort information (see \pkg{LandR})}
+\item{cohortData}{A \code{data.table} with columns \code{pixelGroup}, \code{speciesCode},
+\code{age}, \code{B}, and \code{ecoregionGroup} describing cohort composition per pixel group}
 
 \item{pixelGroupMap}{A \code{SpatRaster} identifying the locations of the pixel groups in \code{cohortData}}
 
