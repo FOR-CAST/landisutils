@@ -8,17 +8,19 @@ testthat::test_that("Biomass Browse extension is properly created", {
   tmp_pth <- withr::local_tempdir("test_BiomassBrowse_")
 
   ## stub the input files referenced by `.relPath()`-validated parameters
-  zone_map  <- file.path(tmp_pth, "ecoregions.gis")
-  pop_file  <- file.path(tmp_pth, "DefinedUngulatePopulation.txt")
-  for (f in c(zone_map, pop_file)) writeLines("", f)
+  zone_map <- file.path(tmp_pth, "ecoregions.gis")
+  pop_file <- file.path(tmp_pth, "DefinedUngulatePopulation.txt")
+  for (f in c(zone_map, pop_file)) {
+    writeLines("", f)
+  }
 
   spt <- data.frame(
-    Species                  = c("acerrubr", "acersacc", "tsugcana"),
-    Preference               = c(0.3, 0.5, 0.5),
+    Species = c("acerrubr", "acersacc", "tsugcana"),
+    Preference = c(0.3, 0.5, 0.5),
     GrowthReductionThreshold = c(0.5, 0.5, 0.5),
-    GrowthReductionMaximum   = c(0.4, 0.4, 0.4),
-    MortalityThreshold       = c(0.5, 0.5, 0.5),
-    MortalityMaximum         = c(0.1, 0.1, 0.1)
+    GrowthReductionMaximum = c(0.4, 0.4, 0.4),
+    MortalityThreshold = c(0.5, 0.5, 0.5),
+    MortalityMaximum = c(0.1, 0.1, 0.1)
   )
 
   suppressWarnings({
@@ -53,7 +55,10 @@ testthat::test_that("Biomass Browse extension is properly created", {
   testthat::expect_true(any(grepl("acerrubr", contents)))
   testthat::expect_true(any(grepl("^ZoneMap\\s+ecoregions\\.gis", contents)))
   testthat::expect_true(any(grepl("^BrowseMethod\\s+Population", contents)))
-  testthat::expect_true(any(grepl("^DefinedPopulationFile\\s+DefinedUngulatePopulation\\.txt", contents)))
+  testthat::expect_true(any(grepl(
+    "^DefinedPopulationFile\\s+DefinedUngulatePopulation\\.txt",
+    contents
+  )))
   testthat::expect_true(any(grepl("^ConsumptionRate\\s+2738", contents)))
   testthat::expect_true(any(grepl("^ANPPForageProp\\s+0\\.66", contents)))
   testthat::expect_true(any(grepl("^MinBrowsePropinReach\\s+0\\.5", contents)))
@@ -86,26 +91,26 @@ testthat::test_that("BiomassBrowse rejects invalid SpeciesTable shape", {
 
   ## missing required columns
   bad <- data.frame(Species = "abiebals", Preference = 0.5)
-  suppressWarnings(
-    testthat::expect_error(
-      BiomassBrowse$new(path = tmp_pth, Timestep = 1L, SpeciesTable = bad)
-    )
-  )
+  suppressWarnings(testthat::expect_error(BiomassBrowse$new(
+    path = tmp_pth,
+    Timestep = 1L,
+    SpeciesTable = bad
+  )))
 
   ## Preference out of range
   bad2 <- data.frame(
     Species = "abiebals",
     Preference = 1.5,
     GrowthReductionThreshold = 0.5,
-    GrowthReductionMaximum   = 0.4,
-    MortalityThreshold       = 0.5,
-    MortalityMaximum         = 0.1
+    GrowthReductionMaximum = 0.4,
+    MortalityThreshold = 0.5,
+    MortalityMaximum = 0.1
   )
-  suppressWarnings(
-    testthat::expect_error(
-      BiomassBrowse$new(path = tmp_pth, Timestep = 1L, SpeciesTable = bad2)
-    )
-  )
+  suppressWarnings(testthat::expect_error(BiomassBrowse$new(
+    path = tmp_pth,
+    Timestep = 1L,
+    SpeciesTable = bad2
+  )))
 
   withr::deferred_run()
 })
@@ -113,16 +118,16 @@ testthat::test_that("BiomassBrowse rejects invalid SpeciesTable shape", {
 testthat::test_that("BiomassBrowse rejects invalid enum values", {
   tmp_pth <- withr::local_tempdir("test_BiomassBrowse_")
 
-  suppressWarnings(
-    testthat::expect_error(
-      BiomassBrowse$new(path = tmp_pth, Timestep = 1L, BrowseMethod = "Triangular")
-    )
-  )
-  suppressWarnings(
-    testthat::expect_error(
-      BiomassBrowse$new(path = tmp_pth, Timestep = 1L, ForageInReachMethod = "RandomEachCohort")
-    )
-  )
+  suppressWarnings(testthat::expect_error(BiomassBrowse$new(
+    path = tmp_pth,
+    Timestep = 1L,
+    BrowseMethod = "Triangular"
+  )))
+  suppressWarnings(testthat::expect_error(BiomassBrowse$new(
+    path = tmp_pth,
+    Timestep = 1L,
+    ForageInReachMethod = "RandomEachCohort"
+  )))
 
   withr::deferred_run()
 })
@@ -131,26 +136,32 @@ testthat::test_that("BiomassBrowse write() requires HSI inputs and population fi
   tmp_pth <- withr::local_tempdir("test_BiomassBrowse_")
 
   spt <- data.frame(
-    Species                  = "abiebals",
-    Preference               = 0.5,
+    Species = "abiebals",
+    Preference = 0.5,
     GrowthReductionThreshold = 0.5,
-    GrowthReductionMaximum   = 0.4,
-    MortalityThreshold       = 0.5,
-    MortalityMaximum         = 0.1
+    GrowthReductionMaximum = 0.4,
+    MortalityThreshold = 0.5,
+    MortalityMaximum = 0.1
   )
 
   ## no ForageQuantity / SitePreference -> error at write() (HSI inputs missing)
   zone_map <- file.path(tmp_pth, "ecoregions.gis")
   pop_file <- file.path(tmp_pth, "DefinedUngulatePopulation.txt")
-  for (f in c(zone_map, pop_file)) writeLines("", f)
+  for (f in c(zone_map, pop_file)) {
+    writeLines("", f)
+  }
 
   suppressWarnings({
     ext <- BiomassBrowse$new(
-      path = tmp_pth, Timestep = 1L,
-      SpeciesTable = spt, ZoneMap = zone_map,
+      path = tmp_pth,
+      Timestep = 1L,
+      SpeciesTable = spt,
+      ZoneMap = zone_map,
       DefinedPopulationFile = pop_file,
-      ConsumptionRate = 1000L, MinBrowsePropinReach = 0.5,
-      BrowseBiomassThreshold = 0.05, EscapeBrowsePropLong = 0.57
+      ConsumptionRate = 1000L,
+      MinBrowsePropinReach = 0.5,
+      BrowseBiomassThreshold = 0.05,
+      EscapeBrowsePropLong = 0.57
     )
   })
   testthat::expect_error(ext$write())
@@ -162,29 +173,40 @@ testthat::test_that("BiomassBrowse DynamicPopulation block emits required keys",
   tmp_pth <- withr::local_tempdir("test_BiomassBrowse_")
 
   spt <- data.frame(
-    Species                  = "abiebals",
-    Preference               = 0.5,
+    Species = "abiebals",
+    Preference = 0.5,
     GrowthReductionThreshold = 0.5,
-    GrowthReductionMaximum   = 0.4,
-    MortalityThreshold       = 0.5,
-    MortalityMaximum         = 0.1
+    GrowthReductionMaximum = 0.4,
+    MortalityThreshold = 0.5,
+    MortalityMaximum = 0.1
   )
   zone_map <- file.path(tmp_pth, "ecoregions.gis")
   pop_file <- file.path(tmp_pth, "DefinedUngulatePopulation.txt")
-  for (f in c(zone_map, pop_file)) writeLines("", f)
+  for (f in c(zone_map, pop_file)) {
+    writeLines("", f)
+  }
 
   suppressWarnings({
     ext <- BiomassBrowse$new(
-      path = tmp_pth, Timestep = 1L,
-      SpeciesTable = spt, ZoneMap = zone_map, DefinedPopulationFile = pop_file,
+      path = tmp_pth,
+      Timestep = 1L,
+      SpeciesTable = spt,
+      ZoneMap = zone_map,
+      DefinedPopulationFile = pop_file,
       DynamicPopulation = list(
-        RMin = 0.0, RMax = 0.5,
-        MortalityMin = 0.0, MortalityMax = 0.3,
-        PredationMin = 0.0, PredationMax = 0.1,
-        HarvestMin = 0.0, HarvestMax = 0.0
+        RMin = 0.0,
+        RMax = 0.5,
+        MortalityMin = 0.0,
+        MortalityMax = 0.3,
+        PredationMin = 0.0,
+        PredationMax = 0.1,
+        HarvestMin = 0.0,
+        HarvestMax = 0.0
       ),
-      ConsumptionRate = 1000L, MinBrowsePropinReach = 0.5,
-      BrowseBiomassThreshold = 0.05, EscapeBrowsePropLong = 0.57,
+      ConsumptionRate = 1000L,
+      MinBrowsePropinReach = 0.5,
+      BrowseBiomassThreshold = 0.05,
+      EscapeBrowsePropLong = 0.57,
       SitePreference = 500L
     )
   })

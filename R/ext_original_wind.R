@@ -124,9 +124,7 @@ OriginalWind <- R6Class(
         if (!is.null(value)) {
           stopifnot(
             is.data.frame(value),
-            all(
-              c("Severity", "LowerAge", "UpperAge", "MortalityProbability") %in% colnames(value)
-            ),
+            all(c("Severity", "LowerAge", "UpperAge", "MortalityProbability") %in% colnames(value)),
             all(as.integer(value$Severity) >= 0L),
             all(value$LowerAge >= 0, value$LowerAge <= 100),
             all(value$UpperAge >= 0, value$UpperAge <= 100),
@@ -227,9 +225,7 @@ prepWindEventParametersTable <- function(ecoregion_params) {
 insertWindEventParametersTable <- function(df) {
   stopifnot(
     is.data.frame(df),
-    all(
-      c("Ecoregion", "MaxSize", "MeanSize", "MinSize", "WindRotationPeriod") %in% colnames(df)
-    )
+    all(c("Ecoregion", "MaxSize", "MeanSize", "MinSize", "WindRotationPeriod") %in% colnames(df))
   )
 
   cols <- c("Ecoregion", "MaxSize", "MeanSize", "MinSize", "WindRotationPeriod")
@@ -260,9 +256,7 @@ insertWindEventParametersTable <- function(df) {
 insertWindSeverities <- function(df) {
   stopifnot(
     is.data.frame(df),
-    all(
-      c("Severity", "LowerAge", "UpperAge", "MortalityProbability") %in% colnames(df)
-    )
+    all(c("Severity", "LowerAge", "UpperAge", "MortalityProbability") %in% colnames(df))
   )
 
   rows <- apply(df, 1, function(x) {

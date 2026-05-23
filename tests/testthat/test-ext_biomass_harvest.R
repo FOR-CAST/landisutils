@@ -23,9 +23,9 @@ testthat::test_that("Biomass Harvest inputs are properly created", {
   ## Additional prescription to exercise the SpeciesList / Economic / PatchCutting
   ## branches (not covered by the minimal upstream reference).
   econ_rank <- tibble::tribble(
-    ~Species  , ~EconomicRank , ~MinimumAge ,
-    "acersacc", 100L          , 60L         ,
-    "acerrubr", 50L           , 60L
+    ~Species   , ~EconomicRank , ~MinimumAge ,
+    "acersacc" , 100L          , 60L         ,
+    "acerrubr" ,  50L          , 60L
   )
   species_list <- tibble::tribble(
     ~Species   , ~Cohorts            ,
@@ -47,7 +47,7 @@ testthat::test_that("Biomass Harvest inputs are properly created", {
   ## HarvestImplementations row from the upstream reference.
   impl <- tibble::tribble(
     ~MgmtArea , ~Prescription    , ~HarvestArea , ~BeginTime , ~EndTime ,
-    1L        , "MaxAgeClearcut" , "10%"        , 5L         , 6L       ,
+    1L        , "MaxAgeClearcut" , "10%"        ,  5L        ,  6L      ,
     1L        , "MapleHarvest"   , "5%"         , 10L        , 50L
   )
 
@@ -87,10 +87,22 @@ testthat::test_that("Biomass Harvest inputs are properly created", {
   testthat::expect_true(any(grepl("^CohortsRemoved\\s+SpeciesList", contents)))
   testthat::expect_true(any(grepl("^HarvestImplementations", contents)))
   testthat::expect_true(any(grepl("^\\s*1\\s+MaxAgeClearcut\\s+10%\\s+5\\s+6", contents)))
-  testthat::expect_true(any(grepl("^PrescriptionMaps\\s+harvest/biomass-harvest-prescripts-\\{timestep\\}\\.tif", contents)))
-  testthat::expect_true(any(grepl("^BiomassMaps\\s+harvest/biomass-removed-\\{timestep\\}\\.tif", contents)))
-  testthat::expect_true(any(grepl("^EventLog\\s+harvest/biomass-harvest-event-log\\.csv", contents)))
-  testthat::expect_true(any(grepl("^SummaryLog\\s+harvest/biomass-harvest-summary-log\\.csv", contents)))
+  testthat::expect_true(any(grepl(
+    "^PrescriptionMaps\\s+harvest/biomass-harvest-prescripts-\\{timestep\\}\\.tif",
+    contents
+  )))
+  testthat::expect_true(any(grepl(
+    "^BiomassMaps\\s+harvest/biomass-removed-\\{timestep\\}\\.tif",
+    contents
+  )))
+  testthat::expect_true(any(grepl(
+    "^EventLog\\s+harvest/biomass-harvest-event-log\\.csv",
+    contents
+  )))
+  testthat::expect_true(any(grepl(
+    "^SummaryLog\\s+harvest/biomass-harvest-summary-log\\.csv",
+    contents
+  )))
 
   withr::deferred_run()
 })

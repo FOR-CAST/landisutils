@@ -9,15 +9,15 @@ testthat::test_that("Output Biomass Reclass inputs are properly created", {
     reclass1 = list(
       MapleHardwood = c("acersacc", "betualle", "abiebals", "acerrubr", "fraxamer", "pinubank"),
       NorthernPines = c("pinubank", "pinuresi", "pinustro"),
-      Oaks          = c("querelli", "querrubr"),
+      Oaks = c("querelli", "querrubr"),
       OtherConifers = c("piceglau", "thujocci"),
-      Other         = c("poputrem", "betupapy")
+      Other = c("poputrem", "betupapy")
     ),
     reclass2 = list(
       MapleHardwood = c("acersacc", "betualle", "acerrubr", "fraxamer"),
       NorthernPines = c("pinubank", "pinuresi", "pinustro"),
       OtherConifers = c("piceglau", "thujocci", "abiebals"),
-      Other         = c("poputrem", "betupapy", "querelli", "querrubr")
+      Other = c("poputrem", "betupapy", "querelli", "querrubr")
     )
   )
 
@@ -65,14 +65,12 @@ testthat::test_that("Output Biomass Reclass inputs are properly created", {
   )))
 
   ## invalid MapFileNames (missing required placeholders) should error
-  testthat::expect_error(
-    OutputBiomassReclass$new(
-      path = tmp_pth,
-      Timestep = 15L,
-      ReclassMaps = reclass_maps,
-      MapFileNames = "outputs/biomass-reclass/bad-pattern.tif"
-    )
-  )
+  testthat::expect_error(OutputBiomassReclass$new(
+    path = tmp_pth,
+    Timestep = 15L,
+    ReclassMaps = reclass_maps,
+    MapFileNames = "outputs/biomass-reclass/bad-pattern.tif"
+  ))
 
   withr::deferred_run()
 })

@@ -41,8 +41,7 @@ EDA <- R6Class(
       ## additional fields
       self$Agents <- Agents
       self$MapNames <- MapNames %||% "eda/{agentName}-{timestep}.tif"
-      self$MORTMapNames <- MORTMapNames %||%
-        "eda/{agentName}-MORT-{timestep}.tif"
+      self$MORTMapNames <- MORTMapNames %||% "eda/{agentName}-MORT-{timestep}.tif"
       self$LogFile <- LogFile
     },
 
@@ -54,18 +53,10 @@ EDA <- R6Class(
 
     #' @description Write extension inputs to disk
     write = function() {
-      stopifnot(
-        length(self$Agents) >= 1L,
-        !is.null(self$MapNames),
-        !is.null(self$LogFile)
-      )
+      stopifnot(length(self$Agents) >= 1L, !is.null(self$MapNames), !is.null(self$LogFile))
 
       .checkPath(file.path(self$path, "eda"))
-      agent_files <- vapply(
-        self$Agents,
-        function(a) writeEDAAgentFile(a, self$path),
-        character(1)
-      )
+      agent_files <- vapply(self$Agents, function(a) writeEDAAgentFile(a, self$path), character(1))
 
       writeLines(
         c(
@@ -89,12 +80,7 @@ EDA <- R6Class(
     }
   ),
 
-  private = list(
-    .Agents = list(),
-    .MapNames = NULL,
-    .MORTMapNames = NULL,
-    .LogFile = NULL
-  ),
+  private = list(.Agents = list(), .MapNames = NULL, .MORTMapNames = NULL, .LogFile = NULL),
 
   active = list(
     #' @field Agents List of `EDAAgent` objects.
@@ -107,10 +93,7 @@ EDA <- R6Class(
         } else if (inherits(value, "EDAAgent")) {
           value <- list(value)
         }
-        stopifnot(
-          is.list(value),
-          all(vapply(value, inherits, logical(1), "EDAAgent"))
-        )
+        stopifnot(is.list(value), all(vapply(value, inherits, logical(1), "EDAAgent")))
         private$.Agents <- value
       }
     },
@@ -291,9 +274,7 @@ edaAgent <- function(
   if (!is.null(DisturbanceModifiers)) {
     stopifnot(
       is.data.frame(DisturbanceModifiers),
-      all(
-        c("SHIModifier", "Duration", "Type") %in% colnames(DisturbanceModifiers)
-      )
+      all(c("SHIModifier", "Duration", "Type") %in% colnames(DisturbanceModifiers))
     )
   }
   if (!is.null(IgnoredSpecies)) {
@@ -374,37 +355,21 @@ writeEDAAgentFile <- function(agent, base_path) {
       insertValue("EDAAgentName", agent$name, blank_line = FALSE),
       insertValue("SHIMode", agent$SHIMode),
       if (!is.null(agent$StartYear)) {
-        insertValue(
-          "StartYear",
-          as.integer(agent$StartYear),
-          blank_line = FALSE
-        )
+        insertValue("StartYear", as.integer(agent$StartYear), blank_line = FALSE)
       },
       if (!is.null(agent$EndYear)) {
         insertValue("EndYear", as.integer(agent$EndYear))
       },
       agent$extraClimateLines,
       if (length(agent$extraClimateLines) > 0L) glue::glue(""),
-      insertValue(
-        "TransmissionRate",
-        agent$TransmissionRate,
-        blank_line = FALSE
-      ),
+      insertValue("TransmissionRate", agent$TransmissionRate, blank_line = FALSE),
       insertValue("AcquisitionRate", agent$AcquisitionRate, blank_line = FALSE),
       if (!is.null(agent$InitialEpidemMap)) {
-        insertValue(
-          "InitialEpidemMap",
-          agent$InitialEpidemMap,
-          blank_line = FALSE
-        )
+        insertValue("InitialEpidemMap", agent$InitialEpidemMap, blank_line = FALSE)
       },
       insertValue("DispersalType", agent$DispersalType, blank_line = FALSE),
       insertValue("DispersalKernel", agent$DispersalKernel, blank_line = FALSE),
-      insertValue(
-        "DispersalMaxDist",
-        agent$DispersalMaxDist,
-        blank_line = FALSE
-      ),
+      insertValue("DispersalMaxDist", agent$DispersalMaxDist, blank_line = FALSE),
       insertValue("AlphaCoef", agent$AlphaCoef),
       insertEDADisturbanceModifiers(agent$DisturbanceModifiers),
       insertEDASpeciesParameters(agent$EDASpeciesParameters),
@@ -430,10 +395,7 @@ insertEDADisturbanceModifiers <- function(df) {
   if (is.null(df)) {
     return(character(0))
   }
-  stopifnot(
-    is.data.frame(df),
-    all(c("SHIModifier", "Duration", "Type") %in% colnames(df))
-  )
+  stopifnot(is.data.frame(df), all(c("SHIModifier", "Duration", "Type") %in% colnames(df)))
 
   c(
     glue::glue("DisturbanceModifiers"),
@@ -457,10 +419,7 @@ insertEDADisturbanceModifiers <- function(df) {
 #'
 #' @keywords internal
 insertEDASpeciesParameters <- function(df) {
-  stopifnot(
-    is.data.frame(df),
-    all(.edaSpeciesParameterCols %in% colnames(df))
-  )
+  stopifnot(is.data.frame(df), all(.edaSpeciesParameterCols %in% colnames(df)))
 
   c(
     glue::glue("EDASpeciesParameters"),
@@ -490,9 +449,5 @@ insertEDAIgnoredSpecies <- function(species) {
     return(character(0))
   }
 
-  c(
-    glue::glue("IgnoredSpecies"),
-    species,
-    glue::glue("")
-  )
+  c(glue::glue("IgnoredSpecies"), species, glue::glue(""))
 }

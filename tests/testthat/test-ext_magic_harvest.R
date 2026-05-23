@@ -41,17 +41,21 @@ testthat::test_that("MagicHarvest accepts logical or string for NoHarvestReIniti
   tmp_pth <- withr::local_tempdir("test_MagicHarvest_")
 
   ext1 <- MagicHarvest$new(
-    path = tmp_pth, Timestep = 5L,
+    path = tmp_pth,
+    Timestep = 5L,
     HarvestExtensionParameterFile = "h.txt",
-    ProcessToLaunch = "python", ProcessArguments = "{none}",
+    ProcessToLaunch = "python",
+    ProcessArguments = "{none}",
     NoHarvestReInitialization = TRUE
   )
   testthat::expect_identical(ext1$NoHarvestReInitialization, "true")
 
   ext2 <- MagicHarvest$new(
-    path = tmp_pth, Timestep = 5L,
+    path = tmp_pth,
+    Timestep = 5L,
     HarvestExtensionParameterFile = "h.txt",
-    ProcessToLaunch = "python", ProcessArguments = "{none}",
+    ProcessToLaunch = "python",
+    ProcessArguments = "{none}",
     NoHarvestReInitialization = "yes"
   )
   testthat::expect_identical(ext2$NoHarvestReInitialization, "true")

@@ -7,8 +7,8 @@ testthat::test_that("Original Wind inputs are properly created", {
 
   wep <- tibble::tribble(
     ~Ecoregion , ~MaxSize , ~MeanSize , ~MinSize , ~WindRotationPeriod ,
-    "101"      , 400      , 100       , 4        , 100L                ,
-    "102"      , 600      , 200       , 6        , 50L
+    "101"      ,      400 ,       100 ,        4 , 100L                ,
+    "102"      ,      600 ,       200 ,        6 ,  50L
   )
 
   ext_wind <- OriginalWind$new(
@@ -49,9 +49,11 @@ testthat::test_that("Original Wind rejects invalid WindEventParametersTable", {
     WindRotationPeriod = 50L
   )
 
-  testthat::expect_error(
-    OriginalWind$new(path = tmp_pth, Timestep = 10L, WindEventParametersTable = bad_min_gt_max)
-  )
+  testthat::expect_error(OriginalWind$new(
+    path = tmp_pth,
+    Timestep = 10L,
+    WindEventParametersTable = bad_min_gt_max
+  ))
 
   withr::deferred_run()
 })
@@ -67,14 +69,12 @@ testthat::test_that("Original Wind rejects MapNames without {timestep}", {
     WindRotationPeriod = 50L
   )
 
-  testthat::expect_error(
-    OriginalWind$new(
-      path = tmp_pth,
-      Timestep = 10L,
-      WindEventParametersTable = wep,
-      MapNames = "outputs-wind/severity.tif" ## missing {timestep}
-    )
-  )
+  testthat::expect_error(OriginalWind$new(
+    path = tmp_pth,
+    Timestep = 10L,
+    WindEventParametersTable = wep,
+    MapNames = "outputs-wind/severity.tif" ## missing {timestep}
+  ))
 
   withr::deferred_run()
 })
@@ -97,14 +97,12 @@ testthat::test_that("Original Wind rejects WindSeverities not in decreasing orde
     MortalityProbability = c(0.1, 0.5, 0.9)
   )
 
-  testthat::expect_error(
-    OriginalWind$new(
-      path = tmp_pth,
-      Timestep = 10L,
-      WindEventParametersTable = wep,
-      WindSeverities = bad_severities
-    )
-  )
+  testthat::expect_error(OriginalWind$new(
+    path = tmp_pth,
+    Timestep = 10L,
+    WindEventParametersTable = wep,
+    WindSeverities = bad_severities
+  ))
 
   withr::deferred_run()
 })

@@ -135,7 +135,13 @@ testthat::test_that("Forest Carbon Succession (ForCS) inputs are properly create
   output_tables <- data.frame(Biomass = 1, DOM_Pools = 1, Fluxes = 1, Summary = 1)
 
   for_cs_map_control <- data.frame(
-    BiomassC = 1, SDOMC = 1, NBP = 1, NEP = 1, NPP = 1, RH = 1, ToFPS = 1
+    BiomassC = 1,
+    SDOMC = 1,
+    NBP = 1,
+    NEP = 1,
+    NPP = 1,
+    RH = 1,
+    ToFPS = 1
   )
 
   spin_up <- data.frame(Flag = 1, BiomassSpinUpFlag = 1, Tolerance = 1.0, MaxIter = 20)
@@ -157,9 +163,9 @@ testthat::test_that("Forest Carbon Succession (ForCS) inputs are properly create
   )
 
   species_params <- tibble::tribble(
-    ~species , ~leaf_long , ~mort_shp , ~merch_min_age , ~merch_a , ~merch_b , ~prop_non_merch , ~growth_shp , ~shade_tol , ~fire_tol ,
-    "pinubank" , 3.0 , 10 , 5 , 0.7546 , 0.983 , 0.25 , 0.9 , 1L , 2L ,
-    "querelli" , 1.0 , 10 , 5 , 0.7546 , 0.983 , 0.25 , 0.9 , 2L , 4L
+    ~species   , ~leaf_long , ~mort_shp , ~merch_min_age , ~merch_a , ~merch_b , ~prop_non_merch , ~growth_shp , ~shade_tol , ~fire_tol ,
+    "pinubank" , 3.0        ,        10 ,              5 , 0.7546   , 0.983    , 0.25            , 0.9         , 1L         , 2L        ,
+    "querelli" , 1.0        ,        10 ,              5 , 0.7546   , 0.983    , 0.25            , 0.9         , 2L         , 4L
   )
 
   dom_pools <- tibble::tribble(
@@ -221,10 +227,10 @@ testthat::test_that("Forest Carbon Succession (ForCS) inputs are properly create
 
   anpp_timeseries <- tibble::tribble(
     ~year , ~ecoregion , ~species   , ~anpp , ~anpp_std ,
-        0 , "eco1"     , "pinubank" ,   648 ,       0.1 ,
-        0 , "eco1"     , "querelli" ,  1415 ,       0.1 ,
-        0 , "eco2"     , "pinubank" ,   648 ,       0.1 ,
-        0 , "eco2"     , "querelli" ,  1415 ,       0.1
+        0 , "eco1"     , "pinubank" ,   648 , 0.1       ,
+        0 , "eco1"     , "querelli" ,  1415 , 0.1       ,
+        0 , "eco2"     , "pinubank" ,   648 , 0.1       ,
+        0 , "eco2"     , "querelli" ,  1415 , 0.1
   )
 
   maxb_timeseries <- tibble::tribble(
@@ -297,17 +303,41 @@ testthat::test_that("ForCS can be written without a SnagFile", {
   clim_file <- prepClimateFile(
     df = tibble::tribble(
       ~year , ~ecoregion , ~avg_temp ,
-          0 , "eco1"     , 5
+          0 , "eco1"     ,         5
     ),
     path = tmp_pth,
     filename = "ForCS_climate.txt"
   )
 
   dm_file <- prepDisturbanceMatrixFile(
-    DisturbFireTransferDOM = data.frame(intensity = 1, from_dom = 1, to_air = 0, to_dom = 0, to_fps = 0),
-    DisturbOtherTransferDOM = data.frame(disturb_type = "wind", from_dom = 8, to_air = 0, to_dom = 1, to_fps = 0),
-    DisturbFireTransferBiomass = data.frame(intensity = 1, from_biomass = 1, to_air = 0, to_fps = 0, to_dom = 1),
-    DisturbOtherTransferBiomass = data.frame(disturb_type = "wind", from_biomass = 1, to_air = 0, to_fps = 0, to_dom = 1),
+    DisturbFireTransferDOM = data.frame(
+      intensity = 1,
+      from_dom = 1,
+      to_air = 0,
+      to_dom = 0,
+      to_fps = 0
+    ),
+    DisturbOtherTransferDOM = data.frame(
+      disturb_type = "wind",
+      from_dom = 8,
+      to_air = 0,
+      to_dom = 1,
+      to_fps = 0
+    ),
+    DisturbFireTransferBiomass = data.frame(
+      intensity = 1,
+      from_biomass = 1,
+      to_air = 0,
+      to_fps = 0,
+      to_dom = 1
+    ),
+    DisturbOtherTransferBiomass = data.frame(
+      disturb_type = "wind",
+      from_biomass = 1,
+      to_air = 0,
+      to_fps = 0,
+      to_dom = 1
+    ),
     path = tmp_pth,
     filename = "ForCS_DM.txt"
   )
@@ -327,7 +357,15 @@ testthat::test_that("ForCS can be written without a SnagFile", {
     DisturbanceMatrixFile = dm_file,
     SnagFile = NULL,
     OutputTables = data.frame(Biomass = 1, DOM_Pools = 1, Fluxes = 1, Summary = 1),
-    ForCSMapControl = data.frame(BiomassC = 1, SDOMC = 1, NBP = 1, NEP = 1, NPP = 1, RH = 1, ToFPS = 1),
+    ForCSMapControl = data.frame(
+      BiomassC = 1,
+      SDOMC = 1,
+      NBP = 1,
+      NEP = 1,
+      NPP = 1,
+      RH = 1,
+      ToFPS = 1
+    ),
     MapOutputInterval = 1,
     SpinUp = data.frame(Flag = 1, BiomassSpinUpFlag = 1, Tolerance = 1.0, MaxIter = 20),
     AvailableLightBiomass = data.frame(
@@ -346,45 +384,74 @@ testthat::test_that("ForCS can be written without a SnagFile", {
     ),
     SpeciesParameters = data.frame(
       species = "pinubank",
-      leaf_long = 3.0, mort_shp = 10, merch_min_age = 5,
-      merch_a = 0.7546, merch_b = 0.983,
-      prop_non_merch = 0.25, growth_shp = 0.9,
-      shade_tol = 1L, fire_tol = 2L
+      leaf_long = 3.0,
+      mort_shp = 10,
+      merch_min_age = 5,
+      merch_a = 0.7546,
+      merch_b = 0.983,
+      prop_non_merch = 0.25,
+      growth_shp = 0.9,
+      shade_tol = 1L,
+      fire_tol = 2L
     ),
     DOMPools = data.frame(
       id = 1:10,
       name = c(
-        "Very Fast Aboveground", "Very Fast Belowground", "Fast Aboveground",
-        "Fast Belowground", "Medium", "Slow Aboveground", "Slow Belowground",
-        "Stem Snag", "Other Snag", "Extra pool"
+        "Very Fast Aboveground",
+        "Very Fast Belowground",
+        "Fast Aboveground",
+        "Fast Belowground",
+        "Medium",
+        "Slow Aboveground",
+        "Slow Belowground",
+        "Stem Snag",
+        "Other Snag",
+        "Extra pool"
       ),
       prop_to_atmosphere = c(0.815, rep(0.83, 9))
     ),
     EcoSppDOMParameters = data.frame(
-      ecoregion = "eco1", species = "pinubank",
+      ecoregion = "eco1",
+      species = "pinubank",
       dom_pool = 1:10,
       decay_rate = c(0.355, 0.5, 0.1435, 0.0374, 0.015, 0.0033, 0.0187, 0.07175, 0.07, 0),
       amt_t0 = c(1.49, 0.07, 158.48, 288.71, 1349.40, 1927.71, 851.21, 314.88, 45.53, 0),
       q10 = c(2.65, rep(2, 9))
     ),
     ForCSProportions = data.frame(
-      BiomassFine = 0.5, BiomassCoarse = 0.5,
-      AnnualSlowAGtoSlowBG = 0.006, AnnualStemSnagToMedium = 0.032,
+      BiomassFine = 0.5,
+      BiomassCoarse = 0.5,
+      AnnualSlowAGtoSlowBG = 0.006,
+      AnnualStemSnagToMedium = 0.032,
       AnnualBranchSnagToFastAG = 0.1
     ),
     ANPPTimeSeries = data.frame(
-      year = 0, ecoregion = "eco1", species = "pinubank", anpp = 648, anpp_std = 0.1
+      year = 0,
+      ecoregion = "eco1",
+      species = "pinubank",
+      anpp = 648,
+      anpp_std = 0.1
     ),
     MaxBiomassTimeSeries = data.frame(
-      year = 0, ecoregion = "eco1", species = "pinubank", maxb = 15000
+      year = 0,
+      ecoregion = "eco1",
+      species = "pinubank",
+      maxb = 15000
     ),
     EstablishProbabilities = data.frame(
-      year = 0, ecoregion = "eco1", species = "pinubank", probability = 0.1
+      year = 0,
+      ecoregion = "eco1",
+      species = "pinubank",
+      probability = 0.1
     ),
     RootDynamics = data.frame(
-      ecoregion = "eco1", species = "pinubank",
-      min_abio = 0, root_abio = 0.399, prop_fine_rt = 0.18,
-      fr_turnover = 0.6, cr_turnover = 0.02
+      ecoregion = "eco1",
+      species = "pinubank",
+      min_abio = 0,
+      root_abio = 0.399,
+      prop_fine_rt = 0.18,
+      fr_turnover = 0.6,
+      cr_turnover = 0.02
     )
   )
 

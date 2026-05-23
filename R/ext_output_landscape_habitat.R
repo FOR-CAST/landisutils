@@ -162,14 +162,21 @@ OutputLandscapeHabitat <- R6Class(
   active = list(
     #' @field LocalVariables (Optional) Named list of `data.frame`s.
     LocalVariables = function(value) {
-      if (missing(value)) return(private$.LocalVariables)
+      if (missing(value)) {
+        return(private$.LocalVariables)
+      }
       if (!is.null(value)) {
         stopifnot(
-          is.list(value), !is.null(names(value)), all(nzchar(names(value))),
-          all(vapply(value, function(df) {
-            is.data.frame(df) &&
-              all(c("ForestType", "AgeRange", "Species") %in% colnames(df))
-          }, logical(1)))
+          is.list(value),
+          !is.null(names(value)),
+          all(nzchar(names(value))),
+          all(vapply(
+            value,
+            function(df) {
+              is.data.frame(df) && all(c("ForestType", "AgeRange", "Species") %in% colnames(df))
+            },
+            logical(1)
+          ))
         )
       }
       private$.LocalVariables <- value
@@ -177,18 +184,20 @@ OutputLandscapeHabitat <- R6Class(
 
     #' @field DerivedLocalVariables (Optional) Named character vector.
     DerivedLocalVariables = function(value) {
-      if (missing(value)) return(private$.DerivedLocalVariables)
+      if (missing(value)) {
+        return(private$.DerivedLocalVariables)
+      }
       if (!is.null(value)) {
-        stopifnot(
-          is.character(value), !is.null(names(value)), all(nzchar(names(value)))
-        )
+        stopifnot(is.character(value), !is.null(names(value)), all(nzchar(names(value))))
       }
       private$.DerivedLocalVariables <- value
     },
 
     #' @field NeighborhoodVariables (Optional) `data.frame`.
     NeighborhoodVariables = function(value) {
-      if (missing(value)) return(private$.NeighborhoodVariables)
+      if (missing(value)) {
+        return(private$.NeighborhoodVariables)
+      }
       if (!is.null(value)) {
         stopifnot(
           is.data.frame(value),
@@ -200,12 +209,13 @@ OutputLandscapeHabitat <- R6Class(
 
     #' @field ClimateVariables (Optional) `data.frame`.
     ClimateVariables = function(value) {
-      if (missing(value)) return(private$.ClimateVariables)
+      if (missing(value)) {
+        return(private$.ClimateVariables)
+      }
       if (!is.null(value)) {
         stopifnot(
           is.data.frame(value),
-          all(c("Name", "Year", "Months", "Source", "ClimateVar", "Transform") %in%
-                colnames(value))
+          all(c("Name", "Year", "Months", "Source", "ClimateVar", "Transform") %in% colnames(value))
         )
       }
       private$.ClimateVariables <- value
@@ -213,7 +223,9 @@ OutputLandscapeHabitat <- R6Class(
 
     #' @field DistanceVariables (Optional) `data.frame`.
     DistanceVariables = function(value) {
-      if (missing(value)) return(private$.DistanceVariables)
+      if (missing(value)) {
+        return(private$.DistanceVariables)
+      }
       if (!is.null(value)) {
         stopifnot(
           is.data.frame(value),
@@ -226,14 +238,21 @@ OutputLandscapeHabitat <- R6Class(
     #' @field SpeciesModels Named list of `data.frame`s with columns
     #'   `Parameter`, `Type`, `Value`.
     SpeciesModels = function(value) {
-      if (missing(value)) return(private$.SpeciesModels)
+      if (missing(value)) {
+        return(private$.SpeciesModels)
+      }
       if (!is.null(value)) {
         stopifnot(
-          is.list(value), !is.null(names(value)), all(nzchar(names(value))),
-          all(vapply(value, function(df) {
-            is.data.frame(df) &&
-              all(c("Parameter", "Type", "Value") %in% colnames(df))
-          }, logical(1)))
+          is.list(value),
+          !is.null(names(value)),
+          all(nzchar(names(value))),
+          all(vapply(
+            value,
+            function(df) {
+              is.data.frame(df) && all(c("Parameter", "Type", "Value") %in% colnames(df))
+            },
+            logical(1)
+          ))
         )
       }
       private$.SpeciesModels <- value
@@ -248,10 +267,16 @@ OutputLandscapeHabitat <- R6Class(
       if (!is.null(value)) {
         stopifnot(
           "LocalVarMapFileNames must be a character string." = is.character(value),
-          "LocalVarMapFileNames must contain the literal `{local-var-name}` placeholder." =
-            grepl("{local-var-name}", value, fixed = TRUE),
-          "LocalVarMapFileNames must contain the literal `{timestep}` placeholder." =
-            grepl("{timestep}", value, fixed = TRUE)
+          "LocalVarMapFileNames must contain the literal `{local-var-name}` placeholder." = grepl(
+            "{local-var-name}",
+            value,
+            fixed = TRUE
+          ),
+          "LocalVarMapFileNames must contain the literal `{timestep}` placeholder." = grepl(
+            "{timestep}",
+            value,
+            fixed = TRUE
+          )
         )
       }
       private$.LocalVarMapFileNames <- value
@@ -266,10 +291,16 @@ OutputLandscapeHabitat <- R6Class(
       if (!is.null(value)) {
         stopifnot(
           "NeighborVarMapFileNames must be a character string." = is.character(value),
-          "NeighborVarMapFileNames must contain the literal `{neighbor-var-name}` placeholder." =
-            grepl("{neighbor-var-name}", value, fixed = TRUE),
-          "NeighborVarMapFileNames must contain the literal `{timestep}` placeholder." =
-            grepl("{timestep}", value, fixed = TRUE)
+          "NeighborVarMapFileNames must contain the literal `{neighbor-var-name}` placeholder." = grepl(
+            "{neighbor-var-name}",
+            value,
+            fixed = TRUE
+          ),
+          "NeighborVarMapFileNames must contain the literal `{timestep}` placeholder." = grepl(
+            "{timestep}",
+            value,
+            fixed = TRUE
+          )
         )
       }
       private$.NeighborVarMapFileNames <- value
@@ -284,10 +315,16 @@ OutputLandscapeHabitat <- R6Class(
       if (!is.null(value)) {
         stopifnot(
           "ClimateVarMapFileNames must be a character string." = is.character(value),
-          "ClimateVarMapFileNames must contain the literal `{climate-var-name}` placeholder." =
-            grepl("{climate-var-name}", value, fixed = TRUE),
-          "ClimateVarMapFileNames must contain the literal `{timestep}` placeholder." =
-            grepl("{timestep}", value, fixed = TRUE)
+          "ClimateVarMapFileNames must contain the literal `{climate-var-name}` placeholder." = grepl(
+            "{climate-var-name}",
+            value,
+            fixed = TRUE
+          ),
+          "ClimateVarMapFileNames must contain the literal `{timestep}` placeholder." = grepl(
+            "{timestep}",
+            value,
+            fixed = TRUE
+          )
         )
       }
       private$.ClimateVarMapFileNames <- value
@@ -302,10 +339,16 @@ OutputLandscapeHabitat <- R6Class(
       if (!is.null(value)) {
         stopifnot(
           "DistanceVarMapFileNames must be a character string." = is.character(value),
-          "DistanceVarMapFileNames must contain the literal `{distance-var-name}` placeholder." =
-            grepl("{distance-var-name}", value, fixed = TRUE),
-          "DistanceVarMapFileNames must contain the literal `{timestep}` placeholder." =
-            grepl("{timestep}", value, fixed = TRUE)
+          "DistanceVarMapFileNames must contain the literal `{distance-var-name}` placeholder." = grepl(
+            "{distance-var-name}",
+            value,
+            fixed = TRUE
+          ),
+          "DistanceVarMapFileNames must contain the literal `{timestep}` placeholder." = grepl(
+            "{timestep}",
+            value,
+            fixed = TRUE
+          )
         )
       }
       private$.DistanceVarMapFileNames <- value
@@ -320,10 +363,16 @@ OutputLandscapeHabitat <- R6Class(
       if (!is.null(value)) {
         stopifnot(
           "SpeciesMapFileNames must be a character string." = is.character(value),
-          "SpeciesMapFileNames must contain the literal `{species-name}` placeholder." =
-            grepl("{species-name}", value, fixed = TRUE),
-          "SpeciesMapFileNames must contain the literal `{timestep}` placeholder." =
-            grepl("{timestep}", value, fixed = TRUE)
+          "SpeciesMapFileNames must contain the literal `{species-name}` placeholder." = grepl(
+            "{species-name}",
+            value,
+            fixed = TRUE
+          ),
+          "SpeciesMapFileNames must contain the literal `{timestep}` placeholder." = grepl(
+            "{timestep}",
+            value,
+            fixed = TRUE
+          )
         )
       }
       private$.SpeciesMapFileNames <- value
@@ -338,8 +387,11 @@ OutputLandscapeHabitat <- R6Class(
       if (!is.null(value)) {
         stopifnot(
           "SpeciesLogFileNames must be a character string." = is.character(value),
-          "SpeciesLogFileNames must contain the literal `{species-name}` placeholder." =
-            grepl("{species-name}", value, fixed = TRUE)
+          "SpeciesLogFileNames must contain the literal `{species-name}` placeholder." = grepl(
+            "{species-name}",
+            value,
+            fixed = TRUE
+          )
         )
       }
       private$.SpeciesLogFileNames <- value
@@ -347,8 +399,11 @@ OutputLandscapeHabitat <- R6Class(
 
     #' @field LogFile Character.
     LogFile = function(value) {
-      if (missing(value)) private$.LogFile
-      else private$.LogFile <- .relPath(value, self$path)
+      if (missing(value)) {
+        private$.LogFile
+      } else {
+        private$.LogFile <- .relPath(value, self$path)
+      }
     }
   )
 )
@@ -368,15 +423,21 @@ insertLandscapeHabitatLocalVariables <- function(x) {
 
   blocks <- lapply(names(x), function(nm) {
     df <- x[[nm]]
-    rows <- vapply(seq_len(nrow(df)), function(i) {
-      prefix <- if (i == 1L) sprintf("   %s -> \t", nm) else strrep(" ", nchar(nm) + 7L)
-      paste0(
-        prefix,
-        format(df$ForestType[i], width = -16), "\t",
-        format(df$AgeRange[i],   width = -10), "\t",
-        df$Species[i]
-      )
-    }, character(1))
+    rows <- vapply(
+      seq_len(nrow(df)),
+      function(i) {
+        prefix <- if (i == 1L) sprintf("   %s -> \t", nm) else strrep(" ", nchar(nm) + 7L)
+        paste0(
+          prefix,
+          format(df$ForestType[i], width = -16),
+          "\t",
+          format(df$AgeRange[i], width = -10),
+          "\t",
+          df$Species[i]
+        )
+      },
+      character(1)
+    )
     c(rows, "")
   })
 
@@ -402,9 +463,13 @@ insertLandscapeHabitatLocalVariables <- function(x) {
 insertLandscapeHabitatDerivedLocalVariables <- function(x) {
   stopifnot(is.character(x), !is.null(names(x)))
 
-  rows <- vapply(seq_along(x), function(i) {
-    sprintf("   %-12s -> %s", names(x)[i], x[[i]])
-  }, character(1))
+  rows <- vapply(
+    seq_along(x),
+    function(i) {
+      sprintf("   %-12s -> %s", names(x)[i], x[[i]])
+    },
+    character(1)
+  )
 
   c(
     glue::glue("DerivedLocalVariables"),
@@ -428,9 +493,19 @@ insertLandscapeHabitatDerivedLocalVariables <- function(x) {
 insertLandscapeHabitatNeighborhoodVariables <- function(df) {
   stopifnot(is.data.frame(df))
 
-  rows <- apply(df[, c("Name", "LocalVar", "NeighborRadius", "Transform"), drop = FALSE], 1, function(x) {
-    sprintf("%s\t%s\t%s\t%s", x[["Name"]], x[["LocalVar"]], x[["NeighborRadius"]], x[["Transform"]])
-  })
+  rows <- apply(
+    df[, c("Name", "LocalVar", "NeighborRadius", "Transform"), drop = FALSE],
+    1,
+    function(x) {
+      sprintf(
+        "%s\t%s\t%s\t%s",
+        x[["Name"]],
+        x[["LocalVar"]],
+        x[["NeighborRadius"]],
+        x[["Transform"]]
+      )
+    }
+  )
 
   c(
     glue::glue("NeighborhoodVariables"),
@@ -458,8 +533,15 @@ insertLandscapeHabitatClimateVariables <- function(df) {
     df[, c("Name", "Year", "Months", "Source", "ClimateVar", "Transform"), drop = FALSE],
     1,
     function(x) {
-      paste(x[["Name"]], x[["Year"]], x[["Months"]], x[["Source"]],
-            x[["ClimateVar"]], x[["Transform"]], sep = "\t")
+      paste(
+        x[["Name"]],
+        x[["Year"]],
+        x[["Months"]],
+        x[["Source"]],
+        x[["ClimateVar"]],
+        x[["Transform"]],
+        sep = "\t"
+      )
     }
   )
 
@@ -513,15 +595,21 @@ insertLandscapeHabitatSpeciesModels <- function(x) {
 
   blocks <- lapply(names(x), function(sp) {
     df <- x[[sp]]
-    rows <- vapply(seq_len(nrow(df)), function(i) {
-      prefix <- if (i == 1L) sprintf("%s\t->\t", sp) else "\t\t"
-      paste0(
-        prefix,
-        format(df$Parameter[i], width = -16), "\t",
-        format(df$Type[i],      width = -10), "\t",
-        df$Value[i]
-      )
-    }, character(1))
+    rows <- vapply(
+      seq_len(nrow(df)),
+      function(i) {
+        prefix <- if (i == 1L) sprintf("%s\t->\t", sp) else "\t\t"
+        paste0(
+          prefix,
+          format(df$Parameter[i], width = -16),
+          "\t",
+          format(df$Type[i], width = -10),
+          "\t",
+          df$Value[i]
+        )
+      },
+      character(1)
+    )
     c(rows, "")
   })
 

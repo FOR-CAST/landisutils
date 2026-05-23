@@ -41,13 +41,11 @@ testthat::test_that("OutputBiomassPnET defaults populate the standard set", {
 testthat::test_that("OutputBiomassPnET rejects unrecognized output keywords", {
   tmp_pth <- withr::local_tempdir("test_OutputBiomassPnET_")
 
-  testthat::expect_error(
-    OutputBiomassPnET$new(
-      path = tmp_pth,
-      Timestep = 1L,
-      Outputs = list(NotARealField = "foo/{timestep}.img")
-    )
-  )
+  testthat::expect_error(OutputBiomassPnET$new(
+    path = tmp_pth,
+    Timestep = 1L,
+    Outputs = list(NotARealField = "foo/{timestep}.img")
+  ))
 
   withr::deferred_run()
 })

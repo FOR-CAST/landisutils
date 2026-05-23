@@ -1,6 +1,6 @@
 Package: landisutils
 Title: Utilities for running LANDIS-II simulations
-Version: 0.0.8
+Version: 0.0.9
 Authors@R: 
     person(c("Alex", "M"), "Chubaty", , "achubaty@for-cast.ca", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0001-7146-8135"))
@@ -50,6 +50,7 @@ Suggests:
     SpaDES.core,
     SpaDES.tools,
     spelling,
+    targets,
     testthat (>= 3.0.0),
     withr,
     zonal
@@ -123,6 +124,8 @@ Collate:
     'landisutils-package.R'
     'scenarios.R'
     'species.R'
+    'tar_landis.R'
     'utils.R'
     'zzz.R'
 Config/roxygen2/version: 8.0.0
+RoxygenNote: 7.3.3

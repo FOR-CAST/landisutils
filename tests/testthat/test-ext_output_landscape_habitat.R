@@ -7,41 +7,41 @@ testthat::test_that("Landscape Habitat Output extension is properly created", {
 
   reclass2 <- data.frame(
     ForestType = c("Open", "Regen", "LowlandCon", "UplandCon"),
-    AgeRange   = c("All",  "1 to 15", "All",       "All"),
-    Species    = c("None", "All",     "thujocci",  "piceglau abiebals pinuresi pinubank")
+    AgeRange = c("All", "1 to 15", "All", "All"),
+    Species = c("None", "All", "thujocci", "piceglau abiebals pinuresi pinubank")
   )
 
   derived <- c(
     LowlandFor = "reclass2[LowlandCon] + reclass2[LowlandHdwd] + reclass2[LowlandMix]",
-    UplandFor  = "reclass2[UplandCon] + reclass2[UplandHdwd] + reclass2[UplandMix]"
+    UplandFor = "reclass2[UplandCon] + reclass2[UplandHdwd] + reclass2[UplandMix]"
   )
 
   neighbor <- data.frame(
-    Name           = c("loguc200", "uf500"),
-    LocalVar       = c("reclass2[UplandCon]", "UplandFor"),
+    Name = c("loguc200", "uf500"),
+    LocalVar = c("reclass2[UplandCon]", "UplandFor"),
     NeighborRadius = c(200L, 500L),
-    Transform      = c("ln", "none")
+    Transform = c("ln", "none")
   )
 
   climate <- data.frame(
-    Name       = "temp",
-    Year       = "current",
-    Months     = "3 to 6",
-    Source     = "Library",
+    Name = "temp",
+    Year = "current",
+    Months = "3 to 6",
+    Source = "Library",
     ClimateVar = "temp",
-    Transform  = "none"
+    Transform = "none"
   )
 
   species_models <- list(
     SPP1 = data.frame(
       Parameter = c("intercept", "loguc200", "temp", "uf500"),
-      Type      = c("int",       "neighbor", "climate", "neighbor"),
-      Value     = c(-5.228327,    0.823546, -0.180834, 0.020801)
+      Type = c("int", "neighbor", "climate", "neighbor"),
+      Value = c(-5.228327, 0.823546, -0.180834, 0.020801)
     ),
     SPP2 = data.frame(
       Parameter = c("intercept", "logforest200"),
-      Type      = c("int",       "neighbor"),
-      Value     = c(-8.25,        1.922)
+      Type = c("int", "neighbor"),
+      Value = c(-8.25, 1.922)
     )
   )
 
@@ -100,65 +100,41 @@ testthat::test_that("OutputLandscapeHabitat enforces literal MapFileName placeho
   ext <- OutputLandscapeHabitat$new(path = tmp_pth, Timestep = 10L)
 
   ## missing {timestep}
-  testthat::expect_error(
-    ext$LocalVarMapFileNames <- "out/{local-var-name}.tif",
-    "timestep"
-  )
+  testthat::expect_error(ext$LocalVarMapFileNames <- "out/{local-var-name}.tif", "timestep")
   ## missing {local-var-name}
-  testthat::expect_error(
-    ext$LocalVarMapFileNames <- "out/local-{timestep}.tif",
-    "local-var-name"
-  )
+  testthat::expect_error(ext$LocalVarMapFileNames <- "out/local-{timestep}.tif", "local-var-name")
 
-  testthat::expect_error(
-    ext$NeighborVarMapFileNames <- "out/{neighbor-var-name}.tif",
-    "timestep"
-  )
+  testthat::expect_error(ext$NeighborVarMapFileNames <- "out/{neighbor-var-name}.tif", "timestep")
   testthat::expect_error(
     ext$NeighborVarMapFileNames <- "out/neighbor-{timestep}.tif",
     "neighbor-var-name"
   )
 
-  testthat::expect_error(
-    ext$ClimateVarMapFileNames <- "out/{climate-var-name}.tif",
-    "timestep"
-  )
+  testthat::expect_error(ext$ClimateVarMapFileNames <- "out/{climate-var-name}.tif", "timestep")
   testthat::expect_error(
     ext$ClimateVarMapFileNames <- "out/climate-{timestep}.tif",
     "climate-var-name"
   )
 
-  testthat::expect_error(
-    ext$DistanceVarMapFileNames <- "out/{distance-var-name}.tif",
-    "timestep"
-  )
+  testthat::expect_error(ext$DistanceVarMapFileNames <- "out/{distance-var-name}.tif", "timestep")
   testthat::expect_error(
     ext$DistanceVarMapFileNames <- "out/distance-{timestep}.tif",
     "distance-var-name"
   )
 
-  testthat::expect_error(
-    ext$SpeciesMapFileNames <- "out/{species-name}.tif",
-    "timestep"
-  )
-  testthat::expect_error(
-    ext$SpeciesMapFileNames <- "out/habitat-{timestep}.tif",
-    "species-name"
-  )
+  testthat::expect_error(ext$SpeciesMapFileNames <- "out/{species-name}.tif", "timestep")
+  testthat::expect_error(ext$SpeciesMapFileNames <- "out/habitat-{timestep}.tif", "species-name")
 
-  testthat::expect_error(
-    ext$SpeciesLogFileNames <- "out/log.csv",
-    "species-name"
-  )
+  testthat::expect_error(ext$SpeciesLogFileNames <- "out/log.csv", "species-name")
 
   ## valid templates assign without error
   testthat::expect_silent({
-    ext$LocalVarMapFileNames    <- "out/{local-var-name}-{timestep}.tif"
+    ext$LocalVarMapFileNames <- "out/{local-var-name}-{timestep}.tif"
     ext$NeighborVarMapFileNames <- "out/{neighbor-var-name}-{timestep}.tif"
-    ext$ClimateVarMapFileNames  <- "out/{climate-var-name}-{timestep}.tif"
+    ext$ClimateVarMapFileNames <- "out/{climate-var-name}-{timestep}.tif"
     ext$DistanceVarMapFileNames <- "out/{distance-var-name}-{timestep}.tif"
-    ext$SpeciesMapFileNames     <- "out/{species-name}-{timestep}.tif"
-    ext$SpeciesLogFileNames     <- "out/{species-name}_log.csv"
+    ext$SpeciesMapFileNames <- "out/{species-name}-{timestep}.tif"
+    ext$SpeciesLogFileNames <- "out/{species-name}_log.csv"
   })
 
   withr::deferred_run()

@@ -31,12 +31,7 @@ OutputBiomassPnET <- R6Class(
     #'   patterns. Each pattern may contain `{timestep}`, `{species}`,
     #'   `{month}`, or `{year}` placeholders depending on the keyword.
     #'   Use `defaultPnETOutputFiles()` for a sensible default set.
-    initialize = function(
-      path,
-      Timestep = NULL,
-      Species = "all",
-      Outputs = NULL
-    ) {
+    initialize = function(path, Timestep = NULL, Species = "all", Outputs = NULL) {
       stopifnot(!is.null(path))
 
       ## LandisExtension fields
@@ -81,10 +76,7 @@ OutputBiomassPnET <- R6Class(
     }
   ),
 
-  private = list(
-    .Species = NULL,
-    .Outputs = NULL
-  ),
+  private = list(.Species = NULL, .Outputs = NULL),
 
   active = list(
     #' @field Species Character vector of species codes, or `"all"` / `"none"`.

@@ -61,19 +61,19 @@ testthat::test_that("RootRot rejects bad SpeciesSusceptibility", {
 
   ## missing Index2
   bad <- data.frame(Species = "abiebals", Index1 = 0.1)
-  suppressWarnings(
-    testthat::expect_error(
-      RootRot$new(path = tmp_pth, Timestep = 5L, SpeciesSusceptibility = bad)
-    )
-  )
+  suppressWarnings(testthat::expect_error(RootRot$new(
+    path = tmp_pth,
+    Timestep = 5L,
+    SpeciesSusceptibility = bad
+  )))
 
   ## Index out of range
   bad2 <- data.frame(Species = "abiebals", Index1 = 1.5, Index2 = 0)
-  suppressWarnings(
-    testthat::expect_error(
-      RootRot$new(path = tmp_pth, Timestep = 5L, SpeciesSusceptibility = bad2)
-    )
-  )
+  suppressWarnings(testthat::expect_error(RootRot$new(
+    path = tmp_pth,
+    Timestep = 5L,
+    SpeciesSusceptibility = bad2
+  )))
 
   withr::deferred_run()
 })
@@ -81,10 +81,7 @@ testthat::test_that("RootRot rejects bad SpeciesSusceptibility", {
 testthat::test_that("RootRot$new() warns about missing LANDIS-II v8 compatibility", {
   tmp_pth <- withr::local_tempdir("test_RootRot_")
 
-  testthat::expect_warning(
-    RootRot$new(path = tmp_pth, Timestep = 5L),
-    regexp = "LANDIS-II v8"
-  )
+  testthat::expect_warning(RootRot$new(path = tmp_pth, Timestep = 5L), regexp = "LANDIS-II v8")
 
   withr::deferred_run()
 })
@@ -92,11 +89,11 @@ testthat::test_that("RootRot$new() warns about missing LANDIS-II v8 compatibilit
 testthat::test_that("RootRot LethalTemp must be <= 0", {
   tmp_pth <- withr::local_tempdir("test_RootRot_")
 
-  suppressWarnings(
-    testthat::expect_error(
-      RootRot$new(path = tmp_pth, Timestep = 5L, LethalTemp = 5)
-    )
-  )
+  suppressWarnings(testthat::expect_error(RootRot$new(
+    path = tmp_pth,
+    Timestep = 5L,
+    LethalTemp = 5
+  )))
 
   withr::deferred_run()
 })

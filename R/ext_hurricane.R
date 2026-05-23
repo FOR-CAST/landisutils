@@ -129,7 +129,11 @@ Hurricane <- R6Class(
       lines <- c(
         lines,
         insertStormOccurrenceProbabilities(self$StormOccurrenceProbabilities),
-        insertValue("LowBoundLandfallWindSpeed", self$LowBoundLandfallWindSpeed, blank_line = FALSE),
+        insertValue(
+          "LowBoundLandfallWindSpeed",
+          self$LowBoundLandfallWindSpeed,
+          blank_line = FALSE
+        ),
         insertValue("ModeLandfallWindSpeed", self$ModeLandfallWindSpeed, blank_line = FALSE),
         insertValue("HighBoundLandfallWindSpeed", self$HighBoundLandfallWindSpeed),
         insertValue("CoastalSlope", self$CoastalSlope),
@@ -219,62 +223,92 @@ Hurricane <- R6Class(
 
     #' @field LowBoundLandfallWindSpeed Numeric.
     LowBoundLandfallWindSpeed = function(value) {
-      if (missing(value)) private$.LowBoundLandfallWindSpeed
-      else private$.LowBoundLandfallWindSpeed <- value
+      if (missing(value)) {
+        private$.LowBoundLandfallWindSpeed
+      } else {
+        private$.LowBoundLandfallWindSpeed <- value
+      }
     },
 
     #' @field ModeLandfallWindSpeed Numeric.
     ModeLandfallWindSpeed = function(value) {
-      if (missing(value)) private$.ModeLandfallWindSpeed
-      else private$.ModeLandfallWindSpeed <- value
+      if (missing(value)) {
+        private$.ModeLandfallWindSpeed
+      } else {
+        private$.ModeLandfallWindSpeed <- value
+      }
     },
 
     #' @field HighBoundLandfallWindSpeed Numeric.
     HighBoundLandfallWindSpeed = function(value) {
-      if (missing(value)) private$.HighBoundLandfallWindSpeed
-      else private$.HighBoundLandfallWindSpeed <- value
+      if (missing(value)) {
+        private$.HighBoundLandfallWindSpeed
+      } else {
+        private$.HighBoundLandfallWindSpeed <- value
+      }
     },
 
     #' @field CoastalSlope Numeric.
     CoastalSlope = function(value) {
-      if (missing(value)) private$.CoastalSlope
-      else private$.CoastalSlope <- value
+      if (missing(value)) {
+        private$.CoastalSlope
+      } else {
+        private$.CoastalSlope <- value
+      }
     },
 
     #' @field MeanStormIntersectionX Numeric.
     MeanStormIntersectionX = function(value) {
-      if (missing(value)) private$.MeanStormIntersectionX
-      else private$.MeanStormIntersectionX <- value
+      if (missing(value)) {
+        private$.MeanStormIntersectionX
+      } else {
+        private$.MeanStormIntersectionX <- value
+      }
     },
 
     #' @field MeanStormIntersectionY Numeric.
     MeanStormIntersectionY = function(value) {
-      if (missing(value)) private$.MeanStormIntersectionY
-      else private$.MeanStormIntersectionY <- value
+      if (missing(value)) {
+        private$.MeanStormIntersectionY
+      } else {
+        private$.MeanStormIntersectionY <- value
+      }
     },
 
     #' @field LandfallSigma Numeric.
     LandfallSigma = function(value) {
-      if (missing(value)) private$.LandfallSigma
-      else private$.LandfallSigma <- value
+      if (missing(value)) {
+        private$.LandfallSigma
+      } else {
+        private$.LandfallSigma <- value
+      }
     },
 
     #' @field StormDirectionMu Numeric.
     StormDirectionMu = function(value) {
-      if (missing(value)) private$.StormDirectionMu
-      else private$.StormDirectionMu <- value
+      if (missing(value)) {
+        private$.StormDirectionMu
+      } else {
+        private$.StormDirectionMu <- value
+      }
     },
 
     #' @field StormDirectionSigma Numeric.
     StormDirectionSigma = function(value) {
-      if (missing(value)) private$.StormDirectionSigma
-      else private$.StormDirectionSigma <- value
+      if (missing(value)) {
+        private$.StormDirectionSigma
+      } else {
+        private$.StormDirectionSigma <- value
+      }
     },
 
     #' @field MinimumWindSpeedforDamage Numeric.
     MinimumWindSpeedforDamage = function(value) {
-      if (missing(value)) private$.MinimumWindSpeedforDamage
-      else private$.MinimumWindSpeedforDamage <- value
+      if (missing(value)) {
+        private$.MinimumWindSpeedforDamage
+      } else {
+        private$.MinimumWindSpeedforDamage <- value
+      }
     },
 
     #' @field ExposureMaps `data.frame` with columns `Degree`, `MapName`.
@@ -376,8 +410,12 @@ Hurricane <- R6Class(
 #' @export
 windSpeedVulnerability <- function(species, maxAge, mortality) {
   stopifnot(
-    is.character(species), length(species) == 1L, nzchar(species),
-    is.numeric(maxAge), length(maxAge) == 1L, maxAge > 0,
+    is.character(species),
+    length(species) == 1L,
+    nzchar(species),
+    is.numeric(maxAge),
+    length(maxAge) == 1L,
+    maxAge > 0,
     is.numeric(mortality),
     !is.null(names(mortality)),
     all(nzchar(names(mortality))),
@@ -405,10 +443,7 @@ windSpeedVulnerability <- function(species, maxAge, mortality) {
 #'
 #' @keywords internal
 insertStormOccurrenceProbabilities <- function(df) {
-  stopifnot(
-    is.data.frame(df),
-    all(c("Storms", "Probability") %in% colnames(df))
-  )
+  stopifnot(is.data.frame(df), all(c("Storms", "Probability") %in% colnames(df)))
 
   rows <- apply(df[, c("Storms", "Probability"), drop = FALSE], 1, function(x) {
     glue::glue("{x[['Storms']]}\t{x[['Probability']]}")
@@ -435,10 +470,7 @@ insertStormOccurrenceProbabilities <- function(df) {
 #'
 #' @keywords internal
 insertExposureMaps <- function(df) {
-  stopifnot(
-    is.data.frame(df),
-    all(c("Degree", "MapName") %in% colnames(df))
-  )
+  stopifnot(is.data.frame(df), all(c("Degree", "MapName") %in% colnames(df)))
 
   rows <- apply(df[, c("Degree", "MapName"), drop = FALSE], 1, function(x) {
     glue::glue("{x[['Degree']]}\t{x[['MapName']]}")
@@ -470,15 +502,25 @@ insertWindSpeedVulnerabilities <- function(vulns) {
     all(vapply(vulns, inherits, logical(1), "WindSpeedVulnerability"))
   )
 
-  rows <- vapply(vulns, function(v) {
-    pairs <- paste(
-      vapply(seq_along(v$mortality), function(i) {
-        sprintf("%s:%s", names(v$mortality)[i], v$mortality[[i]])
-      }, character(1)),
-      collapse = "    "
-    )
-    as.character(glue::glue("   {format(v$species, width = -20)}{format(v$maxAge, width = 6)}    {pairs}"))
-  }, character(1))
+  rows <- vapply(
+    vulns,
+    function(v) {
+      pairs <- paste(
+        vapply(
+          seq_along(v$mortality),
+          function(i) {
+            sprintf("%s:%s", names(v$mortality)[i], v$mortality[[i]])
+          },
+          character(1)
+        ),
+        collapse = "    "
+      )
+      as.character(glue::glue(
+        "   {format(v$species, width = -20)}{format(v$maxAge, width = 6)}    {pairs}"
+      ))
+    },
+    character(1)
+  )
 
   c(
     glue::glue("WindSpeedVulnerabilities"),

@@ -1,3 +1,17 @@
+# landisutils 0.0.9
+
+* `landis_run()`: fix inverted `stopifnot()` guard — the function previously
+  rejected valid `LandisScenario` objects and accepted everything else.
+* New `landis_run_docker()` runs a LANDIS-II simulation in an ephemeral Docker
+  container (bind-mounting the scenario directory to `/sim`).
+* New `landis_run_local()` runs a LANDIS-II simulation directly via `dotnet`,
+  writing stdout/stderr to `<scenario_dir>/log/`.
+* New `tar_landis()` factory creates a `{targets}` `format = "file"` target
+  that runs LANDIS-II (locally or via Docker) and returns tracked output and
+  log files.
+* New package options `landisutils.docker.image` and `landisutils.run.method`
+  are set by `.onLoad()`.
+
 # landisutils 0.0.8
 
 * fix issue with `climr` returning reference period rows - filter these when assembling data;

@@ -1,8 +1,6 @@
 #' @keywords internal
 collapseSpp <- function(x) {
-  x[nzchar(as.character(x))] |>
-    sort() |>
-    paste0(collapse = "__")
+  x[nzchar(as.character(x))] |> sort() |> paste0(collapse = "__")
 }
 
 #' Simplify cohorts
@@ -30,10 +28,7 @@ simplifyCohorts <- function(cohortData, pixelGroupMap, ageBin = 20) {
   cd[, newPixelGroup := .GRP, by = c("community", "ecoregionGroup")]
   cd[, newB := as.integer(newAge / max(newAge) * mean(B)), by = c("newPixelGroup", "speciesCode")]
 
-  stopifnot(
-    all(cd[["newPixelGroup"]] >= 0L),
-    all(cd[["newPixelGroup"]] <= 65535L)
-  )
+  stopifnot(all(cd[["newPixelGroup"]] >= 0L), all(cd[["newPixelGroup"]] <= 65535L))
 
   ## TODO: reclassification is very slow
   pgm <- terra::deepcopy(pixelGroupMap) |>
@@ -64,8 +59,10 @@ prepInitialCommunities <- function(cohortData, pixelGroupMap, path) {
   .checkPath(path)
 
   stopifnot(
-    !is.null(cohortData) && is(cohortData, "data.table") &&
-      !is.null(pixelGroupMap) && is(pixelGroupMap, "SpatRaster")
+    !is.null(cohortData) &&
+      is(cohortData, "data.table") &&
+      !is.null(pixelGroupMap) &&
+      is(pixelGroupMap, "SpatRaster")
   )
 
   initialCommunities <- data.table::copy(cohortData)

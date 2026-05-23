@@ -16,10 +16,9 @@ testthat::test_that("Hurricane extension is properly created", {
   )
 
   default_curve <- defaultHurricaneMortalityCurve()
-  vulns <- lapply(
-    c("MountainHemlock", "SitkaSpruce", "WesternHemlock"),
-    function(sp) windSpeedVulnerability(species = sp, maxAge = 800, mortality = default_curve)
-  )
+  vulns <- lapply(c("MountainHemlock", "SitkaSpruce", "WesternHemlock"), function(sp) {
+    windSpeedVulnerability(species = sp, maxAge = 800, mortality = default_curve)
+  })
 
   ext <- Hurricane$new(
     path = tmp_pth,
@@ -66,21 +65,24 @@ testthat::test_that("Hurricane rejects bad StormOccurrenceProbabilities (sum != 
   tmp_pth <- withr::local_tempdir("test_Hurricane_")
 
   bad_occ <- data.frame(Storms = 0:1, Probability = c(0.5, 0.3))
-  testthat::expect_error(
-    Hurricane$new(path = tmp_pth, Timestep = 1L, StormOccurrenceProbabilities = bad_occ)
-  )
+  testthat::expect_error(Hurricane$new(
+    path = tmp_pth,
+    Timestep = 1L,
+    StormOccurrenceProbabilities = bad_occ
+  ))
 
   withr::deferred_run()
 })
 
 testthat::test_that("windSpeedVulnerability rejects malformed mortality vector", {
-  testthat::expect_error(
-    windSpeedVulnerability(species = "abiebals", maxAge = 100, mortality = c(0.1, 0.5))
-  )
-  testthat::expect_error(
-    windSpeedVulnerability(
-      species = "abiebals", maxAge = 100,
-      mortality = c("60" = 1.5)
-    )
-  )
+  testthat::expect_error(windSpeedVulnerability(
+    species = "abiebals",
+    maxAge = 100,
+    mortality = c(0.1, 0.5)
+  ))
+  testthat::expect_error(windSpeedVulnerability(
+    species = "abiebals",
+    maxAge = 100,
+    mortality = c("60" = 1.5)
+  ))
 })

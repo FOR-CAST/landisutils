@@ -7,12 +7,18 @@ testthat::test_that("EDA extension is properly created", {
 
   sp <- data.frame(
     Species = c("Umbecali", "Lithdens"),
-    LowAge = c(5, 5),     LowScore = c(3, 2),
-    MediumAge = c(15, 20), MediumScore = c(6, 4),
-    HighAge = c(40, 60),   HighScore = c(10, 7),
-    VulnLowAge = c(999, 5),     VulnLowMortProb = c(0, 0.14),
-    VulnMediumAge = c(999, 15), VulnMediumMortProb = c(0, 0.25),
-    VulnHighAge = c(999, 30),   VulnHighMortProb = c(0, 0.30),
+    LowAge = c(5, 5),
+    LowScore = c(3, 2),
+    MediumAge = c(15, 20),
+    MediumScore = c(6, 4),
+    HighAge = c(40, 60),
+    HighScore = c(10, 7),
+    VulnLowAge = c(999, 5),
+    VulnLowMortProb = c(0, 0.14),
+    VulnMediumAge = c(999, 15),
+    VulnMediumMortProb = c(0, 0.25),
+    VulnHighAge = c(999, 30),
+    VulnHighMortProb = c(0, 0.30),
     CFSConifer = c("no", "yes"),
     MortalityPlot = c("no", "yes")
   )
@@ -75,10 +81,14 @@ testthat::test_that("EDA extension is properly created", {
 
 testthat::test_that("edaAgent rejects invalid inputs", {
   base_args <- list(
-    name = "ramorum", SHIMode = "mean",
-    TransmissionRate = 1.8, AcquisitionRate = 0.4,
-    DispersalType = "STATIC", DispersalKernel = "PowerLaw",
-    DispersalMaxDist = 1000, AlphaCoef = 3.55
+    name = "ramorum",
+    SHIMode = "mean",
+    TransmissionRate = 1.8,
+    AcquisitionRate = 0.4,
+    DispersalType = "STATIC",
+    DispersalKernel = "PowerLaw",
+    DispersalMaxDist = 1000,
+    AlphaCoef = 3.55
   )
 
   ## missing EDASpeciesParameters

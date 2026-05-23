@@ -6,12 +6,16 @@ testthat::test_that("Land Use Plus extension is properly created", {
   tmp_pth <- withr::local_tempdir("test_LandUsePlus_")
 
   forest_lu <- landUseType(
-    name = "forest", mapCode = 4L, allowHarvest = "no",
+    name = "forest",
+    mapCode = 4L,
+    allowHarvest = "no",
     changes = list(landCoverChange(type = "NoChange"))
   )
 
   fips_harvest_lu <- landUseType(
-    name = "FIPSandHarvest", mapCode = 3L, allowHarvest = "yes",
+    name = "FIPSandHarvest",
+    mapCode = 3L,
+    allowHarvest = "yes",
     changes = list(
       landCoverChange(
         type = "RemoveTrees",
@@ -38,22 +42,22 @@ testthat::test_that("Land Use Plus extension is properly created", {
   )
 
   multi_range_lu <- landUseType(
-    name = "FIPS", mapCode = 1L, allowHarvest = "yes",
-    changes = list(
-      landCoverChange(
-        type = "InsectDefoliation",
-        cohorts = list(
-          cohortSelector(
-            species = "querrubr",
-            ranges = data.frame(low = 1, high = 300, percent = 75)
-          ),
-          cohortSelector(
-            species = "pinustro",
-            ranges = data.frame(low = c(1, 71), high = c(62, 200), percent = c(20, 25))
-          )
+    name = "FIPS",
+    mapCode = 1L,
+    allowHarvest = "yes",
+    changes = list(landCoverChange(
+      type = "InsectDefoliation",
+      cohorts = list(
+        cohortSelector(
+          species = "querrubr",
+          ranges = data.frame(low = 1, high = 300, percent = 75)
+        ),
+        cohortSelector(
+          species = "pinustro",
+          ranges = data.frame(low = c(1, 71), high = c(62, 200), percent = c(20, 25))
         )
       )
-    )
+    ))
   )
 
   ext <- LandUsePlus$new(
@@ -95,11 +99,15 @@ testthat::test_that("LandUsePlus rejects duplicate LandUse names or mapCodes", {
   tmp_pth <- withr::local_tempdir("test_LandUsePlus_")
 
   lu1 <- landUseType(
-    name = "forest", mapCode = 1L, allowHarvest = "no",
+    name = "forest",
+    mapCode = 1L,
+    allowHarvest = "no",
     changes = landCoverChange(type = "NoChange")
   )
   lu2 <- landUseType(
-    name = "forest", mapCode = 2L, allowHarvest = "no",
+    name = "forest",
+    mapCode = 2L,
+    allowHarvest = "no",
     changes = landCoverChange(type = "NoChange")
   )
 
@@ -151,9 +159,11 @@ testthat::test_that("LandUsePlus$InputMaps requires `{timestep}` and `.tif`", {
   )
 
   ## case-insensitive `.TIF` is accepted
-  testthat::expect_no_error(
-    LandUsePlus$new(path = tmp_pth, Timestep = 1L, InputMaps = "landuse-{timestep}.TIF")
-  )
+  testthat::expect_no_error(LandUsePlus$new(
+    path = tmp_pth,
+    Timestep = 1L,
+    InputMaps = "landuse-{timestep}.TIF"
+  ))
 
   withr::deferred_run()
 })

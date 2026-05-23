@@ -34,18 +34,18 @@ testthat::test_that("DGS Succession inputs are properly created", {
   )
 
   soil_map_names <- list(
-    SoilDepthMapName              = "soil_depth.tif",
-    SoilDrainMapName              = "soil_drain.tif",
-    SoilBaseFlowMapName           = "soil_baseflow.tif",
-    SoilStormFlowMapName          = "soil_stormflow.tif",
-    SoilFieldCapacityMapName      = "soil_fieldcap.tif",
-    SoilWiltingPointMapName       = "soil_wiltpt.tif",
-    SoilPercentSandMapName        = "soil_sand.tif",
-    SoilPercentClayMapName        = "soil_clay.tif",
-    SoilBulkDensityMapName        = "soil_bulkdens.tif",
-    SoilParticleDensityMapName    = "soil_partdens.tif",
-    InitialSOC_PrimaryMapName     = "initial_soc.tif",
-    InitialSON_PrimaryMapName     = "initial_son.tif",
+    SoilDepthMapName = "soil_depth.tif",
+    SoilDrainMapName = "soil_drain.tif",
+    SoilBaseFlowMapName = "soil_baseflow.tif",
+    SoilStormFlowMapName = "soil_stormflow.tif",
+    SoilFieldCapacityMapName = "soil_fieldcap.tif",
+    SoilWiltingPointMapName = "soil_wiltpt.tif",
+    SoilPercentSandMapName = "soil_sand.tif",
+    SoilPercentClayMapName = "soil_clay.tif",
+    SoilBulkDensityMapName = "soil_bulkdens.tif",
+    SoilParticleDensityMapName = "soil_partdens.tif",
+    InitialSOC_PrimaryMapName = "initial_soc.tif",
+    InitialSON_PrimaryMapName = "initial_son.tif",
     InitialDeadWoodSurfaceMapName = "initial_deadwood_surf.tif",
     InitialDeadCoarseRootsMapName = "initial_deadwood_roots.tif"
   )
@@ -140,19 +140,19 @@ testthat::test_that("DGSSuccession$new validates inputs", {
   )
 
   ## Bad WaterDecayFunction
-  testthat::expect_error(
-    DGSSuccession$new(path = tmp_pth, WaterDecayFunction = "Quadratic")
-  )
+  testthat::expect_error(DGSSuccession$new(path = tmp_pth, WaterDecayFunction = "Quadratic"))
 
   ## SoilMaps must use only allowed keys
-  testthat::expect_error(
-    DGSSuccession$new(path = tmp_pth, SoilMaps = list(NotARealMap = "foo.tif"))
-  )
+  testthat::expect_error(DGSSuccession$new(
+    path = tmp_pth,
+    SoilMaps = list(NotARealMap = "foo.tif")
+  ))
 
   ## DammMcNIPParameters must use only allowed keys
-  testthat::expect_error(
-    DGSSuccession$new(path = tmp_pth, DammMcNIPParameters = list(NotAParam = 1))
-  )
+  testthat::expect_error(DGSSuccession$new(
+    path = tmp_pth,
+    DammMcNIPParameters = list(NotAParam = 1)
+  ))
 
   ## write() requires all DAMM-McNiP keys; missing one should fail
   ext <- DGSSuccession$new(

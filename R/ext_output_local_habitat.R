@@ -38,8 +38,7 @@ OutputLocalHabitat <- R6Class(
 
       ## additional fields for this extension
       self$OutputTimestep <- OutputTimestep %||% Timestep
-      self$MapFileNames <- MapFileNames %||%
-        "output/local-habitat/{HabitatName}-{timestep}.tif"
+      self$MapFileNames <- MapFileNames %||% "output/local-habitat/{HabitatName}-{timestep}.tif"
       self$SuitabilityFiles <- SuitabilityFiles
     },
 
@@ -67,11 +66,7 @@ OutputLocalHabitat <- R6Class(
     }
   ),
 
-  private = list(
-    .OutputTimestep = NULL,
-    .MapFileNames = NULL,
-    .SuitabilityFiles = list()
-  ),
+  private = list(.OutputTimestep = NULL, .MapFileNames = NULL, .SuitabilityFiles = list()),
 
   active = list(
     #' @field OutputTimestep Integer. Output frequency (years); must be `>= Timestep`.
@@ -120,10 +115,7 @@ OutputLocalHabitat <- R6Class(
         } else if (inherits(value, "SuitabilityFile")) {
           value <- list(value)
         }
-        stopifnot(
-          is.list(value),
-          all(vapply(value, inherits, logical(1), "SuitabilityFile"))
-        )
+        stopifnot(is.list(value), all(vapply(value, inherits, logical(1), "SuitabilityFile")))
         private$.SuitabilityFiles <- value
       }
     }
@@ -174,9 +166,14 @@ insertSuitabilityFiles <- function(files) {
   c(
     glue::glue("SuitabilityFiles    {paths[1]}"),
     if (length(paths) > 1L) {
-      vapply(paths[-1], function(p) {
-        as.character(glue::glue("                    {p}"))
-      }, character(1), USE.NAMES = FALSE)
+      vapply(
+        paths[-1],
+        function(p) {
+          as.character(glue::glue("                    {p}"))
+        },
+        character(1),
+        USE.NAMES = FALSE
+      )
     },
     glue::glue("")
   )

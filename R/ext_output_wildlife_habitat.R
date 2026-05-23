@@ -40,8 +40,7 @@ OutputWildlifeHabitat <- R6Class(
 
       ## additional fields for this extension
       self$OutputTimestep <- OutputTimestep %||% Timestep
-      self$MapFileNames <- MapFileNames %||%
-        "output/wildlife-habitat/{wildlifeName}-{timestep}.tif"
+      self$MapFileNames <- MapFileNames %||% "output/wildlife-habitat/{wildlifeName}-{timestep}.tif"
       self$SuitabilityFiles <- SuitabilityFiles
     },
 
@@ -69,11 +68,7 @@ OutputWildlifeHabitat <- R6Class(
     }
   ),
 
-  private = list(
-    .OutputTimestep = NULL,
-    .MapFileNames = NULL,
-    .SuitabilityFiles = list()
-  ),
+  private = list(.OutputTimestep = NULL, .MapFileNames = NULL, .SuitabilityFiles = list()),
 
   active = list(
     #' @field OutputTimestep Integer. Output frequency (years); must be `>= Timestep`.
@@ -122,10 +117,7 @@ OutputWildlifeHabitat <- R6Class(
         } else if (inherits(value, "SuitabilityFile")) {
           value <- list(value)
         }
-        stopifnot(
-          is.list(value),
-          all(vapply(value, inherits, logical(1), "SuitabilityFile"))
-        )
+        stopifnot(is.list(value), all(vapply(value, inherits, logical(1), "SuitabilityFile")))
         private$.SuitabilityFiles <- value
       }
     }

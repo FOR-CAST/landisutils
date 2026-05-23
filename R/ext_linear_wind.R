@@ -93,8 +93,7 @@ LinearWind <- R6Class(
       self$WindSeverities <- WindSeverities %||% defaultLinearWindSeverities()
       self$IntensityMapNames <- IntensityMapNames %||%
         MapNames("intensity", "linearwind", self$path)
-      self$SeverityMapNames <- SeverityMapNames %||%
-        MapNames("severity", "linearwind", self$path)
+      self$SeverityMapNames <- SeverityMapNames %||% MapNames("severity", "linearwind", self$path)
       self$LogFile <- LogFile
     },
 
@@ -493,11 +492,7 @@ insertLinearWindIntensityTable <- function(name, pct) {
 #'
 #' @keywords internal
 insertWindDirectionTable <- function(pct) {
-  stopifnot(
-    is.numeric(pct),
-    length(pct) == 4,
-    isTRUE(all.equal(sum(pct), 100))
-  )
+  stopifnot(is.numeric(pct), length(pct) == 4, isTRUE(all.equal(sum(pct), 100)))
 
   directions <- c("N-S", "NE-SW", "E-W", "SE-NW")
 
@@ -563,9 +558,7 @@ insertLinearWindEcoregionModifiers <- function(df) {
 insertLinearWindSeverities <- function(df) {
   stopifnot(
     is.data.frame(df),
-    all(
-      c("Severity", "LowerAge", "UpperAge", "WindspeedMortalityThreshold") %in% colnames(df)
-    )
+    all(c("Severity", "LowerAge", "UpperAge", "WindspeedMortalityThreshold") %in% colnames(df))
   )
 
   rows <- apply(df, 1, function(x) {
