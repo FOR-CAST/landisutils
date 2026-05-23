@@ -415,6 +415,12 @@
   [`landis_run()`](https://for-cast.github.io/landisutils/reference/landis_run.md)
   : Run a LANDIS-II simulation from the R session
 
+- [`landis_run_docker()`](https://for-cast.github.io/landisutils/reference/landis_run_docker.md)
+  : Run a LANDIS-II simulation inside a Docker container
+
+- [`landis_run_local()`](https://for-cast.github.io/landisutils/reference/landis_run_local.md)
+  : Run a LANDIS-II simulation locally (synchronous)
+
 - [`prepClimateConfig()`](https://for-cast.github.io/landisutils/reference/prepClimateConfig.md)
   :
 
@@ -574,6 +580,11 @@
 
 - [`suitabilityFile()`](https://for-cast.github.io/landisutils/reference/suitabilityFile.md)
   : Construct a habitat-suitability file reference
+
+- [`tar_landis()`](https://for-cast.github.io/landisutils/reference/tar_landis.md)
+  :
+
+  Create a `targets` target that runs LANDIS-II
 
 - [`test_ecoregionPolys`](https://for-cast.github.io/landisutils/reference/test_ecoregionPolys.md)
   : Test ecoregion polygons

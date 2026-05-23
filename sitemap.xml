@@ -220,6 +220,8 @@
 <url><loc>https://for-cast.github.io/landisutils/reference/landUseType.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/landis_find.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/landis_run.html</loc></url>
+<url><loc>https://for-cast.github.io/landisutils/reference/landis_run_docker.html</loc></url>
+<url><loc>https://for-cast.github.io/landisutils/reference/landis_run_local.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/landisutils-package.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/prepClimateConfig.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/prepClimateFile.html</loc></url>
@@ -259,6 +261,7 @@
 <url><loc>https://for-cast.github.io/landisutils/reference/scenario.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/simplifyCohorts.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/suitabilityFile.html</loc></url>
+<url><loc>https://for-cast.github.io/landisutils/reference/tar_landis.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/test_ecoregionPolys.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/windSpeedVulnerability.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/writeAgentFile.html</loc></url>

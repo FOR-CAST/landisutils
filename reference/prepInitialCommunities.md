@@ -12,7 +12,8 @@ prepInitialCommunities(cohortData, pixelGroupMap, path)
 
 - cohortData:
 
-  A `data.table` containing cohort information (see LandR)
+  A `data.table` with columns `pixelGroup`, `speciesCode`, `age`, `B`,
+  and `ecoregionGroup` describing cohort composition per pixel group
 
 - pixelGroupMap:
 

@@ -1,5 +1,39 @@
 # Changelog
 
+## landisutils 0.0.11
+
+- Pin `santoku` to its GitHub source (`hughjonesd/santoku`) after the
+  package was archived on CRAN on 2026-05-15, which broke `zonal`
+  dependency resolution in GitHub Actions CI.
+
+## landisutils 0.0.10
+
+- Remove unused PredictiveEcology packages: `LandR`, `SpaDES.core`,
+  `SpaDES.tools`, `reproducible`, `scfmutils`, and `map` – due to broken
+  dependency resolution.
+
+## landisutils 0.0.9
+
+- [`landis_run()`](https://for-cast.github.io/landisutils/reference/landis_run.md):
+  fix inverted [`stopifnot()`](https://rdrr.io/r/base/stopifnot.html)
+  guard — the function previously rejected valid `LandisScenario`
+  objects and accepted everything else.
+- New
+  [`landis_run_docker()`](https://for-cast.github.io/landisutils/reference/landis_run_docker.md)
+  runs a LANDIS-II simulation in an ephemeral Docker container
+  (bind-mounting the scenario directory to `/sim`).
+- New
+  [`landis_run_local()`](https://for-cast.github.io/landisutils/reference/landis_run_local.md)
+  runs a LANDIS-II simulation directly via `dotnet`, writing
+  stdout/stderr to `<scenario_dir>/log/`.
+- New
+  [`tar_landis()`](https://for-cast.github.io/landisutils/reference/tar_landis.md)
+  factory creates a [targets](https://docs.ropensci.org/targets/)
+  `format = "file"` target that runs LANDIS-II (locally or via Docker)
+  and returns tracked output and log files.
+- New package options `landisutils.docker.image` and
+  `landisutils.run.method` are set by `.onLoad()`.
+
 ## landisutils 0.0.8
 
 - fix issue with `climr` returning reference period rows - filter these
