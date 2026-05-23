@@ -1,6 +1,6 @@
 Package: landisutils
 Title: Utilities for running LANDIS-II simulations
-Version: 0.0.10
+Version: 0.0.11
 Authors@R: 
     person(c("Alex", "M"), "Chubaty", , "achubaty@for-cast.ca", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0001-7146-8135"))
@@ -42,13 +42,14 @@ Suggests:
     knitr,
     purrr,
     rmarkdown,
+    santoku,
     sf,
     spelling,
     targets,
     testthat (>= 3.0.0),
     withr,
     zonal
-VignetteBuilder: 
+VignetteBuilder:
     knitr
 Remotes:
     bcgov/climr,
@@ -56,6 +57,7 @@ Remotes:
     cffdrs=cffdrs/cffdrs_r,
     mikejohnson51/climateR,
     mikejohnson51/zonal,
+    hughjonesd/santoku,
     BioSIM=RNCan/BioSimClient_R
 Config/testthat/edition: 3
 Config/testthat/parallel: true

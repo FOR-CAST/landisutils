@@ -1,3 +1,9 @@
+# landisutils 0.0.11
+
+* Pin `santoku` to its GitHub source (`hughjonesd/santoku`) after the package
+  was archived on CRAN on 2026-05-15, which broke `zonal` dependency resolution
+  in GitHub Actions CI.
+
 # landisutils 0.0.10
 
 * Remove unused PredictiveEcology packages: `LandR`, `SpaDES.core`,

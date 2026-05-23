@@ -28,6 +28,7 @@ Evapotranspiration
 FRS
 FWI
 ForCS
+PredictiveEcology
 GCM
 GCMs
 GIPL
@@ -89,6 +90,7 @@ ecoregions
 et
 evapotranspiration
 formatter
+filesystem
 github
 gridded
 labelled
@@ -101,6 +103,7 @@ orchestrator
 parallelizing
 ramorum
 reclass
+stderr
 subclass's
 summarised
 summarises
