@@ -80,12 +80,7 @@ climr_ensemble_8 <- c(
     batch_size = batch_size
   )
   flat <- do.call(rbind, batches)
-  xyz <- data.frame(
-    lon = flat$Longitude,
-    lat = flat$Latitude,
-    elev = flat$Elevation,
-    id = flat$ID
-  )
+  xyz <- data.frame(lon = flat$Longitude, lat = flat$Latitude, elev = flat$Elevation, id = flat$ID)
   eco_lookup <- data.frame(id = flat$ID, EcoID = flat$EcoID)
   list(xyz = xyz, eco_lookup = eco_lookup)
 }
@@ -256,10 +251,7 @@ get_clim_monthly_climr <- function(
         names_sep = "_",
         values_to = "Value"
       ) |>
-      dplyr::mutate(
-        Month = as.integer(Month),
-        Year = as.integer(year)
-      ) |>
+      dplyr::mutate(Month = as.integer(Month), Year = as.integer(year)) |>
       dplyr::select(dplyr::all_of(c("id", keep_extra, "Year", "Month", "Variable", "Value"))) |>
       dplyr::group_by(dplyr::across(dplyr::all_of(c("Variable", "Year", group_extra))))
 
@@ -421,10 +413,9 @@ prep_monthly_weather_climr <- function(
   ## climr's cache is keyed off `getOption("climr.cache.path")` (see
   ## climr/R/cache.R). climr GitHub issue 274 proposes an argument-based override;
   ## until that lands, set the option for the duration of this call.
-  withr::local_options(climr.cache.path = getOption(
-    "climr.cache.path",
-    file.path(.climateCachePath(), "climr")
-  ))
+  withr::local_options(
+    climr.cache.path = getOption("climr.cache.path", file.path(.climateCachePath(), "climr"))
+  )
 
   loc <- .climr_build_xyz(studyArea, id = id, batch_size = batch_size, z = z)
 

@@ -26,7 +26,10 @@ testthat::test_that("Local Habitat Output extension is properly created", {
   testthat::expect_true(any(grepl("^Timestep\\s+1", contents)))
   testthat::expect_true(any(grepl("^OutputTimestep\\s+10", contents)))
   testthat::expect_true(any(grepl("^MapFileNames\\s+output/habitat/\\{HabitatName\\}", contents)))
-  testthat::expect_true(any(grepl("^SuitabilityFiles\\s+AgeClass_ForestType_example\\.txt", contents)))
+  testthat::expect_true(any(grepl(
+    "^SuitabilityFiles\\s+AgeClass_ForestType_example\\.txt",
+    contents
+  )))
   testthat::expect_true(any(grepl("ForestType_TimeSinceHarvest_example\\.txt", contents)))
 
   withr::deferred_run()
@@ -50,14 +53,12 @@ testthat::test_that("OutputLocalHabitat accepts a character vector of suitabilit
 testthat::test_that("OutputLocalHabitat rejects invalid MapFileNames pattern", {
   tmp_pth <- withr::local_tempdir("test_OutputLocalHabitat_")
 
-  testthat::expect_error(
-    OutputLocalHabitat$new(
-      path = tmp_pth,
-      Timestep = 1L,
-      MapFileNames = "no-placeholders.tif",
-      SuitabilityFiles = list(suitabilityFile("a.txt"))
-    )
-  )
+  testthat::expect_error(OutputLocalHabitat$new(
+    path = tmp_pth,
+    Timestep = 1L,
+    MapFileNames = "no-placeholders.tif",
+    SuitabilityFiles = list(suitabilityFile("a.txt"))
+  ))
 
   withr::deferred_run()
 })

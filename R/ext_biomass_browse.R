@@ -182,10 +182,18 @@ BiomassBrowse <- R6Class(
           insertValue("MinBrowsePropinReach", self$MinBrowsePropinReach, blank_line = FALSE),
           insertValue("BrowseBiomassThreshold", self$BrowseBiomassThreshold, blank_line = FALSE),
           if (!is.null(self$BrowseBiomassThresholdMin)) {
-            insertValue("BrowseBiomassThresholdMin", self$BrowseBiomassThresholdMin, blank_line = FALSE)
+            insertValue(
+              "BrowseBiomassThresholdMin",
+              self$BrowseBiomassThresholdMin,
+              blank_line = FALSE
+            )
           },
           if (!is.null(self$BrowseBiomassThresholdMax)) {
-            insertValue("BrowseBiomassThresholdMax", self$BrowseBiomassThresholdMax, blank_line = FALSE)
+            insertValue(
+              "BrowseBiomassThresholdMax",
+              self$BrowseBiomassThresholdMax,
+              blank_line = FALSE
+            )
           },
           insertValue("EscapeBrowsePropLong", self$EscapeBrowsePropLong),
           glue::glue(">> Options"),
@@ -632,10 +640,14 @@ BiomassBrowse <- R6Class(
 #' Required keys for the dynamic-browser-population block
 #' @keywords internal
 .browseDynamicPopulationKeys <- c(
-  "RMin", "RMax",
-  "MortalityMin", "MortalityMax",
-  "PredationMin", "PredationMax",
-  "HarvestMin", "HarvestMax"
+  "RMin",
+  "RMax",
+  "MortalityMin",
+  "MortalityMax",
+  "PredationMin",
+  "PredationMax",
+  "HarvestMin",
+  "HarvestMax"
 )
 
 #' Specify the `SpeciesTable` block for the Biomass Browse extension
@@ -648,10 +660,7 @@ BiomassBrowse <- R6Class(
 #'
 #' @keywords internal
 insertBrowseSpeciesTable <- function(df) {
-  stopifnot(
-    is.data.frame(df),
-    all(.browseSpeciesTableCols %in% colnames(df))
-  )
+  stopifnot(is.data.frame(df), all(.browseSpeciesTableCols %in% colnames(df)))
 
   rows <- apply(df[, .browseSpeciesTableCols, drop = FALSE], 1, function(x) {
     sprintf(
@@ -667,15 +676,9 @@ insertBrowseSpeciesTable <- function(df) {
 
   c(
     glue::glue("SpeciesTable"),
-    glue::glue(
-      ">>                          --GrowthReduction--    -----Mortality-----"
-    ),
-    glue::glue(
-      ">> Name         Preference  Threshold     Max     Threshold     Max"
-    ),
-    glue::glue(
-      ">> --------     ----------  ---------     ---     ---------     ---"
-    ),
+    glue::glue(">>                          --GrowthReduction--    -----Mortality-----"),
+    glue::glue(">> Name         Preference  Threshold     Max     Threshold     Max"),
+    glue::glue(">> --------     ----------  ---------     ---     ---------     ---"),
     rows,
     glue::glue("")
   )
@@ -699,16 +702,18 @@ insertBrowseDynamicPopulation <- function(dyn) {
   if (is.null(dyn)) {
     return(character(0))
   }
-  stopifnot(
-    is.list(dyn),
-    all(.browseDynamicPopulationKeys %in% names(dyn))
-  )
+  stopifnot(is.list(dyn), all(.browseDynamicPopulationKeys %in% names(dyn)))
 
   c(
     glue::glue("DynamicPopulation"),
-    vapply(.browseDynamicPopulationKeys, function(k) {
-      as.character(insertValue(k, dyn[[k]], blank_line = FALSE))
-    }, character(1), USE.NAMES = FALSE),
+    vapply(
+      .browseDynamicPopulationKeys,
+      function(k) {
+        as.character(insertValue(k, dyn[[k]], blank_line = FALSE))
+      },
+      character(1),
+      USE.NAMES = FALSE
+    ),
     glue::glue("")
   )
 }

@@ -1191,19 +1191,27 @@ build_pnet_all_extension <- function(scen_dir, allowed_classes) {
   ## Upstream landuse-*.tif files use map codes 1-4; declare a LandUseType
   ## for each so the parser doesn't reject unknown codes.
   forest_lu <- landUseType(
-    name = "forest", mapCode = 4L, allowHarvest = "no",
+    name = "forest",
+    mapCode = 4L,
+    allowHarvest = "no",
     changes = list(landCoverChange(type = "NoChange"))
   )
   fips_harvest_lu <- landUseType(
-    name = "FIPSandHarvest", mapCode = 3L, allowHarvest = "yes",
+    name = "FIPSandHarvest",
+    mapCode = 3L,
+    allowHarvest = "yes",
     changes = list(landCoverChange(type = "NoChange"))
   )
   remove_trees_lu <- landUseType(
-    name = "RemoveTreesOnly", mapCode = 2L, allowHarvest = "no",
+    name = "RemoveTreesOnly",
+    mapCode = 2L,
+    allowHarvest = "no",
     changes = list(landCoverChange(type = "NoChange"))
   )
   fips_lu <- landUseType(
-    name = "FIPS", mapCode = 1L, allowHarvest = "no",
+    name = "FIPS",
+    mapCode = 1L,
+    allowHarvest = "no",
     changes = list(landCoverChange(type = "NoChange"))
   )
   ## Upstream LandUsePlus inputs ship `landuse-{0,5,10,...,50}.tif` (Timestep=5).
@@ -1252,9 +1260,9 @@ build_pnet_all_extension <- function(scen_dir, allowed_classes) {
     Timestep = 10L,
     Species = "all",
     Outputs = list(
-      WoodBiomass    = "output/WoodBiomass/{species}/WoodBiomass-{timestep}.img",
+      WoodBiomass = "output/WoodBiomass/{species}/WoodBiomass-{timestep}.img",
       FoliageBiomass = "output/FoliageBiomass/{species}/FoliageBiomass-{timestep}.img",
-      LeafAreaIndex  = "output/LeafAreaIndex/{species}/LeafAreaIndex-{timestep}.img"
+      LeafAreaIndex = "output/LeafAreaIndex/{species}/LeafAreaIndex-{timestep}.img"
     )
   )
   ext_olh <- OutputLocalHabitat$new(

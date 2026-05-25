@@ -6,11 +6,11 @@ testthat::test_that("Climate BDA inputs are properly created", {
   tmp_pth <- withr::local_tempdir("test_ClimateBDA_")
 
   sp <- tibble::tribble(
-    ~Species   , ~MinorHostAge , ~MinorHostSRDProb , ~SecondHostAge , ~SecondHostSRDProb ,
-    ~MajorHostAge , ~MajorHostSRDProb , ~Class3Age , ~Class3VulnProb , ~Class2Age ,
-    ~Class2VulnProb , ~Class1Age , ~Class1VulnProb , ~CFSConifer ,
-    "abiebals" , 0  , 0.25 , 20 , 0.5 , 40 , 1.0 , 11 , 1.0 , 20 , 1.0  , 50 , 1.0  , "yes" ,
-    "piceglau" , 0  , 0.25 , 20 , 0.5 , 40 , 1.0 , 0  , 0   , 20 , 0.15 , 50 , 0.42 , "yes"
+    ~Species        , ~MinorHostAge     , ~MinorHostSRDProb , ~SecondHostAge  , ~SecondHostSRDProb ,
+    ~MajorHostAge   , ~MajorHostSRDProb , ~Class3Age        , ~Class3VulnProb , ~Class2Age         ,
+    ~Class2VulnProb , ~Class1Age        , ~Class1VulnProb   , ~CFSConifer     ,
+    "abiebals"      ,                 0 , 0.25              ,              20 , 0.5                , 40 , 1.0 , 11 , 1.0 , 20 , 1.0  , 50 , 1.0  , "yes" ,
+    "piceglau"      ,                 0 , 0.25              ,              20 , 0.5                , 40 , 1.0 ,  0 , 0   , 20 , 0.15 , 50 , 0.42 , "yes"
   )
 
   agent <- bdaAgent(
@@ -104,53 +104,60 @@ testthat::test_that("Climate BDA inputs are properly created", {
 testthat::test_that("bdaAgent rejects invalid inputs", {
   sp <- data.frame(
     Species = "abiebals",
-    MinorHostAge = 0,    MinorHostSRDProb = 0.25,
-    SecondHostAge = 20,  SecondHostSRDProb = 0.5,
-    MajorHostAge = 40,   MajorHostSRDProb = 1.0,
-    Class3Age = 11,      Class3VulnProb = 1.0,
-    Class2Age = 20,      Class2VulnProb = 1.0,
-    Class1Age = 50,      Class1VulnProb = 1.0,
+    MinorHostAge = 0,
+    MinorHostSRDProb = 0.25,
+    SecondHostAge = 20,
+    SecondHostSRDProb = 0.5,
+    MajorHostAge = 40,
+    MajorHostSRDProb = 1.0,
+    Class3Age = 11,
+    Class3VulnProb = 1.0,
+    Class2Age = 20,
+    Class2VulnProb = 1.0,
+    Class1Age = 50,
+    Class1VulnProb = 1.0,
     CFSConifer = "yes"
   )
 
   base_args <- list(
-    name = "budworm", BDPCalibrator = 1, SRDMode = "mean",
-    TimeSinceLastEpidemic = 10L, TemporalType = "variablepulse",
-    MinROS = 0L, MaxROS = 3L,
-    Dispersal = "no", EpidemicThresh = 0.5,
-    InitialEpicenterNum = 0L, OutbreakEpicenterCoeff = 0.01,
-    OutbreakEpicenterThresh = 0, SeedEpicenter = "no",
+    name = "budworm",
+    BDPCalibrator = 1,
+    SRDMode = "mean",
+    TimeSinceLastEpidemic = 10L,
+    TemporalType = "variablepulse",
+    MinROS = 0L,
+    MaxROS = 3L,
+    Dispersal = "no",
+    EpidemicThresh = 0.5,
+    InitialEpicenterNum = 0L,
+    OutbreakEpicenterCoeff = 0.01,
+    OutbreakEpicenterThresh = 0,
+    SeedEpicenter = "no",
     DispersalTemplate = "MaxRadius",
     NeighborFlag = "no",
-    IntensityClass2_BDP = 0.25, IntensityClass3_BDP = 0.5,
+    IntensityClass2_BDP = 0.25,
+    IntensityClass3_BDP = 0.5,
     BDASpeciesParameters = sp
   )
 
   ## invalid OutbreakPattern
-  testthat::expect_error(
-    do.call(bdaAgent, c(base_args, list(OutbreakPattern = "Foo")))
-  )
+  testthat::expect_error(do.call(bdaAgent, c(base_args, list(OutbreakPattern = "Foo"))))
 
   ## CyclicNormal without Mean / StDev
-  testthat::expect_error(
-    do.call(bdaAgent, c(base_args, list(OutbreakPattern = "CyclicNormal")))
-  )
+  testthat::expect_error(do.call(bdaAgent, c(base_args, list(OutbreakPattern = "CyclicNormal"))))
 
   ## BDASpeciesParameters missing required columns
   bad_sp <- sp[, c("Species", "MinorHostAge")]
   bad_args <- base_args
   bad_args$BDASpeciesParameters <- bad_sp
-  testthat::expect_error(
-    do.call(bdaAgent, c(bad_args, list(
-      OutbreakPattern = "CyclicNormal", Mean = 33.5, StDev = 10.6
-    )))
-  )
+  testthat::expect_error(do.call(
+    bdaAgent,
+    c(bad_args, list(OutbreakPattern = "CyclicNormal", Mean = 33.5, StDev = 10.6))
+  ))
 })
 
 testthat::test_that("ClimateBDA rejects empty Agents list at write time", {
   tmp_pth <- withr::local_tempdir("test_ClimateBDA_")
-
-
 
   ext_bda <- ClimateBDA$new(path = tmp_pth, Timestep = 1L)
   testthat::expect_error(ext_bda$write())

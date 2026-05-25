@@ -121,10 +121,7 @@ insertFireDamageTable <- function(df = NULL) {
 #'
 #' @keywords internal
 .collapseRow <- function(df, i, fmt = as.character, sep = "  ") {
-  glue::glue_collapse(
-    vapply(df[i, -1, drop = FALSE], fmt, character(1L)),
-    sep = sep
-  )
+  glue::glue_collapse(vapply(df[i, -1, drop = FALSE], fmt, character(1L)), sep = sep)
 }
 
 #' Create Map Names pattern for file outputs

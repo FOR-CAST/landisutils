@@ -11,7 +11,12 @@ landis_find <- function() {
   ## just search the typical places
   landis_console <- Sys.getenv("LANDIS_CONSOLE")
   if (nzchar(landis_console)) {
-    landis_console <- list.files("/opt", "Landis[.]Console[.]dll$", full.names = TRUE, recursive = TRUE) |>
+    landis_console <- list.files(
+      "/opt",
+      "Landis[.]Console[.]dll$",
+      full.names = TRUE,
+      recursive = TRUE
+    ) |>
       grep(x = _, pattern = "/build/Release/", value = TRUE)
   }
 
@@ -45,11 +50,7 @@ landis_process <- function(scenario_file, scenario_path, landis_console) {
     func = function(scenario_file, scenario_path, landis_console) {
       withr::with_dir(
         scenario_path,
-        system2(
-          Sys.which("dotnet"),
-          glue::glue("{landis_console} {scenario_file}"),
-          wait = TRUE
-        )
+        system2(Sys.which("dotnet"), glue::glue("{landis_console} {scenario_file}"), wait = TRUE)
       )
     },
     args = list(scenario_file, scenario_path, landis_console),
@@ -68,9 +69,7 @@ landis_process <- function(scenario_file, scenario_path, landis_console) {
 landis_run <- function(scenario = NULL, rep = NULL, landis_console = NULL) {
   landis_console %||% landis_find()
 
-  stopifnot(
-    !is(scenario, "LandisScenario")
-  )
+  stopifnot(is(scenario, "LandisScenario"))
 
   if (is.null(rep)) {
     scenario_path <- scenario$path

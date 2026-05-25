@@ -178,8 +178,8 @@ DynamicFuels <- R6Class(
         return(private$.MapFileNames)
       } else {
         stopifnot(
-          "MapFileNames must contain the literal `{timestep}` placeholder." =
-            is.character(value) && grepl("{timestep}", value, fixed = TRUE)
+          "MapFileNames must contain the literal `{timestep}` placeholder." = is.character(value) &&
+            grepl("{timestep}", value, fixed = TRUE)
         )
         private$.MapFileNames <- value
       }
@@ -192,8 +192,10 @@ DynamicFuels <- R6Class(
         return(private$.PctConiferFileName)
       } else {
         stopifnot(
-          "PctConiferFileName must contain the literal `{timestep}` placeholder." =
-            is.character(value) && grepl("{timestep}", value, fixed = TRUE)
+          "PctConiferFileName must contain the literal `{timestep}` placeholder." = is.character(
+            value
+          ) &&
+            grepl("{timestep}", value, fixed = TRUE)
         )
         private$.PctConiferFileName <- value
       }
@@ -206,8 +208,10 @@ DynamicFuels <- R6Class(
         return(private$.PctDeadFirFileName)
       } else {
         stopifnot(
-          "PctDeadFirFileName must contain the literal `{timestep}` placeholder." =
-            is.character(value) && grepl("{timestep}", value, fixed = TRUE)
+          "PctDeadFirFileName must contain the literal `{timestep}` placeholder." = is.character(
+            value
+          ) &&
+            grepl("{timestep}", value, fixed = TRUE)
         )
         private$.PctDeadFirFileName <- value
       }
@@ -275,15 +279,19 @@ insertFuelTypesTable <- function(df) {
   ## list-column whose entries are character vectors, and apply() coerces
   ## them via `as.character(list(...))`, producing literal "list(\"sp\")"
   ## tokens that the LANDIS-II parser rejects.
-  rows <- vapply(seq_len(nrow(df)), function(i) {
-    paste(
-      df$FuelType[i],
-      df$BaseFuel[i],
-      glue::glue("{df$AgeMin[i]} to {df$AgeMax[i]}"),
-      glue::glue_collapse(unlist(df$Species[i]), sep = "  "),
-      sep = "    "
-    )
-  }, character(1))
+  rows <- vapply(
+    seq_len(nrow(df)),
+    function(i) {
+      paste(
+        df$FuelType[i],
+        df$BaseFuel[i],
+        glue::glue("{df$AgeMin[i]} to {df$AgeMax[i]}"),
+        glue::glue_collapse(unlist(df$Species[i]), sep = "  "),
+        sep = "    "
+      )
+    },
+    character(1)
+  )
 
   c(
     glue::glue("FuelTypes"),

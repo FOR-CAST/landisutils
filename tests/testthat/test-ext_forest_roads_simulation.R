@@ -20,12 +20,30 @@ testthat::test_that("Forest Roads Simulation extension is properly created", {
   )
 
   road_types <- list(
-    roadType(id = 3L, name = "Tertiary",  costMultiplier = 1.0,
-             fluxMin = 0, fluxMax = 500, maxAge = 20L),
-    roadType(id = 2L, name = "Secondary", costMultiplier = 1.5,
-             fluxMin = 500, fluxMax = 1500, maxAge = 30L),
-    roadType(id = 1L, name = "Primary",   costMultiplier = 5.0,
-             fluxMin = 1500, fluxMax = 100000, maxAge = 80L)
+    roadType(
+      id = 3L,
+      name = "Tertiary",
+      costMultiplier = 1.0,
+      fluxMin = 0,
+      fluxMax = 500,
+      maxAge = 20L
+    ),
+    roadType(
+      id = 2L,
+      name = "Secondary",
+      costMultiplier = 1.5,
+      fluxMin = 500,
+      fluxMax = 1500,
+      maxAge = 30L
+    ),
+    roadType(
+      id = 1L,
+      name = "Primary",
+      costMultiplier = 5.0,
+      fluxMin = 1500,
+      fluxMax = 100000,
+      maxAge = 80L
+    )
   )
 
   exit_road_types <- list(
@@ -139,10 +157,7 @@ testthat::test_that("HeuristicForNetworkConstruction validates and normalizes ca
   testthat::expect_equal(ext$HeuristicForNetworkConstruction, "Random")
 
   ## anything else is rejected
-  testthat::expect_error(
-    ext$HeuristicForNetworkConstruction <- "Greedy",
-    "must be one of"
-  )
+  testthat::expect_error(ext$HeuristicForNetworkConstruction <- "Greedy", "must be one of")
 
   withr::deferred_run()
 })

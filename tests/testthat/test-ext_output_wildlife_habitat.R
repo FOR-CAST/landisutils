@@ -26,10 +26,7 @@ testthat::test_that("Wildlife Habitat Output extension is properly created", {
   testthat::expect_true(any(grepl("^LandisData\\s+\"Wildlife Habitat Output\"", contents)))
   testthat::expect_true(any(grepl("^Timestep\\s+1", contents)))
   testthat::expect_true(any(grepl("^OutputTimestep\\s+10", contents)))
-  testthat::expect_true(any(grepl(
-    "^MapFileNames\\s+output/habitat/\\{wildlifeName\\}",
-    contents
-  )))
+  testthat::expect_true(any(grepl("^MapFileNames\\s+output/habitat/\\{wildlifeName\\}", contents)))
   testthat::expect_true(any(grepl("^SuitabilityFiles\\s+BBWOAgeForestType\\.txt", contents)))
   testthat::expect_true(any(grepl("STGR\\.txt", contents)))
 
@@ -39,14 +36,12 @@ testthat::test_that("Wildlife Habitat Output extension is properly created", {
 testthat::test_that("OutputWildlifeHabitat rejects MapFileNames missing wildlifeName", {
   tmp_pth <- withr::local_tempdir("test_OutputWildlifeHabitat_")
 
-  testthat::expect_error(
-    OutputWildlifeHabitat$new(
-      path = tmp_pth,
-      Timestep = 1L,
-      MapFileNames = "output/habitat/file-{timestep}.tif",
-      SuitabilityFiles = list(suitabilityFile("a.txt"))
-    )
-  )
+  testthat::expect_error(OutputWildlifeHabitat$new(
+    path = tmp_pth,
+    Timestep = 1L,
+    MapFileNames = "output/habitat/file-{timestep}.tif",
+    SuitabilityFiles = list(suitabilityFile("a.txt"))
+  ))
 
   withr::deferred_run()
 })

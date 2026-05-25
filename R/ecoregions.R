@@ -13,9 +13,6 @@ prepEcoregionsFiles <- function(ecoregion, ecoregionMap, path = NULL) {
   stopifnot(!is.null(path))
   path <- .checkPath(path)
 
-  ## see LandR::makeEcoregionDT (maybe LandR::ecoregionProducer ??)
-  ## see LandR::makeEcoregionMap
-
   ecoregionMap[is.na(ecoregionMap[]) | is.nan(ecoregionMap[])] <- 0L
   er_range <- terra::minmax(ecoregionMap)
 

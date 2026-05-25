@@ -790,11 +790,5 @@ insertExitRoadTypes <- function(roads) {
 #'
 #' @keywords internal
 .frsHeuristicForWrite <- function(x) {
-  switch(
-    x,
-    Random = "Random",
-    ClosestFirst = "Closestfirst",
-    FarthestFirst = "Farthestfirst",
-    x
-  )
+  switch(x, Random = "Random", ClosestFirst = "Closestfirst", FarthestFirst = "Farthestfirst", x)
 }

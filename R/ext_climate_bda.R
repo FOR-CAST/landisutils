@@ -61,19 +61,11 @@ ClimateBDA <- R6Class(
 
     #' @description Write extension inputs to disk
     write = function() {
-      stopifnot(
-        length(self$Agents) >= 1L,
-        !is.null(self$MapNames),
-        !is.null(self$LogFile)
-      )
+      stopifnot(length(self$Agents) >= 1L, !is.null(self$MapNames), !is.null(self$LogFile))
 
       ## write each per-agent file first; collect their relative filenames
       .checkPath(file.path(self$path, "bda"))
-      agent_files <- vapply(
-        self$Agents,
-        function(a) writeAgentFile(a, self$path),
-        character(1)
-      )
+      agent_files <- vapply(self$Agents, function(a) writeAgentFile(a, self$path), character(1))
 
       writeLines(
         c(
@@ -117,10 +109,7 @@ ClimateBDA <- R6Class(
         } else if (inherits(value, "BDAAgent")) {
           value <- list(value)
         }
-        stopifnot(
-          is.list(value),
-          all(vapply(value, inherits, logical(1), "BDAAgent"))
-        )
+        stopifnot(is.list(value), all(vapply(value, inherits, logical(1), "BDAAgent")))
         private$.Agents <- value
       }
     },
@@ -227,12 +216,18 @@ ClimateBDA <- R6Class(
 #' @keywords internal
 .bdaSpeciesParameterCols <- c(
   "Species",
-  "MinorHostAge", "MinorHostSRDProb",
-  "SecondHostAge", "SecondHostSRDProb",
-  "MajorHostAge", "MajorHostSRDProb",
-  "Class3Age", "Class3VulnProb",
-  "Class2Age", "Class2VulnProb",
-  "Class1Age", "Class1VulnProb",
+  "MinorHostAge",
+  "MinorHostSRDProb",
+  "SecondHostAge",
+  "SecondHostSRDProb",
+  "MajorHostAge",
+  "MajorHostSRDProb",
+  "Class3Age",
+  "Class3VulnProb",
+  "Class2Age",
+  "Class2VulnProb",
+  "Class1Age",
+  "Class1VulnProb",
   "CFSConifer"
 )
 
@@ -465,11 +460,7 @@ bdaAgent <- function(
 insertBDAInputFiles <- function(files) {
   stopifnot(is.character(files), length(files) >= 1L)
 
-  c(
-    glue::glue("BDAInputFiles    {files[1]}"),
-    if (length(files) > 1L) files[-1],
-    glue::glue("")
-  )
+  c(glue::glue("BDAInputFiles    {files[1]}"), if (length(files) > 1L) files[-1], glue::glue(""))
 }
 
 #' Write a per-agent Climate BDA input file
@@ -590,25 +581,15 @@ insertDispersal <- function(agent) {
     insertValue("Dispersal", agent$Dispersal, blank_line = FALSE),
     insertValue("DispersalRate", rate, blank_line = FALSE),
     insertValue("EpidemicThresh", agent$EpidemicThresh, blank_line = FALSE),
-    insertValue(
-      "InitialEpicenterNum",
-      as.integer(agent$InitialEpicenterNum),
-      blank_line = FALSE
-    ),
+    insertValue("InitialEpicenterNum", as.integer(agent$InitialEpicenterNum), blank_line = FALSE),
     insertValue("OutbreakEpicenterCoeff", agent$OutbreakEpicenterCoeff, blank_line = FALSE),
     insertValue("OutbreakEpicenterThresh", agent$OutbreakEpicenterThresh, blank_line = FALSE),
     insertValue("SeedEpicenter", agent$SeedEpicenter, blank_line = FALSE),
     ## SeedEpicenterMax (v5+) and SeedEpicenterCoeff are both required by the
     ## v8-release parser even when SeedEpicenter is "no"; supply placeholder
     ## values when the agent didn't specify them.
-    insertValue(
-      "SeedEpicenterMax",
-      as.integer(agent$SeedEpicenterMax %||% 25), blank_line = FALSE
-    ),
-    insertValue(
-      "SeedEpicenterCoeff",
-      agent$SeedEpicenterCoeff %||% 0.5, blank_line = FALSE
-    ),
+    insertValue("SeedEpicenterMax", as.integer(agent$SeedEpicenterMax %||% 25), blank_line = FALSE),
+    insertValue("SeedEpicenterCoeff", agent$SeedEpicenterCoeff %||% 0.5, blank_line = FALSE),
     insertValue("DispersalTemplate", agent$DispersalTemplate, blank_line = FALSE),
     glue::glue("")
   )
@@ -630,11 +611,7 @@ insertNeighborhood <- function(agent) {
     lines <- c(
       lines,
       insertValue("NeighborSpeedUp", agent$NeighborSpeedUp, blank_line = FALSE),
-      insertValue(
-        "NeighborRadius",
-        as.integer(agent$NeighborRadius),
-        blank_line = FALSE
-      ),
+      insertValue("NeighborRadius", as.integer(agent$NeighborRadius), blank_line = FALSE),
       insertValue("NeighborShape", agent$NeighborShape, blank_line = FALSE),
       insertValue("NeighborWeight", agent$NeighborWeight, blank_line = FALSE)
     )
@@ -677,10 +654,7 @@ insertEcoregionModifiers <- function(df) {
   if (is.null(df)) {
     return(character(0))
   }
-  stopifnot(
-    is.data.frame(df),
-    all(c("Ecoregion", "CapacityModifier") %in% colnames(df))
-  )
+  stopifnot(is.data.frame(df), all(c("Ecoregion", "CapacityModifier") %in% colnames(df)))
 
   c(
     glue::glue("EcoregionModifiers"),
@@ -707,10 +681,7 @@ insertDisturbanceModifiers <- function(df) {
   if (is.null(df)) {
     return(character(0))
   }
-  stopifnot(
-    is.data.frame(df),
-    all(c("SRDModifier", "Duration", "Type") %in% colnames(df))
-  )
+  stopifnot(is.data.frame(df), all(c("SRDModifier", "Duration", "Type") %in% colnames(df)))
 
   c(
     glue::glue("DisturbanceModifiers"),
@@ -733,10 +704,7 @@ insertDisturbanceModifiers <- function(df) {
 #'
 #' @keywords internal
 insertBDASpeciesParameters <- function(df) {
-  stopifnot(
-    is.data.frame(df),
-    all(.bdaSpeciesParameterCols %in% colnames(df))
-  )
+  stopifnot(is.data.frame(df), all(.bdaSpeciesParameterCols %in% colnames(df)))
 
   c(
     glue::glue("BDASpeciesParameters"),
@@ -777,9 +745,5 @@ insertIgnoredSpecies <- function(species) {
     return(character(0))
   }
 
-  c(
-    glue::glue("IgnoredSpecies"),
-    species,
-    glue::glue("")
-  )
+  c(glue::glue("IgnoredSpecies"), species, glue::glue(""))
 }

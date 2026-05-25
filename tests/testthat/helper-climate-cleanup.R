@@ -13,16 +13,10 @@
 local_climate_test_cache <- function(prefix, .local_envir = parent.frame()) {
   tmp_pth <- withr::local_tempdir(prefix, .local_envir = .local_envir)
 
-  withr::local_options(
-    landisutils.cache.path = tmp_pth,
-    .local_envir = .local_envir
-  )
+  withr::local_options(landisutils.cache.path = tmp_pth, .local_envir = .local_envir)
 
   withr::local_envvar(
-    c(
-      TMPDIR = tmp_pth,
-      "_JAVA_OPTIONS" = sprintf("-Djava.io.tmpdir=%s", tmp_pth)
-    ),
+    c(TMPDIR = tmp_pth, "_JAVA_OPTIONS" = sprintf("-Djava.io.tmpdir=%s", tmp_pth)),
     .local_envir = .local_envir
   )
 

@@ -19,12 +19,7 @@ OutputBiomassReclass <- R6Class(
     #'   dominance value. See user guide §2.3.
     #' @param MapFileNames Character. Output-map filename pattern; must contain
     #'   the literals `{reclass-map-name}` and `{timestep}`.
-    initialize = function(
-      path = NULL,
-      Timestep = 10L,
-      ReclassMaps = NULL,
-      MapFileNames = NULL
-    ) {
+    initialize = function(path = NULL, Timestep = 10L, ReclassMaps = NULL, MapFileNames = NULL) {
       stopifnot(!is.null(path))
 
       ## LandisExtension fields
@@ -43,10 +38,7 @@ OutputBiomassReclass <- R6Class(
 
     #' @description Write extension inputs to disk
     write = function() {
-      stopifnot(
-        !is.null(self$ReclassMaps),
-        length(self$ReclassMaps) >= 1L
-      )
+      stopifnot(!is.null(self$ReclassMaps), length(self$ReclassMaps) >= 1L)
 
       writeLines(
         c(
@@ -62,10 +54,7 @@ OutputBiomassReclass <- R6Class(
     }
   ),
 
-  private = list(
-    .ReclassMaps = NULL,
-    .MapFileNames = NULL
-  ),
+  private = list(.ReclassMaps = NULL, .MapFileNames = NULL),
 
   active = list(
     #' @field ReclassMaps Nested named list. See `$initialize()` for the expected

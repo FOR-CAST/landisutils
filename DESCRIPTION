@@ -1,6 +1,6 @@
 Package: landisutils
 Title: Utilities for running LANDIS-II simulations
-Version: 0.0.8
+Version: 0.0.11
 Authors@R: 
     person(c("Alex", "M"), "Chubaty", , "achubaty@for-cast.ca", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0001-7146-8135"))
@@ -40,20 +40,16 @@ Suggests:
     future.apply,
     keyring,
     knitr,
-    LandR,
-    map,
     purrr,
-    reproducible,
     rmarkdown,
-    scfmutils,
+    santoku,
     sf,
-    SpaDES.core,
-    SpaDES.tools,
     spelling,
+    targets,
     testthat (>= 3.0.0),
     withr,
     zonal
-VignetteBuilder: 
+VignetteBuilder:
     knitr
 Remotes:
     bcgov/climr,
@@ -61,13 +57,8 @@ Remotes:
     cffdrs=cffdrs/cffdrs_r,
     mikejohnson51/climateR,
     mikejohnson51/zonal,
-    BioSIM=RNCan/BioSimClient_R,
-    PredictiveEcology/LandR@development,
-    PredictiveEcology/map@development,
-    PredictiveEcology/reproducible@development,
-    PredictiveEcology/scfmutils@development,
-    PredictiveEcology/SpaDES.core@development,
-    PredictiveEcology/SpaDES.tools@development
+    hughjonesd/santoku,
+    BioSIM=RNCan/BioSimClient_R
 Config/testthat/edition: 3
 Config/testthat/parallel: true
 Encoding: UTF-8
@@ -123,6 +114,8 @@ Collate:
     'landisutils-package.R'
     'scenarios.R'
     'species.R'
+    'tar_landis.R'
     'utils.R'
     'zzz.R'
 Config/roxygen2/version: 8.0.0
+RoxygenNote: 7.3.3

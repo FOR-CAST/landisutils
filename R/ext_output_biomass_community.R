@@ -36,10 +36,7 @@ OutputBiomassCommunity <- R6Class(
       stopifnot(!is.null(self$Timestep))
 
       writeLines(
-        c(
-          insertLandisData(private$.LandisData),
-          insertValue("Timestep", self$Timestep)
-        ),
+        c(insertLandisData(private$.LandisData), insertValue("Timestep", self$Timestep)),
         file.path(self$path, self$files[1])
       )
 

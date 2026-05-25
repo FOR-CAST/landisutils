@@ -5,10 +5,7 @@ testthat::test_that("Linear Wind inputs are properly created", {
 
   tmp_pth <- withr::local_tempdir("test_LinearWind_")
 
-  eco_mods <- data.frame(
-    Ecoregion = "101",
-    Modifier = -0.5
-  )
+  eco_mods <- data.frame(Ecoregion = "101", Modifier = -0.5)
 
   ext_wind <- LinearWind$new(
     path = tmp_pth,
@@ -67,25 +64,23 @@ testthat::test_that("Linear Wind inputs are properly created", {
 testthat::test_that("Linear Wind rejects intensity tables that do not sum to 100", {
   tmp_pth <- withr::local_tempdir("test_LinearWind_")
 
-  testthat::expect_error(
-    LinearWind$new(
-      path = tmp_pth,
-      Timestep = 10L,
-      NumEventsMean = 0.5,
-      NumEventsStDev = 0.1,
-      TornadoLengthLambda = 25,
-      TornadoLengthAlpha = 1.2,
-      TornadoWidth = 0.4,
-      TornadoIntensityTable = c(10, 10, 10, 10, 10), ## sums to 50, not 100
-      TornadoProp = 0.7,
-      DerechoLengthLambda = 160,
-      DerechoLengthAlpha = 50,
-      DerechoWidth = 40,
-      DerechoIntensityTable = c(5, 15, 50, 25, 5),
-      PropIntensityVar = 0.5,
-      WindDirectionTable = c(25, 25, 25, 25)
-    )
-  )
+  testthat::expect_error(LinearWind$new(
+    path = tmp_pth,
+    Timestep = 10L,
+    NumEventsMean = 0.5,
+    NumEventsStDev = 0.1,
+    TornadoLengthLambda = 25,
+    TornadoLengthAlpha = 1.2,
+    TornadoWidth = 0.4,
+    TornadoIntensityTable = c(10, 10, 10, 10, 10), ## sums to 50, not 100
+    TornadoProp = 0.7,
+    DerechoLengthLambda = 160,
+    DerechoLengthAlpha = 50,
+    DerechoWidth = 40,
+    DerechoIntensityTable = c(5, 15, 50, 25, 5),
+    PropIntensityVar = 0.5,
+    WindDirectionTable = c(25, 25, 25, 25)
+  ))
 
   withr::deferred_run()
 })
@@ -93,25 +88,23 @@ testthat::test_that("Linear Wind rejects intensity tables that do not sum to 100
 testthat::test_that("Linear Wind rejects WindDirectionTable that does not sum to 100", {
   tmp_pth <- withr::local_tempdir("test_LinearWind_")
 
-  testthat::expect_error(
-    LinearWind$new(
-      path = tmp_pth,
-      Timestep = 10L,
-      NumEventsMean = 0.5,
-      NumEventsStDev = 0.1,
-      TornadoLengthLambda = 25,
-      TornadoLengthAlpha = 1.2,
-      TornadoWidth = 0.4,
-      TornadoIntensityTable = c(0, 5, 20, 50, 25),
-      TornadoProp = 0.7,
-      DerechoLengthLambda = 160,
-      DerechoLengthAlpha = 50,
-      DerechoWidth = 40,
-      DerechoIntensityTable = c(5, 15, 50, 25, 5),
-      PropIntensityVar = 0.5,
-      WindDirectionTable = c(10, 20, 30, 20) ## sums to 80
-    )
-  )
+  testthat::expect_error(LinearWind$new(
+    path = tmp_pth,
+    Timestep = 10L,
+    NumEventsMean = 0.5,
+    NumEventsStDev = 0.1,
+    TornadoLengthLambda = 25,
+    TornadoLengthAlpha = 1.2,
+    TornadoWidth = 0.4,
+    TornadoIntensityTable = c(0, 5, 20, 50, 25),
+    TornadoProp = 0.7,
+    DerechoLengthLambda = 160,
+    DerechoLengthAlpha = 50,
+    DerechoWidth = 40,
+    DerechoIntensityTable = c(5, 15, 50, 25, 5),
+    PropIntensityVar = 0.5,
+    WindDirectionTable = c(10, 20, 30, 20) ## sums to 80
+  ))
 
   withr::deferred_run()
 })
@@ -126,26 +119,24 @@ testthat::test_that("Linear Wind rejects WindSeverities not in decreasing order"
     WindspeedMortalityThreshold = c(0.1, 0.5, 0.9)
   )
 
-  testthat::expect_error(
-    LinearWind$new(
-      path = tmp_pth,
-      Timestep = 10L,
-      NumEventsMean = 0.5,
-      NumEventsStDev = 0.1,
-      TornadoLengthLambda = 25,
-      TornadoLengthAlpha = 1.2,
-      TornadoWidth = 0.4,
-      TornadoIntensityTable = c(0, 5, 20, 50, 25),
-      TornadoProp = 0.7,
-      DerechoLengthLambda = 160,
-      DerechoLengthAlpha = 50,
-      DerechoWidth = 40,
-      DerechoIntensityTable = c(5, 15, 50, 25, 5),
-      PropIntensityVar = 0.5,
-      WindDirectionTable = c(0, 30, 60, 10),
-      WindSeverities = bad_severities
-    )
-  )
+  testthat::expect_error(LinearWind$new(
+    path = tmp_pth,
+    Timestep = 10L,
+    NumEventsMean = 0.5,
+    NumEventsStDev = 0.1,
+    TornadoLengthLambda = 25,
+    TornadoLengthAlpha = 1.2,
+    TornadoWidth = 0.4,
+    TornadoIntensityTable = c(0, 5, 20, 50, 25),
+    TornadoProp = 0.7,
+    DerechoLengthLambda = 160,
+    DerechoLengthAlpha = 50,
+    DerechoWidth = 40,
+    DerechoIntensityTable = c(5, 15, 50, 25, 5),
+    PropIntensityVar = 0.5,
+    WindDirectionTable = c(0, 30, 60, 10),
+    WindSeverities = bad_severities
+  ))
 
   withr::deferred_run()
 })
