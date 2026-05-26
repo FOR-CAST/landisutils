@@ -1,4 +1,4 @@
-# landisutils
+# landisutils <a href="https://for-cast.github.io/landisutils/"><img src="man/figures/logo.png" align="right" height="139" alt="landisutils website" /></a>
 
 <!-- badges: start -->
 ![](man/figures/lifecycle-experimental.svg)
