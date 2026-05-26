@@ -3,6 +3,7 @@
   opts <- options()
   opts.landisutils <- list(
     landisutils.cache.path = .climateCachePath(),
+    landisutils.docker.console = "/opt/landis-ii/Core-Model-v8-LINUX/build/Release/Landis.Console.dll",
     landisutils.docker.image = "ghcr.io/landis-ii-foundation/landis-ii-v8-release:main",
     landisutils.run.method = if (.Platform$OS.type == "windows") "local" else "docker"
   )

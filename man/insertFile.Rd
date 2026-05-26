@@ -19,4 +19,3 @@ Emits a \verb{<type>  <file>} line. \code{NULL} (and length-zero) input is treat
 as "parameter omitted" and produces no output, matching how
 \code{\link[=insertValue]{insertValue()}} handles \code{NA}.
 }
-\keyword{internal}

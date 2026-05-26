@@ -50,7 +50,17 @@ landisutilsHeader <- function() {
   )
 }
 
-#' @keywords internal
+#' Write a LANDIS-II `LandisData` header block
+#'
+#' Emits the `landisutils` auto-generated file header followed by the
+#' `LandisData  "<x>"` line and a blank line. Every LANDIS-II input file
+#' starts with this block.
+#'
+#' @param x Character. The `LandisData` value (extension or scenario name).
+#'
+#' @template return_insert
+#'
+#' @export
 insertLandisData <- function(x) {
   c(landisutilsHeader(), glue::glue("LandisData  \"{x}\""), glue::glue(""))
 }
@@ -65,7 +75,7 @@ insertLandisData <- function(x) {
 #'
 #' @template return_insert
 #'
-#' @keywords internal
+#' @export
 insertValue <- function(type, value, blank_line = TRUE) {
   stopifnot(length(value) == 1)
 
@@ -104,7 +114,7 @@ insertValue <- function(type, value, blank_line = TRUE) {
 #'
 #' @template return_insert
 #'
-#' @keywords internal
+#' @export
 insertFile <- function(type, file) {
   if (is.null(file) || length(file) == 0L) {
     return("")

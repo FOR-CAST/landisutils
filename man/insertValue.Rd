@@ -19,4 +19,3 @@ Character string(s) to write to the suitable LANDIS-II input file.
 \description{
 Specify an input parameter value for an extension
 }
-\keyword{internal}

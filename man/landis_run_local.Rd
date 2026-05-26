@@ -12,8 +12,8 @@ absolute before use).}
 
 \item{scenario_file}{Character. Scenario filename relative to \code{scenario_dir}.}
 
-\item{console}{Character or \code{NULL}. Path to \code{Landis.Console.dll}.
-Defaults to \code{NULL}, which calls \code{\link[=landis_find]{landis_find()}} at run time.}
+\item{console}{Character or \code{NULL}. Path to \code{Landis.Console.dll}. Defaults
+to \code{NULL}, which calls \code{\link[=landis_find]{landis_find()}} at run time.}
 }
 \value{
 Integer exit code, invisibly.
@@ -24,9 +24,12 @@ completes. Stdout and stderr are written to
 \verb{<scenario_dir>/log/local_stdout.log} and \code{local_stderr.log}.
 }
 \seealso{
-\code{\link[=landis_find]{landis_find()}}, \code{\link[=landis_run]{landis_run()}}, \code{\link[=landis_run_docker]{landis_run_docker()}}, \code{\link[=tar_landis]{tar_landis()}}
+\code{\link[=landis_find]{landis_find()}}, \code{\link[=landis_find_docker]{landis_find_docker()}}, \code{\link[=landis_run]{landis_run()}}, \code{\link[=landis_run_docker]{landis_run_docker()}}, \code{\link[=tar_landis]{tar_landis()}}
 
 Other LANDIS-II execution helpers:
+\code{\link[=landis_find]{landis_find()}},
+\code{\link[=landis_find_docker]{landis_find_docker()}},
+\code{\link[=landis_replicate]{landis_replicate()}},
 \code{\link[=landis_run_docker]{landis_run_docker()}},
 \code{\link[=tar_landis]{tar_landis()}}
 }

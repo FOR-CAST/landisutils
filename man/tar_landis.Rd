@@ -13,6 +13,8 @@ tar_landis(
   method = NULL,
   image = NULL,
   console = NULL,
+  n_reps = 1L,
+  base_seed = NULL,
   pattern = NULL,
   packages = targets::tar_option_get("packages"),
   library = targets::tar_option_get("library"),
@@ -56,6 +58,19 @@ For \code{method = "docker"} this is the path \emph{inside} the container;
 for \code{method = "local"} it is the local filesystem path (defaults to
 \code{\link[=landis_find]{landis_find()}}).}
 
+\item{n_reps}{Integer. Number of replicate runs per scenario. Each replicate
+is placed in \verb{<scenario_dir>/rep01}, \verb{/rep02}, … (subdirectories of the
+base scenario directory) so input files can be shared. LANDIS runs
+independently in each replicate directory. Output files from all
+replicates are returned as a single character vector. Defaults to \code{1L}.}
+
+\item{base_seed}{Integer or \code{NULL}. Passed to \code{\link[=landis_replicate]{landis_replicate()}}: when
+non-\code{NULL}, the \code{RandomNumberSeed} in each replicate's \code{scenario.txt} is
+set to \code{base_seed + (rep_index - 1)}, giving each run a distinct but
+deterministic seed. Adding more replicates later never changes existing
+seeds because seeds are derived from the rep index, not the order of
+creation.}
+
 \item{pattern}{Expression (unquoted, optional). Dynamic-branching pattern,
 e.g. \code{map(landis_run_name)}. Passed to \code{\link[targets:tar_target_raw]{targets::tar_target_raw()}}.}
 
@@ -82,6 +97,9 @@ per machine.
 \code{\link[=landis_run_local]{landis_run_local()}}, \code{\link[=landis_run_docker]{landis_run_docker()}}
 
 Other LANDIS-II execution helpers:
+\code{\link[=landis_find]{landis_find()}},
+\code{\link[=landis_find_docker]{landis_find_docker()}},
+\code{\link[=landis_replicate]{landis_replicate()}},
 \code{\link[=landis_run_docker]{landis_run_docker()}},
 \code{\link[=landis_run_local]{landis_run_local()}}
 }

@@ -28,9 +28,9 @@ Evapotranspiration
 FRS
 FWI
 ForCS
-PredictiveEcology
 GCM
 GCMs
+GDAL
 GIPL
 GLC
 GeoTIFF
@@ -58,6 +58,7 @@ Pasteris
 Physiographically
 Phytophthora
 PnET
+PredictiveEcology
 RCP
 Rawls
 Reclass
@@ -81,18 +82,16 @@ climr
 climr's
 derecho
 derechos
-docker
-dotnet
 downscaler
 downscaling
 ecoregion
 ecoregions
 et
-evapotranspiration
-formatter
 filesystem
+formatter
 github
 gridded
+initialises
 labelled
 lon
 metres
@@ -103,6 +102,7 @@ orchestrator
 parallelizing
 ramorum
 reclass
+replicate's
 stderr
 subclass's
 summarised

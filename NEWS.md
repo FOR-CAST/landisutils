@@ -1,3 +1,21 @@
+# landisutils 0.0.12
+
+* `insertFile()`, `insertLandisData()`, `insertValue()` are now exported so
+  project-level code can build custom scenario files using the same primitives
+  the package uses internally.
+* `landis_find_docker()` is a new helper that returns the path to
+  `Landis.Console.dll` inside the container, reading
+  `getOption("landisutils.docker.console")`. `landis_run_docker()` now calls
+  it instead of duplicating the lookup.
+* `landis_replicate()` gains a `base_seed` argument. When set, the
+  `RandomNumberSeed` in each replicate's `scenario.txt` is rewritten to
+  `base_seed + (rep_index - 1)`, giving every replicate a distinct but
+  deterministic seed. Seeds are index-stable: adding more replicates later
+  never changes the seeds of existing ones.
+* `tar_landis()` gains a `base_seed` argument, passed through to
+  `landis_replicate()` and baked into the command expression at factory-call
+  time so `crew` workers receive the correct value.
+
 # landisutils 0.0.11
 
 * Pin `santoku` to its GitHub source (`hughjonesd/santoku`) after the package

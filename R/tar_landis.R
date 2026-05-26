@@ -9,30 +9,27 @@
 #' @param scenario_dir Character. Path to the scenario directory (resolved to
 #'   absolute before use).
 #' @param scenario_file Character. Scenario filename relative to `scenario_dir`.
-#' @param console Character or `NULL`. Path to `Landis.Console.dll`.
-#'   Defaults to `NULL`, which calls [landis_find()] at run time.
+#' @param console Character or `NULL`. Path to `Landis.Console.dll`. Defaults
+#'   to `NULL`, which calls [landis_find()] at run time.
 #'
 #' @returns Integer exit code, invisibly.
 #'
 #' @family LANDIS-II execution helpers
-#' @seealso [landis_find()], [landis_run()], [landis_run_docker()], [tar_landis()]
+#' @seealso [landis_find()], [landis_find_docker()], [landis_run()], [landis_run_docker()], [tar_landis()]
 #' @export
 landis_run_local <- function(scenario_dir, scenario_file = "scenario.txt", console = NULL) {
-  if (is.null(console)) {
-    console <- landis_find()
-  }
+  console <- console %||% landis_find()
 
-  scenario_dir <- normalizePath(scenario_dir, mustWork = TRUE)
+  scenario_dir <- fs::path_real(scenario_dir)
 
-  if (!file.exists(file.path(scenario_dir, scenario_file))) {
+  if (!fs::file_exists(fs::path(scenario_dir, scenario_file))) {
     stop(
-      sprintf("scenario file not found: %s", file.path(scenario_dir, scenario_file)),
+      sprintf("scenario file not found: %s", fs::path(scenario_dir, scenario_file)),
       call. = FALSE
     )
   }
 
-  log_dir <- file.path(scenario_dir, "log")
-  dir.create(log_dir, recursive = TRUE, showWarnings = FALSE)
+  log_dir <- fs::dir_create(fs::path(scenario_dir, "log"))
 
   message(glue::glue("Starting LANDIS-II local run ({Sys.time()})"))
   message(glue::glue("  scenario_dir:  {scenario_dir}"))
@@ -44,8 +41,8 @@ landis_run_local <- function(scenario_dir, scenario_file = "scenario.txt", conso
   rc <- system2(
     "dotnet",
     args = c(console, scenario_file),
-    stdout = file.path(log_dir, "local_stdout.log"),
-    stderr = file.path(log_dir, "local_stderr.log"),
+    stdout = fs::path(log_dir, "local_stdout.log"),
+    stderr = fs::path(log_dir, "local_stderr.log"),
     wait = TRUE
   )
 
@@ -74,13 +71,13 @@ landis_run_local <- function(scenario_dir, scenario_file = "scenario.txt", conso
 #'   `getOption("landisutils.docker.image")` (set by `.onLoad()` to
 #'   `"ghcr.io/landis-ii-foundation/landis-ii-v8-release:main"`).
 #' @param console Character or `NULL`. Path to `Landis.Console.dll` **inside
-#'   the container**. Defaults to `NULL`, which uses the standard path for the
-#'   official LANDIS-II v8 Docker images.
+#'   the container**. Defaults to `NULL`, which calls [landis_find_docker()] at
+#'   run time (reads `getOption("landisutils.docker.console")`).
 #'
 #' @returns Integer exit code, invisibly.
 #'
 #' @family LANDIS-II execution helpers
-#' @seealso [landis_find()], [landis_run()], [landis_run_local()], [tar_landis()]
+#' @seealso [landis_find_docker()], [landis_find()], [landis_run()], [landis_run_local()], [tar_landis()]
 #' @export
 landis_run_docker <- function(
   scenario_dir,
@@ -88,24 +85,19 @@ landis_run_docker <- function(
   image = NULL,
   console = NULL
 ) {
-  image <- image %||%
-    getOption(
-      "landisutils.docker.image",
-      default = "ghcr.io/landis-ii-foundation/landis-ii-v8-release:main"
-    )
-  console <- console %||% "/opt/landis-ii/Core-Model-v8-LINUX/build/Release/Landis.Console.dll"
+  image <- image %||% getOption("landisutils.docker.image")
+  console <- console %||% landis_find_docker()
 
-  scenario_dir <- normalizePath(scenario_dir, mustWork = TRUE)
+  scenario_dir <- fs::path_real(scenario_dir)
 
-  if (!file.exists(file.path(scenario_dir, scenario_file))) {
+  if (!fs::file_exists(fs::path(scenario_dir, scenario_file))) {
     stop(
-      sprintf("scenario file not found: %s", file.path(scenario_dir, scenario_file)),
+      sprintf("scenario file not found: %s", fs::path(scenario_dir, scenario_file)),
       call. = FALSE
     )
   }
 
-  log_dir <- file.path(scenario_dir, "log")
-  dir.create(log_dir, recursive = TRUE, showWarnings = FALSE)
+  log_dir <- fs::dir_create(fs::path(scenario_dir, "log"))
 
   uid <- trimws(system("id -u", intern = TRUE))
   gid <- trimws(system("id -g", intern = TRUE))
@@ -132,8 +124,8 @@ landis_run_docker <- function(
       console,
       scenario_file
     ),
-    stdout = file.path(log_dir, "docker_stdout.log"),
-    stderr = file.path(log_dir, "docker_stderr.log"),
+    stdout = fs::path(log_dir, "docker_stdout.log"),
+    stderr = fs::path(log_dir, "docker_stderr.log"),
     wait = TRUE
   )
 
@@ -184,6 +176,17 @@ landis_run_docker <- function(
 #'   For `method = "docker"` this is the path *inside* the container;
 #'   for `method = "local"` it is the local filesystem path (defaults to
 #'   [landis_find()]).
+#' @param n_reps Integer. Number of replicate runs per scenario. Each replicate
+#'   is placed in `<scenario_dir>/rep01`, `/rep02`, … (subdirectories of the
+#'   base scenario directory) so input files can be shared. LANDIS runs
+#'   independently in each replicate directory. Output files from all
+#'   replicates are returned as a single character vector. Defaults to `1L`.
+#' @param base_seed Integer or `NULL`. Passed to [landis_replicate()]: when
+#'   non-`NULL`, the `RandomNumberSeed` in each replicate's `scenario.txt` is
+#'   set to `base_seed + (rep_index - 1)`, giving each run a distinct but
+#'   deterministic seed. Adding more replicates later never changes existing
+#'   seeds because seeds are derived from the rep index, not the order of
+#'   creation.
 #' @param pattern Expression (unquoted, optional). Dynamic-branching pattern,
 #'   e.g. `map(landis_run_name)`. Passed to [targets::tar_target_raw()].
 #' @param packages,library,error,memory,resources,storage,retrieval,cue,description
@@ -203,6 +206,8 @@ tar_landis <- function(
   method = NULL,
   image = NULL,
   console = NULL,
+  n_reps = 1L,
+  base_seed = NULL,
   pattern = NULL,
   packages = targets::tar_option_get("packages"),
   library = targets::tar_option_get("library"),
@@ -227,6 +232,11 @@ tar_landis <- function(
   deps_expr <- substitute(deps)
   pattern_expr <- substitute(pattern)
 
+  ## Resolve n_reps and base_seed at factory-call time so the values are baked
+  ## into the command. crew workers don't inherit R session state.
+  n_reps_val <- as.integer(n_reps)
+  base_seed_val <- if (is.null(base_seed)) NULL else as.integer(base_seed)
+
   ## Resolve method, image at factory-call time so the values are baked into
   ## the command expression. crew workers don't inherit R session options, so
   ## resolution must happen here (in the main process, after _local.R is sourced).
@@ -247,38 +257,63 @@ tar_landis <- function(
   ## command for symbol references, so embedding the list() of upstream
   ## target names here is all that is needed. The assignment itself is a
   ## no-op at execution time.
+  ##
+  ## landis_replicate() creates n_reps subdirectories inside the base scenario
+  ## directory (rep01/, rep02/, …), copies input files into each, and returns
+  ## their absolute paths. LANDIS runs in each replicate directory; output and
+  ## log files from all replicates are returned as a combined character vector.
   cmd <- if (identical(method, "docker")) {
     bquote({
       .deps <- .(deps_expr)
       .sd <- as.character(.(scenario_dir_expr))
-      landisutils::landis_run_docker(
-        scenario_dir = .sd,
-        scenario_file = .(scenario_file),
-        image = .(image),
-        console = .(console)
+      ## pass the dep file values as the explicit copy list so only tracked
+      ## input files (+ their GDAL sidecars) are placed in each replicate dir
+      .dep_files <- Filter(is.character, .deps) |> unlist()
+      .rep_dirs <- landisutils::landis_replicate(
+        .sd,
+        .(n_reps_val),
+        files = .dep_files,
+        base_seed = .(base_seed_val)
       )
-      .log_dir <- file.path(.sd, "log")
-      .out_dir <- file.path(.sd, .(output_dir))
-      c(
-        list.files(.log_dir, full.names = TRUE),
-        list.files(.out_dir, full.names = TRUE, recursive = TRUE)
-      )
+      for (.rd in .rep_dirs) {
+        landisutils::landis_run_docker(
+          scenario_dir = .rd,
+          scenario_file = .(scenario_file),
+          image = .(image),
+          console = .(console)
+        )
+      }
+      unlist(lapply(.rep_dirs, function(.rd) {
+        c(
+          list.files(file.path(.rd, "log"), full.names = TRUE),
+          list.files(file.path(.rd, .(output_dir)), full.names = TRUE, recursive = TRUE)
+        )
+      }))
     })
   } else {
     bquote({
       .deps <- .(deps_expr)
       .sd <- as.character(.(scenario_dir_expr))
-      landisutils::landis_run_local(
-        scenario_dir = .sd,
-        scenario_file = .(scenario_file),
-        console = .(console)
+      .dep_files <- Filter(is.character, .deps) |> unlist()
+      .rep_dirs <- landisutils::landis_replicate(
+        .sd,
+        .(n_reps_val),
+        files = .dep_files,
+        base_seed = .(base_seed_val)
       )
-      .log_dir <- file.path(.sd, "log")
-      .out_dir <- file.path(.sd, .(output_dir))
-      c(
-        list.files(.log_dir, full.names = TRUE),
-        list.files(.out_dir, full.names = TRUE, recursive = TRUE)
-      )
+      for (.rd in .rep_dirs) {
+        landisutils::landis_run_local(
+          scenario_dir = .rd,
+          scenario_file = .(scenario_file),
+          console = .(console)
+        )
+      }
+      unlist(lapply(.rep_dirs, function(.rd) {
+        c(
+          list.files(file.path(.rd, "log"), full.names = TRUE),
+          list.files(file.path(.rd, .(output_dir)), full.names = TRUE, recursive = TRUE)
+        )
+      }))
     })
   }
 

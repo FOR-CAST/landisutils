@@ -55,9 +55,22 @@ LandisScenario <- R6Class(
     #' @param n integer specifying the number of replicates to generate
     replicate = function(n) {
       new_reps <- self$reps + seq_len(n)
+      ## combine scenario-level files with all extension-registered input files
+      all_files <- unique(c(
+        fs::path_abs(self$files, self$path),
+        self$list_files(full.names = TRUE)
+      ))
+      all_files <- all_files[fs::file_exists(all_files)]
+      ## auto-include GDAL sidecar files (.tfw, .aux.xml) for any .tif
+      tif_files <- all_files[grepl("\\.tif$", all_files, ignore.case = TRUE)]
+      sidecars <- fs::path(c(
+        paste0(tif_files, ".aux.xml"),
+        sub("\\.tif$", ".tfw", tif_files, ignore.case = TRUE)
+      ))
+      all_files <- unique(c(all_files, sidecars[fs::file_exists(sidecars)]))
       for (i in new_reps) {
-        rep_path <- sprintf("%s_rep%02d", self$path, i) |> fs::dir_create()
-        fs::file_copy(file.path(self$path, self$files), rep_path)
+        rep_path <- fs::dir_create(fs::path(self$path, sprintf("rep%02d", i)))
+        fs::file_copy(all_files, rep_path, overwrite = FALSE)
       }
       private$.reps <- self$reps + n
     }

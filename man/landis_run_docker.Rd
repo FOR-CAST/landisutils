@@ -22,8 +22,8 @@ absolute before mounting).}
 \code{"ghcr.io/landis-ii-foundation/landis-ii-v8-release:main"}).}
 
 \item{console}{Character or \code{NULL}. Path to \code{Landis.Console.dll} \strong{inside
-the container}. Defaults to \code{NULL}, which uses the standard path for the
-official LANDIS-II v8 Docker images.}
+the container}. Defaults to \code{NULL}, which calls \code{\link[=landis_find_docker]{landis_find_docker()}} at
+run time (reads \code{getOption("landisutils.docker.console")}).}
 }
 \value{
 Integer exit code, invisibly.
@@ -35,9 +35,12 @@ inside the container. Stdout and stderr are written to
 \verb{<scenario_dir>/log/docker_stdout.log} and \code{docker_stderr.log}.
 }
 \seealso{
-\code{\link[=landis_find]{landis_find()}}, \code{\link[=landis_run]{landis_run()}}, \code{\link[=landis_run_local]{landis_run_local()}}, \code{\link[=tar_landis]{tar_landis()}}
+\code{\link[=landis_find_docker]{landis_find_docker()}}, \code{\link[=landis_find]{landis_find()}}, \code{\link[=landis_run]{landis_run()}}, \code{\link[=landis_run_local]{landis_run_local()}}, \code{\link[=tar_landis]{tar_landis()}}
 
 Other LANDIS-II execution helpers:
+\code{\link[=landis_find]{landis_find()}},
+\code{\link[=landis_find_docker]{landis_find_docker()}},
+\code{\link[=landis_replicate]{landis_replicate()}},
 \code{\link[=landis_run_local]{landis_run_local()}},
 \code{\link[=tar_landis]{tar_landis()}}
 }

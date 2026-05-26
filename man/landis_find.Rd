@@ -2,17 +2,26 @@
 % Please edit documentation in R/landis.R
 \name{landis_find}
 \alias{landis_find}
-\title{Find an installed version of LANDIS-II}
+\title{Find the LANDIS-II console for a local installation}
 \usage{
 landis_find()
 }
 \value{
-Character vector. File path(s), if found, to any LANDIS-II executables.
-
-To ensure this function can find your LANDIS-II installation, please ensure that the
-\code{LANDIS_CONSOLE} environment variable is set and accessible by in R
-(e.g., \code{Sys.getenv("LANDIS_CONSOLE")} should return a non-empty value).
+Character. Path to \code{Landis.Console.dll}, or \code{NA} if not found.
 }
 \description{
-Find an installed version of LANDIS-II
+Returns the path to \code{Landis.Console.dll} for a locally-installed LANDIS-II.
+Resolution order: \code{LANDIS_CONSOLE} environment variable; filesystem search
+under \verb{/opt} for a \verb{build/Release/} path.
 }
+\seealso{
+\code{\link[=landis_find_docker]{landis_find_docker()}}, \code{\link[=landis_run_local]{landis_run_local()}}, \code{\link[=tar_landis]{tar_landis()}}
+
+Other LANDIS-II execution helpers:
+\code{\link[=landis_find_docker]{landis_find_docker()}},
+\code{\link[=landis_replicate]{landis_replicate()}},
+\code{\link[=landis_run_docker]{landis_run_docker()}},
+\code{\link[=landis_run_local]{landis_run_local()}},
+\code{\link[=tar_landis]{tar_landis()}}
+}
+\concept{LANDIS-II execution helpers}
