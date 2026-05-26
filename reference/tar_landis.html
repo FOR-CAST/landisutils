@@ -13,7 +13,7 @@ vector of tracked output and log files.'><meta property="og:image" content="http
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.11</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.12</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -64,6 +64,8 @@ vector of tracked output and log files.</p>
 <span>  method <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  image <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  console <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  n_reps <span class="op">=</span> <span class="fl">1L</span>,</span>
+<span>  base_seed <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  pattern <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  packages <span class="op">=</span> <span class="fu">targets</span><span class="fu">::</span><span class="fu"><a href="https://docs.ropensci.org/targets/reference/tar_option_get.html" class="external-link">tar_option_get</a></span><span class="op">(</span><span class="st">"packages"</span><span class="op">)</span>,</span>
 <span>  library <span class="op">=</span> <span class="fu">targets</span><span class="fu">::</span><span class="fu"><a href="https://docs.ropensci.org/targets/reference/tar_option_get.html" class="external-link">tar_option_get</a></span><span class="op">(</span><span class="st">"library"</span><span class="op">)</span>,</span>
@@ -127,6 +129,23 @@ for <code>method = "local"</code> it is the local filesystem path (defaults to
 <code><a href="landis_find.html">landis_find()</a></code>).</p></dd>
 
 
+<dt id="arg-n-reps">n_reps<a class="anchor" aria-label="anchor" href="#arg-n-reps"></a></dt>
+<dd><p>Integer. Number of replicate runs per scenario. Each replicate
+is placed in <code>&lt;scenario_dir&gt;/rep01</code>, <code>/rep02</code>, … (subdirectories of the
+base scenario directory) so input files can be shared. LANDIS runs
+independently in each replicate directory. Output files from all
+replicates are returned as a single character vector. Defaults to <code>1L</code>.</p></dd>
+
+
+<dt id="arg-base-seed">base_seed<a class="anchor" aria-label="anchor" href="#arg-base-seed"></a></dt>
+<dd><p>Integer or <code>NULL</code>. Passed to <code><a href="landis_replicate.html">landis_replicate()</a></code>: when
+non-<code>NULL</code>, the <code>RandomNumberSeed</code> in each replicate's <code>scenario.txt</code> is
+set to <code>base_seed + (rep_index - 1)</code>, giving each run a distinct but
+deterministic seed. Adding more replicates later never changes existing
+seeds because seeds are derived from the rep index, not the order of
+creation.</p></dd>
+
+
 <dt id="arg-pattern">pattern<a class="anchor" aria-label="anchor" href="#arg-pattern"></a></dt>
 <dd><p>Expression (unquoted, optional). Dynamic-branching pattern,
 e.g. <code>map(landis_run_name)</code>. Passed to <code><a href="https://docs.ropensci.org/targets/reference/tar_target.html" class="external-link">targets::tar_target_raw()</a></code>.</p></dd>
@@ -153,6 +172,9 @@ per machine.</p>
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="landis_run_local.html">landis_run_local()</a></code>, <code><a href="landis_run_docker.html">landis_run_docker()</a></code></p>
 <p>Other LANDIS-II execution helpers:
+<code><a href="landis_find.html">landis_find()</a></code>,
+<code><a href="landis_find_docker.html">landis_find_docker()</a></code>,
+<code><a href="landis_replicate.html">landis_replicate()</a></code>,
 <code><a href="landis_run_docker.html">landis_run_docker()</a></code>,
 <code><a href="landis_run_local.html">landis_run_local()</a></code></p></div>
     </div>

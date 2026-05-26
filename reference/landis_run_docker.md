@@ -36,8 +36,9 @@ landis_run_docker(
 - console:
 
   Character or `NULL`. Path to `Landis.Console.dll` **inside the
-  container**. Defaults to `NULL`, which uses the standard path for the
-  official LANDIS-II v8 Docker images.
+  container**. Defaults to `NULL`, which calls
+  [`landis_find_docker()`](https://for-cast.github.io/landisutils/reference/landis_find_docker.md)
+  at run time (reads `getOption("landisutils.docker.console")`).
 
 ## Value
 
@@ -45,11 +46,15 @@ Integer exit code, invisibly.
 
 ## See also
 
+[`landis_find_docker()`](https://for-cast.github.io/landisutils/reference/landis_find_docker.md),
 [`landis_find()`](https://for-cast.github.io/landisutils/reference/landis_find.md),
 [`landis_run()`](https://for-cast.github.io/landisutils/reference/landis_run.md),
 [`landis_run_local()`](https://for-cast.github.io/landisutils/reference/landis_run_local.md),
 [`tar_landis()`](https://for-cast.github.io/landisutils/reference/tar_landis.md)
 
 Other LANDIS-II execution helpers:
+[`landis_find()`](https://for-cast.github.io/landisutils/reference/landis_find.md),
+[`landis_find_docker()`](https://for-cast.github.io/landisutils/reference/landis_find_docker.md),
+[`landis_replicate()`](https://for-cast.github.io/landisutils/reference/landis_replicate.md),
 [`landis_run_local()`](https://for-cast.github.io/landisutils/reference/landis_run_local.md),
 [`tar_landis()`](https://for-cast.github.io/landisutils/reference/tar_landis.md)

@@ -172,6 +172,7 @@
 <url><loc>https://for-cast.github.io/landisutils/reference/insertLadderFuelSpeciesList.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/insertLandCoverChange.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/insertLandUseType.html</loc></url>
+<url><loc>https://for-cast.github.io/landisutils/reference/insertLandisData.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/insertLandscapeHabitatClimateVariables.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/insertLandscapeHabitatDerivedLocalVariables.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/insertLandscapeHabitatDistanceVariables.html</loc></url>
@@ -219,6 +220,8 @@
 <url><loc>https://for-cast.github.io/landisutils/reference/landCoverChange.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/landUseType.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/landis_find.html</loc></url>
+<url><loc>https://for-cast.github.io/landisutils/reference/landis_find_docker.html</loc></url>
+<url><loc>https://for-cast.github.io/landisutils/reference/landis_replicate.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/landis_run.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/landis_run_docker.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/landis_run_local.html</loc></url>

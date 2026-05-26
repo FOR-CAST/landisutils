@@ -35,10 +35,14 @@ Integer exit code, invisibly.
 ## See also
 
 [`landis_find()`](https://for-cast.github.io/landisutils/reference/landis_find.md),
+[`landis_find_docker()`](https://for-cast.github.io/landisutils/reference/landis_find_docker.md),
 [`landis_run()`](https://for-cast.github.io/landisutils/reference/landis_run.md),
 [`landis_run_docker()`](https://for-cast.github.io/landisutils/reference/landis_run_docker.md),
 [`tar_landis()`](https://for-cast.github.io/landisutils/reference/tar_landis.md)
 
 Other LANDIS-II execution helpers:
+[`landis_find()`](https://for-cast.github.io/landisutils/reference/landis_find.md),
+[`landis_find_docker()`](https://for-cast.github.io/landisutils/reference/landis_find_docker.md),
+[`landis_replicate()`](https://for-cast.github.io/landisutils/reference/landis_replicate.md),
 [`landis_run_docker()`](https://for-cast.github.io/landisutils/reference/landis_run_docker.md),
 [`tar_landis()`](https://for-cast.github.io/landisutils/reference/tar_landis.md)

@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.11</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.12</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -90,7 +90,7 @@
 <ul><li>
 <strong><code>prep*()</code></strong> functions (e.g. <code>prepInitialCommunities</code>, <code>prepSpeciesData</code>, <code>prepEcoregionParameters</code>, <code>prepFireReductionParameters</code>, <code>prepClimateConfig</code>) take R-side data (often <code>data.table</code>/<code>data.frame</code> from upstream <code>LandR</code> / <code>Biomass_borealDataPrep</code> workflows) and convert to LANDIS-II file formats on disk, returning file paths or data frames ready for extensions.</li>
 <li>
-<strong><code>insert*()</code></strong> functions (mostly <code>@keywords internal</code>, in <a href="R/ext_utils.R">R/ext_utils.R</a>, <a href="R/utils.R">R/utils.R</a>, <a href="R/scenarios.R">R/scenarios.R</a>, and each <code>ext_*.R</code>) return character vectors of LANDIS-II-formatted text lines that the extension’s <code>$write()</code> concatenates. Foundational primitives live in <a href="R/utils.R">R/utils.R</a>: <code>insertLandisData()</code> (writes the header + <code>LandisData</code> line), <code><a href="reference/insertValue.html">insertValue()</a></code>, <code><a href="reference/insertFile.html">insertFile()</a></code>, plus <code><a href="reference/yesno.html">yesno()</a></code> for logical → <code>"yes"</code>/<code>"no"</code> conversion and <code>.relPath()</code> / <code>.checkPath()</code> for path handling.</li>
+<strong><code>insert*()</code></strong> functions (mostly <code>@keywords internal</code>, in <a href="R/ext_utils.R">R/ext_utils.R</a>, <a href="R/utils.R">R/utils.R</a>, <a href="R/scenarios.R">R/scenarios.R</a>, and each <code>ext_*.R</code>) return character vectors of LANDIS-II-formatted text lines that the extension’s <code>$write()</code> concatenates. Foundational primitives live in <a href="R/utils.R">R/utils.R</a>: <code><a href="reference/insertLandisData.html">insertLandisData()</a></code> (writes the header + <code>LandisData</code> line), <code><a href="reference/insertValue.html">insertValue()</a></code>, <code><a href="reference/insertFile.html">insertFile()</a></code>, plus <code><a href="reference/yesno.html">yesno()</a></code> for logical → <code>"yes"</code>/<code>"no"</code> conversion and <code>.relPath()</code> / <code>.checkPath()</code> for path handling.</li>
 </ul><p>All generated files start with <code>landisutilsHeader()</code> warning that they are auto-generated.</p>
 </div>
 <div class="section level3">

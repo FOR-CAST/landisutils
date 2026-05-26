@@ -1,5 +1,29 @@
 # Changelog
 
+## landisutils 0.0.12
+
+- [`insertFile()`](https://for-cast.github.io/landisutils/reference/insertFile.md),
+  [`insertLandisData()`](https://for-cast.github.io/landisutils/reference/insertLandisData.md),
+  [`insertValue()`](https://for-cast.github.io/landisutils/reference/insertValue.md)
+  are now exported so project-level code can build custom scenario files
+  using the same primitives the package uses internally.
+- [`landis_find_docker()`](https://for-cast.github.io/landisutils/reference/landis_find_docker.md)
+  is a new helper that returns the path to `Landis.Console.dll` inside
+  the container, reading `getOption("landisutils.docker.console")`.
+  [`landis_run_docker()`](https://for-cast.github.io/landisutils/reference/landis_run_docker.md)
+  now calls it instead of duplicating the lookup.
+- [`landis_replicate()`](https://for-cast.github.io/landisutils/reference/landis_replicate.md)
+  gains a `base_seed` argument. When set, the `RandomNumberSeed` in each
+  replicate’s `scenario.txt` is rewritten to
+  `base_seed + (rep_index - 1)`, giving every replicate a distinct but
+  deterministic seed. Seeds are index-stable: adding more replicates
+  later never changes the seeds of existing ones.
+- [`tar_landis()`](https://for-cast.github.io/landisutils/reference/tar_landis.md)
+  gains a `base_seed` argument, passed through to
+  [`landis_replicate()`](https://for-cast.github.io/landisutils/reference/landis_replicate.md)
+  and baked into the command expression at factory-call time so `crew`
+  workers receive the correct value.
+
 ## landisutils 0.0.11
 
 - Pin `santoku` to its GitHub source (`hughjonesd/santoku`) after the

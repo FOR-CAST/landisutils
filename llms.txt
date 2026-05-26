@@ -459,6 +459,9 @@ scenario(
   [`insertOtherExtensions()`](https://for-cast.github.io/landisutils/reference/insertExtensions.md)
   : Specify Scenario Extensions Tables
 
+- [`insertFile()`](https://for-cast.github.io/landisutils/reference/insertFile.md)
+  : Specify an input file for an extension
+
 - [`insertFireReductionParameters()`](https://for-cast.github.io/landisutils/reference/insertFireReductionParameters.md)
   :
 
@@ -510,6 +513,11 @@ scenario(
   :
 
   Specify `InitialCommunities` and `InitialCommunitiesMap` Files
+
+- [`insertLandisData()`](https://for-cast.github.io/landisutils/reference/insertLandisData.md)
+  :
+
+  Write a LANDIS-II `LandisData` header block
 
 - [`insertLightEstablishmentTable()`](https://for-cast.github.io/landisutils/reference/insertLightEstablishmentTable.md)
   :
@@ -578,6 +586,9 @@ scenario(
 
   Specify Dynamic Fire Extension `UphillSlopeAzimuthMap`
 
+- [`insertValue()`](https://for-cast.github.io/landisutils/reference/insertValue.md)
+  : Specify an input parameter value for an extension
+
 - [`insertWindCurveTable()`](https://for-cast.github.io/landisutils/reference/insertWindCurveTable.md)
   :
 
@@ -593,7 +604,13 @@ scenario(
   : Construct a Land Use type
 
 - [`landis_find()`](https://for-cast.github.io/landisutils/reference/landis_find.md)
-  : Find an installed version of LANDIS-II
+  : Find the LANDIS-II console for a local installation
+
+- [`landis_find_docker()`](https://for-cast.github.io/landisutils/reference/landis_find_docker.md)
+  : Find the LANDIS-II console path inside a Docker container
+
+- [`landis_replicate()`](https://for-cast.github.io/landisutils/reference/landis_replicate.md)
+  : Create replicate directories for a LANDIS-II scenario
 
 - [`landis_process()`](https://for-cast.github.io/landisutils/reference/landis_run.md)
   [`landis_run()`](https://for-cast.github.io/landisutils/reference/landis_run.md)

@@ -122,7 +122,8 @@ generation and data massaging:
   text lines that the extension’s `$write()` concatenates. Foundational
   primitives live in
   [R/utils.R](https://for-cast.github.io/landisutils/R/utils.R):
-  `insertLandisData()` (writes the header + `LandisData` line),
+  [`insertLandisData()`](https://for-cast.github.io/landisutils/reference/insertLandisData.md)
+  (writes the header + `LandisData` line),
   [`insertValue()`](https://for-cast.github.io/landisutils/reference/insertValue.md),
   [`insertFile()`](https://for-cast.github.io/landisutils/reference/insertFile.md),
   plus

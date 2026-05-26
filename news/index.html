@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.11</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.12</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -39,6 +39,17 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.12" id="landisutils-0012">landisutils 0.0.12<a class="anchor" aria-label="anchor" href="#landisutils-0012"></a></h2>
+<ul><li>
+<code><a href="../reference/insertFile.html">insertFile()</a></code>, <code><a href="../reference/insertLandisData.html">insertLandisData()</a></code>, <code><a href="../reference/insertValue.html">insertValue()</a></code> are now exported so project-level code can build custom scenario files using the same primitives the package uses internally.</li>
+<li>
+<code><a href="../reference/landis_find_docker.html">landis_find_docker()</a></code> is a new helper that returns the path to <code>Landis.Console.dll</code> inside the container, reading <code>getOption("landisutils.docker.console")</code>. <code><a href="../reference/landis_run_docker.html">landis_run_docker()</a></code> now calls it instead of duplicating the lookup.</li>
+<li>
+<code><a href="../reference/landis_replicate.html">landis_replicate()</a></code> gains a <code>base_seed</code> argument. When set, the <code>RandomNumberSeed</code> in each replicate’s <code>scenario.txt</code> is rewritten to <code>base_seed + (rep_index - 1)</code>, giving every replicate a distinct but deterministic seed. Seeds are index-stable: adding more replicates later never changes the seeds of existing ones.</li>
+<li>
+<code><a href="../reference/tar_landis.html">tar_landis()</a></code> gains a <code>base_seed</code> argument, passed through to <code><a href="../reference/landis_replicate.html">landis_replicate()</a></code> and baked into the command expression at factory-call time so <code>crew</code> workers receive the correct value.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.11" id="landisutils-0011">landisutils 0.0.11<a class="anchor" aria-label="anchor" href="#landisutils-0011"></a></h2>
 <ul><li>Pin <code>santoku</code> to its GitHub source (<code>hughjonesd/santoku</code>) after the package was archived on CRAN on 2026-05-15, which broke <code>zonal</code> dependency resolution in GitHub Actions CI.</li>

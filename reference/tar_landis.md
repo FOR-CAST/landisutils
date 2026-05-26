@@ -17,6 +17,8 @@ tar_landis(
   method = NULL,
   image = NULL,
   console = NULL,
+  n_reps = 1L,
+  base_seed = NULL,
   pattern = NULL,
   packages = targets::tar_option_get("packages"),
   library = targets::tar_option_get("library"),
@@ -78,6 +80,25 @@ tar_landis(
   `method = "local"` it is the local filesystem path (defaults to
   [`landis_find()`](https://for-cast.github.io/landisutils/reference/landis_find.md)).
 
+- n_reps:
+
+  Integer. Number of replicate runs per scenario. Each replicate is
+  placed in `<scenario_dir>/rep01`, `/rep02`, … (subdirectories of the
+  base scenario directory) so input files can be shared. LANDIS runs
+  independently in each replicate directory. Output files from all
+  replicates are returned as a single character vector. Defaults to
+  `1L`.
+
+- base_seed:
+
+  Integer or `NULL`. Passed to
+  [`landis_replicate()`](https://for-cast.github.io/landisutils/reference/landis_replicate.md):
+  when non-`NULL`, the `RandomNumberSeed` in each replicate's
+  `scenario.txt` is set to `base_seed + (rep_index - 1)`, giving each
+  run a distinct but deterministic seed. Adding more replicates later
+  never changes existing seeds because seeds are derived from the rep
+  index, not the order of creation.
+
 - pattern:
 
   Expression (unquoted, optional). Dynamic-branching pattern, e.g.
@@ -110,5 +131,8 @@ method per machine.
 [`landis_run_docker()`](https://for-cast.github.io/landisutils/reference/landis_run_docker.md)
 
 Other LANDIS-II execution helpers:
+[`landis_find()`](https://for-cast.github.io/landisutils/reference/landis_find.md),
+[`landis_find_docker()`](https://for-cast.github.io/landisutils/reference/landis_find_docker.md),
+[`landis_replicate()`](https://for-cast.github.io/landisutils/reference/landis_replicate.md),
 [`landis_run_docker()`](https://for-cast.github.io/landisutils/reference/landis_run_docker.md),
 [`landis_run_local()`](https://for-cast.github.io/landisutils/reference/landis_run_local.md)
