@@ -36,7 +36,7 @@ provides the scenario directory path(s) at run time.}
 \item{deps}{List (unquoted, optional). A \code{list()} of upstream target
 symbols that must complete before the simulation runs, e.g.
 \code{list(landis_scenario_file, landis_ext_forcs_file)}. Values are not used
-directly — they are embedded in the command so \code{{targets}} detects them
+directly -- they are embedded in the command so \code{{targets}} detects them
 as upstream dependencies.}
 
 \item{scenario_file}{Character. Scenario filename inside \code{scenario_dir}.}
@@ -62,7 +62,7 @@ for \code{method = "local"} it is the local filesystem path (defaults to
 \code{\link[=landis_find]{landis_find()}}).}
 
 \item{n_reps}{Integer. Number of replicate runs per scenario. Each replicate
-is placed in \verb{<scenario_dir>/rep01}, \verb{/rep02}, … (subdirectories of the
+is placed in \verb{<scenario_dir>/rep01}, \verb{/rep02}, ... (subdirectories of the
 base scenario directory) so input files can be shared. LANDIS runs
 independently in each replicate directory. Output files from all
 replicates are returned as a single character vector. Defaults to \code{1L}.}
@@ -84,8 +84,8 @@ A \code{tar_target} object (from \code{\link[targets:tar_target_raw]{targets::ta
 }
 \description{
 A \code{{targets}} factory that creates one \code{format = "file"} target per
-scenario (via dynamic branching). The target runs LANDIS-II — locally or
-inside a Docker container depending on \code{method} — and returns a character
+scenario (via dynamic branching). The target runs LANDIS-II -- locally or
+inside a Docker container depending on \code{method} -- and returns a character
 vector of tracked output and log files.
 }
 \details{

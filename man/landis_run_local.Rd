@@ -16,12 +16,16 @@ absolute before use).}
 to \code{NULL}, which calls \code{\link[=landis_find]{landis_find()}} at run time.}
 }
 \value{
-Integer exit code, invisibly.
+Named list with \code{exit_code} (integer), \code{elapsed_sec} (numeric), and
+\code{peak_mem_bytes} (numeric), returned invisibly.
 }
 \description{
 Runs LANDIS-II directly via \code{dotnet}, blocking until the simulation
 completes. Stdout and stderr are written to
 \verb{<scenario_dir>/log/local_stdout.log} and \code{local_stderr.log}.
+Wall-clock elapsed time and peak memory use (polled every 2 s via the \code{ps} package)
+are reported on completion and written to \verb{<scenario_dir>/log/local_resources.log}.
+Works on Linux, macOS, and Windows.
 }
 \seealso{
 \code{\link[=landis_find]{landis_find()}}, \code{\link[=landis_find_docker]{landis_find_docker()}}, \code{\link[=landis_run]{landis_run()}}, \code{\link[=landis_run_docker]{landis_run_docker()}}, \code{\link[=tar_landis]{tar_landis()}}

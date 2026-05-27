@@ -167,6 +167,13 @@ LandUsePlus <- R6Class(
         stopifnot(is.list(value), all(vapply(value, inherits, logical(1), "LandUseType")))
         private$.LandUses <- value
       }
+    },
+
+    output_files = function(value) {
+      if (!missing(value)) {
+        stop("`output_files` is read-only", call. = FALSE)
+      }
+      c(self$SiteLog) ## NULL when SiteLog not configured
     }
   )
 )

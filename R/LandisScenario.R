@@ -79,6 +79,16 @@ LandisScenario <- R6Class(
     #' @field reps integer number of replicates created for this scenario
     reps = function() {
       private$.reps
+    },
+
+    #' @field output_files Character vector of output files always produced by
+    #'   LANDIS-II in the scenario directory, regardless of which extensions are
+    #'   active. Collected by [scenario()] when writing `output_manifest.txt`.
+    output_files = function(value) {
+      if (!missing(value)) {
+        stop("`output_files` is read-only", call. = FALSE)
+      }
+      c("Landis-log.txt", "Metadata/LANDIS-II v8.0/LANDIS-II v8.0.xml")
     }
   ),
   private = list(.reps = 0L)

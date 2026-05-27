@@ -1,10 +1,65 @@
 ## LANDIS-II execution helpers (local and Docker) --------------------------------------------------
 
+## Format an integer number of seconds as "Xh Ym Zs" / "Ym Zs" / "Zs".
+.fmt_duration <- function(seconds) {
+  s <- as.integer(round(seconds))
+  h <- s %/% 3600L
+  m <- (s %% 3600L) %/% 60L
+  sc <- s %% 60L
+  if (h > 0L) {
+    sprintf("%dh %02dm %02ds", h, m, sc)
+  } else if (m > 0L) {
+    sprintf("%dm %02ds", m, sc)
+  } else {
+    sprintf("%ds", sc)
+  }
+}
+
+## Format a byte count as "X.X GiB" / "X.X MiB" / etc.
+.fmt_bytes <- function(bytes) {
+  if (bytes >= 1024^3) {
+    sprintf("%.1f GiB", bytes / 1024^3)
+  } else if (bytes >= 1024^2) {
+    sprintf("%.1f MiB", bytes / 1024^2)
+  } else if (bytes >= 1024) {
+    sprintf("%.1f KiB", bytes / 1024)
+  } else {
+    sprintf("%d B", as.integer(bytes))
+  }
+}
+
+## Parse the current-usage half of a docker-stats MemUsage string (e.g. "1.23GiB / 15.4GiB")
+## into bytes. Returns 0 on parse failure.
+.parse_docker_mem_bytes <- function(x) {
+  usage <- trimws(strsplit(x, "/", fixed = TRUE)[[1L]][1L])
+  m <- regmatches(usage, regexpr("[0-9.]+[A-Za-z]+", usage, perl = TRUE))
+  if (!length(m)) {
+    return(0)
+  }
+  val <- as.numeric(sub("([0-9.]+).*", "\\1", m[1L]))
+  unit <- sub("[0-9.]+([A-Za-z]+)", "\\1", m[1L])
+  mult <- c(
+    B = 1,
+    kB = 1e3,
+    MB = 1e6,
+    GB = 1e9,
+    TB = 1e12,
+    KiB = 1024,
+    MiB = 1024^2,
+    GiB = 1024^3,
+    TiB = 1024^4
+  )
+  val * (mult[[unit]] %||% 1)
+}
+
 #' Run a LANDIS-II simulation locally (synchronous)
 #'
 #' Runs LANDIS-II directly via `dotnet`, blocking until the simulation
 #' completes. Stdout and stderr are written to
 #' `<scenario_dir>/log/local_stdout.log` and `local_stderr.log`.
+#' Wall-clock elapsed time and peak memory use (polled every 2 s via the `ps` package)
+#' are reported on completion and written to `<scenario_dir>/log/local_resources.log`.
+#' Works on Linux, macOS, and Windows.
 #'
 #' @param scenario_dir Character. Path to the scenario directory (resolved to
 #'   absolute before use).
@@ -12,7 +67,8 @@
 #' @param console Character or `NULL`. Path to `Landis.Console.dll`. Defaults
 #'   to `NULL`, which calls [landis_find()] at run time.
 #'
-#' @returns Integer exit code, invisibly.
+#' @returns Named list with `exit_code` (integer), `elapsed_sec` (numeric), and
+#'   `peak_mem_bytes` (numeric), returned invisibly.
 #'
 #' @family LANDIS-II execution helpers
 #' @seealso [landis_find()], [landis_find_docker()], [landis_run()], [landis_run_docker()], [tar_landis()]
@@ -35,15 +91,36 @@ landis_run_local <- function(scenario_dir, scenario_file = "scenario.txt", conso
   message(glue::glue("  scenario_dir:  {scenario_dir}"))
   message(glue::glue("  console:       {console}"))
 
-  old_wd <- setwd(scenario_dir)
-  on.exit(setwd(old_wd), add = TRUE)
-
-  rc <- system2(
-    "dotnet",
+  ## processx gives us a PID for memory polling; wd = sets the working directory
+  ## so LANDIS-II resolves relative file paths correctly (replaces setwd()).
+  t_start <- proc.time()
+  landis_proc <- processx::process$new(
+    command = "dotnet",
     args = c(console, scenario_file),
+    wd = scenario_dir,
     stdout = fs::path(log_dir, "local_stdout.log"),
     stderr = fs::path(log_dir, "local_stderr.log"),
-    wait = TRUE
+    cleanup = TRUE
+  )
+
+  ## Poll RSS memory every 2 s using ps (cross-platform: Linux, macOS, Windows).
+  peak_mem_bytes <- 0
+  while (landis_proc$is_alive()) {
+    mem <- tryCatch(
+      ps::ps_memory_info(ps::ps_handle(landis_proc$get_pid()))[["rss"]],
+      error = function(e) 0
+    )
+    peak_mem_bytes <- max(peak_mem_bytes, mem)
+    Sys.sleep(2)
+  }
+
+  landis_proc$wait()
+  rc <- landis_proc$get_exit_status()
+  elapsed_sec <- (proc.time() - t_start)[["elapsed"]]
+
+  writeLines(
+    c(sprintf("elapsed_sec: %.1f", elapsed_sec), sprintf("peak_mem_bytes: %.0f", peak_mem_bytes)),
+    fs::path(log_dir, "local_resources.log")
   )
 
   if (rc != 0L) {
@@ -53,8 +130,16 @@ landis_run_local <- function(scenario_dir, scenario_file = "scenario.txt", conso
     )
   }
 
+  mem_str <- if (peak_mem_bytes > 0) {
+    .fmt_bytes(peak_mem_bytes)
+  } else {
+    "(not sampled -- run too short)"
+  }
   message(glue::glue("LANDIS-II local run completed ({Sys.time()})"))
-  invisible(rc)
+  message(glue::glue("  Elapsed:     {.fmt_duration(elapsed_sec)}"))
+  message(glue::glue("  Peak memory: {mem_str}"))
+
+  invisible(list(exit_code = rc, elapsed_sec = elapsed_sec, peak_mem_bytes = peak_mem_bytes))
 }
 
 #' Run a LANDIS-II simulation inside a Docker container
@@ -62,7 +147,10 @@ landis_run_local <- function(scenario_dir, scenario_file = "scenario.txt", conso
 #' Runs LANDIS-II in an ephemeral Docker container, blocking until the
 #' simulation completes. The scenario directory is bind-mounted to `/sim`
 #' inside the container. Stdout and stderr are written to
-#' `<scenario_dir>/log/docker_stdout.log` and `docker_stderr.log`.
+#' `<scenario_dir>/log/docker_stdout.log` and `docker_stderr.log`. Wall-clock
+#' elapsed time and peak memory use (polled every 2 s from `docker stats`) are
+#' reported on completion and written to
+#' `<scenario_dir>/log/docker_resources.log`.
 #'
 #' @param scenario_dir Character. Path to the scenario directory (resolved to
 #'   absolute before mounting).
@@ -74,7 +162,8 @@ landis_run_local <- function(scenario_dir, scenario_file = "scenario.txt", conso
 #'   the container**. Defaults to `NULL`, which calls [landis_find_docker()] at
 #'   run time (reads `getOption("landisutils.docker.console")`).
 #'
-#' @returns Integer exit code, invisibly.
+#' @returns Named list with `exit_code` (integer), `elapsed_sec` (numeric), and
+#'   `peak_mem_bytes` (numeric), returned invisibly.
 #'
 #' @family LANDIS-II execution helpers
 #' @seealso [landis_find_docker()], [landis_find()], [landis_run()], [landis_run_local()], [tar_landis()]
@@ -99,34 +188,78 @@ landis_run_docker <- function(
 
   log_dir <- fs::dir_create(fs::path(scenario_dir, "log"))
 
-  uid <- trimws(system("id -u", intern = TRUE))
-  gid <- trimws(system("id -g", intern = TRUE))
+  ## --user uid:gid is a POSIX-only concept; omit on Windows (Docker Desktop runs
+  ## Linux containers via WSL2 and does not need the flag for file ownership).
+  user_args <- if (.Platform$OS.type != "windows") {
+    c(
+      "--user",
+      paste0(trimws(system("id -u", intern = TRUE)), ":", trimws(system("id -g", intern = TRUE)))
+    )
+  } else {
+    character(0)
+  }
+
+  ## Unique name so docker stats can identify this specific container during the run.
+  container_name <- paste0("landis-run-", format(Sys.time(), "%Y%m%d%H%M%S"))
 
   message(glue::glue("Starting LANDIS-II Docker run ({Sys.time()})"))
   message(glue::glue("  scenario_dir:  {scenario_dir}"))
   message(glue::glue("  scenario_file: {scenario_file}"))
   message(glue::glue("  image:         {image}"))
 
-  rc <- system2(
-    command = "docker",
-    args = c(
-      "run",
-      "--rm",
-      "--entrypoint",
-      "dotnet",
-      "--user",
-      paste0(uid, ":", gid),
-      "-v",
-      paste0(scenario_dir, ":/sim"),
-      "-w",
-      "/sim",
-      image,
-      console,
-      scenario_file
-    ),
-    stdout = fs::path(log_dir, "docker_stdout.log"),
-    stderr = fs::path(log_dir, "docker_stderr.log"),
-    wait = TRUE
+  docker_args <- c(
+    "run",
+    "--rm",
+    "--name",
+    container_name,
+    "--entrypoint",
+    "dotnet",
+    user_args,
+    "-v",
+    paste0(scenario_dir, ":/sim"),
+    "-w",
+    "/sim",
+    image,
+    console,
+    scenario_file
+  )
+
+  ## Run docker in a background R process so we can poll docker stats from the main thread.
+  t_start <- proc.time()
+  stdout_log <- fs::path(log_dir, "docker_stdout.log")
+  stderr_log <- fs::path(log_dir, "docker_stderr.log")
+
+  docker_proc <- callr::r_bg(
+    func = function(docker_args, stdout_log, stderr_log) {
+      system2("docker", docker_args, stdout = stdout_log, stderr = stderr_log, wait = TRUE)
+    },
+    args = list(docker_args = docker_args, stdout_log = stdout_log, stderr_log = stderr_log)
+  )
+
+  ## Poll docker stats every 2 s, tracking peak memory across samples.
+  peak_mem_bytes <- 0
+  while (docker_proc$is_alive()) {
+    stats_raw <- tryCatch(
+      system2(
+        "docker",
+        c("stats", "--no-stream", "--format", "{{.MemUsage}}", container_name),
+        stdout = TRUE,
+        stderr = FALSE
+      ),
+      error = function(e) character(0)
+    )
+    if (length(stats_raw) && nzchar(trimws(stats_raw[1L]))) {
+      peak_mem_bytes <- max(peak_mem_bytes, .parse_docker_mem_bytes(stats_raw[1L]))
+    }
+    Sys.sleep(2)
+  }
+
+  rc <- docker_proc$get_result()
+  elapsed_sec <- (proc.time() - t_start)[["elapsed"]]
+
+  writeLines(
+    c(sprintf("elapsed_sec: %.1f", elapsed_sec), sprintf("peak_mem_bytes: %.0f", peak_mem_bytes)),
+    fs::path(log_dir, "docker_resources.log")
   )
 
   if (rc != 0L) {
@@ -136,15 +269,23 @@ landis_run_docker <- function(
     )
   }
 
+  mem_str <- if (peak_mem_bytes > 0) {
+    .fmt_bytes(peak_mem_bytes)
+  } else {
+    "(not sampled -- run too short)"
+  }
   message(glue::glue("LANDIS-II Docker run completed ({Sys.time()})"))
-  invisible(rc)
+  message(glue::glue("  Elapsed:     {.fmt_duration(elapsed_sec)}"))
+  message(glue::glue("  Peak memory: {mem_str}"))
+
+  invisible(list(exit_code = rc, elapsed_sec = elapsed_sec, peak_mem_bytes = peak_mem_bytes))
 }
 
 #' Create a `targets` target that runs LANDIS-II
 #'
 #' A `{targets}` factory that creates one `format = "file"` target per
-#' scenario (via dynamic branching). The target runs LANDIS-II — locally or
-#' inside a Docker container depending on `method` — and returns a character
+#' scenario (via dynamic branching). The target runs LANDIS-II -- locally or
+#' inside a Docker container depending on `method` -- and returns a character
 #' vector of tracked output and log files.
 #'
 #' The `method` is resolved at *factory-call time* (i.e., when `_targets.R` is
@@ -160,7 +301,7 @@ landis_run_docker <- function(
 #' @param deps List (unquoted, optional). A `list()` of upstream target
 #'   symbols that must complete before the simulation runs, e.g.
 #'   `list(landis_scenario_file, landis_ext_forcs_file)`. Values are not used
-#'   directly — they are embedded in the command so `{targets}` detects them
+#'   directly -- they are embedded in the command so `{targets}` detects them
 #'   as upstream dependencies.
 #' @param scenario_file Character. Scenario filename inside `scenario_dir`.
 #' @param output_dir Character vector. Output subdirectory (or subdirectories)
@@ -180,7 +321,7 @@ landis_run_docker <- function(
 #'   for `method = "local"` it is the local filesystem path (defaults to
 #'   [landis_find()]).
 #' @param n_reps Integer. Number of replicate runs per scenario. Each replicate
-#'   is placed in `<scenario_dir>/rep01`, `/rep02`, … (subdirectories of the
+#'   is placed in `<scenario_dir>/rep01`, `/rep02`, ... (subdirectories of the
 #'   base scenario directory) so input files can be shared. LANDIS runs
 #'   independently in each replicate directory. Output files from all
 #'   replicates are returned as a single character vector. Defaults to `1L`.
@@ -263,7 +404,7 @@ tar_landis <- function(
   ## no-op at execution time.
   ##
   ## landis_replicate() creates n_reps subdirectories inside the base scenario
-  ## directory (rep01/, rep02/, …), copies input files into each, and returns
+  ## directory (rep01/, rep02/, ...), copies input files into each, and returns
   ## their absolute paths. LANDIS runs in each replicate directory; output and
   ## log files from all replicates are returned as a combined character vector.
   cmd <- if (identical(method, "docker")) {
@@ -287,10 +428,13 @@ tar_landis <- function(
           console = .(console)
         )
       }
+      .manifest <- file.path(.sd, "output_manifest.txt")
+      .manifest_entries <- if (file.exists(.manifest)) readLines(.manifest) else character(0)
       unlist(lapply(.rep_dirs, function(.rd) {
         c(
           list.files(file.path(.rd, "log"), full.names = TRUE),
-          list.files(file.path(.rd, .(output_dirs_val)), full.names = TRUE, recursive = TRUE)
+          list.files(file.path(.rd, .(output_dirs_val)), full.names = TRUE, recursive = TRUE),
+          file.path(.rd, .manifest_entries)
         )
       }))
     })
@@ -312,10 +456,13 @@ tar_landis <- function(
           console = .(console)
         )
       }
+      .manifest <- file.path(.sd, "output_manifest.txt")
+      .manifest_entries <- if (file.exists(.manifest)) readLines(.manifest) else character(0)
       unlist(lapply(.rep_dirs, function(.rd) {
         c(
           list.files(file.path(.rd, "log"), full.names = TRUE),
-          list.files(file.path(.rd, .(output_dirs_val)), full.names = TRUE, recursive = TRUE)
+          list.files(file.path(.rd, .(output_dirs_val)), full.names = TRUE, recursive = TRUE),
+          file.path(.rd, .manifest_entries)
         )
       }))
     })

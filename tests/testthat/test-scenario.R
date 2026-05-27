@@ -174,6 +174,37 @@ testthat::test_that("LandisScenario$replicate() creates subdirs and copies files
   testthat::expect_true(all(file.exists(file.path(tmp_pth, "rep01", scen$files))))
 })
 
+testthat::test_that("scenario() writes output_manifest.txt listing scenario- and extension-level outputs", {
+  tmp_pth <- withr::local_tempdir("test_scenario_manifest_")
+  fix <- .scenario_fixture(tmp_pth)
+
+  scen <- .scenario_call("test_scenario", list(fix$ext), fix$cc, tmp_pth)
+
+  testthat::expect_true("output_manifest.txt" %in% scen$files)
+  manifest_path <- file.path(tmp_pth, "output_manifest.txt")
+  testthat::expect_true(file.exists(manifest_path))
+  entries <- readLines(manifest_path)
+  ## scenario-level fixed outputs are always present
+  testthat::expect_true("Landis-log.txt" %in% entries)
+  testthat::expect_true("Metadata/LANDIS-II v8.0/LANDIS-II v8.0.xml" %in% entries)
+})
+
+testthat::test_that("LandisScenario$output_files is read-only and returns fixed scenario outputs", {
+  tmp_pth <- withr::local_tempdir("test_scenario_output_files_")
+  fix <- .scenario_fixture(tmp_pth)
+
+  scen <- .scenario_call("test_scenario", list(fix$ext), fix$cc, tmp_pth)
+
+  testthat::expect_setequal(
+    scen$output_files,
+    c("Landis-log.txt", "Metadata/LANDIS-II v8.0/LANDIS-II v8.0.xml")
+  )
+  testthat::expect_snapshot(
+    error = TRUE,
+    scen$output_files <- "something.txt"
+  )
+})
+
 testthat::test_that("LandisScenario$replicate() is additive and leaves existing reps untouched", {
   tmp_pth <- withr::local_tempdir("test_scenario_replicate_add_")
   fix <- .scenario_fixture(tmp_pth)

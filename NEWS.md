@@ -1,3 +1,63 @@
+# landisutils 0.0.14
+
+## ForCS Succession extension
+
+* `insertDOMPools()` now wraps multi-word pool names in double-quotes, matching
+  the LANDIS-II parser's requirement (e.g. `"Fast AG"` instead of `Fast AG`).
+* ForCS v4 changed four large parameter tables from inline text to CSV file
+  references. `insertEcoSppDOMParameters()`, `insertANPPTimeSeries()`,
+  `insertMaxBiomassTimeSeries()`, and `insertEstablishProbabilities()` now each
+  write a CSV to `path` and emit the `Keyword "filename"` reference line,
+  matching the ForCS v4.0.2 input format.
+* `ForCS$write()` passes `self$path` to the four CSV-writing `insert*()`
+  functions and registers the resulting files via `add_file()` so
+  `landis_replicate()` copies them into each replicate directory.
+* The four ForCS CSV filenames are now prefixed with `ForCS_`
+  (`ForCS_EcoSppDOMParameters.csv`, `ForCS_ANPPTimeSeries.csv`,
+  `ForCS_MaxBiomassTimeSeries.csv`, `ForCS_EstablishProbabilities.csv`) so
+  their origin is unambiguous alongside other extension files.
+
+## Output file tracking
+
+* All `LandisExtension` subclasses that produce fixed-name output files now
+  expose an `output_files` active binding listing those files as relative paths
+  (e.g. log CSVs, summary CSVs). Extensions with no fixed outputs inherit the
+  base `LandisExtension$output_files` which returns `character(0)`.
+* `LandisScenario` gains an `output_files` active binding that returns the two
+  LANDIS-II core outputs always written to the scenario directory:
+  `Landis-log.txt` and `Metadata/LANDIS-II v8.0/LANDIS-II v8.0.xml`.
+* `scenario()` now writes `output_manifest.txt` to the scenario directory,
+  listing all fixed-name output files declared by the scenario and its
+  extensions. The manifest is registered in `scenario$files` so
+  `landis_replicate()` copies it into each replicate directory.
+* `tar_landis()` now reads `output_manifest.txt` from the base scenario
+  directory and includes the listed files (as absolute paths per replicate) in
+  the returned character vector alongside the `log/` scan and `output_dir` scan.
+  This ensures `{targets}` tracks log CSVs, `Landis-log.txt`, and the Metadata
+  XML explicitly, without relying on glob discovery.
+
+## Resource tracking for simulation runs
+
+* `landis_run_docker()` now tracks wall-clock elapsed time and peak container
+  memory. Docker is launched via `callr::r_bg()` so the main thread can poll
+  `docker stats --no-stream` every 2 s; the maximum observed RSS is recorded as
+  peak memory. A named container (e.g. `landis-run-20260527123456`) is used for
+  stats lookup and removed automatically with `--rm`. Results are printed on
+  completion and written to `<scenario_dir>/log/docker_resources.log`. The
+  `--user uid:gid` flag is now skipped on Windows (`id -u`/`id -g` are not
+  available there; Docker Desktop on Windows does not require it).
+* `landis_run_local()` now tracks wall-clock elapsed time and peak process
+  memory. `system2()` is replaced by `processx::process$new()` (which exposes
+  the subprocess PID and handles the working directory directly), and the main
+  thread polls `ps::ps_memory_info()` every 2 s. The `ps` package is
+  cross-platform, so memory tracking works on Linux, macOS, and Windows without
+  any platform-specific shell commands. Results are printed on completion and
+  written to `<scenario_dir>/log/local_resources.log`.
+* Both functions now return a named list (`exit_code`, `elapsed_sec`,
+  `peak_mem_bytes`) instead of a bare integer exit code.
+* `processx` and `ps` added to `Imports` (previously available only as
+  transitive dependencies of `callr`).
+
 # landisutils 0.0.13
 
 * `DynamicFire$write()` now calls `add_file()` for `InitialWeatherDatabase` so

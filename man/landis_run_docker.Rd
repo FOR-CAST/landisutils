@@ -26,13 +26,17 @@ the container}. Defaults to \code{NULL}, which calls \code{\link[=landis_find_do
 run time (reads \code{getOption("landisutils.docker.console")}).}
 }
 \value{
-Integer exit code, invisibly.
+Named list with \code{exit_code} (integer), \code{elapsed_sec} (numeric), and
+\code{peak_mem_bytes} (numeric), returned invisibly.
 }
 \description{
 Runs LANDIS-II in an ephemeral Docker container, blocking until the
 simulation completes. The scenario directory is bind-mounted to \verb{/sim}
 inside the container. Stdout and stderr are written to
-\verb{<scenario_dir>/log/docker_stdout.log} and \code{docker_stderr.log}.
+\verb{<scenario_dir>/log/docker_stdout.log} and \code{docker_stderr.log}. Wall-clock
+elapsed time and peak memory use (polled every 2 s from \verb{docker stats}) are
+reported on completion and written to
+\verb{<scenario_dir>/log/docker_resources.log}.
 }
 \seealso{
 \code{\link[=landis_find_docker]{landis_find_docker()}}, \code{\link[=landis_find]{landis_find()}}, \code{\link[=landis_run]{landis_run()}}, \code{\link[=landis_run_local]{landis_run_local()}}, \code{\link[=tar_landis]{tar_landis()}}

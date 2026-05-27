@@ -380,6 +380,13 @@ Hurricane <- R6Class(
           private$.WindReductionTableCSV <- NULL
         }
       }
+    },
+
+    output_files = function(value) {
+      if (!missing(value)) {
+        stop("`output_files` is read-only", call. = FALSE)
+      }
+      c(self$LogFile)
     }
   )
 )

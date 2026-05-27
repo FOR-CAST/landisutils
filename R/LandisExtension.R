@@ -106,6 +106,23 @@ LandisExtension <- R6Class(
       }
       stopifnot(tolower(value) %in% .extTypes)
       private$.type <- tolower(value)
+    },
+
+    #' @field output_files Character vector of output files (relative paths from
+    #'   the scenario directory) that this extension is expected to produce at
+    #'   run time. Subclasses override this to return their extension-specific
+    #'   log files, event CSVs, etc. These paths are collected by [scenario()]
+    #'   and written to `output_manifest.txt` so [tar_landis()] can track them
+    #'   explicitly without relying on [list.files()] discovery.
+    #'
+    #'   Map files whose names depend on the timestep (e.g. `BiomassC-10.tif`)
+    #'   are NOT included here; they are discovered by [tar_landis()]'s
+    #'   `output_dir` scan instead.
+    output_files = function(value) {
+      if (!missing(value)) {
+        stop("`output_files` is read-only; override in the subclass `active` list", call. = FALSE)
+      }
+      character(0)
     }
   )
 )

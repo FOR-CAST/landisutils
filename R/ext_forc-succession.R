@@ -158,11 +158,11 @@ ForCS <- R6Class(
           insertLightEstablishmentTable(self$LightEstablishmentTable),
           insertSpeciesParameters(self$SpeciesParameters),
           insertDOMPools(self$DOMPools),
-          insertEcoSppDOMParameters(self$EcoSppDOMParameters),
+          insertEcoSppDOMParameters(self$EcoSppDOMParameters, self$path),
           insertForCSProportions(self$ForCSProportions),
-          insertANPPTimeSeries(self$ANPPTimeSeries),
-          insertMaxBiomassTimeSeries(self$MaxBiomassTimeSeries),
-          insertEstablishProbabilities(self$EstablishProbabilities),
+          insertANPPTimeSeries(self$ANPPTimeSeries, self$path),
+          insertMaxBiomassTimeSeries(self$MaxBiomassTimeSeries, self$path),
+          insertEstablishProbabilities(self$EstablishProbabilities, self$path),
           insertRootDynamics(self$RootDynamics)
         ),
         file.path(self$path, self$files[1])
@@ -175,6 +175,11 @@ ForCS <- R6Class(
       if (!is.null(self$SnagFile)) {
         self$add_file(self$SnagFile)
       }
+      ## ForCS v4 CSV files written by insert*() above
+      self$add_file("ForCS_EcoSppDOMParameters.csv")
+      self$add_file("ForCS_ANPPTimeSeries.csv")
+      self$add_file("ForCS_MaxBiomassTimeSeries.csv")
+      self$add_file("ForCS_EstablishProbabilities.csv")
 
       return(invisible(self))
     }
@@ -401,6 +406,24 @@ ForCS <- R6Class(
 
         private$.RootDynamics <- value
       }
+    },
+
+    #' @field output_files Character vector of ForCS-specific log CSV files
+    #'   produced at run time, relative to the scenario directory (root level).
+    #'   These fixed names are written by the ForCS extension regardless of
+    #'   scenario configuration. See [LandisExtension] for the contract.
+    output_files = function(value) {
+      if (!missing(value)) {
+        stop("`output_files` is read-only", call. = FALSE)
+      }
+      c(
+        "log_BiomassC.csv",
+        "log_Flux.csv",
+        "log_FluxBio.csv",
+        "log_FluxDOM.csv",
+        "log_Pools.csv",
+        "log_Summary.csv"
+      )
     }
   )
 )
@@ -747,6 +770,7 @@ insertSpeciesParameters <- function(df) {
 #' @export
 insertDOMPools <- function(df) {
   stopifnot(ncol(df) == 3L)
+  df[[2]] <- sprintf('"%s"', df[[2]]) ## LANDIS requires quoted strings for multi-word names
 
   c(
     glue::glue("DOMPools"),
@@ -762,24 +786,26 @@ insertDOMPools <- function(df) {
 
 #' Specify `EcoSppDOMParameters` for Forest Carbon Succession (ForCS) extension
 #'
-#' @param df data.frame corresponding to `EcoSppDOMParameters` table
+#' ForCS v4 reads this table from a CSV file rather than inline in the main config.
+#' This function writes `ForCS_EcoSppDOMParameters.csv` to `path` and
+#' returns the keyword + filename reference for inclusion in the main config.
 #'
-#' @returns data.frame
+#' @param df data.frame corresponding to `EcoSppDOMParameters` table
+#' @param path Character. Directory where the CSV file will be written.
+#'
+#' @returns Character vector (keyword line for the main config).
 #'
 #' @family ForCS helpers
 #'
 #' @export
-insertEcoSppDOMParameters <- function(df) {
+insertEcoSppDOMParameters <- function(df, path) {
   stopifnot(ncol(df) == 6L)
+  csv_file <- "ForCS_EcoSppDOMParameters.csv"
+  colnames(df) <- c("Ecoregion", "Species", "DOMPool", "DecayRate", "AmountT0", "Q10")
+  utils::write.csv(df, file.path(path, csv_file), row.names = FALSE, quote = FALSE)
 
   c(
-    glue::glue("EcoSppDOMParameters"),
-    glue::glue(">>  Ecoregion  Species  DOM   Decay  Amount  Q10 Ref"),
-    glue::glue(">>                      Pool  Rate   at T0   Temp 10C"),
-    glue::glue(">>  -------------------------------------------------"),
-    apply(df, 1, function(x) {
-      glue::glue_collapse(x, sep = "  ")
-    }),
+    glue::glue("EcoSppDOMParameters\t\"{csv_file}\""),
     glue::glue("") ## add blank line after each item group
   )
 }
@@ -811,70 +837,78 @@ insertForCSProportions <- function(df) {
 
 #' Specify `ANPPTimeSeries` for Forest Carbon Succession (ForCS) extension
 #'
-#' @param df data.frame corresponding to `ANPPTimeSeries` table
+#' ForCS v4 reads this table from a CSV file rather than inline in the main
+#' config. This function writes `ForCS_ANPPTimeSeries.csv` to `path` and returns
+#' the keyword + filename reference for inclusion in the main config.
 #'
-#' @returns data.frame
+#' @param df data.frame corresponding to `ANPPTimeSeries` table
+#' @param path Character. Directory where the CSV file will be written.
+#'
+#' @returns Character vector (keyword line for the main config).
 #'
 #' @family ForCS helpers
 #'
 #' @export
-insertANPPTimeSeries <- function(df) {
+insertANPPTimeSeries <- function(df, path) {
   stopifnot(ncol(df) == 5L)
+  csv_file <- "ForCS_ANPPTimeSeries.csv"
+  colnames(df) <- c("Year", "Ecoregion", "Species", "ANPP", "ANPP-Std")
+  utils::write.csv(df, file.path(path, csv_file), row.names = FALSE, quote = FALSE)
 
   c(
-    glue::glue("ANPPTimeSeries"),
-    glue::glue(">>  Year  Ecoregion  Species  ANPP       ANPP-std"),
-    glue::glue(">>                            (g/m2/yr)"),
-    glue::glue(">>  ---------------------------------------------"),
-    apply(df, 1, function(x) {
-      glue::glue_collapse(x, sep = "  ")
-    }),
+    glue::glue("ANPPTimeSeries\t\"{csv_file}\""),
     glue::glue("") ## add blank line after each item group
   )
 }
 
 #' Specify `MaxBiomassTimeSeries` for Forest Carbon Succession (ForCS) extension
 #'
-#' @param df data.frame corresponding to `MaxBiomassTimeSeries` table
+#' ForCS v4 reads this table from a CSV file rather than inline in the main
+#' config. This function writes `ForCS_MaxBiomassTimeSeries.csv` to `path` and
+#' returns the keyword + filename reference for inclusion in the main config.
 #'
-#' @returns data.frame
+#' @param df data.frame corresponding to `MaxBiomassTimeSeries` table
+#' @param path Character. Directory where the CSV file will be written.
+#'
+#' @returns Character vector (keyword line for the main config).
 #'
 #' @family ForCS helpers
 #'
 #' @export
-insertMaxBiomassTimeSeries <- function(df) {
+insertMaxBiomassTimeSeries <- function(df, path) {
   stopifnot(ncol(df) == 4L)
+  csv_file <- "ForCS_MaxBiomassTimeSeries.csv"
+  colnames(df) <- c("Year", "Ecoregion", "Species", "MaxBiomass")
+  utils::write.csv(df, file.path(path, csv_file), row.names = FALSE, quote = FALSE)
 
   c(
-    glue::glue("MaxBiomassTimeSeries"),
-    glue::glue(">>  Year  Ecoregion  Species  Max Biomass (g/m2)"),
-    glue::glue(">>  --------------------------------------------"),
-    apply(df, 1, function(x) {
-      glue::glue_collapse(x, sep = "  ")
-    }),
+    glue::glue("MaxBiomassTimeSeries\t\"{csv_file}\""),
     glue::glue("") ## add blank line after each item group
   )
 }
 
 #' Specify `EstablishProbabilities` for Forest Carbon Succession (ForCS) extension
 #'
-#' @param df data.frame corresponding to `EstablishProbabilities` table
+#' ForCS v4 reads this table from a CSV file rather than inline in the main
+#' config. This function writes `ForCS_EstablishProbabilities.csv` to `path` and
+#' returns the keyword + filename reference for inclusion in the main config.
 #'
-#' @returns data.frame
+#' @param df data.frame corresponding to `EstablishProbabilities` table
+#' @param path Character. Directory where the CSV file will be written.
+#'
+#' @returns Character vector (keyword line for the main config).
 #'
 #' @family ForCS helpers
 #'
 #' @export
-insertEstablishProbabilities <- function(df) {
+insertEstablishProbabilities <- function(df, path) {
   stopifnot(ncol(df) == 4L)
+  csv_file <- "ForCS_EstablishProbabilities.csv"
+  colnames(df) <- c("Year", "Ecoregion", "Species", "Probability")
+  utils::write.csv(df, file.path(path, csv_file), row.names = FALSE, quote = FALSE)
 
   c(
-    glue::glue("EstablishProbabilities"),
-    glue::glue(">>  Year  Ecoregion  Species  Probability"),
-    glue::glue(">>  -------------------------------------"),
-    apply(df, 1, function(x) {
-      glue::glue_collapse(x, sep = "  ")
-    }),
+    glue::glue("EstablishProbabilities\t\"{csv_file}\""),
     glue::glue("") ## add blank line after each item group
   )
 }

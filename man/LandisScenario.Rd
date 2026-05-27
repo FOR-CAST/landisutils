@@ -22,6 +22,10 @@ Keeps track of a scenario's files and all its extensions' input files.
   \if{html}{\out{<div class="r6-active-bindings">}}
   \describe{
     \item{\code{reps}}{integer number of replicates created for this scenario}
+
+    \item{\code{output_files}}{Character vector of output files always produced by
+LANDIS-II in the scenario directory, regardless of which extensions are
+active. Collected by \code{\link[=scenario]{scenario()}} when writing \code{output_manifest.txt}.}
   }
   \if{html}{\out{</div>}}
 }

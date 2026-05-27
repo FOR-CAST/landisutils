@@ -294,6 +294,33 @@ testthat::test_that("Forest Carbon Succession (ForCS) inputs are properly create
   testthat::expect_true(any(grepl("^SpinUp", contents)))
   testthat::expect_true(any(grepl("^SpeciesParameters", contents)))
 
+  ## DOMPools: multi-word names must be wrapped in double-quotes (0.0.14)
+  testthat::expect_true(any(grepl('"Very Fast Aboveground"', contents, fixed = TRUE)))
+  testthat::expect_true(any(grepl('"Very Fast Belowground"', contents, fixed = TRUE)))
+  testthat::expect_true(any(grepl('"Fast Aboveground"', contents, fixed = TRUE)))
+  testthat::expect_true(any(grepl('"Stem Snag"', contents, fixed = TRUE)))
+
+  ## ForCS v4 CSV keyword lines reference ForCS_-prefixed files (0.0.14)
+  testthat::expect_true(any(grepl(
+    '^EcoSppDOMParameters\\s+"ForCS_EcoSppDOMParameters\\.csv"',
+    contents
+  )))
+  testthat::expect_true(any(grepl('^ANPPTimeSeries\\s+"ForCS_ANPPTimeSeries\\.csv"', contents)))
+  testthat::expect_true(any(grepl(
+    '^MaxBiomassTimeSeries\\s+"ForCS_MaxBiomassTimeSeries\\.csv"',
+    contents
+  )))
+  testthat::expect_true(any(grepl(
+    '^EstablishProbabilities\\s+"ForCS_EstablishProbabilities\\.csv"',
+    contents
+  )))
+
+  ## ForCS_*.csv files are registered in ext_forcs$files (0.0.14)
+  testthat::expect_true("ForCS_EcoSppDOMParameters.csv" %in% ext_forcs$files)
+  testthat::expect_true("ForCS_ANPPTimeSeries.csv" %in% ext_forcs$files)
+  testthat::expect_true("ForCS_MaxBiomassTimeSeries.csv" %in% ext_forcs$files)
+  testthat::expect_true("ForCS_EstablishProbabilities.csv" %in% ext_forcs$files)
+
   withr::deferred_run()
 })
 

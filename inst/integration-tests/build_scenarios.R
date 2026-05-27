@@ -293,8 +293,18 @@ scenarios <- character(0)
 ## for reproducibility; bump when upstream test fixtures change. The same SHA
 ## is used for both the YAMLs and the test-input tarballs so the registry and
 ## the inputs come from a consistent snapshot of upstream.
+##
+## Docker image extension SHAs:
+##   release: https://github.com/LANDIS-II-Foundation/Tool-Docker-Apptainer/blob/main/extensions-v8-release.yaml
+##   UCLv2:   https://github.com/LANDIS-II-Foundation/Tool-Docker-Apptainer/blob/main/extensions-v8-UCL2-release.yaml
 TDA_REPO <- "LANDIS-II-Foundation/Tool-Docker-Apptainer"
 TDA_REF <- "6a546fbb55f722751f78925089784152378eebb0" ## 2026-04-29
+
+## Pinned to the same commit used in the landis-ii-v8-release Docker image
+## (see extensions-v8-release.yaml above).
+## The ForCS test inputs live in testing/v8 Scenario/ within this repo.
+FORCS_REPO <- "LANDIS-II-Foundation/Extension-ForCS-Succession"
+FORCS_REF <- "b761895100a7b30174dd78523d57cc63c592c887" ## extensions-v8-release.yaml 2026-05
 
 ##' Mapping from upstream extension-repo name (the value of `repo:` in the
 ##' YAMLs) to the package's R6 class name (matching `R6Class()` definitions in
@@ -1558,6 +1568,224 @@ build_necn_scrpple <- function(scen_dir, allowed_classes) {
 }
 
 ## ---------------------------------------------------------------------------
+## Scenario: Forest Carbon Succession (ForCS)
+##
+## Uses the upstream Extension-ForCS-Succession v8 test scenario as reference
+## data. The R6 API regenerates forc-succession.txt and the four ForCS_*.csv
+## files; all other inputs (climate, DM, IC rasters, ecoregions, species) are
+## downloaded from upstream verbatim.
+##
+## The upstream climate file has spaces in its name
+## ("ForCSClimateInputv3.0 no CC.txt"); it is renamed to "ForCS_climate.txt"
+## after download so LANDIS-II's whitespace-tokenising parser doesn't split
+## it across multiple tokens.
+##
+## Skipped on any image that doesn't register ForCS.
+## ---------------------------------------------------------------------------
+
+build_forcs <- function(scen_dir, allowed_classes) {
+  if (!"ForCS" %in% allowed_classes) {
+    return(NULL)
+  }
+
+  download_repo_subtree(FORCS_REPO, FORCS_REF, "testing/v8 Scenario", scen_dir)
+  flatten_path_refs(scen_dir)
+
+  scen_name <- basename(scen_dir)
+  abs <- function(name) file.path(scen_dir, name)
+
+  ## Rename the climate file: it has spaces, which confuse LANDIS-II's parser.
+  old_clim <- abs("ForCSClimateInputv3.0 no CC.txt")
+  new_clim <- abs("ForCS_climate.txt")
+  if (file.exists(old_clim) && !file.exists(new_clim)) {
+    file.rename(old_clim, new_clim)
+  }
+
+  ## Upstream ancillary files used verbatim.
+  clim_file <- new_clim
+  dm_file <- abs("ForCS_DM.txt")
+  snag_path <- abs("ForCS_snags.txt")
+  snag_file <- if (file.exists(snag_path)) snag_path else NULL
+  ic_files <- c(abs("initial-communitiesv3.0generallyold.csv"), abs("initial-communities.gis"))
+
+  ## ---- Parameter tables (values from upstream test scenario) --------------
+  output_tables <- data.frame(Biomass = 1, DOM_Pools = 1, Fluxes = 1, Summary = 1)
+
+  for_cs_map_control <- data.frame(
+    BiomassC = 1,
+    SDOMC = 1,
+    NBP = 1,
+    NEP = 1,
+    NPP = 1,
+    RH = 1,
+    ToFPS = 1
+  )
+
+  spin_up <- data.frame(Flag = 1, BiomassSpinUpFlag = 1, Tolerance = 1.0, MaxIter = 20)
+
+  avail_light_biomass <- data.frame(
+    Class = 1L:5L,
+    eco1 = c(30, 35, 55, 80, 100),
+    eco2 = c(30, 35, 55, 80, 100)
+  )
+
+  light_est <- data.frame(
+    class = 1L:5L,
+    X0 = c(1.0, 0.5, 0.0, 0.0, 0.0),
+    X1 = c(0.0, 1.0, 0.5, 0.0, 0.0),
+    X2 = c(0.0, 0.0, 1.0, 0.5, 0.0),
+    X3 = c(0.0, 0.0, 0.5, 1.0, 0.5),
+    X4 = c(0.0, 0.0, 0.0, 0.0, 1.0),
+    X5 = c(0.0, 0.0, 0.0, 0.0, 0.5)
+  )
+
+  species_params <- tibble::tribble(
+    ~species   , ~leaf_long , ~mort_shp , ~merch_min_age , ~merch_a , ~merch_b , ~prop_non_merch , ~growth_shp , ~shade_tol , ~fire_tol ,
+    "pinubank" , 3.0        ,        10 ,              5 , 0.7546   , 0.983    , 0.25            , 0.9         , 1L         , 2L        ,
+    "querelli" , 1.0        ,        10 ,              5 , 0.7546   , 0.983    , 0.25            , 0.9         , 2L         , 4L
+  )
+
+  dom_pools <- tibble::tribble(
+    ~id , ~name                   , ~prop_to_atmosphere ,
+      1 , "Very Fast Aboveground" , 0.815               ,
+      2 , "Very Fast Belowground" , 0.83                ,
+      3 , "Fast Aboveground"      , 0.83                ,
+      4 , "Fast Belowground"      , 0.83                ,
+      5 , "Medium"                , 0.83                ,
+      6 , "Slow Aboveground"      , 0.83                ,
+      7 , "Slow Belowground"      , 0.83                ,
+      8 , "Stem Snag"             , 0.83                ,
+      9 , "Other Snag"            , 0.83                ,
+     10 , "Extra pool"            , 0.83
+  )
+
+  ecosppdom_pinubank <- tibble::tribble(
+    ~dom_pool , ~decay_rate , ~amt_t0 , ~q10 ,
+            1 , 0.355       ,    1.49 , 2.65 ,
+            2 , 0.5         ,    0.07 , 2    ,
+            3 , 0.1435      ,  158.48 , 2    ,
+            4 , 0.0374      ,  288.71 , 2    ,
+            5 , 0.015       , 1349.40 , 2    ,
+            6 , 0.0033      , 1927.71 , 2    ,
+            7 , 0.0187      ,  851.21 , 2    ,
+            8 , 0.07175     ,  314.88 , 2    ,
+            9 , 0.07        ,   45.53 , 2    ,
+           10 , 0           ,    0.00 , 2
+  )
+  ecosppdom_querelli <- tibble::tribble(
+    ~dom_pool , ~decay_rate , ~amt_t0 , ~q10 ,
+            1 , 0.355       ,    0.34 , 2.65 ,
+            2 , 0.5         ,    0.02 , 2    ,
+            3 , 0.1435      ,    5.15 , 2    ,
+            4 , 0.0374      ,  143.23 , 2    ,
+            5 , 0.015       , 2476.27 , 2    ,
+            6 , 0.0033      , 4075.40 , 2    ,
+            7 , 0.0187      , 2339.42 , 2    ,
+            8 , 0.07175     ,    7.45 , 2    ,
+            9 , 0.07        ,    1.97 , 2    ,
+           10 , 0           ,    0.00 , 2
+  )
+  ecosppdom_params <- dplyr::bind_rows(
+    dplyr::mutate(ecosppdom_pinubank, ecoregion = "eco1", species = "pinubank"),
+    dplyr::mutate(ecosppdom_pinubank, ecoregion = "eco2", species = "pinubank"),
+    dplyr::mutate(ecosppdom_querelli, ecoregion = "eco1", species = "querelli"),
+    dplyr::mutate(ecosppdom_querelli, ecoregion = "eco2", species = "querelli")
+  ) |>
+    dplyr::select(ecoregion, species, dom_pool, decay_rate, amt_t0, q10)
+
+  forcs_props <- data.frame(
+    BiomassFine = 0.5,
+    BiomassCoarse = 0.5,
+    AnnualSlowAGtoSlowBG = 0.006,
+    AnnualStemSnagToMedium = 0.032,
+    AnnualBranchSnagToFastAG = 0.1
+  )
+
+  anpp_timeseries <- tibble::tribble(
+    ~year , ~ecoregion , ~species   , ~anpp , ~anpp_std ,
+        0 , "eco1"     , "pinubank" ,   648 , 0.1       ,
+        0 , "eco1"     , "querelli" ,  1415 , 0.1       ,
+        0 , "eco2"     , "pinubank" ,   648 , 0.1       ,
+        0 , "eco2"     , "querelli" ,  1415 , 0.1
+  )
+
+  maxb_timeseries <- tibble::tribble(
+    ~year , ~ecoregion , ~species   , ~maxb ,
+        0 , "eco1"     , "pinubank" , 15000 ,
+        0 , "eco1"     , "querelli" , 25000 ,
+        0 , "eco2"     , "pinubank" , 15000 ,
+        0 , "eco2"     , "querelli" , 25000
+  )
+
+  est_prob <- tibble::tribble(
+    ~year , ~ecoregion , ~species   , ~probability ,
+        0 , "eco1"     , "pinubank" , 0.25         ,
+        0 , "eco1"     , "querelli" , 0.25         ,
+        0 , "eco2"     , "pinubank" , 0.25         ,
+        0 , "eco2"     , "querelli" , 0.25         ,
+        5 , "eco1"     , "pinubank" , 0.25         ,
+        5 , "eco1"     , "querelli" , 0.25         ,
+        5 , "eco2"     , "pinubank" , 0.25         ,
+        5 , "eco2"     , "querelli" , 0.25
+  )
+
+  root_dynamics <- tibble::tribble(
+    ~ecoregion , ~species   , ~min_abio , ~root_abio , ~prop_fine_rt , ~fr_turnover , ~cr_turnover ,
+    "eco1"     , "pinubank" ,         0 , 0.399      , 0.18          , 0.6          , 0.02         ,
+    "eco1"     , "querelli" ,         0 , 0.403      , 0.18          , 1            , 0.02         ,
+    "eco2"     , "pinubank" ,         0 , 0.399      , 0.18          , 0.6          , 0.02         ,
+    "eco2"     , "querelli" ,         0 , 0.403      , 0.18          , 1            , 0.02
+  )
+
+  ## ---- Build and write ForCS config ---------------------------------------
+  ext_forcs <- ForCS$new(
+    path = scen_dir,
+    Timestep = 1L,
+    SeedingAlgorithm = "WardSeedDispersal",
+    ForCSClimateFile = clim_file,
+    InitialCommunitiesFiles = ic_files,
+    DisturbanceMatrixFile = dm_file,
+    SnagFile = snag_file,
+    OutputTables = output_tables,
+    ForCSMapControl = for_cs_map_control,
+    MapOutputInterval = 10L,
+    SpinUp = spin_up,
+    AvailableLightBiomass = avail_light_biomass,
+    LightEstablishmentTable = light_est,
+    SpeciesParameters = species_params,
+    DOMPools = dom_pools,
+    EcoSppDOMParameters = ecosppdom_params,
+    ForCSProportions = forcs_props,
+    ANPPTimeSeries = anpp_timeseries,
+    MaxBiomassTimeSeries = maxb_timeseries,
+    EstablishProbabilities = est_prob,
+    RootDynamics = root_dynamics
+  )
+  ext_forcs$write()
+
+  ## ForCS manages climate via ForCSClimateFile; no top-level climate library.
+  climate_cfg <- LandisClimateConfig$new(path = scen_dir)
+
+  scen <- scenario(
+    name = scen_name,
+    extensions = list(ext_forcs),
+    climate_config = climate_cfg,
+    path = scen_dir,
+    CellLength = 100,
+    DisturbancesRandomOrder = FALSE,
+    Duration = 100,
+    EcoregionsFiles = c(
+      file.path(scen_dir, "ecoregions.txt"),
+      file.path(scen_dir, "ecoregions.gis")
+    ),
+    RandomNumberSeed = 4357,
+    SpeciesInputFile = file.path(scen_dir, "species.txt")
+  )
+
+  scen_dir
+}
+
+## ---------------------------------------------------------------------------
 ## Drive the per-image build for the AllExtension scenarios.
 ## ---------------------------------------------------------------------------
 
@@ -1566,7 +1794,8 @@ for (image_id in names(IMAGES)) {
   for (sb in list(
     list(name = "necn_all_extension", builder = build_necn_all_extension),
     list(name = "pnet_all_extension", builder = build_pnet_all_extension),
-    list(name = "necn_scrpple", builder = build_necn_scrpple)
+    list(name = "necn_scrpple", builder = build_necn_scrpple),
+    list(name = "forcs", builder = build_forcs)
   )) {
     p <- build_one(sb$name, image_id, image_info, sb$builder, out_dir)
     if (!is.null(p)) scenarios <- c(scenarios, p)

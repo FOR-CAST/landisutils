@@ -4,16 +4,20 @@
 \alias{insertMaxBiomassTimeSeries}
 \title{Specify \code{MaxBiomassTimeSeries} for Forest Carbon Succession (ForCS) extension}
 \usage{
-insertMaxBiomassTimeSeries(df)
+insertMaxBiomassTimeSeries(df, path)
 }
 \arguments{
 \item{df}{data.frame corresponding to \code{MaxBiomassTimeSeries} table}
+
+\item{path}{Character. Directory where the CSV file will be written.}
 }
 \value{
-data.frame
+Character vector (keyword line for the main config).
 }
 \description{
-Specify \code{MaxBiomassTimeSeries} for Forest Carbon Succession (ForCS) extension
+ForCS v4 reads this table from a CSV file rather than inline in the main
+config. This function writes \code{ForCS_MaxBiomassTimeSeries.csv} to \code{path} and
+returns the keyword + filename reference for inclusion in the main config.
 }
 \seealso{
 Other ForCS helpers:

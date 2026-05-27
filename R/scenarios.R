@@ -119,6 +119,17 @@ scenario <- function(name = NULL, extensions = NULL, climate_config = NULL, path
   scenario$add_file(dots$SpeciesInputFile)
   scenario$add_file(scenario$list_files(full.names = FALSE)) ## extensions' files
 
+  ## Write output_manifest.txt listing all fixed-name run-time output files.
+  ## Map files with timestep-dependent names (e.g. BiomassC-10.tif) are NOT
+  ## included here; tar_landis() discovers them via output_dir scan instead.
+  all_output_files <- unique(c(
+    scenario$output_files,
+    lapply(extensions, function(ext) ext$output_files) |> unlist()
+  ))
+  manifest <- file.path(path, "output_manifest.txt")
+  writeLines(all_output_files, manifest)
+  scenario$add_file("output_manifest.txt")
+
   return(scenario)
 }
 

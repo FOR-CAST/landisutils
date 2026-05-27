@@ -86,6 +86,11 @@ One of \code{"WardSeedDispersal"}, \code{"NoDispersal"}, \code{"UniversalDispers
     \item{\code{EstablishProbabilities}}{\code{data.frame}.}
 
     \item{\code{RootDynamics}}{\code{data.frame}.}
+
+    \item{\code{output_files}}{Character vector of ForCS-specific log CSV files
+produced at run time, relative to the scenario directory (root level).
+These fixed names are written by the ForCS extension regardless of
+scenario configuration. See \link{LandisExtension} for the contract.}
   }
   \if{html}{\out{</div>}}
 }

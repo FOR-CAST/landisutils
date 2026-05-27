@@ -33,6 +33,17 @@ Use Plus). Read-only.}
 
     \item{\code{type}}{character specifying the extension type
 (must be one of: succession, disturbance, other)}
+
+    \item{\code{output_files}}{Character vector of output files (relative paths from
+the scenario directory) that this extension is expected to produce at
+run time. Subclasses override this to return their extension-specific
+log files, event CSVs, etc. These paths are collected by \code{\link[=scenario]{scenario()}}
+and written to \code{output_manifest.txt} so \code{\link[=tar_landis]{tar_landis()}} can track them
+explicitly without relying on \code{\link[=list.files]{list.files()}} discovery.
+
+Map files whose names depend on the timestep (e.g. \verb{BiomassC-10.tif})
+are NOT included here; they are discovered by \code{\link[=tar_landis]{tar_landis()}}'s
+\code{output_dir} scan instead.}
   }
   \if{html}{\out{</div>}}
 }

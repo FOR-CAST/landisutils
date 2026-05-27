@@ -203,6 +203,13 @@ OriginalFire <- R6Class(
       } else {
         private$.SummaryLogFile <- .relPath(value, self$path)
       }
+    },
+
+    output_files = function(value) {
+      if (!missing(value)) {
+        stop("`output_files` is read-only", call. = FALSE)
+      }
+      c(self$LogFile, self$SummaryLogFile)
     }
   )
 )

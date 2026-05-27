@@ -53,6 +53,7 @@ Modelling
 NECN
 NRD
 ORCID
+PID
 PROJ
 Pasteris
 Physiographically
@@ -91,7 +92,6 @@ filesystem
 formatter
 github
 gridded
-initialises
 labelled
 lon
 metres
@@ -100,11 +100,13 @@ modelling
 namespaced
 orchestrator
 parallelizing
+parser's
 ramorum
 reclass
 replicate's
 stderr
 subclass's
+subprocess
 summarised
 summarises
 summarising
