@@ -48,17 +48,20 @@ conifer <- function(cx, base, height, width, grp) {
   )
   foliage_base <- base + trunk_h
   foliage_h <- height - trunk_h
-  tiers_df <- do.call(rbind, lapply(seq_len(tiers), function(i) {
-    y0 <- foliage_base + (i - 1) * foliage_h / tiers * 0.85
-    y1 <- y0 + foliage_h / tiers
-    w <- width * (1 - (i - 1) / tiers * 0.55)
-    data.frame(
-      x = cx + c(-w / 2, w / 2, 0),
-      y = c(y0, y0, y1),
-      grp = paste0(grp, "_tier", i),
-      fill = "tree"
-    )
-  }))
+  tiers_df <- do.call(
+    rbind,
+    lapply(seq_len(tiers), function(i) {
+      y0 <- foliage_base + (i - 1) * foliage_h / tiers * 0.85
+      y1 <- y0 + foliage_h / tiers
+      w <- width * (1 - (i - 1) / tiers * 0.55)
+      data.frame(
+        x = cx + c(-w / 2, w / 2, 0),
+        y = c(y0, y0, y1),
+        grp = paste0(grp, "_tier", i),
+        fill = "tree"
+      )
+    })
+  )
   rbind(trunk, tiers_df)
 }
 
@@ -69,8 +72,7 @@ cells <- expand.grid(x = seq_len(nx), y = seq_len(ny))
 # smooth "biomass" field -> green succession gradient
 cells$z <- with(
   cells,
-  sin(x / 2.2) + cos(y / 2.6) + 0.45 * sin((x + y) / 3) +
-    runif(nrow(cells), -0.25, 0.25)
+  sin(x / 2.2) + cos(y / 2.6) + 0.45 * sin((x + y) / 3) + runif(nrow(cells), -0.25, 0.25)
 )
 # a small "disturbance" (recently burned) patch in the upper area
 burn <- with(cells, x %in% 7:9 & y %in% 6:7)
@@ -86,23 +88,14 @@ tree_cols <- c(tree = col_tree, trunk = "#3b2a17")
 
 ## --- subplot ---------------------------------------------------------------
 p <- ggplot() +
-  geom_tile(
-    data = cells,
-    aes(x = x, y = y, fill = z),
-    color = col_grid,
-    linewidth = 0.25
-  ) +
+  geom_tile(data = cells, aes(x = x, y = y, fill = z), color = col_grid, linewidth = 0.25) +
   scale_fill_gradientn(
     colours = c("#3a1f10", "#5a4a1e", "#2f6b2f", "#3f8f3f", "#6fbf5f"),
     guide = "none"
   ) +
   # conifer silhouettes (drawn larger than the grid so they read at small size)
   lapply(split(trees, trees$grp), function(d) {
-    geom_polygon(
-      data = d,
-      aes(x = x * (nx / 11), y = y * 0.95),
-      fill = tree_cols[[d$fill[1]]]
-    )
+    geom_polygon(data = d, aes(x = x * (nx / 11), y = y * 0.95), fill = tree_cols[[d$fill[1]]])
   }) +
   coord_fixed(ratio = ny / nx, expand = FALSE) +
   theme_void() +
@@ -132,6 +125,8 @@ sticker(
 
 # hexSticker/ggsave can open the default graphics device and leave an empty
 # "Rplots.pdf" behind when run non-interactively; clean it up.
-if (file.exists("Rplots.pdf")) unlink("Rplots.pdf")
+if (file.exists("Rplots.pdf")) {
+  unlink("Rplots.pdf")
+}
 
 message("Wrote ", out)
