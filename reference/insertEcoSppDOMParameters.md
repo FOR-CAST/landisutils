@@ -1,12 +1,14 @@
 # Specify `EcoSppDOMParameters` for Forest Carbon Succession (ForCS) extension
 
-Specify `EcoSppDOMParameters` for Forest Carbon Succession (ForCS)
-extension
+ForCS v4 reads this table from a CSV file rather than inline in the main
+config. This function writes `ForCS_EcoSppDOMParameters.csv` to `path`
+and returns the keyword + filename reference for inclusion in the main
+config.
 
 ## Usage
 
 ``` r
-insertEcoSppDOMParameters(df)
+insertEcoSppDOMParameters(df, path)
 ```
 
 ## Arguments
@@ -15,9 +17,13 @@ insertEcoSppDOMParameters(df)
 
   data.frame corresponding to `EcoSppDOMParameters` table
 
+- path:
+
+  Character. Directory where the CSV file will be written.
+
 ## Value
 
-data.frame
+Character vector (keyword line for the main config).
 
 ## See also
 

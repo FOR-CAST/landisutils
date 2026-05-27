@@ -2,7 +2,11 @@
 
 Runs LANDIS-II directly via `dotnet`, blocking until the simulation
 completes. Stdout and stderr are written to
-`<scenario_dir>/log/local_stdout.log` and `local_stderr.log`.
+`<scenario_dir>/log/local_stdout.log` and `local_stderr.log`. Wall-clock
+elapsed time and peak memory use (polled every 2 s via the `ps` package)
+are reported on completion and written to
+`<scenario_dir>/log/local_resources.log`. Works on Linux, macOS, and
+Windows.
 
 ## Usage
 
@@ -30,7 +34,8 @@ landis_run_local(scenario_dir, scenario_file = "scenario.txt", console = NULL)
 
 ## Value
 
-Integer exit code, invisibly.
+Named list with `exit_code` (integer), `elapsed_sec` (numeric), and
+`peak_mem_bytes` (numeric), returned invisibly.
 
 ## See also
 

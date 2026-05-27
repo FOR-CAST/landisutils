@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.13</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.14</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -137,6 +137,18 @@
 
     <dt><code>WindReductionTableCSV</code></dt>
 <dd><p>Character. Relative path.</p></dd>
+
+
+    <dt><code>output_files</code></dt>
+<dd><p>Character vector of output files (relative paths from
+the scenario directory) that this extension is expected to produce at
+run time. Subclasses override this to return their extension-specific
+log files, event CSVs, etc. These paths are collected by <code><a href="scenario.html">scenario()</a></code>
+and written to <code>output_manifest.txt</code> so <code><a href="tar_landis.html">tar_landis()</a></code> can track them
+explicitly without relying on <code><a href="https://rdrr.io/r/base/list.files.html" class="external-link">list.files()</a></code> discovery.</p>
+<p>Map files whose names depend on the timestep (e.g. <code>BiomassC-10.tif</code>)
+are NOT included here; they are discovered by <code><a href="tar_landis.html">tar_landis()</a></code>'s
+<code>output_dir</code> scan instead.</p></dd>
 
 
 </dl><p></p></div>

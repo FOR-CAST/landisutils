@@ -1,8 +1,8 @@
 # Create a `targets` target that runs LANDIS-II
 
 A `{targets}` factory that creates one `format = "file"` target per
-scenario (via dynamic branching). The target runs LANDIS-II — locally or
-inside a Docker container depending on `method` — and returns a
+scenario (via dynamic branching). The target runs LANDIS-II – locally or
+inside a Docker container depending on `method` – and returns a
 character vector of tracked output and log files.
 
 ## Usage
@@ -49,7 +49,7 @@ tar_landis(
   [`list()`](https://rdrr.io/r/base/list.html) of upstream target
   symbols that must complete before the simulation runs, e.g.
   `list(landis_scenario_file, landis_ext_forcs_file)`. Values are not
-  used directly — they are embedded in the command so `{targets}`
+  used directly – they are embedded in the command so `{targets}`
   detects them as upstream dependencies.
 
 - scenario_file:
@@ -86,7 +86,7 @@ tar_landis(
 - n_reps:
 
   Integer. Number of replicate runs per scenario. Each replicate is
-  placed in `<scenario_dir>/rep01`, `/rep02`, … (subdirectories of the
+  placed in `<scenario_dir>/rep01`, `/rep02`, ... (subdirectories of the
   base scenario directory) so input files can be shared. LANDIS runs
   independently in each replicate directory. Output files from all
   replicates are returned as a single character vector. Defaults to

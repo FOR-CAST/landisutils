@@ -68,6 +68,23 @@ Other Original Fire helpers:
 
   Character. Relative file path.
 
+- `output_files`:
+
+  Character vector of output files (relative paths from the scenario
+  directory) that this extension is expected to produce at run time.
+  Subclasses override this to return their extension-specific log files,
+  event CSVs, etc. These paths are collected by
+  [`scenario()`](https://for-cast.github.io/landisutils/reference/scenario.md)
+  and written to `output_manifest.txt` so
+  [`tar_landis()`](https://for-cast.github.io/landisutils/reference/tar_landis.md)
+  can track them explicitly without relying on
+  [`list.files()`](https://rdrr.io/r/base/list.files.html) discovery.
+
+  Map files whose names depend on the timestep (e.g. `BiomassC-10.tif`)
+  are NOT included here; they are discovered by
+  [`tar_landis()`](https://for-cast.github.io/landisutils/reference/tar_landis.md)'s
+  `output_dir` scan instead.
+
 ## Methods
 
 ### Public methods

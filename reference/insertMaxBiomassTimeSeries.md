@@ -1,12 +1,14 @@
 # Specify `MaxBiomassTimeSeries` for Forest Carbon Succession (ForCS) extension
 
-Specify `MaxBiomassTimeSeries` for Forest Carbon Succession (ForCS)
-extension
+ForCS v4 reads this table from a CSV file rather than inline in the main
+config. This function writes `ForCS_MaxBiomassTimeSeries.csv` to `path`
+and returns the keyword + filename reference for inclusion in the main
+config.
 
 ## Usage
 
 ``` r
-insertMaxBiomassTimeSeries(df)
+insertMaxBiomassTimeSeries(df, path)
 ```
 
 ## Arguments
@@ -15,9 +17,13 @@ insertMaxBiomassTimeSeries(df)
 
   data.frame corresponding to `MaxBiomassTimeSeries` table
 
+- path:
+
+  Character. Directory where the CSV file will be written.
+
 ## Value
 
-data.frame
+Character vector (keyword line for the main config).
 
 ## See also
 

@@ -119,6 +119,15 @@ Other ForCS helpers:
 
   `data.frame`.
 
+- `output_files`:
+
+  Character vector of ForCS-specific log CSV files produced at run time,
+  relative to the scenario directory (root level). These fixed names are
+  written by the ForCS extension regardless of scenario configuration.
+  See
+  [LandisExtension](https://for-cast.github.io/landisutils/reference/LandisExtension.md)
+  for the contract.
+
 ## Methods
 
 ### Public methods

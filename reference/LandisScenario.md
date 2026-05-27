@@ -23,6 +23,14 @@ Keeps track of a scenario's files and all its extensions' input files.
 
   integer number of replicates created for this scenario
 
+- `output_files`:
+
+  Character vector of output files always produced by LANDIS-II in the
+  scenario directory, regardless of which extensions are active.
+  Collected by
+  [`scenario()`](https://for-cast.github.io/landisutils/reference/scenario.md)
+  when writing `output_manifest.txt`.
+
 ## Methods
 
 ### Public methods
