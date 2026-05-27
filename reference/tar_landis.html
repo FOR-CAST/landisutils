@@ -13,7 +13,7 @@ vector of tracked output and log files.'><meta property="og:image" content="http
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.12</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.13</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -105,8 +105,11 @@ as upstream dependencies.</p></dd>
 
 
 <dt id="arg-output-dir">output_dir<a class="anchor" aria-label="anchor" href="#arg-output-dir"></a></dt>
-<dd><p>Character. Output subdirectory inside <code>scenario_dir</code>;
-all files found there (recursively) are returned as tracked outputs.</p></dd>
+<dd><p>Character vector. Output subdirectory (or subdirectories)
+inside <code>scenario_dir</code>; all files found there (recursively) are returned as
+tracked outputs. Defaults to <code>"output"</code>. Pass <code>c("output", "fire")</code> when
+using the Dynamic Fire extension, which writes its maps and logs to a
+<code>fire/</code> subdirectory.</p></dd>
 
 
 <dt id="arg-method">method<a class="anchor" aria-label="anchor" href="#arg-method"></a></dt>

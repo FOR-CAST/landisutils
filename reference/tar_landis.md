@@ -58,8 +58,11 @@ tar_landis(
 
 - output_dir:
 
-  Character. Output subdirectory inside `scenario_dir`; all files found
-  there (recursively) are returned as tracked outputs.
+  Character vector. Output subdirectory (or subdirectories) inside
+  `scenario_dir`; all files found there (recursively) are returned as
+  tracked outputs. Defaults to `"output"`. Pass `c("output", "fire")`
+  when using the Dynamic Fire extension, which writes its maps and logs
+  to a `fire/` subdirectory.
 
 - method:
 

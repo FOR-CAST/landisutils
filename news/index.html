@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.12</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.13</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -39,6 +39,13 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.13" id="landisutils-0013">landisutils 0.0.13<a class="anchor" aria-label="anchor" href="#landisutils-0013"></a></h2>
+<ul><li>
+<code>DynamicFire$write()</code> now calls <code>add_file()</code> for <code>InitialWeatherDatabase</code> so it is copied into replicate directories by <code><a href="../reference/landis_replicate.html">landis_replicate()</a></code>. Previously the weather CSV was silently absent, causing LANDIS-II to fail at runtime.</li>
+<li>
+<code><a href="../reference/tar_landis.html">tar_landis()</a></code> <code>output_dir</code> now accepts a character vector of output subdirectory names. Pass <code>c("output", "fire")</code> when using the Dynamic Fire extension, which writes its maps and event/summary logs to a <code>fire/</code> subdirectory inside the scenario directory.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.12" id="landisutils-0012">landisutils 0.0.12<a class="anchor" aria-label="anchor" href="#landisutils-0012"></a></h2>
 <ul><li>

@@ -1,7 +1,7 @@
 # Find the LANDIS-II console path inside a Docker container
 
 Returns the path to `Landis.Console.dll` **inside the container**. Reads
-`getOption("landisutils.docker.console")`, which `.onLoad()` initialises
+`getOption("landisutils.docker.console")`, which `.onLoad()` initializes
 to the standard path used by the official LANDIS-II v8 Docker images.
 Override the option in `_local.R` when using a non-standard image
 layout.

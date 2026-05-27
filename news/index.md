@@ -1,5 +1,18 @@
 # Changelog
 
+## landisutils 0.0.13
+
+- `DynamicFire$write()` now calls `add_file()` for
+  `InitialWeatherDatabase` so it is copied into replicate directories by
+  [`landis_replicate()`](https://for-cast.github.io/landisutils/reference/landis_replicate.md).
+  Previously the weather CSV was silently absent, causing LANDIS-II to
+  fail at runtime.
+- [`tar_landis()`](https://for-cast.github.io/landisutils/reference/tar_landis.md)
+  `output_dir` now accepts a character vector of output subdirectory
+  names. Pass `c("output", "fire")` when using the Dynamic Fire
+  extension, which writes its maps and event/summary logs to a `fire/`
+  subdirectory inside the scenario directory.
+
 ## landisutils 0.0.12
 
 - [`insertFile()`](https://for-cast.github.io/landisutils/reference/insertFile.md),
