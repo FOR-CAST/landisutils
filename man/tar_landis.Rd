@@ -41,8 +41,11 @@ as upstream dependencies.}
 
 \item{scenario_file}{Character. Scenario filename inside \code{scenario_dir}.}
 
-\item{output_dir}{Character. Output subdirectory inside \code{scenario_dir};
-all files found there (recursively) are returned as tracked outputs.}
+\item{output_dir}{Character vector. Output subdirectory (or subdirectories)
+inside \code{scenario_dir}; all files found there (recursively) are returned as
+tracked outputs. Defaults to \code{"output"}. Pass \code{c("output", "fire")} when
+using the Dynamic Fire extension, which writes its maps and logs to a
+\verb{fire/} subdirectory.}
 
 \item{method}{Character or \code{NULL}. \code{"docker"} to run in Docker,
 \code{"local"} to run via a local \code{dotnet} installation. \code{NULL} (default)

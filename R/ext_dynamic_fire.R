@@ -147,6 +147,7 @@ DynamicFire <- R6Class(
       if (!is.null(self$UphillSlopeAzimuthMap)) {
         self$add_file(self$UphillSlopeAzimuthMap)
       }
+      self$add_file(self$InitialWeatherDatabase)
 
       return(invisible(self))
     }

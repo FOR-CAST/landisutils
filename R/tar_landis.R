@@ -163,8 +163,11 @@ landis_run_docker <- function(
 #'   directly — they are embedded in the command so `{targets}` detects them
 #'   as upstream dependencies.
 #' @param scenario_file Character. Scenario filename inside `scenario_dir`.
-#' @param output_dir Character. Output subdirectory inside `scenario_dir`;
-#'   all files found there (recursively) are returned as tracked outputs.
+#' @param output_dir Character vector. Output subdirectory (or subdirectories)
+#'   inside `scenario_dir`; all files found there (recursively) are returned as
+#'   tracked outputs. Defaults to `"output"`. Pass `c("output", "fire")` when
+#'   using the Dynamic Fire extension, which writes its maps and logs to a
+#'   `fire/` subdirectory.
 #' @param method Character or `NULL`. `"docker"` to run in Docker,
 #'   `"local"` to run via a local `dotnet` installation. `NULL` (default)
 #'   reads `getOption("landisutils.run.method")`, which itself defaults to
@@ -236,6 +239,7 @@ tar_landis <- function(
   ## into the command. crew workers don't inherit R session state.
   n_reps_val <- as.integer(n_reps)
   base_seed_val <- if (is.null(base_seed)) NULL else as.integer(base_seed)
+  output_dirs_val <- as.character(output_dir)
 
   ## Resolve method, image at factory-call time so the values are baked into
   ## the command expression. crew workers don't inherit R session options, so
@@ -286,7 +290,7 @@ tar_landis <- function(
       unlist(lapply(.rep_dirs, function(.rd) {
         c(
           list.files(file.path(.rd, "log"), full.names = TRUE),
-          list.files(file.path(.rd, .(output_dir)), full.names = TRUE, recursive = TRUE)
+          list.files(file.path(.rd, .(output_dirs_val)), full.names = TRUE, recursive = TRUE)
         )
       }))
     })
@@ -311,7 +315,7 @@ tar_landis <- function(
       unlist(lapply(.rep_dirs, function(.rd) {
         c(
           list.files(file.path(.rd, "log"), full.names = TRUE),
-          list.files(file.path(.rd, .(output_dir)), full.names = TRUE, recursive = TRUE)
+          list.files(file.path(.rd, .(output_dirs_val)), full.names = TRUE, recursive = TRUE)
         )
       }))
     })

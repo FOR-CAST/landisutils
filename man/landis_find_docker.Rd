@@ -11,7 +11,7 @@ Character. Path to \code{Landis.Console.dll} inside the container.
 }
 \description{
 Returns the path to \code{Landis.Console.dll} \strong{inside the container}.
-Reads \code{getOption("landisutils.docker.console")}, which \code{.onLoad()} initialises
+Reads \code{getOption("landisutils.docker.console")}, which \code{.onLoad()} initializes
 to the standard path used by the official LANDIS-II v8 Docker images.
 Override the option in \verb{_local.R} when using a non-standard image layout.
 }

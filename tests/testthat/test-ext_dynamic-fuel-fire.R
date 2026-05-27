@@ -64,6 +64,7 @@ testthat::test_that("Dynamic Fuel & Fire inputs are properly created", {
   ext_dyn_fire$write()
 
   testthat::expect_true(all(file.exists(file.path(tmp_pth, ext_dyn_fire$files))))
+  testthat::expect_contains(ext_dyn_fire$files, basename(iwdb_file))
 
   ## NOTE: all sample values from Dynamic Fuels v4.0 test files (for LANDIS-II v8)
   ## <https://github.com/LANDIS-II-Foundation/Extension-Dynamic-Fire-System/blob/master/testings/Core8-DynamicFire4.0/dynamic-fire_SetUpFuel.txt>

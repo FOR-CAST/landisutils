@@ -6,6 +6,8 @@
 \alias{landisutils-package}
 \title{landisutils: Utilities for running LANDIS-II simulations}
 \description{
+\if{html}{\figure{logo.png}{options: style='float: right' alt='logo' width='120'}}
+
 Tools and utilities for preparing data for and running 'LANDIS-II' simulations, and post-processing their outputs.
 }
 \seealso{
