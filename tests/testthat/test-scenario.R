@@ -97,7 +97,10 @@ testthat::test_that("scenario() writes scenario.txt and returns a LandisScenario
   scen <- .scenario_call("test_scenario", list(fix$ext), fix$cc, tmp_pth)
 
   testthat::expect_true(is(scen, "LandisScenario"))
-  testthat::expect_equal(as.character(scen$path), as.character(tmp_pth))
+  testthat::expect_equal(
+    normalizePath(as.character(scen$path), mustWork = FALSE),
+    normalizePath(as.character(tmp_pth), mustWork = FALSE)
+  )
   testthat::expect_true(all(file.exists(file.path(scen$path, scen$files))))
 })
 
