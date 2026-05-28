@@ -200,7 +200,15 @@ landis_run_docker <- function(
   }
 
   ## Unique name so docker stats can identify this specific container during the run.
-  container_name <- paste0("landis-run-", format(Sys.time(), "%Y%m%d%H%M%S"))
+  ## Include PID and a random suffix to prevent collisions when multiple reps run simultaneously.
+  container_name <- paste0(
+    "landis-run-",
+    format(Sys.time(), "%Y%m%d%H%M%S"),
+    "-",
+    Sys.getpid(),
+    "-",
+    sample.int(.Machine$integer.max, 1L)
+  )
 
   message(glue::glue("Starting LANDIS-II Docker run ({Sys.time()})"))
   message(glue::glue("  scenario_dir:  {scenario_dir}"))
@@ -414,6 +422,23 @@ tar_landis <- function(
       ## pass the dep file values as the explicit copy list so only tracked
       ## input files (+ their GDAL sidecars) are placed in each replicate dir
       .dep_files <- Filter(is.character, .deps) |> unlist()
+      ## targets may pass aggregate (all-branch) values for format="file" targets
+      ## when branch hashes diverge after a dependency is recomputed.  Normalize
+      ## to absolute paths first so that relative + absolute representations of
+      ## the same file are caught by unique(), then deduplicate by basename,
+      ## preferring files under .sd so the correct scenario-specific file always
+      ## wins over a cross-scenario duplicate.
+      .dep_files <- .dep_files |> fs::path_abs() |> unique()
+      .dep_files <- .dep_files[fs::file_exists(.dep_files)]
+      ## Append "/" so startsWith() matches only files *under* .sd, not files
+      ## under a sibling directory whose name begins with the same string
+      ## (e.g. phase_2_ICH_fire/ must not match prefix phase_2_ICH/).
+      .sd_real <- paste0(fs::path_real(.sd), "/")
+      .dep_files <- c(
+        .dep_files[startsWith(.dep_files, .sd_real)],
+        .dep_files[!startsWith(.dep_files, .sd_real)]
+      )
+      .dep_files <- .dep_files[!duplicated(basename(.dep_files))]
       .rep_dirs <- landisutils::landis_replicate(
         .sd,
         .(n_reps_val),
@@ -421,12 +446,20 @@ tar_landis <- function(
         base_seed = .(base_seed_val)
       )
       for (.rd in .rep_dirs) {
-        landisutils::landis_run_docker(
-          scenario_dir = .rd,
-          scenario_file = .(scenario_file),
-          image = .(image),
-          console = .(console)
-        )
+        ## Skip reps where LANDIS already completed (idempotency).  Check
+        ## Landis-log.txt (written by every run mode) for the terminal message
+        ## rather than docker_resources.log (written even on failure).
+        .landis_log <- file.path(.rd, "Landis-log.txt")
+        .already_done <- file.exists(.landis_log) &&
+          any(grepl("Model run is complete", readLines(.landis_log, warn = FALSE)))
+        if (!.already_done) {
+          landisutils::landis_run_docker(
+            scenario_dir = .rd,
+            scenario_file = .(scenario_file),
+            image = .(image),
+            console = .(console)
+          )
+        }
       }
       .manifest <- file.path(.sd, "output_manifest.txt")
       .manifest_entries <- if (file.exists(.manifest)) readLines(.manifest) else character(0)
@@ -443,6 +476,14 @@ tar_landis <- function(
       .deps <- .(deps_expr)
       .sd <- as.character(.(scenario_dir_expr))
       .dep_files <- Filter(is.character, .deps) |> unlist()
+      .dep_files <- .dep_files |> fs::path_abs() |> unique()
+      .dep_files <- .dep_files[fs::file_exists(.dep_files)]
+      .sd_real <- paste0(fs::path_real(.sd), "/")
+      .dep_files <- c(
+        .dep_files[startsWith(.dep_files, .sd_real)],
+        .dep_files[!startsWith(.dep_files, .sd_real)]
+      )
+      .dep_files <- .dep_files[!duplicated(basename(.dep_files))]
       .rep_dirs <- landisutils::landis_replicate(
         .sd,
         .(n_reps_val),
@@ -450,11 +491,16 @@ tar_landis <- function(
         base_seed = .(base_seed_val)
       )
       for (.rd in .rep_dirs) {
-        landisutils::landis_run_local(
-          scenario_dir = .rd,
-          scenario_file = .(scenario_file),
-          console = .(console)
-        )
+        .landis_log <- file.path(.rd, "Landis-log.txt")
+        .already_done <- file.exists(.landis_log) &&
+          any(grepl("Model run is complete", readLines(.landis_log, warn = FALSE)))
+        if (!.already_done) {
+          landisutils::landis_run_local(
+            scenario_dir = .rd,
+            scenario_file = .(scenario_file),
+            console = .(console)
+          )
+        }
       }
       .manifest <- file.path(.sd, "output_manifest.txt")
       .manifest_entries <- if (file.exists(.manifest)) readLines(.manifest) else character(0)

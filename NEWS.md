@@ -1,3 +1,20 @@
+# landisutils 0.0.15
+
+## `tar_landis()` / `landis_run_docker()` fixes
+
+* `landis_run_docker()`: container names now include the calling process PID and
+  a random integer suffix to prevent name collisions when multiple LANDIS
+  replicates run simultaneously.
+* `tar_landis()`: dependency file lists are now deduplicated before being passed
+  to `landis_replicate()`. Paths are normalised to absolute form, filtered to
+  existing files, then deduplicated by basename; scenario-specific files
+  (under the scenario directory) take priority over cross-scenario duplicates.
+  Applies to both the Docker and local run paths.
+* `tar_landis()`: replicates where LANDIS-II already completed successfully are
+  now skipped (idempotent re-run). Completion is detected by the presence of
+  "Model run is complete" in `Landis-log.txt`. Applies to both the Docker and
+  local run paths.
+
 # landisutils 0.0.14
 
 ## ForCS Succession extension
