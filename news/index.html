@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.14</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.15</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -39,6 +39,19 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.15" id="landisutils-0015">landisutils 0.0.15<a class="anchor" aria-label="anchor" href="#landisutils-0015"></a></h2>
+<div class="section level3">
+<h3 id="tar_landis--landis_run_docker-fixes-0-0-15">
+<code>tar_landis()</code> / <code>landis_run_docker()</code> fixes<a class="anchor" aria-label="anchor" href="#tar_landis--landis_run_docker-fixes-0-0-15"></a></h3>
+<ul><li>
+<code><a href="../reference/landis_run_docker.html">landis_run_docker()</a></code>: container names now include the calling process PID and a random integer suffix to prevent name collisions when multiple LANDIS replicates run simultaneously.</li>
+<li>
+<code><a href="../reference/tar_landis.html">tar_landis()</a></code>: dependency file lists are now deduplicated before being passed to <code><a href="../reference/landis_replicate.html">landis_replicate()</a></code>. Paths are normalised to absolute form, filtered to existing files, then deduplicated by basename; scenario-specific files (under the scenario directory) take priority over cross-scenario duplicates. Applies to both the Docker and local run paths.</li>
+<li>
+<code><a href="../reference/tar_landis.html">tar_landis()</a></code>: replicates where LANDIS-II already completed successfully are now skipped (idempotent re-run). Completion is detected by the presence of “Model run is complete” in <code>Landis-log.txt</code>. Applies to both the Docker and local run paths.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.14" id="landisutils-0014">landisutils 0.0.14<a class="anchor" aria-label="anchor" href="#landisutils-0014"></a></h2>
 <div class="section level3">
