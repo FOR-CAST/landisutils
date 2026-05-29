@@ -1,13 +1,23 @@
 #' Create replicate directories for a LANDIS-II scenario
 #'
-#' Creates `n_reps` numbered replicate sub-directories inside `scenario_dir`
-#' (`rep01/`, `rep02/`, …) and copies input files into each. If `files` is
-#' supplied it is used as the explicit copy list; GDAL sidecar files (`.tfw`,
-#' `.aux.xml`) that accompany any `.tif` in the list are included
-#' automatically. When `files` is `NULL` the fallback is every top-level file
-#' in `scenario_dir` (sub-directories are never copied). The function is
-#' idempotent: existing replicate directories are left untouched, so adding
-#' more replicates later never alters previously-created ones.
+#' Creates numbered replicate sub-directories inside `scenario_dir`
+#' (`rep01/`, `rep02/`, ...) and copies input files into each.
+#'
+#' Two modes:
+#' - **All-at-once** (`n_reps`): creates `rep01` through `repNN`. Used by
+#'   legacy code and interactive workflows.
+#' - **Single-rep** (`rep_index`): creates exactly one directory for the
+#'   given 1-based index. Used by [tar_landis()] when each replicate is a
+#'   separate targets branch; branches run concurrently and each sets up only
+#'   its own directory, avoiding the O(N_REPS) re-setup cost of all-at-once.
+#'
+#' If `files` is supplied it is used as the explicit copy list; GDAL sidecar
+#' files (`.tfw`, `.aux.xml`) that accompany any `.tif` in the list are
+#' included automatically. When `files` is `NULL` the fallback is every
+#' top-level file in `scenario_dir` (sub-directories are never copied).
+#' The function is idempotent: existing replicate directories are left
+#' untouched, so adding more replicates later never alters previously-created
+#' ones.
 #'
 #' When `base_seed` is provided the `RandomNumberSeed` line in each rep's
 #' `scenario.txt` is rewritten to `base_seed + (rep_index - 1)`, giving every
@@ -16,26 +26,41 @@
 #' changes existing seeds.
 #'
 #' @param scenario_dir Character. Path to the base scenario directory.
-#' @param n_reps Integer. Number of replicates to create.
+#' @param n_reps Integer or `NULL`. Number of replicates to create (all-at-once
+#'   mode). Exactly one of `n_reps` and `rep_index` must be provided.
+#' @param rep_index Integer or `NULL`. 1-based index of the single replicate to
+#'   create (single-rep mode). Exactly one of `n_reps` and `rep_index` must be
+#'   provided.
 #' @param files Character vector or `NULL`. Explicit set of file paths to copy
 #'   into each replicate directory. Typically the values of the `deps` targets
 #'   passed to [tar_landis()] (already absolute paths). When `NULL`, all
 #'   top-level files in `scenario_dir` are copied.
 #' @param base_seed Integer or `NULL`. When non-`NULL`, the `RandomNumberSeed`
 #'   in each copied `scenario.txt` is set to `base_seed + (rep_index - 1)`.
-#'   Rep indices are 1-based (`rep01` → `base_seed`, `rep02` → `base_seed + 1`,
-#'   …).
+#'   Rep indices are 1-based (`rep01` -> `base_seed`, `rep02` -> `base_seed + 1`,
+#'   ...).
 #'
-#' @returns Character vector of absolute paths to the replicate directories,
-#'   in replicate order.
+#' @returns Character vector of absolute paths to the created replicate
+#'   directories (length 1 in single-rep mode, length `n_reps` in all-at-once
+#'   mode), in replicate order.
 #'
 #' @family LANDIS-II execution helpers
 #' @seealso [tar_landis()], [landis_run_docker()], [landis_run_local()]
 #' @export
-landis_replicate <- function(scenario_dir, n_reps, files = NULL, base_seed = NULL) {
-  n_reps <- as.integer(n_reps)
+landis_replicate <- function(
+  scenario_dir,
+  n_reps = NULL,
+  rep_index = NULL,
+  files = NULL,
+  base_seed = NULL
+) {
+  if (is.null(n_reps) == is.null(rep_index)) {
+    stop("Exactly one of 'n_reps' or 'rep_index' must be provided.", call. = FALSE)
+  }
+
   scenario_dir <- fs::path_real(scenario_dir)
-  rep_dirs <- fs::path(scenario_dir, sprintf("rep%02d", seq_len(n_reps)))
+  indices <- if (!is.null(rep_index)) as.integer(rep_index) else seq_len(as.integer(n_reps))
+  rep_dirs <- fs::path(scenario_dir, sprintf("rep%02d", indices))
 
   if (is.null(files)) {
     ## fallback: every top-level file in the scenario dir (skip sub-directories)
@@ -52,7 +77,7 @@ landis_replicate <- function(scenario_dir, n_reps, files = NULL, base_seed = NUL
     src_files <- src_files[fs::file_exists(src_files)]
   }
 
-  for (i in seq_len(n_reps)) {
+  for (i in seq_along(indices)) {
     rep_dir <- rep_dirs[[i]]
     if (!fs::dir_exists(rep_dir)) {
       fs::dir_create(rep_dir)
@@ -63,7 +88,7 @@ landis_replicate <- function(scenario_dir, n_reps, files = NULL, base_seed = NUL
       if (!is.null(base_seed)) {
         scenario_txt <- fs::path(rep_dir, "scenario.txt")
         if (fs::file_exists(scenario_txt)) {
-          seed_i <- as.integer(base_seed) + (i - 1L)
+          seed_i <- as.integer(base_seed) + (indices[[i]] - 1L)
           lines <- readLines(scenario_txt)
           ## matches both the commented form (>> RandomNumberSeed ...) written
           ## by insertRandomNumberSeed(NULL) and any active seed line

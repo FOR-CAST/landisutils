@@ -2,18 +2,18 @@
 % Please edit documentation in R/tar_landis.R
 \name{tar_landis}
 \alias{tar_landis}
-\title{Create a \code{targets} target that runs LANDIS-II}
+\title{Create a \code{targets} target that runs one LANDIS-II replicate}
 \usage{
 tar_landis(
   name,
   scenario_dir,
+  rep_index,
   deps = NULL,
   scenario_file = "scenario.txt",
   output_dir = "output",
   method = NULL,
   image = NULL,
   console = NULL,
-  n_reps = 1L,
   base_seed = NULL,
   pattern = NULL,
   packages = targets::tar_option_get("packages"),
@@ -32,6 +32,12 @@ tar_landis(
 
 \item{scenario_dir}{Symbol or expression (unquoted). Upstream target that
 provides the scenario directory path(s) at run time.}
+
+\item{rep_index}{Symbol (unquoted). Upstream target that provides the
+1-based integer index for the current branch. Must be defined with
+\code{iteration = "vector"} so that \code{cross()} iterates over individual
+elements. Typically created as
+\code{tar_target(name = ..._rep_index, command = seq_len(n_reps), iteration = "vector")}.}
 
 \item{deps}{List (unquoted, optional). A \code{list()} of upstream target
 symbols that must complete before the simulation runs, e.g.
@@ -61,12 +67,6 @@ For \code{method = "docker"} this is the path \emph{inside} the container;
 for \code{method = "local"} it is the local filesystem path (defaults to
 \code{\link[=landis_find]{landis_find()}}).}
 
-\item{n_reps}{Integer. Number of replicate runs per scenario. Each replicate
-is placed in \verb{<scenario_dir>/rep01}, \verb{/rep02}, ... (subdirectories of the
-base scenario directory) so input files can be shared. LANDIS runs
-independently in each replicate directory. Output files from all
-replicates are returned as a single character vector. Defaults to \code{1L}.}
-
 \item{base_seed}{Integer or \code{NULL}. Passed to \code{\link[=landis_replicate]{landis_replicate()}}: when
 non-\code{NULL}, the \code{RandomNumberSeed} in each replicate's \code{scenario.txt} is
 set to \code{base_seed + (rep_index - 1)}, giving each run a distinct but
@@ -74,21 +74,49 @@ deterministic seed. Adding more replicates later never changes existing
 seeds because seeds are derived from the rep index, not the order of
 creation.}
 
-\item{pattern}{Expression (unquoted, optional). Dynamic-branching pattern,
-e.g. \code{map(landis_run_name)}. Passed to \code{\link[targets:tar_target_raw]{targets::tar_target_raw()}}.}
+\item{pattern}{Expression (unquoted). Dynamic-branching pattern covering
+both the scenario and replicate dimensions, e.g.
+\code{cross(landis_run_name, landis_run_output_rep_index)}.
+Passed directly to \code{\link[targets:tar_target_raw]{targets::tar_target_raw()}}.}
 
 \item{packages, library, error, memory, resources, storage, retrieval, cue, description}{Standard \code{{targets}} options; all default to \code{\link[targets:tar_option_get]{targets::tar_option_get()}}.}
 }
 \value{
-A \code{tar_target} object (from \code{\link[targets:tar_target_raw]{targets::tar_target_raw()}}).
+A single \code{tar_target} object (from \code{\link[targets:tar_target_raw]{targets::tar_target_raw()}}).
 }
 \description{
-A \code{{targets}} factory that creates one \code{format = "file"} target per
-scenario (via dynamic branching). The target runs LANDIS-II -- locally or
-inside a Docker container depending on \code{method} -- and returns a character
-vector of tracked output and log files.
+A \code{{targets}} factory that creates \strong{one} \code{format = "file"} target.
+Each branch runs exactly one LANDIS-II simulation and returns only that
+replicate's output files.
 }
 \details{
+\strong{Per-replicate parallel branching:} the caller creates a rep-index target
+with \code{iteration = "vector"} and combines it with the scenario dimension via
+\code{cross()}. Keeping the rep-index target explicit in the project's \code{list()}
+makes it visible to static analysis tools (tarborist) and makes the
+\code{iteration = "vector"} annotation clear in the project code:
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{list(
+  ## iteration = "vector" is critical: cross() iterates over each ELEMENT,
+  ## giving n_scenarios x n_reps independent branches dispatched in parallel.
+  tar_target(
+    name      = landis_run_output_rep_index,
+    command   = seq_len(5L),
+    iteration = "vector"
+  ),
+  landisutils::tar_landis(
+    name      = landis_run_output,
+    rep_index = landis_run_output_rep_index,
+    ...
+    pattern   = cross(landis_run_name, landis_run_output_rep_index)
+  )
+)
+}\if{html}{\out{</div>}}
+
+\strong{Caching:} each (scenario, replicate) branch is cached independently.
+Adding replicates (increasing the \code{seq_len()} value) only computes new
+branches; existing ones remain untouched.
+
 The \code{method} is resolved at \emph{factory-call time} (i.e., when \verb{_targets.R} is
 evaluated) and baked into the target command. This ensures that
 \code{{crew}} worker processes, which do not inherit R session options, receive
@@ -97,7 +125,7 @@ the correct values. Set \code{options(landisutils.run.method = ...)} in
 per machine.
 }
 \seealso{
-\code{\link[=landis_run_local]{landis_run_local()}}, \code{\link[=landis_run_docker]{landis_run_docker()}}
+\code{\link[=landis_replicate]{landis_replicate()}}, \code{\link[=landis_run_local]{landis_run_local()}}, \code{\link[=landis_run_docker]{landis_run_docker()}}
 
 Other LANDIS-II execution helpers:
 \code{\link[=landis_find]{landis_find()}},

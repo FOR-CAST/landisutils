@@ -289,12 +289,39 @@ landis_run_docker <- function(
   invisible(list(exit_code = rc, elapsed_sec = elapsed_sec, peak_mem_bytes = peak_mem_bytes))
 }
 
-#' Create a `targets` target that runs LANDIS-II
+#' Create a `targets` target that runs one LANDIS-II replicate
 #'
-#' A `{targets}` factory that creates one `format = "file"` target per
-#' scenario (via dynamic branching). The target runs LANDIS-II -- locally or
-#' inside a Docker container depending on `method` -- and returns a character
-#' vector of tracked output and log files.
+#' A `{targets}` factory that creates **one** `format = "file"` target.
+#' Each branch runs exactly one LANDIS-II simulation and returns only that
+#' replicate's output files.
+#'
+#' **Per-replicate parallel branching:** the caller creates a rep-index target
+#' with `iteration = "vector"` and combines it with the scenario dimension via
+#' `cross()`. Keeping the rep-index target explicit in the project's `list()`
+#' makes it visible to static analysis tools (tarborist) and makes the
+#' `iteration = "vector"` annotation clear in the project code:
+#'
+#' ```r
+#' list(
+#'   ## iteration = "vector" is critical: cross() iterates over each ELEMENT,
+#'   ## giving n_scenarios x n_reps independent branches dispatched in parallel.
+#'   tar_target(
+#'     name      = landis_run_output_rep_index,
+#'     command   = seq_len(5L),
+#'     iteration = "vector"
+#'   ),
+#'   landisutils::tar_landis(
+#'     name      = landis_run_output,
+#'     rep_index = landis_run_output_rep_index,
+#'     ...
+#'     pattern   = cross(landis_run_name, landis_run_output_rep_index)
+#'   )
+#' )
+#' ```
+#'
+#' **Caching:** each (scenario, replicate) branch is cached independently.
+#' Adding replicates (increasing the `seq_len()` value) only computes new
+#' branches; existing ones remain untouched.
 #'
 #' The `method` is resolved at *factory-call time* (i.e., when `_targets.R` is
 #' evaluated) and baked into the target command. This ensures that
@@ -306,6 +333,11 @@ landis_run_docker <- function(
 #' @param name Symbol (unquoted). Target name.
 #' @param scenario_dir Symbol or expression (unquoted). Upstream target that
 #'   provides the scenario directory path(s) at run time.
+#' @param rep_index Symbol (unquoted). Upstream target that provides the
+#'   1-based integer index for the current branch. Must be defined with
+#'   `iteration = "vector"` so that `cross()` iterates over individual
+#'   elements. Typically created as
+#'   `tar_target(name = ..._rep_index, command = seq_len(n_reps), iteration = "vector")`.
 #' @param deps List (unquoted, optional). A `list()` of upstream target
 #'   symbols that must complete before the simulation runs, e.g.
 #'   `list(landis_scenario_file, landis_ext_forcs_file)`. Values are not used
@@ -328,37 +360,34 @@ landis_run_docker <- function(
 #'   For `method = "docker"` this is the path *inside* the container;
 #'   for `method = "local"` it is the local filesystem path (defaults to
 #'   [landis_find()]).
-#' @param n_reps Integer. Number of replicate runs per scenario. Each replicate
-#'   is placed in `<scenario_dir>/rep01`, `/rep02`, ... (subdirectories of the
-#'   base scenario directory) so input files can be shared. LANDIS runs
-#'   independently in each replicate directory. Output files from all
-#'   replicates are returned as a single character vector. Defaults to `1L`.
 #' @param base_seed Integer or `NULL`. Passed to [landis_replicate()]: when
 #'   non-`NULL`, the `RandomNumberSeed` in each replicate's `scenario.txt` is
 #'   set to `base_seed + (rep_index - 1)`, giving each run a distinct but
 #'   deterministic seed. Adding more replicates later never changes existing
 #'   seeds because seeds are derived from the rep index, not the order of
 #'   creation.
-#' @param pattern Expression (unquoted, optional). Dynamic-branching pattern,
-#'   e.g. `map(landis_run_name)`. Passed to [targets::tar_target_raw()].
+#' @param pattern Expression (unquoted). Dynamic-branching pattern covering
+#'   both the scenario and replicate dimensions, e.g.
+#'   `cross(landis_run_name, landis_run_output_rep_index)`.
+#'   Passed directly to [targets::tar_target_raw()].
 #' @param packages,library,error,memory,resources,storage,retrieval,cue,description
 #'   Standard `{targets}` options; all default to [targets::tar_option_get()].
 #'
-#' @returns A `tar_target` object (from [targets::tar_target_raw()]).
+#' @returns A single `tar_target` object (from [targets::tar_target_raw()]).
 #'
 #' @family LANDIS-II execution helpers
-#' @seealso [landis_run_local()], [landis_run_docker()]
+#' @seealso [landis_replicate()], [landis_run_local()], [landis_run_docker()]
 #' @export
 tar_landis <- function(
   name,
   scenario_dir,
+  rep_index,
   deps = NULL,
   scenario_file = "scenario.txt",
   output_dir = "output",
   method = NULL,
   image = NULL,
   console = NULL,
-  n_reps = 1L,
   base_seed = NULL,
   pattern = NULL,
   packages = targets::tar_option_get("packages"),
@@ -381,18 +410,16 @@ tar_landis <- function(
   ## Capture unevaluated caller expressions before any evaluation occurs.
   name_str <- deparse(substitute(name))
   scenario_dir_expr <- substitute(scenario_dir)
+  rep_index_expr <- substitute(rep_index)
   deps_expr <- substitute(deps)
   pattern_expr <- substitute(pattern)
 
-  ## Resolve n_reps and base_seed at factory-call time so the values are baked
-  ## into the command. crew workers don't inherit R session state.
-  n_reps_val <- as.integer(n_reps)
+  ## Resolve scalar args at factory-call time so values are baked into the
+  ## command. crew workers don't inherit R session state.
   base_seed_val <- if (is.null(base_seed)) NULL else as.integer(base_seed)
   output_dirs_val <- as.character(output_dir)
 
-  ## Resolve method, image at factory-call time so the values are baked into
-  ## the command expression. crew workers don't inherit R session options, so
-  ## resolution must happen here (in the main process, after _local.R is sourced).
+  ## Resolve method and image at factory-call time.
   method <- method %||%
     getOption(
       "landisutils.run.method",
@@ -404,113 +431,81 @@ tar_landis <- function(
       default = "ghcr.io/landis-ii-foundation/landis-ii-v8-release:main"
     )
 
-  ## Build the command expression.
-  ##
-  ## .deps forces {targets} dependency detection: the package scans the
-  ## command for symbol references, so embedding the list() of upstream
-  ## target names here is all that is needed. The assignment itself is a
-  ## no-op at execution time.
-  ##
-  ## landis_replicate() creates n_reps subdirectories inside the base scenario
-  ## directory (rep01/, rep02/, ...), copies input files into each, and returns
-  ## their absolute paths. LANDIS runs in each replicate directory; output and
-  ## log files from all replicates are returned as a combined character vector.
+  ## ---- shared input-file prep expression -------------------------------------------------------
+  ## .deps forces {targets} dependency detection: symbol references embedded in
+  ## the list() are scanned at pipeline parse time; the assignment is a no-op
+  ## at execution time.
+  prep_expr <- bquote({
+    .deps <- .(deps_expr)
+    .sd <- as.character(.(scenario_dir_expr))
+    .rep_idx <- as.integer(.(rep_index_expr))
+
+    .dep_files <- Filter(is.character, .deps) |> unlist()
+    .dep_files <- .dep_files |> fs::path_abs() |> unique()
+    .dep_files <- .dep_files[fs::file_exists(.dep_files)]
+    ## Append "/" so startsWith() matches only files *under* .sd, not files
+    ## under a sibling whose name shares the same prefix
+    ## (e.g. phase_2_ICH_fire/ must not match prefix phase_2_ICH/).
+    .sd_real <- paste0(fs::path_real(.sd), "/")
+    .dep_files <- c(
+      .dep_files[startsWith(.dep_files, .sd_real)],
+      .dep_files[!startsWith(.dep_files, .sd_real)]
+    )
+    .dep_files <- .dep_files[!duplicated(basename(.dep_files))]
+
+    ## Create/verify exactly this replicate's directory (idempotent).
+    .rep_dir <- landisutils::landis_replicate(
+      .sd,
+      rep_index = .rep_idx,
+      files = .dep_files,
+      base_seed = .(base_seed_val)
+    )[[1L]]
+  })
+
+  ## ---- output-collection expression ------------------------------------------------------------
+  collect_expr <- bquote({
+    .manifest <- file.path(.sd, "output_manifest.txt")
+    .manifest_entries <- if (file.exists(.manifest)) readLines(.manifest) else character(0)
+    c(
+      list.files(file.path(.rep_dir, "log"), full.names = TRUE),
+      list.files(file.path(.rep_dir, .(output_dirs_val)), full.names = TRUE, recursive = TRUE),
+      file.path(.rep_dir, .manifest_entries)
+    )
+  })
+
+  ## ---- run command (docker vs local) -----------------------------------------------------------
+  skip_check_expr <- quote({
+    .landis_log <- file.path(.rep_dir, "Landis-log.txt")
+    .already_done <- file.exists(.landis_log) &&
+      any(grepl("Model run is complete", readLines(.landis_log, warn = FALSE)))
+  })
+
   cmd <- if (identical(method, "docker")) {
     bquote({
-      .deps <- .(deps_expr)
-      .sd <- as.character(.(scenario_dir_expr))
-      ## pass the dep file values as the explicit copy list so only tracked
-      ## input files (+ their GDAL sidecars) are placed in each replicate dir
-      .dep_files <- Filter(is.character, .deps) |> unlist()
-      ## targets may pass aggregate (all-branch) values for format="file" targets
-      ## when branch hashes diverge after a dependency is recomputed.  Normalize
-      ## to absolute paths first so that relative + absolute representations of
-      ## the same file are caught by unique(), then deduplicate by basename,
-      ## preferring files under .sd so the correct scenario-specific file always
-      ## wins over a cross-scenario duplicate.
-      .dep_files <- .dep_files |> fs::path_abs() |> unique()
-      .dep_files <- .dep_files[fs::file_exists(.dep_files)]
-      ## Append "/" so startsWith() matches only files *under* .sd, not files
-      ## under a sibling directory whose name begins with the same string
-      ## (e.g. phase_2_ICH_fire/ must not match prefix phase_2_ICH/).
-      .sd_real <- paste0(fs::path_real(.sd), "/")
-      .dep_files <- c(
-        .dep_files[startsWith(.dep_files, .sd_real)],
-        .dep_files[!startsWith(.dep_files, .sd_real)]
-      )
-      .dep_files <- .dep_files[!duplicated(basename(.dep_files))]
-      .rep_dirs <- landisutils::landis_replicate(
-        .sd,
-        .(n_reps_val),
-        files = .dep_files,
-        base_seed = .(base_seed_val)
-      )
-      for (.rd in .rep_dirs) {
-        ## Skip reps where LANDIS already completed (idempotency).  Check
-        ## Landis-log.txt (written by every run mode) for the terminal message
-        ## rather than docker_resources.log (written even on failure).
-        .landis_log <- file.path(.rd, "Landis-log.txt")
-        .already_done <- file.exists(.landis_log) &&
-          any(grepl("Model run is complete", readLines(.landis_log, warn = FALSE)))
-        if (!.already_done) {
-          landisutils::landis_run_docker(
-            scenario_dir = .rd,
-            scenario_file = .(scenario_file),
-            image = .(image),
-            console = .(console)
-          )
-        }
-      }
-      .manifest <- file.path(.sd, "output_manifest.txt")
-      .manifest_entries <- if (file.exists(.manifest)) readLines(.manifest) else character(0)
-      unlist(lapply(.rep_dirs, function(.rd) {
-        c(
-          list.files(file.path(.rd, "log"), full.names = TRUE),
-          list.files(file.path(.rd, .(output_dirs_val)), full.names = TRUE, recursive = TRUE),
-          file.path(.rd, .manifest_entries)
+      .(prep_expr)
+      .(skip_check_expr)
+      if (!.already_done) {
+        landisutils::landis_run_docker(
+          scenario_dir = .rep_dir,
+          scenario_file = .(scenario_file),
+          image = .(image),
+          console = .(console)
         )
-      }))
+      }
+      .(collect_expr)
     })
   } else {
     bquote({
-      .deps <- .(deps_expr)
-      .sd <- as.character(.(scenario_dir_expr))
-      .dep_files <- Filter(is.character, .deps) |> unlist()
-      .dep_files <- .dep_files |> fs::path_abs() |> unique()
-      .dep_files <- .dep_files[fs::file_exists(.dep_files)]
-      .sd_real <- paste0(fs::path_real(.sd), "/")
-      .dep_files <- c(
-        .dep_files[startsWith(.dep_files, .sd_real)],
-        .dep_files[!startsWith(.dep_files, .sd_real)]
-      )
-      .dep_files <- .dep_files[!duplicated(basename(.dep_files))]
-      .rep_dirs <- landisutils::landis_replicate(
-        .sd,
-        .(n_reps_val),
-        files = .dep_files,
-        base_seed = .(base_seed_val)
-      )
-      for (.rd in .rep_dirs) {
-        .landis_log <- file.path(.rd, "Landis-log.txt")
-        .already_done <- file.exists(.landis_log) &&
-          any(grepl("Model run is complete", readLines(.landis_log, warn = FALSE)))
-        if (!.already_done) {
-          landisutils::landis_run_local(
-            scenario_dir = .rd,
-            scenario_file = .(scenario_file),
-            console = .(console)
-          )
-        }
-      }
-      .manifest <- file.path(.sd, "output_manifest.txt")
-      .manifest_entries <- if (file.exists(.manifest)) readLines(.manifest) else character(0)
-      unlist(lapply(.rep_dirs, function(.rd) {
-        c(
-          list.files(file.path(.rd, "log"), full.names = TRUE),
-          list.files(file.path(.rd, .(output_dirs_val)), full.names = TRUE, recursive = TRUE),
-          file.path(.rd, .manifest_entries)
+      .(prep_expr)
+      .(skip_check_expr)
+      if (!.already_done) {
+        landisutils::landis_run_local(
+          scenario_dir = .rep_dir,
+          scenario_file = .(scenario_file),
+          console = .(console)
         )
-      }))
+      }
+      .(collect_expr)
     })
   }
 

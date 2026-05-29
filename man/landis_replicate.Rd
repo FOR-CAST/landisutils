@@ -4,12 +4,23 @@
 \alias{landis_replicate}
 \title{Create replicate directories for a LANDIS-II scenario}
 \usage{
-landis_replicate(scenario_dir, n_reps, files = NULL, base_seed = NULL)
+landis_replicate(
+  scenario_dir,
+  n_reps = NULL,
+  rep_index = NULL,
+  files = NULL,
+  base_seed = NULL
+)
 }
 \arguments{
 \item{scenario_dir}{Character. Path to the base scenario directory.}
 
-\item{n_reps}{Integer. Number of replicates to create.}
+\item{n_reps}{Integer or \code{NULL}. Number of replicates to create (all-at-once
+mode). Exactly one of \code{n_reps} and \code{rep_index} must be provided.}
+
+\item{rep_index}{Integer or \code{NULL}. 1-based index of the single replicate to
+create (single-rep mode). Exactly one of \code{n_reps} and \code{rep_index} must be
+provided.}
 
 \item{files}{Character vector or \code{NULL}. Explicit set of file paths to copy
 into each replicate directory. Typically the values of the \code{deps} targets
@@ -18,24 +29,37 @@ top-level files in \code{scenario_dir} are copied.}
 
 \item{base_seed}{Integer or \code{NULL}. When non-\code{NULL}, the \code{RandomNumberSeed}
 in each copied \code{scenario.txt} is set to \code{base_seed + (rep_index - 1)}.
-Rep indices are 1-based (\code{rep01} → \code{base_seed}, \code{rep02} → \code{base_seed + 1},
-…).}
+Rep indices are 1-based (\code{rep01} -> \code{base_seed}, \code{rep02} -> \code{base_seed + 1},
+...).}
 }
 \value{
-Character vector of absolute paths to the replicate directories,
-in replicate order.
+Character vector of absolute paths to the created replicate
+directories (length 1 in single-rep mode, length \code{n_reps} in all-at-once
+mode), in replicate order.
 }
 \description{
-Creates \code{n_reps} numbered replicate sub-directories inside \code{scenario_dir}
-(\verb{rep01/}, \verb{rep02/}, …) and copies input files into each. If \code{files} is
-supplied it is used as the explicit copy list; GDAL sidecar files (\code{.tfw},
-\code{.aux.xml}) that accompany any \code{.tif} in the list are included
-automatically. When \code{files} is \code{NULL} the fallback is every top-level file
-in \code{scenario_dir} (sub-directories are never copied). The function is
-idempotent: existing replicate directories are left untouched, so adding
-more replicates later never alters previously-created ones.
+Creates numbered replicate sub-directories inside \code{scenario_dir}
+(\verb{rep01/}, \verb{rep02/}, ...) and copies input files into each.
 }
 \details{
+Two modes:
+\itemize{
+\item \strong{All-at-once} (\code{n_reps}): creates \code{rep01} through \code{repNN}. Used by
+legacy code and interactive workflows.
+\item \strong{Single-rep} (\code{rep_index}): creates exactly one directory for the
+given 1-based index. Used by \code{\link[=tar_landis]{tar_landis()}} when each replicate is a
+separate targets branch; branches run concurrently and each sets up only
+its own directory, avoiding the O(N_REPS) re-setup cost of all-at-once.
+}
+
+If \code{files} is supplied it is used as the explicit copy list; GDAL sidecar
+files (\code{.tfw}, \code{.aux.xml}) that accompany any \code{.tif} in the list are
+included automatically. When \code{files} is \code{NULL} the fallback is every
+top-level file in \code{scenario_dir} (sub-directories are never copied).
+The function is idempotent: existing replicate directories are left
+untouched, so adding more replicates later never alters previously-created
+ones.
+
 When \code{base_seed} is provided the \code{RandomNumberSeed} line in each rep's
 \code{scenario.txt} is rewritten to \code{base_seed + (rep_index - 1)}, giving every
 replicate a distinct but deterministic seed. Because seeds are derived from
