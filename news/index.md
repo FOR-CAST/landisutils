@@ -1,5 +1,46 @@
 # Changelog
 
+## landisutils 0.0.16
+
+### Vegetation dynamics: species biomass and transition plots
+
+- New `read_biomass_c_snapshots(paths, times, run_name)` reads ForCS
+  `log_BiomassC.csv` files (per-cohort, per-cell) for one or more
+  replicates, filtering to requested snapshot years via
+  [`arrow::open_dataset()`](https://arrow.apache.org/docs/r/reference/open_dataset.html)
+  lazy streaming so that multi-GB files never need to be fully
+  materialised in R. ForCS writes `log_BiomassC.csv` unconditionally, so
+  no additional output extension is required.
+- New
+  `read_biomass_output_rasters(dirs, times, species, live_map_pattern, run_name)`
+  is the succession-agnostic alternative: reads per-species biomass
+  rasters written by the Output.Biomass v4 extension (present in the
+  `landis-ii-v8-release` Docker image). Works with any succession
+  extension; requires Output.Biomass to be included in the scenario
+  configuration.
+- Both readers return an identical `data.table` schema
+  (`scenario, replicate, Time, row, column, [ecoregion,] species, biomass`
+  in Mg C ha^-1), so all downstream functions are source-agnostic.
+- New `biomass_landscape_summary(df)` aggregates per-cell snapshot data
+  to landscape-mean ± SD biomass by species per timestep.
+- New `leading_species(df)` labels each cell at each snapshot by the
+  species with the highest total live biomass. Ties broken
+  alphabetically.
+- New `community_label(df, n_spp, min_pct)` labels each cell by its
+  top-`n` species combination (e.g. `"Hw-Sx"`); species below `min_pct`
+  of cell total are dropped; zero-biomass cells are labelled
+  `"Non-vegetated"`.
+- New `transition_data(label_df, times)` builds the lodes-form `tibble`
+  required by `ggalluvial`: unique label-path combinations across all
+  snapshot years, with cell counts averaged across replicates.
+- New `plot_species_biomass(summary_df, colours, title)` produces a
+  stacked area chart of landscape-mean biomass by species over time.
+- New `plot_transitions(lodes_df, colours, title)` produces a
+  Sankey-style alluvial diagram (via `ggalluvial`) showing how cells
+  move between vegetation types across snapshot years.
+- `arrow`, `ggalluvial`, `ggplot2`, and `purrr` added to `Imports`
+  (previously absent or in `Suggests`).
+
 ## landisutils 0.0.15
 
 ### `tar_landis()` / `landis_run_docker()` fixes

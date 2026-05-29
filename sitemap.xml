@@ -53,9 +53,11 @@
 <url><loc>https://for-cast.github.io/landisutils/reference/assemble_climate_library_file_monthly_terraclim.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/assemble_climate_library_file_scf.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/bdaAgent.html</loc></url>
+<url><loc>https://for-cast.github.io/landisutils/reference/biomass_landscape_summary.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/calibrate_original_fire.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/climr_ensemble_8.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/cohortSelector.html</loc></url>
+<url><loc>https://for-cast.github.io/landisutils/reference/community_label.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/create_locations_df.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/defaultDGSDammMcNIPParameters.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/defaultFireDamageTable.html</loc></url>
@@ -226,6 +228,9 @@
 <url><loc>https://for-cast.github.io/landisutils/reference/landis_run_docker.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/landis_run_local.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/landisutils-package.html</loc></url>
+<url><loc>https://for-cast.github.io/landisutils/reference/leading_species.html</loc></url>
+<url><loc>https://for-cast.github.io/landisutils/reference/plot_species_biomass.html</loc></url>
+<url><loc>https://for-cast.github.io/landisutils/reference/plot_transitions.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/prepClimateConfig.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/prepClimateFile.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/prepDGSFireReductionParameters.html</loc></url>
@@ -260,12 +265,15 @@
 <url><loc>https://for-cast.github.io/landisutils/reference/prep_climate_data.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/proj_climate_data.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/proj_forest_data.html</loc></url>
+<url><loc>https://for-cast.github.io/landisutils/reference/read_biomass_c_snapshots.html</loc></url>
+<url><loc>https://for-cast.github.io/landisutils/reference/read_biomass_output_rasters.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/roadType.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/scenario.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/simplifyCohorts.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/suitabilityFile.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/tar_landis.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/test_ecoregionPolys.html</loc></url>
+<url><loc>https://for-cast.github.io/landisutils/reference/transition_data.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/windSpeedVulnerability.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/writeAgentFile.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/writeClimateData.html</loc></url>

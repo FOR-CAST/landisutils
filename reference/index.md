@@ -136,6 +136,9 @@
 - [`bdaAgent()`](https://for-cast.github.io/landisutils/reference/bdaAgent.md)
   : Construct a Climate BDA agent
 
+- [`biomass_landscape_summary()`](https://for-cast.github.io/landisutils/reference/biomass_landscape_summary.md)
+  : Landscape biomass summary by species
+
 - [`calibrate_original_fire()`](https://for-cast.github.io/landisutils/reference/calibrate_original_fire.md)
   : Calibrate Original Fire
 
@@ -144,6 +147,9 @@
 
 - [`cohortSelector()`](https://for-cast.github.io/landisutils/reference/cohortSelector.md)
   : Construct a cohort selector for a Land Use Plus change block
+
+- [`community_label()`](https://for-cast.github.io/landisutils/reference/community_label.md)
+  : Community label per cell at each snapshot
 
 - [`create_locations_df()`](https://for-cast.github.io/landisutils/reference/create_locations_df.md)
   : Build batched point-location table from a study area
@@ -438,6 +444,15 @@
 - [`landis_run_local()`](https://for-cast.github.io/landisutils/reference/landis_run_local.md)
   : Run a LANDIS-II simulation locally (synchronous)
 
+- [`leading_species()`](https://for-cast.github.io/landisutils/reference/leading_species.md)
+  : Leading species per cell at each snapshot
+
+- [`plot_species_biomass()`](https://for-cast.github.io/landisutils/reference/plot_species_biomass.md)
+  : Plot species biomass over time (stacked area)
+
+- [`plot_transitions()`](https://for-cast.github.io/landisutils/reference/plot_transitions.md)
+  : Plot vegetation transitions (Sankey / alluvial diagram)
+
 - [`prepClimateConfig()`](https://for-cast.github.io/landisutils/reference/prepClimateConfig.md)
   :
 
@@ -586,6 +601,12 @@
 - [`proj_nrcan_lcc`](https://for-cast.github.io/landisutils/reference/proj_forest_data.md)
   : PROJ4 strings for forest data
 
+- [`read_biomass_c_snapshots()`](https://for-cast.github.io/landisutils/reference/read_biomass_c_snapshots.md)
+  : Read ForCS log_BiomassC snapshots
+
+- [`read_biomass_output_rasters()`](https://for-cast.github.io/landisutils/reference/read_biomass_output_rasters.md)
+  : Read Output.Biomass raster snapshots
+
 - [`roadType()`](https://for-cast.github.io/landisutils/reference/roadType.md)
   : Construct a non-exit road type
 
@@ -605,6 +626,9 @@
 
 - [`test_ecoregionPolys`](https://for-cast.github.io/landisutils/reference/test_ecoregionPolys.md)
   : Test ecoregion polygons
+
+- [`transition_data()`](https://for-cast.github.io/landisutils/reference/transition_data.md)
+  : Build a transition data frame for alluvial plots
 
 - [`windSpeedVulnerability()`](https://for-cast.github.io/landisutils/reference/windSpeedVulnerability.md)
   : Construct a per-species wind-speed vulnerability curve
