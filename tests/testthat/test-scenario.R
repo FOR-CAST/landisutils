@@ -199,10 +199,7 @@ testthat::test_that("LandisScenario$output_files is read-only and returns fixed 
     scen$output_files,
     c("Landis-log.txt", "Metadata/LANDIS-II v8.0/LANDIS-II v8.0.xml")
   )
-  testthat::expect_snapshot(
-    error = TRUE,
-    scen$output_files <- "something.txt"
-  )
+  testthat::expect_snapshot(error = TRUE, scen$output_files <- "something.txt")
 })
 
 testthat::test_that("LandisScenario$replicate() is additive and leaves existing reps untouched", {

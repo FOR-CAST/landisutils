@@ -1,6 +1,6 @@
 Package: landisutils
 Title: Utilities for running LANDIS-II simulations
-Version: 0.0.15
+Version: 0.0.16
 Authors@R: 
     person(c("Alex", "M"), "Chubaty", , "achubaty@for-cast.ca", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0001-7146-8135"))
@@ -11,17 +11,21 @@ URL: https://for-cast.github.io/landisutils/
 Depends: 
     R (>= 4.2)
 Imports:
+    arrow,
     callr,
     cffdrs,
     data.table,
     digest,
     dplyr,
     fs,
+    ggalluvial,
+    ggplot2,
     glue,
     lifecycle,
     methods,
     processx,
     ps,
+    purrr,
     R6,
     stats,
     stringr,
@@ -31,7 +35,6 @@ Imports:
     utils
 Suggests:
     appeears,
-    arrow,
     bcdata,
     BioSIM,
     climateR,
@@ -42,7 +45,6 @@ Suggests:
     future.apply,
     keyring,
     knitr,
-    purrr,
     rmarkdown,
     santoku,
     sf,
@@ -114,6 +116,7 @@ Collate:
     'initial_communities.R'
     'landis.R'
     'landisutils-package.R'
+    'plot_transitions.R'
     'scenarios.R'
     'species.R'
     'tar_landis.R'

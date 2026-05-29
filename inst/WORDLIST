@@ -5,6 +5,7 @@ BEC
 BFOLDS
 BioSIM
 BioSIM's
+BiomassC
 CForC
 CGCM
 CMD
@@ -68,6 +69,7 @@ SOM
 SRD
 SSP
 SSPs
+Sankey
 Sault
 Saxton
 Scheller
@@ -76,11 +78,13 @@ TerraClim
 Wotton
 al
 bcgov
+behaviour
 buildable
 centre
 climatological
 climr
 climr's
+colours
 deduplicated
 derecho
 derechos
@@ -95,6 +99,7 @@ github
 gridded
 labelled
 lon
+materialised
 metres
 modelled
 modelling
@@ -103,6 +108,7 @@ normalised
 orchestrator
 parallelizing
 parser's
+pre
 ramorum
 reclass
 replicate's
