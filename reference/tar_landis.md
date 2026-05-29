@@ -1,9 +1,8 @@
-# Create a `targets` target that runs LANDIS-II
+# Create a `targets` target that runs one LANDIS-II replicate
 
-A `{targets}` factory that creates one `format = "file"` target per
-scenario (via dynamic branching). The target runs LANDIS-II – locally or
-inside a Docker container depending on `method` – and returns a
-character vector of tracked output and log files.
+A `{targets}` factory that creates **one** `format = "file"` target.
+Each branch runs exactly one LANDIS-II simulation and returns only that
+replicate's output files.
 
 ## Usage
 
@@ -11,13 +10,13 @@ character vector of tracked output and log files.
 tar_landis(
   name,
   scenario_dir,
+  rep_index,
   deps = NULL,
   scenario_file = "scenario.txt",
   output_dir = "output",
   method = NULL,
   image = NULL,
   console = NULL,
-  n_reps = 1L,
   base_seed = NULL,
   pattern = NULL,
   packages = targets::tar_option_get("packages"),
@@ -42,6 +41,14 @@ tar_landis(
 
   Symbol or expression (unquoted). Upstream target that provides the
   scenario directory path(s) at run time.
+
+- rep_index:
+
+  Symbol (unquoted). Upstream target that provides the 1-based integer
+  index for the current branch. Must be defined with
+  `iteration = "vector"` so that `cross()` iterates over individual
+  elements. Typically created as
+  `tar_target(name = ..._rep_index, command = seq_len(n_reps), iteration = "vector")`.
 
 - deps:
 
@@ -83,15 +90,6 @@ tar_landis(
   `method = "local"` it is the local filesystem path (defaults to
   [`landis_find()`](https://for-cast.github.io/landisutils/reference/landis_find.md)).
 
-- n_reps:
-
-  Integer. Number of replicate runs per scenario. Each replicate is
-  placed in `<scenario_dir>/rep01`, `/rep02`, ... (subdirectories of the
-  base scenario directory) so input files can be shared. LANDIS runs
-  independently in each replicate directory. Output files from all
-  replicates are returned as a single character vector. Defaults to
-  `1L`.
-
 - base_seed:
 
   Integer or `NULL`. Passed to
@@ -104,8 +102,10 @@ tar_landis(
 
 - pattern:
 
-  Expression (unquoted, optional). Dynamic-branching pattern, e.g.
-  `map(landis_run_name)`. Passed to
+  Expression (unquoted). Dynamic-branching pattern covering both the
+  scenario and replicate dimensions, e.g.
+  `cross(landis_run_name, landis_run_output_rep_index)`. Passed directly
+  to
   [`targets::tar_target_raw()`](https://docs.ropensci.org/targets/reference/tar_target.html).
 
 - packages, library, error, memory, resources, storage, retrieval, cue,
@@ -116,10 +116,38 @@ tar_landis(
 
 ## Value
 
-A `tar_target` object (from
+A single `tar_target` object (from
 [`targets::tar_target_raw()`](https://docs.ropensci.org/targets/reference/tar_target.html)).
 
 ## Details
+
+**Per-replicate parallel branching:** the caller creates a rep-index
+target with `iteration = "vector"` and combines it with the scenario
+dimension via `cross()`. Keeping the rep-index target explicit in the
+project's [`list()`](https://rdrr.io/r/base/list.html) makes it visible
+to static analysis tools (tarborist) and makes the
+`iteration = "vector"` annotation clear in the project code:
+
+    list(
+      ## iteration = "vector" is critical: cross() iterates over each ELEMENT,
+      ## giving n_scenarios x n_reps independent branches dispatched in parallel.
+      tar_target(
+        name      = landis_run_output_rep_index,
+        command   = seq_len(5L),
+        iteration = "vector"
+      ),
+      landisutils::tar_landis(
+        name      = landis_run_output,
+        rep_index = landis_run_output_rep_index,
+        ...
+        pattern   = cross(landis_run_name, landis_run_output_rep_index)
+      )
+    )
+
+**Caching:** each (scenario, replicate) branch is cached independently.
+Adding replicates (increasing the
+[`seq_len()`](https://rdrr.io/r/base/seq.html) value) only computes new
+branches; existing ones remain untouched.
 
 The `method` is resolved at *factory-call time* (i.e., when `_targets.R`
 is evaluated) and baked into the target command. This ensures that
@@ -130,6 +158,7 @@ method per machine.
 
 ## See also
 
+[`landis_replicate()`](https://for-cast.github.io/landisutils/reference/landis_replicate.md),
 [`landis_run_local()`](https://for-cast.github.io/landisutils/reference/landis_run_local.md),
 [`landis_run_docker()`](https://for-cast.github.io/landisutils/reference/landis_run_docker.md)
 

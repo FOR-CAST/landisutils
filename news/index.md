@@ -1,5 +1,60 @@
 # Changelog
 
+## landisutils 0.0.17
+
+### Per-replicate parallel branching in `tar_landis()`
+
+- **Breaking API change:**
+  [`tar_landis()`](https://for-cast.github.io/landisutils/reference/tar_landis.md)
+  no longer accepts `n_reps`. It now takes an explicit `rep_index`
+  argument (an unquoted upstream target symbol) and returns a **single**
+  `tar_target` object (same as the original API).
+
+- The caller creates the rep-index target explicitly inside the module
+  [`list()`](https://rdrr.io/r/base/list.html) alongside the
+  [`tar_landis()`](https://for-cast.github.io/landisutils/reference/tar_landis.md)
+  call. This keeps both targets visible to tarborist’s static AST
+  analysis (`tarborist.additionalSingleTargetFactories` handles the run
+  target; the literal `tar_target()` call handles the rep-index target):
+
+  ``` r
+
+  list(
+    tar_target(name = ..._rep_index, command = seq_len(5L), iteration = "vector"),
+    landisutils::tar_landis(name = ..., rep_index = ..._rep_index, ...,
+                            pattern = cross(scenario_dir, ..._rep_index))
+  )
+  ```
+
+- `iteration = "vector"` on the rep-index target is what enables
+  `cross()` to iterate over individual elements, giving
+  `n_scenarios x n_reps` independent branches dispatched to crew workers
+  in parallel.
+
+- Each branch runs **one** LANDIS-II simulation and tracks only that
+  replicate’s output files. Previously all `n_reps` simulations ran
+  inside a single `for` loop within one target branch.
+
+- **Caching and scaling:** adding replicates only creates new branches –
+  existing replicate results remain cached. Changing one replicate’s
+  inputs invalidates only that branch. Previously any change invalidated
+  all replicates.
+
+### `landis_replicate()` single-rep mode
+
+- [`landis_replicate()`](https://for-cast.github.io/landisutils/reference/landis_replicate.md)
+  gains a `rep_index` parameter for single-replicate creation. Pass
+  `rep_index = i` (instead of `n_reps = N`) to create exactly one
+  replicate directory (`repNN/`) without touching any others. Useful
+  when each replicate is dispatched to its own crew worker.
+- `n_reps` is now keyword-only; the positional second-argument form
+  still works but `n_reps =` is clearer.
+- The function now requires exactly one of `n_reps` or `rep_index`.
+- The seed assigned when `rep_index` is used
+  (`base_seed + rep_index - 1`) matches the seed assigned by the
+  `n_reps` mode for the same index, so results are reproducible
+  regardless of which call form was used.
+
 ## landisutils 0.0.16
 
 ### Vegetation dynamics: species biomass and transition plots

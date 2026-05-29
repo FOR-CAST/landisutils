@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.16</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.17</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -39,6 +39,36 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.17" id="landisutils-0017">landisutils 0.0.17<a class="anchor" aria-label="anchor" href="#landisutils-0017"></a></h2>
+<div class="section level3">
+<h3 id="per-replicate-parallel-branching-in-tar_landis-0-0-17">Per-replicate parallel branching in <code>tar_landis()</code>
+<a class="anchor" aria-label="anchor" href="#per-replicate-parallel-branching-in-tar_landis-0-0-17"></a></h3>
+<ul><li><p><strong>Breaking API change:</strong> <code><a href="../reference/tar_landis.html">tar_landis()</a></code> no longer accepts <code>n_reps</code>. It now takes an explicit <code>rep_index</code> argument (an unquoted upstream target symbol) and returns a <strong>single</strong> <code>tar_target</code> object (same as the original API).</p></li>
+<li>
+<p>The caller creates the rep-index target explicitly inside the module <code><a href="https://rdrr.io/r/base/list.html" class="external-link">list()</a></code> alongside the <code><a href="../reference/tar_landis.html">tar_landis()</a></code> call. This keeps both targets visible to tarborist’s static AST analysis (<code>tarborist.additionalSingleTargetFactories</code> handles the run target; the literal <code>tar_target()</code> call handles the rep-index target):</p>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>  <span class="fu">tar_target</span><span class="op">(</span>name <span class="op">=</span> <span class="va">..._rep_index</span>, command <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="fl">5L</span><span class="op">)</span>, iteration <span class="op">=</span> <span class="st">"vector"</span><span class="op">)</span>,</span>
+<span>  <span class="fu">landisutils</span><span class="fu">::</span><span class="fu"><a href="../reference/tar_landis.html">tar_landis</a></span><span class="op">(</span>name <span class="op">=</span> <span class="va">...</span>, rep_index <span class="op">=</span> <span class="va">..._rep_index</span>, <span class="va">...</span>,</span>
+<span>                          pattern <span class="op">=</span> <span class="fu">cross</span><span class="op">(</span><span class="va">scenario_dir</span>, <span class="va">..._rep_index</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+</li>
+<li><p><code>iteration = "vector"</code> on the rep-index target is what enables <code>cross()</code> to iterate over individual elements, giving <code>n_scenarios x n_reps</code> independent branches dispatched to crew workers in parallel.</p></li>
+<li><p>Each branch runs <strong>one</strong> LANDIS-II simulation and tracks only that replicate’s output files. Previously all <code>n_reps</code> simulations ran inside a single <code>for</code> loop within one target branch.</p></li>
+<li><p><strong>Caching and scaling:</strong> adding replicates only creates new branches – existing replicate results remain cached. Changing one replicate’s inputs invalidates only that branch. Previously any change invalidated all replicates.</p></li>
+</ul></div>
+<div class="section level3">
+<h3 id="landis_replicate-single-rep-mode-0-0-17">
+<code>landis_replicate()</code> single-rep mode<a class="anchor" aria-label="anchor" href="#landis_replicate-single-rep-mode-0-0-17"></a></h3>
+<ul><li>
+<code><a href="../reference/landis_replicate.html">landis_replicate()</a></code> gains a <code>rep_index</code> parameter for single-replicate creation. Pass <code>rep_index = i</code> (instead of <code>n_reps = N</code>) to create exactly one replicate directory (<code>repNN/</code>) without touching any others. Useful when each replicate is dispatched to its own crew worker.</li>
+<li>
+<code>n_reps</code> is now keyword-only; the positional second-argument form still works but <code>n_reps =</code> is clearer.</li>
+<li>The function now requires exactly one of <code>n_reps</code> or <code>rep_index</code>.</li>
+<li>The seed assigned when <code>rep_index</code> is used (<code>base_seed + rep_index - 1</code>) matches the seed assigned by the <code>n_reps</code> mode for the same index, so results are reproducible regardless of which call form was used.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.16" id="landisutils-0016">landisutils 0.0.16<a class="anchor" aria-label="anchor" href="#landisutils-0016"></a></h2>
 <div class="section level3">

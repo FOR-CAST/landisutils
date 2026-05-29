@@ -622,7 +622,7 @@
 - [`tar_landis()`](https://for-cast.github.io/landisutils/reference/tar_landis.md)
   :
 
-  Create a `targets` target that runs LANDIS-II
+  Create a `targets` target that runs one LANDIS-II replicate
 
 - [`test_ecoregionPolys`](https://for-cast.github.io/landisutils/reference/test_ecoregionPolys.md)
   : Test ecoregion polygons
