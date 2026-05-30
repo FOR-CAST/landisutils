@@ -501,14 +501,16 @@ prepTopographyFile <- function(aoi, type, path = ".", filename = NULL) {
     elev <- terra::resample(elev, aoi)
   }
 
-  terr <- terra::terrain(elev, v = type, unit = "degrees") |> terra::as.int()
+  terr <- terra::terrain(elev, v = type, unit = "degrees")
 
   if (type == "aspect") {
     ## reverse direction, because LANDIS-II wants uphill azimuth
     terr <- (terr + 180) %% 360
   }
 
-  terra::writeRaster(terr, file, overwrite = TRUE)
+  ## Write as Int16 (signed 16-bit integer): accepted by LANDIS-II Dynamic Fire as "short".
+  ## Slope (0-90 deg) and azimuth (0-360 deg) fit safely within Int16 range (-32768..32767).
+  terra::writeRaster(terra::as.int(terr), file, datatype = "INT2S", overwrite = TRUE)
 
   return(file)
 }
