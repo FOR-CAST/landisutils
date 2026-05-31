@@ -221,6 +221,23 @@ testthat::test_that("leading_species breaks ties alphabetically", {
   testthat::expect_equal(result$label, "Hw")
 })
 
+testthat::test_that("leading_species labels zero-biomass cells as Non-vegetated", {
+  ## All-zero cells must not get an arbitrary species via alphabetical tiebreaker;
+  ## they should be labelled "Non-vegetated" (matching community_label() semantics).
+  df <- data.table::data.table(
+    scenario = "s",
+    replicate = "rep01",
+    Time = 0L,
+    row = 1L,
+    column = 1L,
+    ecoregion = 1L,
+    species = c("Hw", "Sx"),
+    biomass = c(0, 0)
+  )
+  result <- leading_species(df)
+  testthat::expect_equal(result$label, "Non-vegetated")
+})
+
 ## ---- community_label ------------------------------------------------------------------------
 
 testthat::test_that("community_label returns top-2 species joined with '-'", {

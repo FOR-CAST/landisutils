@@ -12,12 +12,15 @@ leading_species(df)
 \value{
 A \code{tibble} with columns
 \verb{scenario, replicate, Time, row, column, label}
-where \code{label} is the leading species name.
+where \code{label} is the leading species name (or \code{"Non-vegetated"}).
 }
 \description{
 For each (replicate, Time, row, column), identifies the species with the
 highest total biomass and labels that cell accordingly.
 Ties are broken by alphabetical species name.
+Cells where total biomass across all species is zero are labelled
+\code{"Non-vegetated"} (rather than getting an arbitrary alphabetically-first
+species via the tiebreaker), matching \code{\link[=community_label]{community_label()}}'s behaviour.
 }
 \seealso{
 \code{\link[=community_label]{community_label()}}, \code{\link[=plot_transitions]{plot_transitions()}}

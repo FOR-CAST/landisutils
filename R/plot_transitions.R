@@ -266,12 +266,15 @@ biomass_landscape_summary <- function(df) {
 #' For each (replicate, Time, row, column), identifies the species with the
 #' highest total biomass and labels that cell accordingly.
 #' Ties are broken by alphabetical species name.
+#' Cells where total biomass across all species is zero are labelled
+#' `"Non-vegetated"` (rather than getting an arbitrary alphabetically-first
+#' species via the tiebreaker), matching [community_label()]'s behaviour.
 #'
 #' @param df `data.table` or `data.frame` as returned by [read_biomass_c_snapshots()].
 #'
 #' @returns A `tibble` with columns
 #'   `scenario, replicate, Time, row, column, label`
-#'   where `label` is the leading species name.
+#'   where `label` is the leading species name (or `"Non-vegetated"`).
 #'
 #' @seealso [community_label()], [plot_transitions()]
 #' @family Vegetation transition helpers
@@ -281,7 +284,10 @@ leading_species <- function(df) {
   dt <- data.table::as.data.table(df)
   data.table::setorder(dt, replicate, Time, row, column, -biomass, species)
 
-  dt[, .(label = species[1L]), by = .(scenario, replicate, Time, row, column)] |>
+  dt[,
+    .(label = if (sum(biomass) <= 0) "Non-vegetated" else species[1L]),
+    by = .(scenario, replicate, Time, row, column)
+  ] |>
     tibble::as_tibble()
 }
 

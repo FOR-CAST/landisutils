@@ -1,3 +1,13 @@
+# landisutils 0.0.18
+
+## `leading_species()` handles non-vegetated cells
+
+* `leading_species()` now returns `"Non-vegetated"` for cells where total
+  biomass across all species is zero, instead of falling through to the
+  alphabetical tiebreaker (which arbitrarily assigned `"Ac"` to defoliated
+  cells). This matches the existing `community_label()` behaviour and means
+  transition / alluvial plots accurately reflect fire and harvest impacts.
+
 # landisutils 0.0.17
 
 ## Per-replicate parallel branching in `tar_landis()`
