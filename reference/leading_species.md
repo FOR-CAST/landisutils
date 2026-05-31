@@ -2,7 +2,11 @@
 
 For each (replicate, Time, row, column), identifies the species with the
 highest total biomass and labels that cell accordingly. Ties are broken
-by alphabetical species name.
+by alphabetical species name. Cells where total biomass across all
+species is zero are labelled `"Non-vegetated"` (rather than getting an
+arbitrary alphabetically-first species via the tiebreaker), matching
+[`community_label()`](https://for-cast.github.io/landisutils/reference/community_label.md)'s
+behaviour.
 
 ## Usage
 
@@ -20,7 +24,7 @@ leading_species(df)
 ## Value
 
 A `tibble` with columns `scenario, replicate, Time, row, column, label`
-where `label` is the leading species name.
+where `label` is the leading species name (or `"Non-vegetated"`).
 
 ## See also
 

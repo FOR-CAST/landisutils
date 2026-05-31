@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.17</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.18</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -39,6 +39,15 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.18" id="landisutils-0018">landisutils 0.0.18<a class="anchor" aria-label="anchor" href="#landisutils-0018"></a></h2>
+<div class="section level3">
+<h3 id="leading_species-handles-non-vegetated-cells-0-0-18">
+<code>leading_species()</code> handles non-vegetated cells<a class="anchor" aria-label="anchor" href="#leading_species-handles-non-vegetated-cells-0-0-18"></a></h3>
+<ul><li>
+<code><a href="../reference/leading_species.html">leading_species()</a></code> now returns <code>"Non-vegetated"</code> for cells where total biomass across all species is zero, instead of falling through to the alphabetical tiebreaker (which arbitrarily assigned <code>"Ac"</code> to defoliated cells). This matches the existing <code><a href="../reference/community_label.html">community_label()</a></code> behaviour and means transition / alluvial plots accurately reflect fire and harvest impacts.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.17" id="landisutils-0017">landisutils 0.0.17<a class="anchor" aria-label="anchor" href="#landisutils-0017"></a></h2>
 <div class="section level3">
