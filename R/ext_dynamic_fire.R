@@ -508,6 +508,17 @@ prepTopographyFile <- function(aoi, type, path = ".", filename = NULL) {
     terr <- (terr + 180) %% 360
   }
 
+  ## terra::terrain() leaves edge cells as NaN (no full 3x3 neighbourhood is
+  ## available). When written as INT2S, NaN encodes as the -32768 sentinel,
+  ## which LANDIS-II's Dynamic Fire reader rejects with
+  ##   "Ground Slope invalid map code: -32768"
+  ## for any active cell that lands on an edge. Replace NaN with 0 (flat /
+  ## neutral) so LANDIS-II sees a valid value everywhere. This is a safe
+  ## default: slope and azimuth on a 1-cell-wide edge contribute almost
+  ## nothing to fire spread, and a flat default never breaks Dynamic Fire's
+  ## rate-of-spread computation.
+  terr <- terra::subst(terr, NA, 0)
+
   ## Write as Int16 (signed 16-bit integer): accepted by LANDIS-II Dynamic Fire as "short".
   ## Slope (0-90 deg) and azimuth (0-360 deg) fit safely within Int16 range (-32768..32767).
   terra::writeRaster(terra::as.int(terr), file, datatype = "INT2S", overwrite = TRUE)
