@@ -289,22 +289,16 @@ scenarios <- character(0)
 ## package's R6 class names via `EXT_REPO_TO_CLASS` below.
 ## ===========================================================================
 
-## Pinned to a specific commit of LANDIS-II-Foundation/Tool-Docker-Apptainer
-## for reproducibility; bump when upstream test fixtures change. The same SHA
-## is used for both the YAMLs and the test-input tarballs so the registry and
-## the inputs come from a consistent snapshot of upstream.
-##
-## Docker image extension SHAs:
-##   release: https://github.com/LANDIS-II-Foundation/Tool-Docker-Apptainer/blob/main/extensions-v8-release.yaml
-##   UCLv2:   https://github.com/LANDIS-II-Foundation/Tool-Docker-Apptainer/blob/main/extensions-v8-UCL2-release.yaml
-TDA_REPO <- "LANDIS-II-Foundation/Tool-Docker-Apptainer"
-TDA_REF <- "6a546fbb55f722751f78925089784152378eebb0" ## 2026-04-29
-
-## Pinned to the same commit used in the landis-ii-v8-release Docker image
-## (see extensions-v8-release.yaml above).
-## The ForCS test inputs live in testing/v8 Scenario/ within this repo.
-FORCS_REPO <- "LANDIS-II-Foundation/Extension-ForCS-Succession"
-FORCS_REF <- "b761895100a7b30174dd78523d57cc63c592c887" ## extensions-v8-release.yaml 2026-05
+## Upstream-source pins are shared with install_landis_windows.R and
+## install_landis_linux.sh via inst/integration-tests/_pins.R. Bump SHAs
+## there to flow them through to both the docker and the native install
+## paths.
+.this_script_dir <- (function() {
+  cargs <- commandArgs(trailingOnly = FALSE)
+  m <- regmatches(cargs, regexpr("(?<=--file=).+", cargs, perl = TRUE))
+  if (length(m) > 0L) dirname(normalizePath(m[1])) else "inst/integration-tests"
+})()
+source(file.path(.this_script_dir, "_pins.R"))
 
 ##' Mapping from upstream extension-repo name (the value of `repo:` in the
 ##' YAMLs) to the package's R6 class name (matching `R6Class()` definitions in

@@ -1,0 +1,195 @@
+## Run package-generated LANDIS-II scenario files through a *natively*
+## installed LANDIS-II v8 console -- the counterpart to
+## `landis-integration.yaml` which uses Docker. Validates that the
+## package's writers produce config files the v8 console accepts on
+## platforms outside the docker image, and exercises the same
+## `build_scenarios.R` fixtures end-to-end.
+##
+## Matrix:
+##   * ubuntu-24.04  -- native via docker-image extraction
+##   * ubuntu-26.04  -- same; catches Ubuntu-LTS drift in the build env
+##   * windows-latest -- native via WiX MSI (Core) + Inno Setup
+##                       installers (extensions)
+##
+## When this workflow runs:
+##   * `release` published                              (every release)
+##   * `workflow_dispatch`                              (manual)
+##   * push/PR commit message contains `[ci-windows]`   (opt-in)
+##
+## It does NOT run on every push, because:
+##   * Windows native install is ~5-15 min per run.
+##   * Linux native via docker-image extraction is redundant on most
+##     pushes (the Docker workflow already exercises that image).
+##
+## See `inst/integration-tests/README.md#ci-integration` for the
+## human-facing description and the matching `[ci-windows]` documentation.
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+name: landis-integration-native.yaml
+
+permissions: read-all
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    outputs:
+      run: ${{ steps.decide.outputs.run }}
+    steps:
+      - id: decide
+        env:
+          EVENT: ${{ github.event_name }}
+          MSG_PUSH: ${{ github.event.head_commit.message }}
+          MSG_PR: ${{ github.event.pull_request.title }}
+          MSG_PR_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          should_run=false
+          case "$EVENT" in
+            workflow_dispatch|release) should_run=true ;;
+            push)
+              [[ "$MSG_PUSH" == *"[ci-windows]"* ]] && should_run=true ;;
+            pull_request)
+              [[ "$MSG_PR" == *"[ci-windows]"* ]] && should_run=true
+              [[ "$MSG_PR_BODY" == *"[ci-windows]"* ]] && should_run=true
+              ;;
+          esac
+          echo "run=$should_run" >> "$GITHUB_OUTPUT"
+          echo "Gate: event=$EVENT -> run=$should_run"
+
+  landis-integration-native:
+    needs: gate
+    if: needs.gate.outputs.run == 'true'
+    runs-on: ${{ matrix.os }}
+
+    name: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-24.04
+          - ubuntu-26.04
+          - windows-latest
+
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      R_KEEP_PKG_SOURCE: yes
+      DOTNET_VERSION: '8.0.x'
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - uses: r-lib/actions/setup-pandoc@v2
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: 'release'
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: |
+            any::tibble
+            any::gh
+            any::cli
+          dependencies: '"hard"'
+
+      - name: Install landisutils
+        run: R CMD INSTALL --no-multiarch --with-keep.source .
+
+      ## ----- Linux native (docker-image extraction) ------------------------
+
+      - name: Cache LANDIS native install (Linux)
+        if: runner.os == 'Linux'
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/landis-install
+          key: landis-native-${{ matrix.os }}-${{ hashFiles('inst/integration-tests/_pins.R') }}
+
+      - name: Install LANDIS-II native (Linux, from docker image)
+        if: runner.os == 'Linux'
+        env:
+          LANDIS_INSTALL_DIR: ${{ runner.temp }}/landis-install
+        run: |
+          if [ -f "$LANDIS_INSTALL_DIR/Core-Model-v8-LINUX/build/Release/Landis.Console.dll" ]; then
+            echo "cache hit; using existing install"
+            echo "LANDIS_CONSOLE_DLL=$LANDIS_INSTALL_DIR/Core-Model-v8-LINUX/build/Release/Landis.Console.dll" >> "$GITHUB_ENV"
+          else
+            bash inst/integration-tests/install_landis_linux.sh
+          fi
+
+      ## ----- Windows native (MSI + Inno Setup) -----------------------------
+
+      - name: Cache LANDIS installers (Windows)
+        if: runner.os == 'Windows'
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}\landis-installers
+          key: landis-installers-${{ matrix.os }}-${{ hashFiles('inst/integration-tests/_pins.R') }}
+
+      - name: Install LANDIS-II native (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          LANDIS_DOWNLOAD_DIR: ${{ runner.temp }}\landis-installers
+        run: |
+          Rscript inst/integration-tests/install_landis_windows.R
+
+      ## ----- Verify + run --------------------------------------------------
+
+      - name: Verify LANDIS-II install
+        shell: bash
+        run: |
+          if [ -z "${LANDIS_CONSOLE_DLL:-}" ]; then
+            echo "::error::LANDIS_CONSOLE_DLL not set; install step did not export the console path"
+            exit 1
+          fi
+          if [ ! -f "$LANDIS_CONSOLE_DLL" ]; then
+            echo "::error::LANDIS_CONSOLE_DLL points at missing file: $LANDIS_CONSOLE_DLL"
+            exit 1
+          fi
+          echo "LANDIS_CONSOLE_DLL=$LANDIS_CONSOLE_DLL"
+          dotnet --info | head -20
+
+      - name: Build LANDIS-II scenarios
+        shell: bash
+        run: |
+          mkdir -p "$RUNNER_TEMP/landis-scenarios"
+          Rscript inst/integration-tests/build_scenarios.R "$RUNNER_TEMP/landis-scenarios" \
+            > "$RUNNER_TEMP/landis-scenarios.list"
+          echo "Scenarios built:"
+          cat "$RUNNER_TEMP/landis-scenarios.list"
+
+      - name: Run LANDIS-II on each scenario
+        shell: bash
+        run: |
+          fail=0
+          while IFS= read -r scen_path; do
+            [ -z "$scen_path" ] && continue
+            scen_name="$(basename "$scen_path")"
+            echo "::group::LANDIS-II run: ${scen_name} (${{ matrix.os }})"
+            if ! Rscript inst/integration-tests/run_native.R "$scen_path"; then
+              echo "::error::LANDIS-II run failed for scenario '${scen_name}' on ${{ matrix.os }}"
+              fail=1
+            fi
+            echo "::endgroup::"
+          done < "$RUNNER_TEMP/landis-scenarios.list"
+          exit "$fail"
+
+      - name: Upload scenario directories
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: landis-scenarios-native-${{ matrix.os }}
+          path: ${{ runner.temp }}/landis-scenarios
+          retention-days: 7

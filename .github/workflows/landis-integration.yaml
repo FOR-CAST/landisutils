@@ -26,7 +26,7 @@ jobs:
       LANDIS_IMAGE_UCLV2: ghcr.io/landis-ii-foundation/landis-ii-v8-uclv2-release:main
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - uses: r-lib/actions/setup-pandoc@v2
 
