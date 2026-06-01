@@ -31,10 +31,12 @@ Works on Linux, macOS, and Windows.
 \code{\link[=landis_find]{landis_find()}}, \code{\link[=landis_find_docker]{landis_find_docker()}}, \code{\link[=landis_run]{landis_run()}}, \code{\link[=landis_run_docker]{landis_run_docker()}}, \code{\link[=tar_landis]{tar_landis()}}
 
 Other LANDIS-II execution helpers:
+\code{\link[=host_cpu_info]{host_cpu_info()}},
 \code{\link[=landis_find]{landis_find()}},
 \code{\link[=landis_find_docker]{landis_find_docker()}},
 \code{\link[=landis_replicate]{landis_replicate()}},
 \code{\link[=landis_run_docker]{landis_run_docker()}},
+\code{\link[=read_landis_resource_logs]{read_landis_resource_logs()}},
 \code{\link[=tar_landis]{tar_landis()}}
 }
 \concept{LANDIS-II execution helpers}

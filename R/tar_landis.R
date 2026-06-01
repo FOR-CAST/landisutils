@@ -1,5 +1,170 @@
 ## LANDIS-II execution helpers (local and Docker) --------------------------------------------------
 
+#' Host CPU and RAM identification (cross-platform)
+#'
+#' Identifies the CPU model, logical core count, and total RAM of the machine
+#' running the current R process. Each field falls back to `NA` if it can't be
+#' determined.
+#'
+#' Implementation by platform:
+#'
+#' * **Linux**: reads `/proc/cpuinfo` (`model name`) and `/proc/meminfo`
+#'   (`MemTotal`).
+#' * **macOS** (`Darwin`): `sysctl -n machdep.cpu.brand_string` for the CPU
+#'   model, `sysctl -n hw.memsize` for RAM.
+#' * **Windows**: `PROCESSOR_IDENTIFIER` environment variable for the CPU
+#'   model, `wmic ComputerSystem get TotalPhysicalMemory` for RAM.
+#' * Logical core count uses [parallel::detectCores()] on every platform.
+#'
+#' Used by [landis_run_docker()] and [landis_run_local()] to append host
+#' context to each rep's resource log so downstream provenance tooling can
+#' identify what host produced any given replicate's outputs.
+#'
+#' @returns A list with elements `model` (character), `n_logical` (integer),
+#'   and `ram_bytes` (numeric).
+#'
+#' @family LANDIS-II execution helpers
+#' @export
+host_cpu_info <- function() {
+  os <- Sys.info()[["sysname"]]
+  ## Logical cores: parallel::detectCores() is cross-platform (base R).
+  n_logical <- tryCatch(
+    as.integer(parallel::detectCores(logical = TRUE)),
+    error = function(e) NA_integer_
+  )
+  model <- NA_character_
+  ram_bytes <- NA_real_
+
+  if (identical(os, "Linux")) {
+    if (file.exists("/proc/cpuinfo")) {
+      cpu_lines <- readLines("/proc/cpuinfo", warn = FALSE)
+      ml <- grep("^model name\\s*:", cpu_lines, value = TRUE)[1L]
+      if (!is.na(ml)) {
+        model <- trimws(sub("^model name\\s*:\\s*", "", ml))
+      }
+    }
+    if (file.exists("/proc/meminfo")) {
+      mem_lines <- readLines("/proc/meminfo", warn = FALSE)
+      mt <- grep("^MemTotal:", mem_lines, value = TRUE)[1L]
+      if (!is.na(mt)) {
+        ## /proc/meminfo reports kB but the unit is actually KiB (Linux convention).
+        ram_bytes <- as.numeric(sub(".*?([0-9]+).*", "\\1", mt)) * 1024
+      }
+    }
+  } else if (identical(os, "Darwin")) {
+    model <- tryCatch(
+      trimws(system2(
+        "sysctl",
+        c("-n", "machdep.cpu.brand_string"),
+        stdout = TRUE,
+        stderr = FALSE
+      )[1L]),
+      error = function(e) NA_character_
+    )
+    ram_bytes <- tryCatch(
+      as.numeric(system2("sysctl", c("-n", "hw.memsize"), stdout = TRUE, stderr = FALSE)[1L]),
+      error = function(e) NA_real_
+    )
+  } else if (identical(os, "Windows")) {
+    ## PROCESSOR_IDENTIFIER is always set on Windows; e.g. "AMD64 Family 23 Model 113 Stepping 0, AuthenticAMD".
+    ## It's not a friendly brand name but is reliable. WMIC's "cpu get name"
+    ## is the friendly form but `wmic` is deprecated/removed on Windows 11/Server 2025.
+    pi <- Sys.getenv("PROCESSOR_IDENTIFIER", unset = "")
+    if (nzchar(pi)) {
+      model <- pi
+    }
+    ram_bytes <- tryCatch(
+      {
+        out <- system2(
+          "wmic",
+          c("ComputerSystem", "get", "TotalPhysicalMemory", "/value"),
+          stdout = TRUE,
+          stderr = FALSE
+        )
+        m <- regmatches(out, regexpr("[0-9]+", out, perl = TRUE))
+        if (length(m)) as.numeric(m[1L]) else NA_real_
+      },
+      error = function(e) NA_real_
+    )
+  }
+
+  list(model = model, n_logical = n_logical, ram_bytes = ram_bytes)
+}
+
+#' Read per-rep resource logs written by `landis_run_docker()` / `landis_run_local()`
+#'
+#' Discovers all `docker_resources.log` and `local_resources.log` files under
+#' `run_dir` (typically a scenario directory containing per-rep subdirectories)
+#' and returns one row per rep with every key-value pair the run helpers wrote.
+#' Always includes `elapsed_sec` and `peak_mem_bytes`; rows from runs produced
+#' by landisutils >= 0.0.22 additionally include `host_cpu_model`,
+#' `host_cpu_cores`, and `host_ram_bytes`. Older logs return `NA` for missing
+#' fields.
+#'
+#' Used by per-scenario report templates to surface run-time / memory / host
+#' statistics in build-provenance appendices.
+#'
+#' @param run_dir Character. Scenario directory to search (recursively) for
+#'   resource logs. Returns an empty data.frame when `run_dir` does not exist
+#'   or contains no logs.
+#'
+#' @returns A `data.frame` with columns `replicate, source` (one of `"docker"`
+#'   or `"local"`), and one numeric or character column per recorded key.
+#'
+#' @family LANDIS-II execution helpers
+#' @export
+read_landis_resource_logs <- function(run_dir) {
+  empty <- data.frame(
+    replicate = character(0),
+    source = character(0),
+    elapsed_sec = numeric(0),
+    peak_mem_bytes = numeric(0),
+    host_cpu_model = character(0),
+    host_cpu_cores = integer(0),
+    host_ram_bytes = numeric(0)
+  )
+  if (!dir.exists(run_dir)) {
+    return(empty)
+  }
+  logs <- list.files(
+    run_dir,
+    pattern = "^(docker|local)_resources\\.log$",
+    recursive = TRUE,
+    full.names = TRUE
+  )
+  if (length(logs) == 0L) {
+    return(empty)
+  }
+  parse_one <- function(path) {
+    lines <- readLines(path, warn = FALSE)
+    ## Numeric "key: value" lines.
+    num_m <- regmatches(lines, regexec("^([A-Za-z_]+):\\s*([0-9.eE+-]+)\\s*$", lines))
+    num_kv <- Filter(function(m) length(m) == 3L, num_m)
+    num_vals <- as.numeric(vapply(num_kv, `[`, character(1L), 3L))
+    names(num_vals) <- vapply(num_kv, `[`, character(1L), 2L)
+    ## Free-form "key: rest of line" entries (e.g. host_cpu_model).
+    str_m <- regmatches(lines, regexec("^([A-Za-z_]+):\\s*(.+?)\\s*$", lines))
+    str_kv <- Filter(function(m) length(m) == 3L, str_m)
+    str_vals <- vapply(str_kv, `[`, character(1L), 3L)
+    names(str_vals) <- vapply(str_kv, `[`, character(1L), 2L)
+    ## Numeric wins when a key parses both ways (e.g. host_cpu_cores).
+    out <- as.list(str_vals)
+    out[names(num_vals)] <- as.list(num_vals)
+    out$replicate <- basename(dirname(dirname(path)))
+    out$source <- sub("_resources\\.log$", "", basename(path))
+    out
+  }
+  rows <- lapply(logs, parse_one)
+  ## Union of keys across rows -> one column per key.
+  all_keys <- unique(unlist(lapply(rows, names)))
+  fill <- function(row) {
+    miss <- setdiff(all_keys, names(row))
+    row[miss] <- NA
+    row[all_keys]
+  }
+  do.call(rbind, lapply(rows, function(r) data.frame(fill(r), stringsAsFactors = FALSE)))
+}
+
 ## Format an integer number of seconds as "Xh Ym Zs" / "Ym Zs" / "Zs".
 .fmt_duration <- function(seconds) {
   s <- as.integer(round(seconds))
@@ -118,8 +283,15 @@ landis_run_local <- function(scenario_dir, scenario_file = "scenario.txt", conso
   rc <- landis_proc$get_exit_status()
   elapsed_sec <- (proc.time() - t_start)[["elapsed"]]
 
+  host <- host_cpu_info()
   writeLines(
-    c(sprintf("elapsed_sec: %.1f", elapsed_sec), sprintf("peak_mem_bytes: %.0f", peak_mem_bytes)),
+    c(
+      sprintf("elapsed_sec: %.1f", elapsed_sec),
+      sprintf("peak_mem_bytes: %.0f", peak_mem_bytes),
+      sprintf("host_cpu_model: %s", host$model %||% "NA"),
+      sprintf("host_cpu_cores: %s", host$n_logical %||% "NA"),
+      sprintf("host_ram_bytes: %s", if (is.na(host$ram_bytes)) "NA" else sprintf("%.0f", host$ram_bytes))
+    ),
     fs::path(log_dir, "local_resources.log")
   )
 
@@ -318,8 +490,15 @@ landis_run_docker <- function(
   rc <- docker_proc$get_result()
   elapsed_sec <- (proc.time() - t_start)[["elapsed"]]
 
+  host <- host_cpu_info()
   writeLines(
-    c(sprintf("elapsed_sec: %.1f", elapsed_sec), sprintf("peak_mem_bytes: %.0f", peak_mem_bytes)),
+    c(
+      sprintf("elapsed_sec: %.1f", elapsed_sec),
+      sprintf("peak_mem_bytes: %.0f", peak_mem_bytes),
+      sprintf("host_cpu_model: %s", host$model %||% "NA"),
+      sprintf("host_cpu_cores: %s", host$n_logical %||% "NA"),
+      sprintf("host_ram_bytes: %s", if (is.na(host$ram_bytes)) "NA" else sprintf("%.0f", host$ram_bytes))
+    ),
     fs::path(log_dir, "docker_resources.log")
   )
 
