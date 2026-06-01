@@ -297,6 +297,13 @@ scenario(
 - [`appendPercent()`](https://for-cast.github.io/landisutils/reference/appendPercent.md)
   : Ensure percent symbol appended to table values
 
+- [`apply_calibrated_hi_prop()`](https://for-cast.github.io/landisutils/reference/apply_calibrated_hi_prop.md)
+  : Overwrite FireSizesTable Sp/Sum/Fall HiProp columns with calibrated
+  values
+
+- [`apply_calibrated_ignprob()`](https://for-cast.github.io/landisutils/reference/apply_calibrated_ignprob.md)
+  : Apply per-base-fuel-type IgnProb multipliers to a FuelTypeTable
+
 - [`assemble_climate_library_file()`](https://for-cast.github.io/landisutils/reference/assemble_climate_library_file.md)
   : Assemble LANDIS-II Climate Library wide-format table from a BioSIM
   Arrow dataset
@@ -317,14 +324,30 @@ scenario(
   : Assemble Social-Climate-Fire-shaped daily climate CSV from a BioSIM
   Arrow dataset
 
+- [`bc_fuel_code_to_base()`](https://for-cast.github.io/landisutils/reference/bc_fuel_code_to_base.md)
+  : Default fuel-code -\> base-fuel-type mapping (BC FUEL_TYPE_CD factor
+  levels)
+
 - [`bdaAgent()`](https://for-cast.github.io/landisutils/reference/bdaAgent.md)
   : Construct a Climate BDA agent
 
 - [`biomass_landscape_summary()`](https://for-cast.github.io/landisutils/reference/biomass_landscape_summary.md)
   : Landscape biomass summary by species
 
+- [`build_calibration_scenario_template()`](https://for-cast.github.io/landisutils/reference/build_calibration_scenario_template.md)
+  : Build the calibration scenario template directory
+
+- [`build_calibration_spinup_scenario()`](https://for-cast.github.io/landisutils/reference/build_calibration_spinup_scenario.md)
+  : Build a calibration spinup scenario directory
+
+- [`calibrate_dynamic_fire()`](https://for-cast.github.io/landisutils/reference/calibrate_dynamic_fire.md)
+  : DEoptim driver for Dynamic Fire calibration
+
 - [`calibrate_original_fire()`](https://for-cast.github.io/landisutils/reference/calibrate_original_fire.md)
   : Calibrate Original Fire
+
+- [`calibration_par_names()`](https://for-cast.github.io/landisutils/reference/calibration_par_names.md)
+  : Canonical parameter names for the Dynamic Fire calibration vector
 
 - [`climr_ensemble_8`](https://for-cast.github.io/landisutils/reference/climr_ensemble_8.md)
   : bcgov-recommended eight-member climr GCM ensemble
@@ -618,6 +641,15 @@ scenario(
 - [`landis_find_docker()`](https://for-cast.github.io/landisutils/reference/landis_find_docker.md)
   : Find the LANDIS-II console path inside a Docker container
 
+- [`landis_pool_exec()`](https://for-cast.github.io/landisutils/reference/landis_pool_exec.md)
+  : Execute a command in one of the warm-pool containers
+
+- [`landis_pool_start()`](https://for-cast.github.io/landisutils/reference/landis_pool_start.md)
+  : Start a warm Docker pool for LANDIS-II calibration
+
+- [`landis_pool_stop()`](https://for-cast.github.io/landisutils/reference/landis_pool_stop.md)
+  : Stop and remove all containers in a warm Docker pool
+
 - [`landis_replicate()`](https://for-cast.github.io/landisutils/reference/landis_replicate.md)
   : Create replicate directories for a LANDIS-II scenario
 
@@ -633,6 +665,18 @@ scenario(
 
 - [`leading_species()`](https://for-cast.github.io/landisutils/reference/leading_species.md)
   : Leading species per cell at each snapshot
+
+- [`loss_from_stats()`](https://for-cast.github.io/landisutils/reference/loss_from_stats.md)
+  : Compute the calibration loss from N replicate trial outputs
+
+- [`parse_dynamic_fire_logs()`](https://for-cast.github.io/landisutils/reference/parse_dynamic_fire_logs.md)
+  : Parse a Dynamic Fire run's event and summary logs
+
+- [`patch_fire_config()`](https://for-cast.github.io/landisutils/reference/patch_fire_config.md)
+  :
+
+  Patch a `dynamic-fire.txt` in place with candidate calibration
+  parameters
 
 - [`plot_species_biomass()`](https://for-cast.github.io/landisutils/reference/plot_species_biomass.md)
   : Plot species biomass over time (stacked area)
@@ -805,8 +849,25 @@ scenario(
 - [`roadType()`](https://for-cast.github.io/landisutils/reference/roadType.md)
   : Construct a non-exit road type
 
+- [`run_calibration_spinup()`](https://for-cast.github.io/landisutils/reference/run_calibration_spinup.md)
+  : Run the calibration spinup scenario (blocking)
+
+- [`save_observed_fire_targets()`](https://for-cast.github.io/landisutils/reference/save_observed_fire_targets.md)
+  : Save observed fire-regime targets (NFDB-derived) for calibration
+  loss
+
 - [`scenario()`](https://for-cast.github.io/landisutils/reference/scenario.md)
   : Create LANDIS-II scenario files
+
+- [`sim_landis()`](https://for-cast.github.io/landisutils/reference/sim_landis.md)
+  : Run one DEoptim trial for a candidate parameter vector (blocking)
+
+- [`sim_mock()`](https://for-cast.github.io/landisutils/reference/sim_mock.md)
+  : Mock simulator backend for testing the calibration driver without
+  LANDIS-II
+
+- [`sim_r_reimpl()`](https://for-cast.github.io/landisutils/reference/sim_r_reimpl.md)
+  : Standalone-R Dynamic Fire reimplementation (stub)
 
 - [`simplifyCohorts()`](https://for-cast.github.io/landisutils/reference/simplifyCohorts.md)
   : Simplify cohorts
@@ -831,6 +892,11 @@ scenario(
 - [`writeClimateData()`](https://for-cast.github.io/landisutils/reference/writeClimateData.md)
   : Write LANDIS-II Climate Input File to disk
 
+- [`write_landis_scenario_file()`](https://for-cast.github.io/landisutils/reference/write_landis_scenario_file.md)
+  :
+
+  Write a LANDIS-II `scenario.txt` file (lower-level helper)
+
 - [`yesno()`](https://for-cast.github.io/landisutils/reference/yesno.md)
   [`truefalse()`](https://for-cast.github.io/landisutils/reference/yesno.md)
   : Convert logical to a LANDIS-II yes/no or true/false token
@@ -843,6 +909,8 @@ scenario(
   Inputs](https://for-cast.github.io/landisutils/articles/Biomass-Succession.md):
 - [Preparing Climate Data for Use With
   LANDIS-II](https://for-cast.github.io/landisutils/articles/climate-data.md):
+- [Calibrating the Dynamic Fire System
+  Extension](https://for-cast.github.io/landisutils/articles/Dynamic-Fire-Calibration.md):
 - [Preparing Dynamic Fire and Fuels
   Inputs](https://for-cast.github.io/landisutils/articles/Dynamic-Fire-Fuels.md):
 - [Preparing Forest Carbon Succession (ForCS)

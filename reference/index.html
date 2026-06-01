@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.23</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.24</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -20,6 +20,7 @@
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/Biomass-Succession.html">Preparing Biomass Succession Inputs</a></li>
     <li><a class="dropdown-item" href="../articles/climate-data.html">Preparing Climate Data for Use With LANDIS-II</a></li>
+    <li><a class="dropdown-item" href="../articles/Dynamic-Fire-Calibration.html">Calibrating the Dynamic Fire System Extension</a></li>
     <li><a class="dropdown-item" href="../articles/Dynamic-Fire-Fuels.html">Preparing Dynamic Fire and Fuels Inputs</a></li>
     <li><a class="dropdown-item" href="../articles/Forest-Carbon-Succession.html">Preparing Forest Carbon Succession (ForCS) Inputs</a></li>
     <li><a class="dropdown-item" href="../articles/Multi-Extension-Scenarios.html">Assembling a Multi-Extension Scenario</a></li>
@@ -295,6 +296,20 @@
 
         <dt>
 
+          <code><a href="apply_calibrated_hi_prop.html">apply_calibrated_hi_prop()</a></code>
+
+        </dt>
+        <dd>Overwrite FireSizesTable Sp/Sum/Fall HiProp columns with calibrated values</dd>
+
+        <dt>
+
+          <code><a href="apply_calibrated_ignprob.html">apply_calibrated_ignprob()</a></code>
+
+        </dt>
+        <dd>Apply per-base-fuel-type IgnProb multipliers to a FuelTypeTable</dd>
+
+        <dt>
+
           <code><a href="assemble_climate_library_file.html">assemble_climate_library_file()</a></code>
 
         </dt>
@@ -330,6 +345,13 @@
 
         <dt>
 
+          <code><a href="bc_fuel_code_to_base.html">bc_fuel_code_to_base()</a></code>
+
+        </dt>
+        <dd>Default fuel-code -&gt; base-fuel-type mapping (BC FUEL_TYPE_CD factor levels)</dd>
+
+        <dt>
+
           <code><a href="bdaAgent.html">bdaAgent()</a></code>
 
         </dt>
@@ -344,10 +366,38 @@
 
         <dt>
 
+          <code><a href="build_calibration_scenario_template.html">build_calibration_scenario_template()</a></code>
+
+        </dt>
+        <dd>Build the calibration scenario template directory</dd>
+
+        <dt>
+
+          <code><a href="build_calibration_spinup_scenario.html">build_calibration_spinup_scenario()</a></code>
+
+        </dt>
+        <dd>Build a calibration spinup scenario directory</dd>
+
+        <dt>
+
+          <code><a href="calibrate_dynamic_fire.html">calibrate_dynamic_fire()</a></code>
+
+        </dt>
+        <dd>DEoptim driver for Dynamic Fire calibration</dd>
+
+        <dt>
+
           <code><a href="calibrate_original_fire.html">calibrate_original_fire()</a></code>
 
         </dt>
         <dd>Calibrate Original Fire</dd>
+
+        <dt>
+
+          <code><a href="calibration_par_names.html">calibration_par_names()</a></code>
+
+        </dt>
+        <dd>Canonical parameter names for the Dynamic Fire calibration vector</dd>
 
         <dt>
 
@@ -834,6 +884,27 @@
 
         <dt>
 
+          <code><a href="landis_pool_exec.html">landis_pool_exec()</a></code>
+
+        </dt>
+        <dd>Execute a command in one of the warm-pool containers</dd>
+
+        <dt>
+
+          <code><a href="landis_pool_start.html">landis_pool_start()</a></code>
+
+        </dt>
+        <dd>Start a warm Docker pool for LANDIS-II calibration</dd>
+
+        <dt>
+
+          <code><a href="landis_pool_stop.html">landis_pool_stop()</a></code>
+
+        </dt>
+        <dd>Stop and remove all containers in a warm Docker pool</dd>
+
+        <dt>
+
           <code><a href="landis_replicate.html">landis_replicate()</a></code>
 
         </dt>
@@ -866,6 +937,27 @@
 
         </dt>
         <dd>Leading species per cell at each snapshot</dd>
+
+        <dt>
+
+          <code><a href="loss_from_stats.html">loss_from_stats()</a></code>
+
+        </dt>
+        <dd>Compute the calibration loss from N replicate trial outputs</dd>
+
+        <dt>
+
+          <code><a href="parse_dynamic_fire_logs.html">parse_dynamic_fire_logs()</a></code>
+
+        </dt>
+        <dd>Parse a Dynamic Fire run's event and summary logs</dd>
+
+        <dt>
+
+          <code><a href="patch_fire_config.html">patch_fire_config()</a></code>
+
+        </dt>
+        <dd>Patch a <code>dynamic-fire.txt</code> in place with candidate calibration parameters</dd>
 
         <dt>
 
@@ -1149,10 +1241,45 @@
 
         <dt>
 
+          <code><a href="run_calibration_spinup.html">run_calibration_spinup()</a></code>
+
+        </dt>
+        <dd>Run the calibration spinup scenario (blocking)</dd>
+
+        <dt>
+
+          <code><a href="save_observed_fire_targets.html">save_observed_fire_targets()</a></code>
+
+        </dt>
+        <dd>Save observed fire-regime targets (NFDB-derived) for calibration loss</dd>
+
+        <dt>
+
           <code><a href="scenario.html">scenario()</a></code>
 
         </dt>
         <dd>Create LANDIS-II scenario files</dd>
+
+        <dt>
+
+          <code><a href="sim_landis.html">sim_landis()</a></code>
+
+        </dt>
+        <dd>Run one DEoptim trial for a candidate parameter vector (blocking)</dd>
+
+        <dt>
+
+          <code><a href="sim_mock.html">sim_mock()</a></code>
+
+        </dt>
+        <dd>Mock simulator backend for testing the calibration driver without LANDIS-II</dd>
+
+        <dt>
+
+          <code><a href="sim_r_reimpl.html">sim_r_reimpl()</a></code>
+
+        </dt>
+        <dd>Standalone-R Dynamic Fire reimplementation (stub)</dd>
 
         <dt>
 
@@ -1202,6 +1329,13 @@
 
         </dt>
         <dd>Write LANDIS-II Climate Input File to disk</dd>
+
+        <dt>
+
+          <code><a href="write_landis_scenario_file.html">write_landis_scenario_file()</a></code>
+
+        </dt>
+        <dd>Write a LANDIS-II <code>scenario.txt</code> file (lower-level helper)</dd>
 
         <dt>
 

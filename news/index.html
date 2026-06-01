@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.23</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.24</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -20,6 +20,7 @@
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/Biomass-Succession.html">Preparing Biomass Succession Inputs</a></li>
     <li><a class="dropdown-item" href="../articles/climate-data.html">Preparing Climate Data for Use With LANDIS-II</a></li>
+    <li><a class="dropdown-item" href="../articles/Dynamic-Fire-Calibration.html">Calibrating the Dynamic Fire System Extension</a></li>
     <li><a class="dropdown-item" href="../articles/Dynamic-Fire-Fuels.html">Preparing Dynamic Fire and Fuels Inputs</a></li>
     <li><a class="dropdown-item" href="../articles/Forest-Carbon-Succession.html">Preparing Forest Carbon Succession (ForCS) Inputs</a></li>
     <li><a class="dropdown-item" href="../articles/Multi-Extension-Scenarios.html">Assembling a Multi-Extension Scenario</a></li>
@@ -39,6 +40,65 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.24" id="landisutils-0024">landisutils 0.0.24<a class="anchor" aria-label="anchor" href="#landisutils-0024"></a></h2>
+<div class="section level3">
+<h3 id="dynamic-fire-system-extension-calibration-0-0-24">Dynamic Fire System extension calibration<a class="anchor" aria-label="anchor" href="#dynamic-fire-system-extension-calibration-0-0-24"></a></h3>
+<p>A new function family for calibrating the LANDIS-II Dynamic Fire System extension. The calibration tunes <code>SeverityCalibrationFactor</code>, per-season FMC <code>HiProp</code> values, and per-base-fuel-type <code>IgnProb</code> multipliers so simulated fires match observed regional fire statistics; the empirically-fit parameters (<code>Mu</code>, <code>Sigma</code>, <code>Max</code>, <code>NumFires</code>, seasonal <code>PropFire</code>) are fit at the data layer upstream and are not part of the optimisation.</p>
+<ul><li>
+<p><strong>Pure-data helpers</strong> (no LANDIS-II invocation):</p>
+<ul><li>
+<code><a href="../reference/calibration_par_names.html">calibration_par_names()</a></code> – canonical 9-name parameter vector.</li>
+<li>
+<code><a href="../reference/parse_dynamic_fire_logs.html">parse_dynamic_fire_logs()</a></code> – reads <code>fire/dynamic-fire-event-log.csv</code> + <code>fire/dynamic-fire-summary-log.csv</code> into a small per-rep stats list.</li>
+<li>
+<code><a href="../reference/patch_fire_config.html">patch_fire_config()</a></code> – surgical text patch of <code>dynamic-fire.txt</code> (SeverityCalibrationFactor scalar; FireSizesTable HiProp columns; FuelTypeTable IgnProb column multiplied per base type).</li>
+<li>
+<code><a href="../reference/loss_from_stats.html">loss_from_stats()</a></code> – multi-component weighted loss (count + KS-on-size in Tier 1; area_by_fuel + severity stubbed at weight 0 for Tier 2).</li>
+<li>
+<code><a href="../reference/apply_calibrated_ignprob.html">apply_calibrated_ignprob()</a></code> / <code><a href="../reference/apply_calibrated_hi_prop.html">apply_calibrated_hi_prop()</a></code> – table-level helpers used downstream of calibration to feed calibrated values into production fire-config writers.</li>
+</ul></li>
+<li>
+<p><strong>Observed-target builder</strong> (one-time NFDB-derived summaries):</p>
+<ul><li>
+<code><a href="../reference/save_observed_fire_targets.html">save_observed_fire_targets()</a></code> – writes a small <code>.rds</code> of per-ecoregion observed summaries. Project-agnostic: primary / secondary ecoregion SpatVectors + <code>fuel_code_to_base</code> mapping are all caller-provided.</li>
+<li>
+<code><a href="../reference/bc_fuel_code_to_base.html">bc_fuel_code_to_base()</a></code> – default fuel-code mapping for BC <code>FUEL_TYPE_CD</code> factor encoding (codes 1..13); pass a custom mapping if your project’s fuel-classification raster uses a different encoding.</li>
+</ul></li>
+<li>
+<p><strong>Scenario builders</strong> for the static-landscape calibration scenario:</p>
+<ul><li>
+<code><a href="../reference/build_calibration_spinup_scenario.html">build_calibration_spinup_scenario()</a></code> – builds a one-off LANDIS-II scenario that runs ForCS with both spinup flags ON and emits a snapshot of the spun-up cohort community via the Output Biomass Community extension. The year-0 snapshot becomes the calibration IC.</li>
+<li>
+<code><a href="../reference/run_calibration_spinup.html">run_calibration_spinup()</a></code> – blocking single-trial LANDIS-II invocation for the spinup; dispatches to <code><a href="../reference/landis_run_local.html">landis_run_local()</a></code> / <code><a href="../reference/landis_run_docker.html">landis_run_docker()</a></code>.</li>
+<li>
+<code><a href="../reference/build_calibration_scenario_template.html">build_calibration_scenario_template()</a></code> – copies a production fire scenario, swaps the IC for the spinup snapshot, patches ForCS for calibration (spinup off + frozen succession), optionally writes a fresh baseline <code>dynamic-fire.txt</code> inline (breaks the cycle between a <code>calibrated_fire_params</code>-aware production fire config and the calibration loop).</li>
+<li>
+<code><a href="../reference/write_landis_scenario_file.html">write_landis_scenario_file()</a></code> (in <code>scenarios.R</code>) – lower-level <code>scenario.txt</code> writer that takes already-written extension config-file paths rather than R6 extension objects. Useful when project pipelines write extension configs in separate steps.</li>
+</ul></li>
+<li>
+<p><strong>Warm Docker pool</strong> for calibration:</p>
+<ul><li>
+<code><a href="../reference/landis_pool_start.html">landis_pool_start()</a></code> / <code><a href="../reference/landis_pool_exec.html">landis_pool_exec()</a></code> / <code><a href="../reference/landis_pool_stop.html">landis_pool_stop()</a></code> – a pool of detached LANDIS-II containers that <code>docker exec</code>s per DEoptim trial instead of <code>docker run --rm</code> per trial. Per-call env overrides (<code>HOME=/tmp</code>, <code>DOTNET_BUNDLE_EXTRACT_BASE_DIR=...</code>) keep dotnet from accreting per-user-cache state between trials. Designed for <code><a href="https://rdrr.io/r/base/on.exit.html" class="external-link">on.exit()</a></code> teardown from calibration drivers.</li>
+</ul></li>
+<li>
+<p><strong>Simulator backends</strong> for the calibration loop:</p>
+<ul><li>
+<code><a href="../reference/sim_landis.html">sim_landis()</a></code> – per-trial LANDIS-II invocation. Takes file paths only (FORK-safe), copies template -&gt; scratch dir, patches <code>dynamic-fire.txt</code>, runs LANDIS-II either via the warm pool or a one-off <code><a href="../reference/landis_run_docker.html">landis_run_docker()</a></code> / <code><a href="../reference/landis_run_local.html">landis_run_local()</a></code>, parses logs.</li>
+<li>
+<code><a href="../reference/sim_r_reimpl.html">sim_r_reimpl()</a></code> – reserved slot for a future pure-R reimplementation; currently errors with a not-yet-implemented message.</li>
+<li>
+<code><a href="../reference/sim_mock.html">sim_mock()</a></code> – plausibly-shaped output for testing the calibration driver’s control flow without Docker.</li>
+</ul></li>
+<li>
+<p><strong>DEoptim driver:</strong></p>
+<ul><li>
+<code><a href="../reference/calibrate_dynamic_fire.html">calibrate_dynamic_fire()</a></code> – orchestrates the calibration: starts a warm Docker pool, sets up a FORK cluster with per-worker container pinning, invokes <code><a href="https://rdrr.io/pkg/DEoptim/man/DEoptim.html" class="external-link">DEoptim::DEoptim()</a></code> with the multi-component loss as the objective, tears down pool + cluster via <code><a href="https://rdrr.io/r/base/on.exit.html" class="external-link">on.exit()</a></code>. Gated on <code><a href="https://github.com/ArdiaD/DEoptim" class="external-link">requireNamespace("DEoptim")</a></code> (DEoptim is in Suggests; install via <code>renv::install("DEoptim")</code> before calling).</li>
+</ul></li>
+<li><p><strong>Vignette:</strong> <code><a href="../articles/Dynamic-Fire-Calibration.html">vignette("Dynamic-Fire-Calibration", package = "landisutils")</a></code> documents the end-to-end target-wiring pattern for downstream projects.</p></li>
+<li><p><strong>Tests:</strong> 97+ testthat expectations across calibration + pool test files. Docker-gated tests <code>skip_if_not()</code> when docker is unavailable; DEoptim-gated driver tests <code>skip_if_not_installed("DEoptim")</code>.</p></li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.23" id="landisutils-0023">landisutils 0.0.23<a class="anchor" aria-label="anchor" href="#landisutils-0023"></a></h2>
 <div class="section level3">

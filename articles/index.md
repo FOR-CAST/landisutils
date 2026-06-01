@@ -6,6 +6,8 @@
   Inputs](https://for-cast.github.io/landisutils/articles/Biomass-Succession.md):
 - [Preparing Climate Data for Use With
   LANDIS-II](https://for-cast.github.io/landisutils/articles/climate-data.md):
+- [Calibrating the Dynamic Fire System
+  Extension](https://for-cast.github.io/landisutils/articles/Dynamic-Fire-Calibration.md):
 - [Preparing Dynamic Fire and Fuels
   Inputs](https://for-cast.github.io/landisutils/articles/Dynamic-Fire-Fuels.md):
 - [Preparing Forest Carbon Succession (ForCS)
