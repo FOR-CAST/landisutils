@@ -165,6 +165,71 @@ read_landis_resource_logs <- function(run_dir) {
   do.call(rbind, lapply(rows, function(r) data.frame(fill(r), stringsAsFactors = FALSE)))
 }
 
+## Parse a memory-limit input (numeric bytes, NULL/Inf for "no limit", or
+## a string like "8g" / "512m" / "1024k") into either a numeric byte count
+## (positive) or Inf. Returns Inf when the input means "no limit".
+.parse_mem_limit <- function(x) {
+  if (is.null(x) || (is.numeric(x) && length(x) == 1L && (is.infinite(x) || is.na(x)))) {
+    return(Inf)
+  }
+  if (is.numeric(x)) {
+    return(as.numeric(x))
+  }
+  ## String form: number + optional suffix (b/k/m/g/t, case-insensitive).
+  s <- trimws(tolower(as.character(x)))
+  m <- regmatches(s, regexec("^([0-9.]+)\\s*([kmgt]?)b?$", s))[[1L]]
+  if (length(m) != 3L) {
+    stop(sprintf("Could not parse mem_limit '%s' (expected e.g. '8g', '512m', or numeric bytes).", x), call. = FALSE)
+  }
+  val <- as.numeric(m[2L])
+  suffix <- m[3L]
+  mult <- if (!nzchar(suffix)) {
+    1
+  } else {
+    ## switch() can't use "" as a label (zero-length variable name) so we
+    ## special-case the suffix-less form above.
+    switch(suffix, k = 1024, m = 1024^2, g = 1024^3, t = 1024^4)
+  }
+  val * mult
+}
+
+## Resolve memory cap for a LANDIS run.
+## - `mem_limit` is the user-supplied baseline (any form accepted by .parse_mem_limit).
+## - If a prior resource log for this rep records peak_mem_bytes, scale by
+##   `mem_margin` and raise the cap to that value (so we never kill a run
+##   that previously fit). If NO prior log exists, drop the cap to Inf so
+##   the first run can discover its own requirements.
+## Returns Inf (no limit) or a numeric byte count.
+.resolve_mem_limit <- function(rep_dir, mem_limit, mem_margin) {
+  baseline <- .parse_mem_limit(mem_limit)
+  log_dir <- file.path(rep_dir, "log")
+  prior_logs <- if (dir.exists(log_dir)) {
+    list.files(log_dir, pattern = "^(docker|local)_resources\\.log$", full.names = TRUE)
+  } else {
+    character(0)
+  }
+  if (length(prior_logs) == 0L) {
+    ## No history: relax the constraint so the first run can discover its peak.
+    return(Inf)
+  }
+  prior_peak <- tryCatch(
+    {
+      ## Pick the most recently modified log if multiple exist.
+      lines <- readLines(prior_logs[order(file.info(prior_logs)$mtime, decreasing = TRUE)[1L]], warn = FALSE)
+      m <- regmatches(lines, regexec("^peak_mem_bytes:\\s*([0-9.eE+-]+)\\s*$", lines))
+      m <- Filter(function(x) length(x) == 2L, m)
+      if (length(m) == 0L) NA_real_ else as.numeric(m[[1L]][2L])
+    },
+    error = function(e) NA_real_
+  )
+  if (is.na(prior_peak) || prior_peak <= 0) {
+    return(baseline)
+  }
+  ## Honour the user baseline, but raise it if the prior peak (with margin)
+  ## would exceed it -- never set the cap below what we've seen the rep need.
+  max(baseline, prior_peak * mem_margin)
+}
+
 ## Format an integer number of seconds as "Xh Ym Zs" / "Ym Zs" / "Zs".
 .fmt_duration <- function(seconds) {
   s <- as.integer(round(seconds))
@@ -340,6 +405,21 @@ landis_run_local <- function(scenario_dir, scenario_file = "scenario.txt", conso
 #'   simulation so the recorded digest reflects the current registry rather
 #'   than a stale local copy. Defaults to `FALSE` to keep runs reproducible
 #'   across iterations of an already-cached image.
+#' @param cpu_limit Numeric or `NULL`. Hard CPU cap for the container
+#'   (`docker run --cpus`). Default `4`: LANDIS-II compute is single-threaded
+#'   but the .NET runtime spins up 9-11 OS threads, so 4 is a comfortable
+#'   headroom default. Pass `NULL` for no CPU limit.
+#' @param mem_limit Numeric byte count, character (e.g. `"8g"`, `"512m"`),
+#'   `NULL`, or `Inf`. Baseline RAM cap (`docker run --memory`). Default
+#'   `"8g"`. When a prior `<rep_dir>/log/*_resources.log` exists with a
+#'   recorded `peak_mem_bytes`, the cap is raised to
+#'   `peak_mem_bytes * mem_margin` if that exceeds the baseline -- a rep
+#'   that fit last time will never be killed by this cap on a rerun. When
+#'   **no** prior log exists for the rep (first run, or rep dir freshly
+#'   deleted), the cap is dropped entirely so the first run can discover
+#'   what it needs.
+#' @param mem_margin Numeric. Headroom factor applied to a previously
+#'   observed peak when auto-raising `mem_limit`. Default `1.5`.
 #'
 #' @returns Named list with `exit_code` (integer), `elapsed_sec` (numeric), and
 #'   `peak_mem_bytes` (numeric), returned invisibly.
@@ -352,7 +432,10 @@ landis_run_docker <- function(
   scenario_file = "scenario.txt",
   image = NULL,
   console = NULL,
-  pull = FALSE
+  pull = FALSE,
+  cpu_limit = 4,
+  mem_limit = "8g",
+  mem_margin = 1.5
 ) {
   image <- image %||% getOption("landisutils.docker.image")
   console <- console %||% landis_find_docker()
@@ -435,10 +518,28 @@ landis_run_docker <- function(
     sample.int(.Machine$integer.max, 1L)
   )
 
+  ## Resolve resource caps (auto-raises memory based on prior peak; drops
+  ## memory cap entirely on first runs so they can discover what they need).
+  effective_mem_bytes <- .resolve_mem_limit(scenario_dir, mem_limit, mem_margin)
+  cpu_args <- if (is.null(cpu_limit) || is.infinite(cpu_limit)) {
+    character(0)
+  } else {
+    c("--cpus", as.character(cpu_limit))
+  }
+  mem_args <- if (is.infinite(effective_mem_bytes)) {
+    character(0)
+  } else {
+    c("--memory", sprintf("%.0fb", effective_mem_bytes))
+  }
+
   message(glue::glue("Starting LANDIS-II Docker run ({Sys.time()})"))
   message(glue::glue("  scenario_dir:  {scenario_dir}"))
   message(glue::glue("  scenario_file: {scenario_file}"))
   message(glue::glue("  image:         {image}"))
+  message(glue::glue(
+    "  resources:     cpus={if (length(cpu_args)) cpu_args[2] else 'unlimited'}, ",
+    "memory={if (length(mem_args)) .fmt_bytes(effective_mem_bytes) else 'unlimited (no prior log)'}"
+  ))
 
   docker_args <- c(
     "run",
@@ -448,6 +549,8 @@ landis_run_docker <- function(
     "--entrypoint",
     "dotnet",
     user_args,
+    cpu_args,
+    mem_args,
     "-v",
     paste0(scenario_dir, ":/sim"),
     "-w",
@@ -612,6 +715,10 @@ landis_run_docker <- function(
 #'   recorded hash matches the current inputs (per-input-file MD5 + `base_seed`
 #'   + `rep_index` + `scenario_file`). When `TRUE`, the skip check is bypassed
 #'   and LANDIS-II is invoked unconditionally.
+#' @param cpu_limit,mem_limit,mem_margin Passed to [landis_run_docker()] when
+#'   `method = "docker"`. See that function's documentation for semantics;
+#'   defaults are `4`, `"8g"`, and `1.5` respectively. No effect for
+#'   `method = "local"`.
 #' @param packages,library,error,memory,resources,storage,retrieval,cue,description
 #'   Standard `{targets}` options; all default to [targets::tar_option_get()].
 #'
@@ -633,6 +740,9 @@ tar_landis <- function(
   base_seed = NULL,
   pull = FALSE,
   force = FALSE,
+  cpu_limit = 4,
+  mem_limit = "8g",
+  mem_margin = 1.5,
   pattern = NULL,
   packages = targets::tar_option_get("packages"),
   library = targets::tar_option_get("library"),
@@ -664,6 +774,9 @@ tar_landis <- function(
   output_dirs_val <- as.character(output_dir)
   pull_val <- isTRUE(pull)
   force_val <- isTRUE(force)
+  cpu_limit_val <- cpu_limit
+  mem_limit_val <- mem_limit
+  mem_margin_val <- as.numeric(mem_margin)
 
   ## Resolve method and image at factory-call time.
   method <- method %||%
@@ -776,7 +889,10 @@ tar_landis <- function(
           scenario_file = .(scenario_file),
           image = .(image),
           console = .(console),
-          pull = .(pull_val)
+          pull = .(pull_val),
+          cpu_limit = .(cpu_limit_val),
+          mem_limit = .(mem_limit_val),
+          mem_margin = .(mem_margin_val)
         )
         .(write_hash_expr)
       }

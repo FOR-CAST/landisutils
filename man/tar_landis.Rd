@@ -17,6 +17,9 @@ tar_landis(
   base_seed = NULL,
   pull = FALSE,
   force = FALSE,
+  cpu_limit = 4,
+  mem_limit = "8g",
+  mem_margin = 1.5,
   pattern = NULL,
   packages = targets::tar_option_get("packages"),
   library = targets::tar_option_get("library"),
@@ -89,6 +92,11 @@ recorded hash matches the current inputs (per-input-file MD5 + \code{base_seed}
 \item \code{rep_index} + \code{scenario_file}). When \code{TRUE}, the skip check is bypassed
 and LANDIS-II is invoked unconditionally.
 }}
+
+\item{cpu_limit, mem_limit, mem_margin}{Passed to \code{\link[=landis_run_docker]{landis_run_docker()}} when
+\code{method = "docker"}. See that function's documentation for semantics;
+defaults are \code{4}, \code{"8g"}, and \code{1.5} respectively. No effect for
+\code{method = "local"}.}
 
 \item{pattern}{Expression (unquoted). Dynamic-branching pattern covering
 both the scenario and replicate dimensions, e.g.

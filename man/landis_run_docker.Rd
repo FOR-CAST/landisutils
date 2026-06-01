@@ -9,7 +9,10 @@ landis_run_docker(
   scenario_file = "scenario.txt",
   image = NULL,
   console = NULL,
-  pull = FALSE
+  pull = FALSE,
+  cpu_limit = 4,
+  mem_limit = "8g",
+  mem_margin = 1.5
 )
 }
 \arguments{
@@ -30,6 +33,24 @@ run time (reads \code{getOption("landisutils.docker.console")}).}
 simulation so the recorded digest reflects the current registry rather
 than a stale local copy. Defaults to \code{FALSE} to keep runs reproducible
 across iterations of an already-cached image.}
+
+\item{cpu_limit}{Numeric or \code{NULL}. Hard CPU cap for the container
+(\verb{docker run --cpus}). Default \code{4}: LANDIS-II compute is single-threaded
+but the .NET runtime spins up 9-11 OS threads, so 4 is a comfortable
+headroom default. Pass \code{NULL} for no CPU limit.}
+
+\item{mem_limit}{Numeric byte count, character (e.g. \code{"8g"}, \code{"512m"}),
+\code{NULL}, or \code{Inf}. Baseline RAM cap (\verb{docker run --memory}). Default
+\code{"8g"}. When a prior \verb{<rep_dir>/log/*_resources.log} exists with a
+recorded \code{peak_mem_bytes}, the cap is raised to
+\code{peak_mem_bytes * mem_margin} if that exceeds the baseline -- a rep
+that fit last time will never be killed by this cap on a rerun. When
+\strong{no} prior log exists for the rep (first run, or rep dir freshly
+deleted), the cap is dropped entirely so the first run can discover
+what it needs.}
+
+\item{mem_margin}{Numeric. Headroom factor applied to a previously
+observed peak when auto-raising \code{mem_limit}. Default \code{1.5}.}
 }
 \value{
 Named list with \code{exit_code} (integer), \code{elapsed_sec} (numeric), and
