@@ -42,10 +42,10 @@ inside the container. Stdout and stderr are written to
 \verb{<scenario_dir>/log/docker_stdout.log} and \code{docker_stderr.log}. Wall-clock
 elapsed time and peak memory use (polled every 2 s from \verb{docker stats}) are
 reported on completion and written to
-\verb{<scenario_dir>/log/docker_resources.log}. The image's immutable \code{sha256}
-digest is captured into \verb{<scenario_dir>/log/docker_image.log} so downstream
-provenance tools can pin runs to a specific image regardless of subsequent
-tag movement.
+\verb{<scenario_dir>/log/docker_resources.log}.
+The image's immutable \code{sha256} digest is captured into
+\verb{<scenario_dir>/log/docker_image.log} so downstream provenance tools can
+pin runs to a specific image regardless of subsequent tag movement.
 }
 \seealso{
 \code{\link[=landis_find_docker]{landis_find_docker()}}, \code{\link[=landis_find]{landis_find()}}, \code{\link[=landis_run]{landis_run()}}, \code{\link[=landis_run_local]{landis_run_local()}}, \code{\link[=tar_landis]{tar_landis()}}

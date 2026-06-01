@@ -427,6 +427,12 @@ landis_run_docker <- function(
 #'   both the scenario and replicate dimensions, e.g.
 #'   `cross(landis_run_name, landis_run_output_rep_index)`.
 #'   Passed directly to [targets::tar_target_raw()].
+#' @param force Logical (default `FALSE`). When `FALSE`, `tar_landis()` skips
+#'   the actual `landis_run_*()` call if the rep dir already contains a
+#'   completed `Landis-log.txt` *and* a `log/input_hash.json` sidecar whose
+#'   recorded hash matches the current inputs (per-input-file MD5 + `base_seed`
+#'   + `rep_index` + `scenario_file`). When `TRUE`, the skip check is bypassed
+#'   and LANDIS-II is invoked unconditionally.
 #' @param packages,library,error,memory,resources,storage,retrieval,cue,description
 #'   Standard `{targets}` options; all default to [targets::tar_option_get()].
 #'
@@ -447,6 +453,7 @@ tar_landis <- function(
   console = NULL,
   base_seed = NULL,
   pull = FALSE,
+  force = FALSE,
   pattern = NULL,
   packages = targets::tar_option_get("packages"),
   library = targets::tar_option_get("library"),
@@ -477,6 +484,7 @@ tar_landis <- function(
   base_seed_val <- if (is.null(base_seed)) NULL else as.integer(base_seed)
   output_dirs_val <- as.character(output_dir)
   pull_val <- isTRUE(pull)
+  force_val <- isTRUE(force)
 
   ## Resolve method and image at factory-call time.
   method <- method %||%
@@ -532,16 +540,56 @@ tar_landis <- function(
     )
   })
 
-  ## ---- run command (docker vs local) -----------------------------------------------------------
-  skip_check_expr <- quote({
+  ## ---- input-hash + skip check -----------------------------------------------------------------
+  ## Idempotency is hash-based: a successful LANDIS-II run writes
+  ## <rep_dir>/log/input_hash.json containing a digest of (per-input-file MD5,
+  ## base_seed, rep_index, scenario_file). On subsequent runs the same digest
+  ## is recomputed from current inputs and compared. If `Landis-log.txt`
+  ## reports completion AND the hash matches, the rep is treated as up-to-date.
+  ## If the hash mismatches (e.g. upstream inputs changed) the rep is rerun
+  ## even though outputs nominally exist on disk -- which fixes the case where
+  ## an output-existence-only skip check let stale outputs through after
+  ## upstream invalidation.
+  hash_expr <- bquote({
+    .hash_file <- file.path(.rep_dir, "log", "input_hash.json")
+    .input_hash <- digest::digest(
+      list(
+        files = vapply(sort(.dep_files), tools::md5sum, character(1L)),
+        base_seed = .(base_seed_val),
+        rep_index = .rep_idx,
+        scenario_file = .(scenario_file)
+      ),
+      algo = "sha1"
+    )
+  })
+  skip_check_expr <- bquote({
     .landis_log <- file.path(.rep_dir, "Landis-log.txt")
-    .already_done <- file.exists(.landis_log) &&
-      any(grepl("Model run is complete", readLines(.landis_log, warn = FALSE)))
+    .saved_hash <- if (file.exists(.hash_file)) {
+      tryCatch(jsonlite::fromJSON(.hash_file)$input_hash, error = function(e) NA_character_)
+    } else {
+      NA_character_
+    }
+    .already_done <- !isTRUE(.(force_val)) &&
+      file.exists(.landis_log) &&
+      any(grepl("Model run is complete", readLines(.landis_log, warn = FALSE))) &&
+      identical(.saved_hash, .input_hash)
+  })
+  ## After a successful run, persist the hash so the next tar_make can detect
+  ## "no-op" reruns (deps unchanged) and skip cleanly.
+  write_hash_expr <- bquote({
+    dir.create(dirname(.hash_file), recursive = TRUE, showWarnings = FALSE)
+    jsonlite::write_json(
+      list(input_hash = .input_hash, written = format(Sys.time(), "%Y-%m-%dT%H:%M:%S%z")),
+      .hash_file,
+      auto_unbox = TRUE,
+      pretty = TRUE
+    )
   })
 
   cmd <- if (identical(method, "docker")) {
     bquote({
       .(prep_expr)
+      .(hash_expr)
       .(skip_check_expr)
       if (!.already_done) {
         landisutils::landis_run_docker(
@@ -551,12 +599,14 @@ tar_landis <- function(
           console = .(console),
           pull = .(pull_val)
         )
+        .(write_hash_expr)
       }
       .(collect_expr)
     })
   } else {
     bquote({
       .(prep_expr)
+      .(hash_expr)
       .(skip_check_expr)
       if (!.already_done) {
         landisutils::landis_run_local(
@@ -564,6 +614,7 @@ tar_landis <- function(
           scenario_file = .(scenario_file),
           console = .(console)
         )
+        .(write_hash_expr)
       }
       .(collect_expr)
     })

@@ -16,6 +16,7 @@ tar_landis(
   console = NULL,
   base_seed = NULL,
   pull = FALSE,
+  force = FALSE,
   pattern = NULL,
   packages = targets::tar_option_get("packages"),
   library = targets::tar_option_get("library"),
@@ -79,6 +80,15 @@ creation.}
 \code{method = "docker"}: when \code{TRUE}, the image is \verb{docker pull}ed before
 running so the digest captured in \code{log/docker_image.log} reflects the
 current registry. Defaults to \code{FALSE}. No effect for \code{method = "local"}.}
+
+\item{force}{Logical (default \code{FALSE}). When \code{FALSE}, \code{tar_landis()} skips
+the actual \verb{landis_run_*()} call if the rep dir already contains a
+completed \code{Landis-log.txt} \emph{and} a \code{log/input_hash.json} sidecar whose
+recorded hash matches the current inputs (per-input-file MD5 + \code{base_seed}
+\itemize{
+\item \code{rep_index} + \code{scenario_file}). When \code{TRUE}, the skip check is bypassed
+and LANDIS-II is invoked unconditionally.
+}}
 
 \item{pattern}{Expression (unquoted). Dynamic-branching pattern covering
 both the scenario and replicate dimensions, e.g.

@@ -1,3 +1,28 @@
+# landisutils 0.0.20
+
+## `tar_landis()` idempotency respects input changes
+
+* The skip check in `tar_landis()` is now input-aware. Previously the run was
+  skipped whenever `<rep_dir>/Landis-log.txt` existed and contained
+  "Model run is complete", regardless of whether the inputs had changed. This
+  meant that when `{targets}` correctly re-evaluated the run target after an
+  upstream input change (e.g. a regenerated `initial-communities.tif` or
+  `ecoregions.tif`), the surrounding command ran but the skip check still
+  fired, so `landis_run_docker()` / `landis_run_local()` was never invoked
+  and the rep dir kept stale outputs from the previous run.
+* The fix writes a `<rep_dir>/log/input_hash.json` sidecar after each
+  successful run, capturing a SHA-1 of (per-input-file MD5 + `base_seed` +
+  `rep_index` + `scenario_file`). The skip check now also requires the saved
+  hash to match the current input hash; any mismatch triggers a real rerun.
+* New `force = FALSE` argument on `tar_landis()`. Setting `force = TRUE`
+  short-circuits the skip check so LANDIS-II always runs (useful for
+  debugging and one-off forced reruns without deleting rep dirs).
+* **Migration:** existing rep dirs lack `log/input_hash.json`, so the first
+  `tar_make()` after upgrading rebuilds every rep. This is the safe-conservative
+  behaviour: we can't know whether existing outputs correspond to current
+  inputs. Users who *know* a rep is current can sidestep the rerun by writing
+  the hash file manually.
+
 # landisutils 0.0.19
 
 ## `landis_run_docker()` captures image digest
