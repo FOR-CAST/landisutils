@@ -33,6 +33,14 @@ calibration_par_names <- function() {
   )
 }
 
+## LANDIS-II writes CSVs with a trailing comma -> empty trailing column.
+## Strip it so downstream column references aren't misaligned.
+.read_landis_csv <- function(p) {
+  df <- utils::read.csv(p, header = TRUE, check.names = FALSE, stringsAsFactors = FALSE)
+  blank <- vapply(df, function(col) all(is.na(col) | col == ""), logical(1))
+  df[, !blank, drop = FALSE]
+}
+
 #' Parse a Dynamic Fire run's event and summary logs
 #'
 #' Reads `<rep_dir>/fire/dynamic-fire-event-log.csv` (one row per fire event)
@@ -65,11 +73,7 @@ parse_dynamic_fire_logs <- function(rep_dir, pixel_area_ha = 1.0) {
   event_path <- fs::path(rep_dir, "fire", "dynamic-fire-event-log.csv")
   summary_path <- fs::path(rep_dir, "fire", "dynamic-fire-summary-log.csv")
   if (!fs::file_exists(event_path) || !fs::file_exists(summary_path)) {
-    stop(
-      "Dynamic Fire logs not found under ",
-      fs::path(rep_dir, "fire"),
-      call. = FALSE
-    )
+    stop("Dynamic Fire logs not found under ", fs::path(rep_dir, "fire"), call. = FALSE)
   }
 
   events <- .read_landis_csv(event_path)
@@ -107,14 +111,6 @@ parse_dynamic_fire_logs <- function(rep_dir, pixel_area_ha = 1.0) {
     total_sites_burned = sum(events_tbl$sites),
     n_events = nrow(events_tbl)
   )
-}
-
-## LANDIS-II writes CSVs with a trailing comma -> empty trailing column.
-## Strip it so downstream column references aren't misaligned.
-.read_landis_csv <- function(p) {
-  df <- utils::read.csv(p, header = TRUE, check.names = FALSE, stringsAsFactors = FALSE)
-  blank <- vapply(df, function(col) all(is.na(col) | col == ""), logical(1))
-  df[, !blank, drop = FALSE]
 }
 
 #' Patch a `dynamic-fire.txt` in place with candidate calibration parameters
@@ -262,12 +258,7 @@ loss_from_stats <- function(
   observed,
   weights = c(count = 1, size = 1, area_fuel = 0, severity = 0)
 ) {
-  stopifnot(
-    is.list(reps),
-    length(reps) >= 1L,
-    is.list(observed),
-    !is.null(observed$fru59)
-  )
+  stopifnot(is.list(reps), length(reps) >= 1L, is.list(observed), !is.null(observed$fru59))
 
   ## L_count: pool simulated annual counts per rep, compare mean to observed lambda
   n_fires_per_year_per_rep <- vapply(
@@ -277,7 +268,9 @@ loss_from_stats <- function(
   )
   obs_n <- observed$fru59$n_fires_by_year$n
   obs_sd <- stats::sd(obs_n)
-  if (!is.finite(obs_sd) || obs_sd <= 0) obs_sd <- 1
+  if (!is.finite(obs_sd) || obs_sd <= 0) {
+    obs_sd <- 1
+  }
   L_count <- abs(mean(n_fires_per_year_per_rep) - observed$fru59$lambda_obs) / obs_sd
 
   ## L_size: pool simulated sizes across reps, compute KS distance to observed
@@ -369,4 +362,205 @@ apply_calibrated_hi_prop <- function(fire_size_table, calibrated_fire_params) {
   fire_size_table$SumHiProp <- calibrated_fire_params[["SumHiProp"]]
   fire_size_table$FallHiProp <- calibrated_fire_params[["FallHiProp"]]
   fire_size_table
+}
+
+
+## Phase 8b: observed-target builder ------------------------------------------------------------
+
+#' Default fuel-code -> base-fuel-type mapping (BC FUEL_TYPE_CD factor levels)
+#'
+#' Returns the mapping used by gitanyow-partial-harvest and other projects that
+#' use the BC `FUEL_TYPE_CD` factor encoding for `fuel_types_rast`. Levels
+#' correspond to: 1=B71_S-2, 2=C-2, 3=C-3, 4=C-4, 5=C-5, 6=C-6, 7=C-7, 8=D-1/2,
+#' 9=M-1/2, 10=N (non-fuel), 11=O-1a/b, 12=S-1, 13=S-3. Mapped to the five base
+#' types accepted by [defaultFuelTypeTable()] / [calibration_par_names()].
+#'
+#' Downstream projects with a different fuel-classification raster should pass
+#' their own mapping vector to [save_observed_fire_targets()] via the
+#' `fuel_code_to_base` argument.
+#'
+#' @returns Character vector of length 13, names "1".."13", values
+#'   `"Conifer"` / `"ConiferPlantation"` / `"Deciduous"` / `"Slash"` /
+#'   `"Open"` / `NA_character_`.
+#'
+#' @family Dynamic Fire calibration helpers
+#'
+#' @export
+bc_fuel_code_to_base <- function() {
+  c(
+    "1" = "Conifer", ## B71_S-2 burned regen, classified as Conifer per pipeline
+    "2" = "Conifer", ## C-2
+    "3" = "Conifer", ## C-3
+    "4" = "Conifer", ## C-4
+    "5" = "Conifer", ## C-5
+    "6" = "ConiferPlantation", ## C-6
+    "7" = "Conifer", ## C-7
+    "8" = "Deciduous", ## D-1/2
+    "9" = "Conifer", ## M-1/2 mixedwood
+    "10" = NA_character_, ## N (non-fuel)
+    "11" = "Open", ## O-1a/b
+    "12" = "Slash", ## S-1
+    "13" = "Slash" ## S-3
+  )
+}
+
+#' Save observed fire-regime targets (NFDB-derived) for calibration loss
+#'
+#' Pre-computes per-ecoregion observed summaries that downstream calibration
+#' loss components ([loss_from_stats()]) compare simulated fires against.
+#' Saves a single small `.rds` payload of base R types -- so DEoptim workers
+#' can read it from disk without terra/sf in their environments.
+#'
+#' Loss-component consumers:
+#' \itemize{
+#'   \item `L_count` uses `n_fires_by_year` (mean + sd for normalisation).
+#'   \item `L_size` uses `fire_sizes_ha` (sorted vector; KS test against sim).
+#'   \item `L_area_fuel` uses primary-ecoregion `area_by_fuel_ha` (Tier 2;
+#'         weight 0 in Tier 1).
+#'   \item `L_severity` stays NULL; populate from literature priors when Tier 2
+#'         severity matching is implemented.
+#' }
+#'
+#' Per ecoregion (`primary_ecoregion`, `secondary_ecoregion`):
+#' \itemize{
+#'   \item Fire counts come from NFDB IGNITION POINTS (one row = one ignition).
+#'         NFDB polygons are sparser (only mapped for larger fires).
+#'   \item Fire sizes come from NFDB points' `SIZE_HA` column (zeros dropped to
+#'         keep the lognormal-flavoured size distribution positive).
+#'   \item `area_by_fuel_ha` is computed for the PRIMARY ecoregion only via
+#'         polygon overlay on `fuel_types_rast`. `fuel_types_rast` covers the
+#'         LANDIS simulation domain; secondary-ecoregion polygons typically
+#'         extend well beyond that extent, making a secondary computation
+#'         misleading (it would just be the primary value over again).
+#' }
+#'
+#' @param primary_points,primary_polys SpatVector. NFDB ignition points and
+#'   fire polygons for the primary ecoregion (the LANDIS simulation extent).
+#' @param secondary_points,secondary_polys SpatVector or NULL. Same, for an
+#'   optional regional-context ecoregion. `area_by_fuel_ha` is NOT computed
+#'   for the secondary (see Details).
+#' @param fire_years Integer vector. Years over which counts are normalised
+#'   (denominator for `lambda_obs`).
+#' @param fuel_types_rast SpatRaster. Integer-coded fuel-type raster covering
+#'   the LANDIS simulation extent.
+#' @param primary_label,secondary_label Character. Labels for the two ecoregions
+#'   (e.g., `"FRU59"` / `"FRT12"`). Stored in the payload for reproducibility.
+#' @param fuel_code_to_base Named character vector. Mapping from
+#'   `fuel_types_rast` integer codes (as character names) to the five base
+#'   fuel types from [defaultFuelTypeTable()]. NA values mark non-fuel codes
+#'   to be excluded. Default: [bc_fuel_code_to_base()].
+#' @param path Character. Output `.rds` path. Parent dir created if missing.
+#'
+#' @returns Character. Absolute path to the written file.
+#'
+#' @family Dynamic Fire calibration helpers
+#'
+#' @export
+save_observed_fire_targets <- function(
+  primary_points,
+  primary_polys,
+  fire_years,
+  fuel_types_rast,
+  path,
+  secondary_points = NULL,
+  secondary_polys = NULL,
+  primary_label = "primary",
+  secondary_label = "secondary",
+  fuel_code_to_base = bc_fuel_code_to_base()
+) {
+  stopifnot(
+    inherits(primary_points, "SpatVector"),
+    inherits(primary_polys, "SpatVector"),
+    is.null(secondary_points) || inherits(secondary_points, "SpatVector"),
+    is.null(secondary_polys) || inherits(secondary_polys, "SpatVector"),
+    is.numeric(fire_years),
+    length(fire_years) >= 1L,
+    inherits(fuel_types_rast, "SpatRaster"),
+    is.character(path),
+    length(path) == 1L,
+    is.character(fuel_code_to_base),
+    !is.null(names(fuel_code_to_base))
+  )
+
+  fs::dir_create(dirname(path))
+  pixel_area_ha <- prod(terra::res(fuel_types_rast)) / 10000
+
+  .summarise <- function(points_sv, polys_sv, label, compute_area_by_fuel) {
+    pts <- as.data.frame(points_sv)
+    plys <- if (is.null(polys_sv)) data.frame() else as.data.frame(polys_sv)
+
+    pts_year <- pts[["YEAR"]]
+    n_fires_by_year <- tibble::tibble(
+      year = as.integer(fire_years),
+      n = vapply(as.integer(fire_years), function(y) sum(pts_year == y, na.rm = TRUE), integer(1))
+    )
+
+    sizes_raw <- pts[["SIZE_HA"]]
+    fire_sizes_ha <- sort(sizes_raw[!is.na(sizes_raw) & sizes_raw > 0])
+
+    if (isTRUE(compute_area_by_fuel) && !is.null(polys_sv) && nrow(plys) > 0L) {
+      poly_mask <- terra::rasterize(polys_sv, fuel_types_rast, background = NA, field = 1)
+      burned <- terra::mask(fuel_types_rast, poly_mask)
+      freq_df <- as.data.frame(terra::freq(burned))
+      val_col <- if ("value" %in% names(freq_df)) "value" else "label"
+      area_by_fuel_ha <- tibble::tibble(
+        fuel_code = as.integer(freq_df[[val_col]]),
+        cells = as.integer(freq_df[["count"]]),
+        area_ha = as.numeric(freq_df[["count"]]) * pixel_area_ha,
+        base = unname(fuel_code_to_base[as.character(freq_df[[val_col]])])
+      ) |>
+        dplyr::filter(!is.na(.data$base)) |>
+        dplyr::group_by(.data$base) |>
+        dplyr::summarise(
+          area_ha = sum(.data$area_ha),
+          cells = sum(.data$cells),
+          .groups = "drop"
+        ) |>
+        dplyr::arrange(.data$base)
+    } else {
+      area_by_fuel_ha <- NULL
+    }
+
+    list(
+      ecoregion = label,
+      n_years = length(fire_years),
+      n_ignitions = nrow(pts),
+      n_polys = nrow(plys),
+      lambda_obs = nrow(pts) / length(fire_years),
+      n_fires_by_year = n_fires_by_year,
+      fire_sizes_ha = fire_sizes_ha,
+      area_by_fuel_ha = area_by_fuel_ha,
+      severity_dist = NULL
+    )
+  }
+
+  primary <- .summarise(primary_points, primary_polys, primary_label, compute_area_by_fuel = TRUE)
+  secondary <- if (!is.null(secondary_points)) {
+    .summarise(secondary_points, secondary_polys, secondary_label, compute_area_by_fuel = FALSE)
+  } else {
+    NULL
+  }
+
+  ## Keep the named accessors that loss_from_stats() expects ($fru59 in legacy
+  ## clients, $primary going forward). Set BOTH so projects can use either name.
+  payload <- list(
+    primary = primary,
+    secondary = secondary,
+    fru59 = primary, ## back-compat alias for the gitanyow project's loss_from_stats() refs
+    frt12 = secondary, ## back-compat alias
+    fuel_code_to_base = fuel_code_to_base,
+    fire_years_range = c(min = min(fire_years), max = max(fire_years)),
+    fire_years = as.integer(fire_years),
+    pixel_area_ha = pixel_area_ha,
+    computed_at = Sys.time(),
+    notes = c(
+      "Fire counts come from NFDB ignition points (one row = one ignition).",
+      "Fire sizes are NFDB point SIZE_HA values (zeros dropped).",
+      "area_by_fuel_ha is computed for the primary ecoregion only (LANDIS sim extent).",
+      "severity_dist is NULL; Tier 2 will populate from literature priors."
+    )
+  )
+
+  saveRDS(payload, path)
+  fs::path_real(path)
 }

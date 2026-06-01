@@ -52,10 +52,7 @@ test_that("parse_dynamic_fire_logs() reads sample event + summary logs", {
 
 test_that("parse_dynamic_fire_logs() errors clearly when logs are missing", {
   rep_dir <- withr::local_tempdir()
-  expect_error(
-    parse_dynamic_fire_logs(rep_dir),
-    "Dynamic Fire logs not found"
-  )
+  expect_error(parse_dynamic_fire_logs(rep_dir), "Dynamic Fire logs not found")
 })
 
 test_that("patch_fire_config() rewrites SeverityCalibrationFactor / HiProp / IgnProb", {
@@ -113,7 +110,9 @@ test_that("patch_fire_config() rewrites SeverityCalibrationFactor / HiProp / Ign
   expect_equal(as.numeric(row1[4L]), 0.8)
   ## look ahead for the ConiferPlantation row (Index 6)
   for (k in seq(j, j + 16L)) {
-    if (k > length(patched) || !nzchar(trimws(patched[k]))) break
+    if (k > length(patched) || !nzchar(trimws(patched[k]))) {
+      break
+    }
     pk <- strsplit(trimws(patched[k]), "\\s+")[[1]]
     if (length(pk) >= 4L && identical(pk[2L], "ConiferPlantation")) {
       expect_equal(as.numeric(pk[4L]), 1.2)
@@ -137,7 +136,10 @@ test_that("patch_fire_config() rejects par_vec with wrong names", {
 test_that("apply_calibrated_ignprob() multiplies by base-type multipliers", {
   ft <- defaultFuelTypeTable()
   cand <- c(
-    SeverityCalibrationFactor = 1, SpHiProp = 0, SumHiProp = 0, FallHiProp = 0,
+    SeverityCalibrationFactor = 1,
+    SpHiProp = 0,
+    SumHiProp = 0,
+    FallHiProp = 0,
     IgnProb_Conifer = 0.8,
     IgnProb_ConiferPlantation = 1.2,
     IgnProb_Deciduous = 0.5,
@@ -147,26 +149,14 @@ test_that("apply_calibrated_ignprob() multiplies by base-type multipliers", {
   out <- apply_calibrated_ignprob(ft, cand)
 
   ## row-wise: out$IgnProb == ft$IgnProb * multiplier[ft$Base]
-  expect_equal(
-    out$IgnProb[ft$Base == "Conifer"],
-    ft$IgnProb[ft$Base == "Conifer"] * 0.8
-  )
+  expect_equal(out$IgnProb[ft$Base == "Conifer"], ft$IgnProb[ft$Base == "Conifer"] * 0.8)
   expect_equal(
     out$IgnProb[ft$Base == "ConiferPlantation"],
     ft$IgnProb[ft$Base == "ConiferPlantation"] * 1.2
   )
-  expect_equal(
-    out$IgnProb[ft$Base == "Deciduous"],
-    ft$IgnProb[ft$Base == "Deciduous"] * 0.5
-  )
-  expect_equal(
-    out$IgnProb[ft$Base == "Slash"],
-    ft$IgnProb[ft$Base == "Slash"] * 1.5
-  )
-  expect_equal(
-    out$IgnProb[ft$Base == "Open"],
-    rep(0, sum(ft$Base == "Open"))
-  )
+  expect_equal(out$IgnProb[ft$Base == "Deciduous"], ft$IgnProb[ft$Base == "Deciduous"] * 0.5)
+  expect_equal(out$IgnProb[ft$Base == "Slash"], ft$IgnProb[ft$Base == "Slash"] * 1.5)
+  expect_equal(out$IgnProb[ft$Base == "Open"], rep(0, sum(ft$Base == "Open")))
   ## non-IgnProb columns untouched
   expect_equal(out$a, ft$a)
   expect_equal(out$Base, ft$Base)
@@ -183,9 +173,14 @@ test_that("apply_calibrated_hi_prop() overwrites the three HiProp columns", {
   )
   cand <- c(
     SeverityCalibrationFactor = 1,
-    SpHiProp = 0.42, SumHiProp = 0.63, FallHiProp = 0.17,
-    IgnProb_Conifer = 1, IgnProb_ConiferPlantation = 1,
-    IgnProb_Deciduous = 1, IgnProb_Slash = 1, IgnProb_Open = 1
+    SpHiProp = 0.42,
+    SumHiProp = 0.63,
+    FallHiProp = 0.17,
+    IgnProb_Conifer = 1,
+    IgnProb_ConiferPlantation = 1,
+    IgnProb_Deciduous = 1,
+    IgnProb_Slash = 1,
+    IgnProb_Open = 1
   )
   out <- apply_calibrated_hi_prop(fst, cand)
   expect_equal(out$SpHiProp, c(0.42, 0.42))
@@ -217,6 +212,121 @@ test_that("loss_from_stats() Tier 1 returns finite count + size components", {
   expect_true(loss$components[["size"]] >= 0 && loss$components[["size"]] <= 1)
   expect_equal(loss$components[["area_fuel"]], 0)
   expect_equal(loss$components[["severity"]], 0)
+})
+
+test_that("bc_fuel_code_to_base() maps the 13 BC FUEL_TYPE_CD levels", {
+  m <- bc_fuel_code_to_base()
+  expect_length(m, 13L)
+  expect_setequal(names(m), as.character(1:13))
+  ## Conifers are codes 1-5, 7, 9
+  expect_true(all(m[as.character(c(1, 2, 3, 4, 5, 7, 9))] == "Conifer"))
+  expect_equal(m[["6"]], "ConiferPlantation")
+  expect_equal(m[["8"]], "Deciduous")
+  expect_true(is.na(m[["10"]])) ## non-fuel
+  expect_equal(m[["11"]], "Open")
+  expect_true(all(m[as.character(c(12, 13))] == "Slash"))
+})
+
+test_that("save_observed_fire_targets() writes a payload with expected shape", {
+  ## Build a tiny synthetic landscape + NFDB.
+  ## Raster: 10x10 grid, fuel codes 2 (Conifer C-2) on left half, 8 (Deciduous) on right.
+  r <- terra::rast(nrow = 10, ncol = 10, xmin = 0, xmax = 1000, ymin = 0, ymax = 1000)
+  terra::values(r) <- rep(c(rep(2L, 5), rep(8L, 5)), 10)
+
+  ## Two synthetic ignition points: one in conifer, one in deciduous.
+  pts <- terra::vect(
+    data.frame(
+      lon = c(250, 750, 300),
+      lat = c(500, 500, 200),
+      YEAR = c(2010L, 2015L, 2020L),
+      SIZE_HA = c(5.0, 100.0, 0.5)
+    ),
+    geom = c("lon", "lat"),
+    crs = terra::crs(r)
+  )
+  ## One synthetic fire polygon (matches the 100ha fire, deciduous side).
+  poly_df <- data.frame(
+    geom = "POLYGON ((600 400, 900 400, 900 600, 600 600, 600 400))",
+    YEAR = 2015L,
+    SIZE_HA = 100.0
+  )
+  polys <- terra::vect(poly_df$geom, crs = terra::crs(r))
+  polys$YEAR <- 2015L
+  polys$SIZE_HA <- 100.0
+
+  out_path <- withr::local_tempfile(fileext = ".rds")
+  result_path <- save_observed_fire_targets(
+    primary_points = pts,
+    primary_polys = polys,
+    fire_years = 2010L:2020L,
+    fuel_types_rast = r,
+    path = out_path,
+    primary_label = "TEST_REGION"
+  )
+  expect_true(fs::file_exists(result_path))
+
+  payload <- readRDS(result_path)
+  expect_named(
+    payload,
+    c(
+      "primary",
+      "secondary",
+      "fru59",
+      "frt12",
+      "fuel_code_to_base",
+      "fire_years_range",
+      "fire_years",
+      "pixel_area_ha",
+      "computed_at",
+      "notes"
+    )
+  )
+  ## Primary summary checks
+  p <- payload$primary
+  expect_equal(p$ecoregion, "TEST_REGION")
+  expect_equal(p$n_ignitions, 3L)
+  expect_equal(p$n_polys, 1L)
+  expect_equal(p$lambda_obs, 3 / 11) ## 3 fires over 11 years
+  ## Sizes: SIZE_HA = 0.5 dropped (would be zero-ish + need positive); 5 and 100 kept
+  expect_equal(p$fire_sizes_ha, sort(c(5.0, 100.0, 0.5)))
+  ## area_by_fuel_ha: polygon overlaps deciduous cells only (codes 8)
+  expect_s3_class(p$area_by_fuel_ha, "tbl_df")
+  expect_true("Deciduous" %in% p$area_by_fuel_ha$base)
+
+  ## Secondary stays NULL when no secondary inputs supplied
+  expect_null(payload$secondary)
+  expect_null(payload$frt12)
+  ## Aliases populated
+  expect_identical(payload$fru59, payload$primary)
+})
+
+test_that("save_observed_fire_targets() accepts a custom fuel_code_to_base mapping", {
+  r <- terra::rast(nrow = 5, ncol = 5, xmin = 0, xmax = 500, ymin = 0, ymax = 500)
+  terra::values(r) <- 1L ## all the same custom code
+  pts <- terra::vect(
+    data.frame(lon = 250, lat = 250, YEAR = 2010L, SIZE_HA = 1.0),
+    geom = c("lon", "lat"),
+    crs = terra::crs(r)
+  )
+  polys <- terra::vect(
+    "POLYGON ((100 100, 400 100, 400 400, 100 400, 100 100))",
+    crs = terra::crs(r)
+  )
+  polys$YEAR <- 2010L
+  polys$SIZE_HA <- 9.0
+  custom_map <- c("1" = "Open") ## custom: code 1 -> Open
+  out_path <- withr::local_tempfile(fileext = ".rds")
+  save_observed_fire_targets(
+    primary_points = pts,
+    primary_polys = polys,
+    fire_years = 2010L:2015L,
+    fuel_types_rast = r,
+    path = out_path,
+    fuel_code_to_base = custom_map
+  )
+  payload <- readRDS(out_path)
+  expect_equal(payload$primary$area_by_fuel_ha$base, "Open")
+  expect_equal(payload$fuel_code_to_base, custom_map)
 })
 
 test_that("loss_from_stats() handles empty-fires reps with a finite penalty", {
