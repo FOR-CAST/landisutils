@@ -221,6 +221,9 @@
 - [`harvestPrescription()`](https://for-cast.github.io/landisutils/reference/harvestPrescription.md)
   : Construct a Biomass Harvest prescription
 
+- [`host_cpu_info()`](https://for-cast.github.io/landisutils/reference/host_cpu_info.md)
+  : Host CPU and RAM identification (cross-platform)
+
 - [`insertANPPTimeSeries()`](https://for-cast.github.io/landisutils/reference/insertANPPTimeSeries.md)
   :
 
@@ -606,6 +609,14 @@
 
 - [`read_biomass_output_rasters()`](https://for-cast.github.io/landisutils/reference/read_biomass_output_rasters.md)
   : Read Output.Biomass raster snapshots
+
+- [`read_landis_resource_logs()`](https://for-cast.github.io/landisutils/reference/read_landis_resource_logs.md)
+  :
+
+  Read per-rep resource logs written by
+  [`landis_run_docker()`](https://for-cast.github.io/landisutils/reference/landis_run_docker.md)
+  /
+  [`landis_run_local()`](https://for-cast.github.io/landisutils/reference/landis_run_local.md)
 
 - [`roadType()`](https://for-cast.github.io/landisutils/reference/roadType.md)
   : Construct a non-exit road type

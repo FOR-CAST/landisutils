@@ -1,5 +1,40 @@
 # Changelog
 
+## landisutils 0.0.22
+
+### Resource logs now self-describe the host
+
+- [`landis_run_docker()`](https://for-cast.github.io/landisutils/reference/landis_run_docker.md)
+  and
+  [`landis_run_local()`](https://for-cast.github.io/landisutils/reference/landis_run_local.md)
+  now append three additional lines to each rep’s `docker_resources.log`
+  / `local_resources.log`:
+
+      host_cpu_model: <model name>          # e.g. "AMD EPYC 7702 64-Core Processor"
+      host_cpu_cores: <N>                   # logical cores visible to R
+      host_ram_bytes: <N>                   # total system memory in bytes
+
+  This makes each per-rep resource log self-describing: downstream
+  provenance tooling can recover not just what the rep used
+  (`elapsed_sec`, `peak_mem_bytes`) but the host it ran on, important
+  when reps are dispatched across a heterogeneous cluster.
+
+- New exported helpers:
+
+  - [`host_cpu_info()`](https://for-cast.github.io/landisutils/reference/host_cpu_info.md)
+    returns `list(model, n_logical, ram_bytes)`, cross-platform:
+    `/proc/cpuinfo` + `/proc/meminfo` on Linux,
+    `sysctl machdep.cpu.brand_string` + `hw.memsize` on macOS,
+    `PROCESSOR_IDENTIFIER` env var +
+    `wmic ComputerSystem ... TotalPhysicalMemory` on Windows.
+    Logical-core count uses
+    [`parallel::detectCores()`](https://rdrr.io/r/parallel/detectCores.html)
+    everywhere. Called automatically by the run helpers.
+  - `read_landis_resource_logs(run_dir)` parses any `*_resources.log`
+    under `run_dir` and returns one data.frame row per rep with all
+    fields. Used by downstream report tooling to summarise run-time /
+    memory / host across replicates.
+
 ## landisutils 0.0.21
 
 ### `prepTopographyFile()` fills NoData with 0

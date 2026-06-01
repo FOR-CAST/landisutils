@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.21</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.22</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -39,6 +39,26 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.22" id="landisutils-0022">landisutils 0.0.22<a class="anchor" aria-label="anchor" href="#landisutils-0022"></a></h2>
+<div class="section level3">
+<h3 id="resource-logs-now-self-describe-the-host-0-0-22">Resource logs now self-describe the host<a class="anchor" aria-label="anchor" href="#resource-logs-now-self-describe-the-host-0-0-22"></a></h3>
+<ul><li>
+<p><code><a href="../reference/landis_run_docker.html">landis_run_docker()</a></code> and <code><a href="../reference/landis_run_local.html">landis_run_local()</a></code> now append three additional lines to each rep’s <code>docker_resources.log</code> / <code>local_resources.log</code>:</p>
+<pre><code>host_cpu_model: &lt;model name&gt;          # e.g. "AMD EPYC 7702 64-Core Processor"
+host_cpu_cores: &lt;N&gt;                   # logical cores visible to R
+host_ram_bytes: &lt;N&gt;                   # total system memory in bytes</code></pre>
+<p>This makes each per-rep resource log self-describing: downstream provenance tooling can recover not just what the rep used (<code>elapsed_sec</code>, <code>peak_mem_bytes</code>) but the host it ran on, important when reps are dispatched across a heterogeneous cluster.</p>
+</li>
+<li>
+<p>New exported helpers:</p>
+<ul><li>
+<code><a href="../reference/host_cpu_info.html">host_cpu_info()</a></code> returns <code>list(model, n_logical, ram_bytes)</code>, cross-platform: <code>/proc/cpuinfo</code> + <code>/proc/meminfo</code> on Linux, <code>sysctl machdep.cpu.brand_string</code> + <code>hw.memsize</code> on macOS, <code>PROCESSOR_IDENTIFIER</code> env var + <code>wmic ComputerSystem ... TotalPhysicalMemory</code> on Windows. Logical-core count uses <code><a href="https://rdrr.io/r/parallel/detectCores.html" class="external-link">parallel::detectCores()</a></code> everywhere. Called automatically by the run helpers.</li>
+<li>
+<code>read_landis_resource_logs(run_dir)</code> parses any <code>*_resources.log</code> under <code>run_dir</code> and returns one data.frame row per rep with all fields. Used by downstream report tooling to summarise run-time / memory / host across replicates.</li>
+</ul></li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.21" id="landisutils-0021">landisutils 0.0.21<a class="anchor" aria-label="anchor" href="#landisutils-0021"></a></h2>
 <div class="section level3">
@@ -90,7 +110,7 @@
 <ul><li><p><strong>Breaking API change:</strong> <code><a href="../reference/tar_landis.html">tar_landis()</a></code> no longer accepts <code>n_reps</code>. It now takes an explicit <code>rep_index</code> argument (an unquoted upstream target symbol) and returns a <strong>single</strong> <code>tar_target</code> object (same as the original API).</p></li>
 <li>
 <p>The caller creates the rep-index target explicitly inside the module <code><a href="https://rdrr.io/r/base/list.html" class="external-link">list()</a></code> alongside the <code><a href="../reference/tar_landis.html">tar_landis()</a></code> call. This keeps both targets visible to tarborist’s static AST analysis (<code>tarborist.additionalSingleTargetFactories</code> handles the run target; the literal <code>tar_target()</code> call handles the rep-index target):</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>  <span class="fu">tar_target</span><span class="op">(</span>name <span class="op">=</span> <span class="va">..._rep_index</span>, command <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="fl">5L</span><span class="op">)</span>, iteration <span class="op">=</span> <span class="st">"vector"</span><span class="op">)</span>,</span>
 <span>  <span class="fu">landisutils</span><span class="fu">::</span><span class="fu"><a href="../reference/tar_landis.html">tar_landis</a></span><span class="op">(</span>name <span class="op">=</span> <span class="va">...</span>, rep_index <span class="op">=</span> <span class="va">..._rep_index</span>, <span class="va">...</span>,</span>
