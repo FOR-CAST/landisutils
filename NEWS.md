@@ -1,3 +1,19 @@
+# landisutils 0.0.19
+
+## `landis_run_docker()` captures image digest
+
+* `landis_run_docker()` now writes `<scenario_dir>/log/docker_image.log`
+  containing the immutable `sha256` digest of the image used for the run
+  (`<repo>@sha256:<64hex>`, falling back to the local `Id` for images with no
+  registry origin). Image tags are mutable; the digest is the canonical
+  identifier of the bytes that actually ran. Downstream provenance tooling can
+  read this sidecar to pin a run to a specific image regardless of subsequent
+  tag movement.
+* New `pull = FALSE` argument; when `TRUE`, `docker pull <image>` runs before
+  the simulation so the captured digest reflects the current registry rather
+  than a possibly-stale local copy. The argument is also exposed via
+  `tar_landis(pull = ...)`.
+
 # landisutils 0.0.18
 
 ## `leading_species()` handles non-vegetated cells

@@ -15,6 +15,7 @@ tar_landis(
   image = NULL,
   console = NULL,
   base_seed = NULL,
+  pull = FALSE,
   pattern = NULL,
   packages = targets::tar_option_get("packages"),
   library = targets::tar_option_get("library"),
@@ -73,6 +74,11 @@ set to \code{base_seed + (rep_index - 1)}, giving each run a distinct but
 deterministic seed. Adding more replicates later never changes existing
 seeds because seeds are derived from the rep index, not the order of
 creation.}
+
+\item{pull}{Logical. Passed to \code{\link[=landis_run_docker]{landis_run_docker()}} when
+\code{method = "docker"}: when \code{TRUE}, the image is \verb{docker pull}ed before
+running so the digest captured in \code{log/docker_image.log} reflects the
+current registry. Defaults to \code{FALSE}. No effect for \code{method = "local"}.}
 
 \item{pattern}{Expression (unquoted). Dynamic-branching pattern covering
 both the scenario and replicate dimensions, e.g.

@@ -8,7 +8,8 @@ landis_run_docker(
   scenario_dir,
   scenario_file = "scenario.txt",
   image = NULL,
-  console = NULL
+  console = NULL,
+  pull = FALSE
 )
 }
 \arguments{
@@ -24,6 +25,11 @@ absolute before mounting).}
 \item{console}{Character or \code{NULL}. Path to \code{Landis.Console.dll} \strong{inside
 the container}. Defaults to \code{NULL}, which calls \code{\link[=landis_find_docker]{landis_find_docker()}} at
 run time (reads \code{getOption("landisutils.docker.console")}).}
+
+\item{pull}{Logical. When \code{TRUE}, run \verb{docker pull <image>} before the
+simulation so the recorded digest reflects the current registry rather
+than a stale local copy. Defaults to \code{FALSE} to keep runs reproducible
+across iterations of an already-cached image.}
 }
 \value{
 Named list with \code{exit_code} (integer), \code{elapsed_sec} (numeric), and
@@ -36,7 +42,10 @@ inside the container. Stdout and stderr are written to
 \verb{<scenario_dir>/log/docker_stdout.log} and \code{docker_stderr.log}. Wall-clock
 elapsed time and peak memory use (polled every 2 s from \verb{docker stats}) are
 reported on completion and written to
-\verb{<scenario_dir>/log/docker_resources.log}.
+\verb{<scenario_dir>/log/docker_resources.log}. The image's immutable \code{sha256}
+digest is captured into \verb{<scenario_dir>/log/docker_image.log} so downstream
+provenance tools can pin runs to a specific image regardless of subsequent
+tag movement.
 }
 \seealso{
 \code{\link[=landis_find_docker]{landis_find_docker()}}, \code{\link[=landis_find]{landis_find()}}, \code{\link[=landis_run]{landis_run()}}, \code{\link[=landis_run_local]{landis_run_local()}}, \code{\link[=tar_landis]{tar_landis()}}

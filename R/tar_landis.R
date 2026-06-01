@@ -151,6 +151,9 @@ landis_run_local <- function(scenario_dir, scenario_file = "scenario.txt", conso
 #' elapsed time and peak memory use (polled every 2 s from `docker stats`) are
 #' reported on completion and written to
 #' `<scenario_dir>/log/docker_resources.log`.
+#' The image's immutable `sha256` digest is captured into
+#' `<scenario_dir>/log/docker_image.log` so downstream provenance tools can
+#' pin runs to a specific image regardless of subsequent tag movement.
 #'
 #' @param scenario_dir Character. Path to the scenario directory (resolved to
 #'   absolute before mounting).
@@ -161,6 +164,10 @@ landis_run_local <- function(scenario_dir, scenario_file = "scenario.txt", conso
 #' @param console Character or `NULL`. Path to `Landis.Console.dll` **inside
 #'   the container**. Defaults to `NULL`, which calls [landis_find_docker()] at
 #'   run time (reads `getOption("landisutils.docker.console")`).
+#' @param pull Logical. When `TRUE`, run `docker pull <image>` before the
+#'   simulation so the recorded digest reflects the current registry rather
+#'   than a stale local copy. Defaults to `FALSE` to keep runs reproducible
+#'   across iterations of an already-cached image.
 #'
 #' @returns Named list with `exit_code` (integer), `elapsed_sec` (numeric), and
 #'   `peak_mem_bytes` (numeric), returned invisibly.
@@ -172,7 +179,8 @@ landis_run_docker <- function(
   scenario_dir,
   scenario_file = "scenario.txt",
   image = NULL,
-  console = NULL
+  console = NULL,
+  pull = FALSE
 ) {
   image <- image %||% getOption("landisutils.docker.image")
   console <- console %||% landis_find_docker()
@@ -187,6 +195,51 @@ landis_run_docker <- function(
   }
 
   log_dir <- fs::dir_create(fs::path(scenario_dir, "log"))
+
+  ## Optionally pull the image so the captured digest reflects the current
+  ## registry rather than a possibly-stale local copy.
+  if (isTRUE(pull)) {
+    message(glue::glue("  pulling:       {image}"))
+    pull_rc <- system2("docker", c("pull", image), stdout = FALSE, stderr = FALSE)
+    if (pull_rc != 0L) {
+      warning(
+        sprintf(
+          "`docker pull %s` failed (exit code %d); continuing with local image.",
+          image,
+          pull_rc
+        ),
+        call. = FALSE
+      )
+    }
+  }
+
+  ## Capture the immutable image digest into a sidecar. Image tags are mutable;
+  ## the digest is the canonical identifier of the bytes that ran. RepoDigests
+  ## carries `<repo>@sha256:<64hex>` for any image with a known registry origin;
+  ## locally-built images fall back to the content-addressable Id (`sha256:...`).
+  digest_line <- tryCatch(
+    {
+      rd <- system2(
+        "docker",
+        c(
+          "image",
+          "inspect",
+          image,
+          "--format",
+          "{{if .RepoDigests}}{{index .RepoDigests 0}}{{else}}{{.Id}}{{end}}"
+        ),
+        stdout = TRUE,
+        stderr = FALSE
+      )
+      if (length(rd) && nzchar(trimws(rd[1L]))) trimws(rd[1L]) else NA_character_
+    },
+    error = function(e) NA_character_,
+    warning = function(w) NA_character_
+  )
+  if (is.na(digest_line)) {
+    digest_line <- sprintf("# %s (digest unavailable: not present in local image cache?)", image)
+  }
+  writeLines(digest_line, fs::path(log_dir, "docker_image.log"))
 
   ## --user uid:gid is a POSIX-only concept; omit on Windows (Docker Desktop runs
   ## Linux containers via WSL2 and does not need the flag for file ownership).
@@ -366,6 +419,10 @@ landis_run_docker <- function(
 #'   deterministic seed. Adding more replicates later never changes existing
 #'   seeds because seeds are derived from the rep index, not the order of
 #'   creation.
+#' @param pull Logical. Passed to [landis_run_docker()] when
+#'   `method = "docker"`: when `TRUE`, the image is `docker pull`ed before
+#'   running so the digest captured in `log/docker_image.log` reflects the
+#'   current registry. Defaults to `FALSE`. No effect for `method = "local"`.
 #' @param pattern Expression (unquoted). Dynamic-branching pattern covering
 #'   both the scenario and replicate dimensions, e.g.
 #'   `cross(landis_run_name, landis_run_output_rep_index)`.
@@ -389,6 +446,7 @@ tar_landis <- function(
   image = NULL,
   console = NULL,
   base_seed = NULL,
+  pull = FALSE,
   pattern = NULL,
   packages = targets::tar_option_get("packages"),
   library = targets::tar_option_get("library"),
@@ -418,6 +476,7 @@ tar_landis <- function(
   ## command. crew workers don't inherit R session state.
   base_seed_val <- if (is.null(base_seed)) NULL else as.integer(base_seed)
   output_dirs_val <- as.character(output_dir)
+  pull_val <- isTRUE(pull)
 
   ## Resolve method and image at factory-call time.
   method <- method %||%
@@ -489,7 +548,8 @@ tar_landis <- function(
           scenario_dir = .rep_dir,
           scenario_file = .(scenario_file),
           image = .(image),
-          console = .(console)
+          console = .(console),
+          pull = .(pull_val)
         )
       }
       .(collect_expr)
