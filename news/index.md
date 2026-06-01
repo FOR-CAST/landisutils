@@ -1,5 +1,29 @@
 # Changelog
 
+## landisutils 0.0.21
+
+### `prepTopographyFile()` fills NoData with 0
+
+- [`prepTopographyFile()`](https://for-cast.github.io/landisutils/reference/prepTopographyFile.md)
+  (and its
+  [`prepGroundSlopeFile()`](https://for-cast.github.io/landisutils/reference/prepTopographyFile.md)
+  /
+  [`prepUphillAzimuthMap()`](https://for-cast.github.io/landisutils/reference/prepTopographyFile.md)
+  wrappers) now replaces NoData cells with `0` before writing the INT2S
+  raster.
+  [`terra::terrain()`](https://rspatial.github.io/terra/reference/terrain.html)
+  leaves edge cells as `NaN` (no full 3x3 neighbourhood), which becomes
+  the `-32768` sentinel under INT2S. LANDIS-II’s Dynamic Fire reader
+  rejects any active cell with that value:
+
+      Ground Slope invalid map code: -32768
+
+  The bug was latent for grids with few active cells, but is exposed
+  whenever upstream changes (e.g. corrected non-veg masks) expand the
+  active area into the 1-cell edge band of the terrain raster. A flat
+  default (0 deg) is safe: a single-cell edge contributes negligibly to
+  Dynamic Fire’s rate-of-spread.
+
 ## landisutils 0.0.20
 
 ### `tar_landis()` idempotency respects input changes

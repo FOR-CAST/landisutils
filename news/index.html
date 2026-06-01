@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.20</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.21</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -39,6 +39,18 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.21" id="landisutils-0021">landisutils 0.0.21<a class="anchor" aria-label="anchor" href="#landisutils-0021"></a></h2>
+<div class="section level3">
+<h3 id="preptopographyfile-fills-nodata-with-0-0-21">
+<code>prepTopographyFile()</code> fills NoData with 0<a class="anchor" aria-label="anchor" href="#preptopographyfile-fills-nodata-with-0-0-21"></a></h3>
+<ul><li>
+<p><code><a href="../reference/prepTopographyFile.html">prepTopographyFile()</a></code> (and its <code><a href="../reference/prepTopographyFile.html">prepGroundSlopeFile()</a></code> / <code><a href="../reference/prepTopographyFile.html">prepUphillAzimuthMap()</a></code> wrappers) now replaces NoData cells with <code>0</code> before writing the INT2S raster. <code><a href="https://rspatial.github.io/terra/reference/terrain.html" class="external-link">terra::terrain()</a></code> leaves edge cells as <code>NaN</code> (no full 3x3 neighbourhood), which becomes the <code>-32768</code> sentinel under INT2S. LANDIS-II’s Dynamic Fire reader rejects any active cell with that value:</p>
+<pre><code>Ground Slope invalid map code: -32768</code></pre>
+<p>The bug was latent for grids with few active cells, but is exposed whenever upstream changes (e.g. corrected non-veg masks) expand the active area into the 1-cell edge band of the terrain raster. A flat default (0 deg) is safe: a single-cell edge contributes negligibly to Dynamic Fire’s rate-of-spread.</p>
+</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.20" id="landisutils-0020">landisutils 0.0.20<a class="anchor" aria-label="anchor" href="#landisutils-0020"></a></h2>
 <div class="section level3">
@@ -78,7 +90,7 @@
 <ul><li><p><strong>Breaking API change:</strong> <code><a href="../reference/tar_landis.html">tar_landis()</a></code> no longer accepts <code>n_reps</code>. It now takes an explicit <code>rep_index</code> argument (an unquoted upstream target symbol) and returns a <strong>single</strong> <code>tar_target</code> object (same as the original API).</p></li>
 <li>
 <p>The caller creates the rep-index target explicitly inside the module <code><a href="https://rdrr.io/r/base/list.html" class="external-link">list()</a></code> alongside the <code><a href="../reference/tar_landis.html">tar_landis()</a></code> call. This keeps both targets visible to tarborist’s static AST analysis (<code>tarborist.additionalSingleTargetFactories</code> handles the run target; the literal <code>tar_target()</code> call handles the rep-index target):</p>
-<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>  <span class="fu">tar_target</span><span class="op">(</span>name <span class="op">=</span> <span class="va">..._rep_index</span>, command <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="fl">5L</span><span class="op">)</span>, iteration <span class="op">=</span> <span class="st">"vector"</span><span class="op">)</span>,</span>
 <span>  <span class="fu">landisutils</span><span class="fu">::</span><span class="fu"><a href="../reference/tar_landis.html">tar_landis</a></span><span class="op">(</span>name <span class="op">=</span> <span class="va">...</span>, rep_index <span class="op">=</span> <span class="va">..._rep_index</span>, <span class="va">...</span>,</span>
