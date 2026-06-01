@@ -35,10 +35,14 @@ identify what host produced any given replicate's outputs.
 Other LANDIS-II execution helpers:
 \code{\link[=landis_find]{landis_find()}},
 \code{\link[=landis_find_docker]{landis_find_docker()}},
+\code{\link[=landis_pool_exec]{landis_pool_exec()}},
+\code{\link[=landis_pool_start]{landis_pool_start()}},
+\code{\link[=landis_pool_stop]{landis_pool_stop()}},
 \code{\link[=landis_replicate]{landis_replicate()}},
 \code{\link[=landis_run_docker]{landis_run_docker()}},
 \code{\link[=landis_run_local]{landis_run_local()}},
 \code{\link[=read_landis_resource_logs]{read_landis_resource_logs()}},
-\code{\link[=tar_landis]{tar_landis()}}
+\code{\link[=tar_landis]{tar_landis()}},
+\code{\link[=write_landis_scenario_file]{write_landis_scenario_file()}}
 }
 \concept{LANDIS-II execution helpers}

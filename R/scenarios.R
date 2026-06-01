@@ -304,7 +304,7 @@ write_landis_scenario_file <- function(
       return(NULL)
     }
     vals <- vapply(named_files, function(f) fs::path_rel(fs::path_real(f), path), character(1))
-    as.list(setNames(vals, names(named_files)))
+    as.list(stats::setNames(vals, names(named_files)))
   }
 
   succession_rel <- make_rel_list(succession_ext_files)

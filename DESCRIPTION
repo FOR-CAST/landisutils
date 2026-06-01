@@ -1,6 +1,6 @@
 Package: landisutils
 Title: Utilities for running LANDIS-II simulations
-Version: 0.0.23
+Version: 0.0.24
 Authors@R: 
     person(c("Alex", "M"), "Chubaty", , "achubaty@for-cast.ca", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0001-7146-8135"))
@@ -76,6 +76,7 @@ Collate:
     'LandisClimateConfig.R'
     'LandisExtension.R'
     'LandisScenario.R'
+    'landis_pool.R'
     'calibrate_dynamic_fire.R'
     'calibrate_original_fire.R'
     'climate.R'
@@ -119,7 +120,6 @@ Collate:
     'ext_social_climate_fire.R'
     'initial_communities.R'
     'landis.R'
-    'landis_pool.R'
     'landisutils-package.R'
     'plot_transitions.R'
     'scenarios.R'

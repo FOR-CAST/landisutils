@@ -1,3 +1,86 @@
+# landisutils 0.0.24
+
+## Dynamic Fire System extension calibration
+
+A new function family for calibrating the LANDIS-II Dynamic Fire System
+extension. The calibration tunes `SeverityCalibrationFactor`, per-season FMC
+`HiProp` values, and per-base-fuel-type `IgnProb` multipliers so simulated
+fires match observed regional fire statistics; the empirically-fit parameters
+(`Mu`, `Sigma`, `Max`, `NumFires`, seasonal `PropFire`) are fit at the data
+layer upstream and are not part of the optimisation.
+
+* **Pure-data helpers** (no LANDIS-II invocation):
+  * `calibration_par_names()` -- canonical 9-name parameter vector.
+  * `parse_dynamic_fire_logs()` -- reads `fire/dynamic-fire-event-log.csv` +
+    `fire/dynamic-fire-summary-log.csv` into a small per-rep stats list.
+  * `patch_fire_config()` -- surgical text patch of `dynamic-fire.txt`
+    (SeverityCalibrationFactor scalar; FireSizesTable HiProp columns;
+    FuelTypeTable IgnProb column multiplied per base type).
+  * `loss_from_stats()` -- multi-component weighted loss (count + KS-on-size
+    in Tier 1; area_by_fuel + severity stubbed at weight 0 for Tier 2).
+  * `apply_calibrated_ignprob()` / `apply_calibrated_hi_prop()` -- table-level
+    helpers used downstream of calibration to feed calibrated values into
+    production fire-config writers.
+
+* **Observed-target builder** (one-time NFDB-derived summaries):
+  * `save_observed_fire_targets()` -- writes a small `.rds` of per-ecoregion
+    observed summaries. Project-agnostic: primary / secondary ecoregion
+    SpatVectors + `fuel_code_to_base` mapping are all caller-provided.
+  * `bc_fuel_code_to_base()` -- default fuel-code mapping for BC
+    `FUEL_TYPE_CD` factor encoding (codes 1..13); pass a custom mapping
+    if your project's fuel-classification raster uses a different encoding.
+
+* **Scenario builders** for the static-landscape calibration scenario:
+  * `build_calibration_spinup_scenario()` -- builds a one-off LANDIS-II
+    scenario that runs ForCS with both spinup flags ON and emits a snapshot
+    of the spun-up cohort community via the Output Biomass Community
+    extension. The year-0 snapshot becomes the calibration IC.
+  * `run_calibration_spinup()` -- blocking single-trial LANDIS-II invocation
+    for the spinup; dispatches to `landis_run_local()` / `landis_run_docker()`.
+  * `build_calibration_scenario_template()` -- copies a production fire
+    scenario, swaps the IC for the spinup snapshot, patches ForCS for
+    calibration (spinup off + frozen succession), optionally writes a fresh
+    baseline `dynamic-fire.txt` inline (breaks the cycle between a
+    `calibrated_fire_params`-aware production fire config and the
+    calibration loop).
+  * `write_landis_scenario_file()` (in `scenarios.R`) -- lower-level
+    `scenario.txt` writer that takes already-written extension config-file
+    paths rather than R6 extension objects. Useful when project pipelines
+    write extension configs in separate steps.
+
+* **Warm Docker pool** for calibration:
+  * `landis_pool_start()` / `landis_pool_exec()` / `landis_pool_stop()` --
+    a pool of detached LANDIS-II containers that `docker exec`s per DEoptim
+    trial instead of `docker run --rm` per trial. Per-call env overrides
+    (`HOME=/tmp`, `DOTNET_BUNDLE_EXTRACT_BASE_DIR=...`) keep dotnet from
+    accreting per-user-cache state between trials. Designed for `on.exit()`
+    teardown from calibration drivers.
+
+* **Simulator backends** for the calibration loop:
+  * `sim_landis()` -- per-trial LANDIS-II invocation. Takes file paths only
+    (FORK-safe), copies template -> scratch dir, patches `dynamic-fire.txt`,
+    runs LANDIS-II either via the warm pool or a one-off
+    `landis_run_docker()` / `landis_run_local()`, parses logs.
+  * `sim_r_reimpl()` -- reserved slot for a future pure-R reimplementation;
+    currently errors with a not-yet-implemented message.
+  * `sim_mock()` -- plausibly-shaped output for testing the calibration
+    driver's control flow without Docker.
+
+* **DEoptim driver:**
+  * `calibrate_dynamic_fire()` -- orchestrates the calibration: starts a
+    warm Docker pool, sets up a FORK cluster with per-worker container
+    pinning, invokes `DEoptim::DEoptim()` with the multi-component loss as
+    the objective, tears down pool + cluster via `on.exit()`. Gated on
+    `requireNamespace("DEoptim")` (DEoptim is in Suggests; install via
+    `renv::install("DEoptim")` before calling).
+
+* **Vignette:** `vignette("Dynamic-Fire-Calibration", package = "landisutils")`
+  documents the end-to-end target-wiring pattern for downstream projects.
+
+* **Tests:** 97+ testthat expectations across calibration + pool test files.
+  Docker-gated tests `skip_if_not()` when docker is unavailable; DEoptim-gated
+  driver tests `skip_if_not_installed("DEoptim")`.
+
 # landisutils 0.0.23
 
 ## `landis_run_docker()` accepts resource constraints

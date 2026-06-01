@@ -31,6 +31,8 @@ Great Lakes Forestry Centre, Sault Ste. Marie, Ontario. Information Report GLC-X
 \seealso{
 Other Dynamic Fire helpers:
 \code{\link{DynamicFire}},
+\code{\link[=apply_calibrated_hi_prop]{apply_calibrated_hi_prop()}},
+\code{\link[=apply_calibrated_ignprob]{apply_calibrated_ignprob()}},
 \code{\link[=insertBuildUpIndex]{insertBuildUpIndex()}},
 \code{\link[=insertFireSizesTable]{insertFireSizesTable()}},
 \code{\link[=insertFuelTypeTable]{insertFuelTypeTable()}},

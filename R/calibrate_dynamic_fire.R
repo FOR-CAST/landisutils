@@ -7,6 +7,9 @@
 ## See also `calibrate_original_fire.R` (stub; a future calibration target for
 ## the LANDIS-II Original Fire extension would mirror this file's structure).
 
+#' @include landis_pool.R
+NULL
+
 #' Canonical parameter names for the Dynamic Fire calibration vector
 #'
 #' The order of names in this vector is the canonical order used by
@@ -287,7 +290,7 @@ loss_from_stats <- function(
   L_severity <- 0.0
 
   components <- c(count = L_count, size = L_size, area_fuel = L_area_fuel, severity = L_severity)
-  w <- setNames(rep(0, length(components)), names(components))
+  w <- stats::setNames(rep(0, length(components)), names(components))
   w[names(weights)] <- weights
   total <- sum(w * components)
 
@@ -1392,7 +1395,7 @@ calibrate_dynamic_fire <- function(observed_targets_path, scenario_template, cfg
     control = control
   )
 
-  best_params <- setNames(as.numeric(res$optim$bestmem), par_names)
+  best_params <- stats::setNames(as.numeric(res$optim$bestmem), par_names)
   trace_path <- fs::path(
     out_dir,
     sprintf("deoptim_trace_%s.csv", format(Sys.time(), "%Y%m%d_%H%M%S"))
