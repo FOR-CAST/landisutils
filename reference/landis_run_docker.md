@@ -6,7 +6,10 @@ inside the container. Stdout and stderr are written to
 `<scenario_dir>/log/docker_stdout.log` and `docker_stderr.log`.
 Wall-clock elapsed time and peak memory use (polled every 2 s from
 `docker stats`) are reported on completion and written to
-`<scenario_dir>/log/docker_resources.log`.
+`<scenario_dir>/log/docker_resources.log`. The image's immutable
+`sha256` digest is captured into `<scenario_dir>/log/docker_image.log`
+so downstream provenance tools can pin runs to a specific image
+regardless of subsequent tag movement.
 
 ## Usage
 
@@ -15,7 +18,8 @@ landis_run_docker(
   scenario_dir,
   scenario_file = "scenario.txt",
   image = NULL,
-  console = NULL
+  console = NULL,
+  pull = FALSE
 )
 ```
 
@@ -42,6 +46,13 @@ landis_run_docker(
   container**. Defaults to `NULL`, which calls
   [`landis_find_docker()`](https://for-cast.github.io/landisutils/reference/landis_find_docker.md)
   at run time (reads `getOption("landisutils.docker.console")`).
+
+- pull:
+
+  Logical. When `TRUE`, run `docker pull <image>` before the simulation
+  so the recorded digest reflects the current registry rather than a
+  stale local copy. Defaults to `FALSE` to keep runs reproducible across
+  iterations of an already-cached image.
 
 ## Value
 

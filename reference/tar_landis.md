@@ -18,6 +18,7 @@ tar_landis(
   image = NULL,
   console = NULL,
   base_seed = NULL,
+  pull = FALSE,
   pattern = NULL,
   packages = targets::tar_option_get("packages"),
   library = targets::tar_option_get("library"),
@@ -99,6 +100,15 @@ tar_landis(
   run a distinct but deterministic seed. Adding more replicates later
   never changes existing seeds because seeds are derived from the rep
   index, not the order of creation.
+
+- pull:
+
+  Logical. Passed to
+  [`landis_run_docker()`](https://for-cast.github.io/landisutils/reference/landis_run_docker.md)
+  when `method = "docker"`: when `TRUE`, the image is `docker pull`ed
+  before running so the digest captured in `log/docker_image.log`
+  reflects the current registry. Defaults to `FALSE`. No effect for
+  `method = "local"`.
 
 - pattern:
 

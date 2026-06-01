@@ -11,7 +11,7 @@ replicate's output files."><meta property="og:image" content="https://for-cast.g
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.18</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.19</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -63,6 +63,7 @@ replicate's output files.</p>
 <span>  image <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  console <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  base_seed <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  pull <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  pattern <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  packages <span class="op">=</span> <span class="fu">targets</span><span class="fu">::</span><span class="fu"><a href="https://docs.ropensci.org/targets/reference/tar_option_get.html" class="external-link">tar_option_get</a></span><span class="op">(</span><span class="st">"packages"</span><span class="op">)</span>,</span>
 <span>  library <span class="op">=</span> <span class="fu">targets</span><span class="fu">::</span><span class="fu"><a href="https://docs.ropensci.org/targets/reference/tar_option_get.html" class="external-link">tar_option_get</a></span><span class="op">(</span><span class="st">"library"</span><span class="op">)</span>,</span>
@@ -144,6 +145,13 @@ set to <code>base_seed + (rep_index - 1)</code>, giving each run a distinct but
 deterministic seed. Adding more replicates later never changes existing
 seeds because seeds are derived from the rep index, not the order of
 creation.</p></dd>
+
+
+<dt id="arg-pull">pull<a class="anchor" aria-label="anchor" href="#arg-pull"></a></dt>
+<dd><p>Logical. Passed to <code><a href="landis_run_docker.html">landis_run_docker()</a></code> when
+<code>method = "docker"</code>: when <code>TRUE</code>, the image is <code>docker pull</code>ed before
+running so the digest captured in <code>log/docker_image.log</code> reflects the
+current registry. Defaults to <code>FALSE</code>. No effect for <code>method = "local"</code>.</p></dd>
 
 
 <dt id="arg-pattern">pattern<a class="anchor" aria-label="anchor" href="#arg-pattern"></a></dt>

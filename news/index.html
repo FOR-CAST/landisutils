@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.18</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.19</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -39,6 +39,16 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.19" id="landisutils-0019">landisutils 0.0.19<a class="anchor" aria-label="anchor" href="#landisutils-0019"></a></h2>
+<div class="section level3">
+<h3 id="landis_run_docker-captures-image-digest-0-0-19">
+<code>landis_run_docker()</code> captures image digest<a class="anchor" aria-label="anchor" href="#landis_run_docker-captures-image-digest-0-0-19"></a></h3>
+<ul><li>
+<code><a href="../reference/landis_run_docker.html">landis_run_docker()</a></code> now writes <code>&lt;scenario_dir&gt;/log/docker_image.log</code> containing the immutable <code>sha256</code> digest of the image used for the run (<code>&lt;repo&gt;@sha256:&lt;64hex&gt;</code>, falling back to the local <code>Id</code> for images with no registry origin). Image tags are mutable; the digest is the canonical identifier of the bytes that actually ran. Downstream provenance tooling can read this sidecar to pin a run to a specific image regardless of subsequent tag movement.</li>
+<li>New <code>pull = FALSE</code> argument; when <code>TRUE</code>, <code>docker pull &lt;image&gt;</code> runs before the simulation so the captured digest reflects the current registry rather than a possibly-stale local copy. The argument is also exposed via <code>tar_landis(pull = ...)</code>.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.18" id="landisutils-0018">landisutils 0.0.18<a class="anchor" aria-label="anchor" href="#landisutils-0018"></a></h2>
 <div class="section level3">
