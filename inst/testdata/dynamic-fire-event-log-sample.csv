@@ -1,0 +1,5 @@
+Time,InitSiteRow,InitSiteColumn,InitFireRegion,InitFuel,InitPercentConifer,SelectedSizeOrDuration,SizeBin,Duration,FireSeason,WindSpeed,WindDirection,FFMC,BUI,PercentCuring,ISI,SitesChecked,CohortsKilled,MeanSeverity,DamagedSites,
+1, 534, 375, FRU59, 2, 0, 536.4556364142938, 3, 1142.8354743430043, 0, 30, 171, 90, 32, 0, 18, 537, 335, 4.397769516728625, 538, 
+8, 619, 276, FRU59, 2, 100, 2.820531471791978, 1, 23450.73336882961, 1, 27, 208, 63, 4, 51, 1, 3, 0, 0.75, 4, 
+9, 195, 151, FRU59, 2, 100, 48.28743611183686, 2, 187.04546161442278, 1, 10, 221, 90, 41, 51, 5, 49, 0, 3.38, 50, 
+8, 619, 276, FRU59, 2, 100, 2.820531471791978, 1, 23450.73336882961, 1, 27, 208, 63, 4, 51, 1, 3, 0, 0.75, 4, 

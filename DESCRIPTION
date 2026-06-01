@@ -75,6 +75,7 @@ Collate:
     'LandisClimateConfig.R'
     'LandisExtension.R'
     'LandisScenario.R'
+    'calibrate_dynamic_fire.R'
     'calibrate_original_fire.R'
     'climate.R'
     'climate_daily_biosim.R'
