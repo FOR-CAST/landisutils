@@ -19,6 +19,7 @@ tar_landis(
   console = NULL,
   base_seed = NULL,
   pull = FALSE,
+  force = FALSE,
   pattern = NULL,
   packages = targets::tar_option_get("packages"),
   library = targets::tar_option_get("library"),
@@ -109,6 +110,17 @@ tar_landis(
   before running so the digest captured in `log/docker_image.log`
   reflects the current registry. Defaults to `FALSE`. No effect for
   `method = "local"`.
+
+- force:
+
+  Logical (default `FALSE`). When `FALSE`, `tar_landis()` skips the
+  actual `landis_run_*()` call if the rep dir already contains a
+  completed `Landis-log.txt` *and* a `log/input_hash.json` sidecar whose
+  recorded hash matches the current inputs (per-input-file MD5 +
+  `base_seed`
+
+  - `rep_index` + `scenario_file`). When `TRUE`, the skip check is
+    bypassed and LANDIS-II is invoked unconditionally.
 
 - pattern:
 

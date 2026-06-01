@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.19</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.20</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -39,6 +39,18 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.20" id="landisutils-0020">landisutils 0.0.20<a class="anchor" aria-label="anchor" href="#landisutils-0020"></a></h2>
+<div class="section level3">
+<h3 id="tar_landis-idempotency-respects-input-changes-0-0-20">
+<code>tar_landis()</code> idempotency respects input changes<a class="anchor" aria-label="anchor" href="#tar_landis-idempotency-respects-input-changes-0-0-20"></a></h3>
+<ul><li>The skip check in <code><a href="../reference/tar_landis.html">tar_landis()</a></code> is now input-aware. Previously the run was skipped whenever <code>&lt;rep_dir&gt;/Landis-log.txt</code> existed and contained “Model run is complete”, regardless of whether the inputs had changed. This meant that when <a href="https://docs.ropensci.org/targets/" class="external-link">targets</a> correctly re-evaluated the run target after an upstream input change (e.g. a regenerated <code>initial-communities.tif</code> or <code>ecoregions.tif</code>), the surrounding command ran but the skip check still fired, so <code><a href="../reference/landis_run_docker.html">landis_run_docker()</a></code> / <code><a href="../reference/landis_run_local.html">landis_run_local()</a></code> was never invoked and the rep dir kept stale outputs from the previous run.</li>
+<li>The fix writes a <code>&lt;rep_dir&gt;/log/input_hash.json</code> sidecar after each successful run, capturing a SHA-1 of (per-input-file MD5 + <code>base_seed</code> + <code>rep_index</code> + <code>scenario_file</code>). The skip check now also requires the saved hash to match the current input hash; any mismatch triggers a real rerun.</li>
+<li>New <code>force = FALSE</code> argument on <code><a href="../reference/tar_landis.html">tar_landis()</a></code>. Setting <code>force = TRUE</code> short-circuits the skip check so LANDIS-II always runs (useful for debugging and one-off forced reruns without deleting rep dirs).</li>
+<li>
+<strong>Migration:</strong> existing rep dirs lack <code>log/input_hash.json</code>, so the first <code>tar_make()</code> after upgrading rebuilds every rep. This is the safe-conservative behaviour: we can’t know whether existing outputs correspond to current inputs. Users who <em>know</em> a rep is current can sidestep the rerun by writing the hash file manually.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.19" id="landisutils-0019">landisutils 0.0.19<a class="anchor" aria-label="anchor" href="#landisutils-0019"></a></h2>
 <div class="section level3">
