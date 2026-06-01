@@ -329,6 +329,75 @@ test_that("save_observed_fire_targets() accepts a custom fuel_code_to_base mappi
   expect_equal(payload$fuel_code_to_base, custom_map)
 })
 
+test_that(".patch_forcs_for_calibration() rewrites Timestep + SpinUp", {
+  fixture <- test_path("..", "..", "inst", "testdata", "forc-succession-sample.txt")
+  tmp <- withr::local_tempfile(fileext = ".txt")
+  fs::file_copy(fixture, tmp)
+  landisutils:::.patch_forcs_for_calibration(tmp, sim_years = 10L)
+  patched <- readLines(tmp)
+
+  ts_line <- grep("^Timestep[[:space:]]", patched, value = TRUE)
+  expect_length(ts_line, 1L)
+  ## sim_years + 1 = 11
+  expect_match(ts_line, "Timestep\\s+11")
+
+  sp_idx <- grep("^SpinUp[[:space:]]*$", patched)
+  data_idx <- sp_idx + 1L
+  while (grepl("^[[:space:]]*>>", patched[data_idx])) {
+    data_idx <- data_idx + 1L
+  }
+  expect_equal(trimws(patched[data_idx]), "0  0  1  20")
+})
+
+test_that(".patch_forcs_for_calibration() errors when expected sections are missing", {
+  tmp <- withr::local_tempfile(fileext = ".txt")
+  writeLines(c("LandisData  \"ForC Succession\"", ""), tmp)
+  expect_error(landisutils:::.patch_forcs_for_calibration(tmp, sim_years = 10L), "Timestep")
+})
+
+test_that("write_landis_scenario_file() writes a syntactically clean scenario.txt", {
+  dir <- withr::local_tempdir()
+  ## minimum-viable fake inputs (paths only -- the writer doesn't validate file
+  ## contents, just relativises and references them)
+  species <- fs::path(dir, "species.txt")
+  fs::file_create(species)
+  eco_txt <- fs::path(dir, "ecoregions.txt")
+  eco_tif <- fs::path(dir, "ecoregions.tif")
+  fs::file_create(eco_txt)
+  fs::file_create(eco_tif)
+  forcs <- fs::path(dir, "forc-succession.txt")
+  fs::file_create(forcs)
+  fire <- fs::path(dir, "dynamic-fire.txt")
+  fs::file_create(fire)
+
+  out <- write_landis_scenario_file(
+    path = dir,
+    duration = 5L,
+    cell_length = 100L,
+    species_file = species,
+    ecoregions_files = c(eco_txt, eco_tif),
+    succession_ext_files = c("ForC Succession" = forcs),
+    disturbance_ext_files = c("Dynamic Fire System" = fire),
+    other_ext_files = NULL,
+    output_manifest = c("fire/dynamic-fire-event-log.csv")
+  )
+  expect_true(fs::file_exists(out))
+  lines <- readLines(out)
+  ## Sections we expect
+  expect_true(any(grepl('LandisData\\s+"Scenario"', lines)))
+  expect_true(any(grepl("^Duration\\s+5", lines)))
+  expect_true(any(grepl("^CellLength\\s+100", lines)))
+  expect_true(any(grepl('"ForC Succession"\\s+forc-succession.txt', lines)))
+  expect_true(any(grepl('"Dynamic Fire System"\\s+dynamic-fire.txt', lines)))
+  ## RandomNumberSeed is commented (allows per-rep seed override at run time)
+  expect_true(any(grepl("^>>\\s+RandomNumberSeed", lines)))
+
+  ## output_manifest.txt is written alongside
+  manifest_path <- fs::path(dir, "output_manifest.txt")
+  expect_true(fs::file_exists(manifest_path))
+  expect_equal(readLines(manifest_path), "fire/dynamic-fire-event-log.csv")
+})
+
 test_that("loss_from_stats() handles empty-fires reps with a finite penalty", {
   rep_empty <- list(
     n_fires_by_year = tibble::tibble(year = 1:10, n_fires = rep(0L, 10L)),

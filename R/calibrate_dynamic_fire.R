@@ -564,3 +564,336 @@ save_observed_fire_targets <- function(
   saveRDS(payload, path)
   fs::path_real(path)
 }
+
+
+## Phase 8c: scenario builders for calibration runs ----------------------------------------------
+
+#' Patch a ForC Succession config for calibration use (internal)
+#'
+#' Two surgical replacements in `forc-succession.txt`:
+#' \itemize{
+#'   \item `Timestep N` -> `Timestep <sim_years + 1>`. Makes ForCS skip its
+#'         succession step for the duration of the calibration run (no growth,
+#'         no establishment, no mortality) so each DEoptim trial is purely a
+#'         fire-on-fixed-landscape experiment.
+#'   \item `SpinUp` data row -> `0  0  1  20`. The calibration IC is already
+#'         post-spinup (from the snapshot of [build_calibration_spinup_scenario()]),
+#'         so per-trial spinup would be wasted compute. DOM equilibration is
+#'         also skipped -- fire severity depends on cohort biomass, not DOM.
+#' }
+#'
+#' Patches the file in place. Caller is expected to pass the calibration
+#' scenario's own copy of `forc-succession.txt` (not the production one).
+#'
+#' @param path Character. Absolute path to `forc-succession.txt`.
+#' @param sim_years Integer. Calibration sim duration (years).
+#'
+#' @returns The patched lines, invisibly (also written to `path`).
+#'
+#' @keywords internal
+.patch_forcs_for_calibration <- function(path, sim_years) {
+  stopifnot(fs::file_exists(path), is.numeric(sim_years), sim_years >= 1L)
+  lines <- readLines(path)
+
+  ts_idx <- grep("^Timestep[[:space:]]", lines)
+  if (length(ts_idx) != 1L) {
+    stop(
+      "Expected exactly one `Timestep` line in ",
+      path,
+      " (found ",
+      length(ts_idx),
+      ")",
+      call. = FALSE
+    )
+  }
+  lines[ts_idx] <- sprintf("Timestep    %d", as.integer(sim_years) + 1L)
+
+  spinup_hdr <- grep("^SpinUp[[:space:]]*$", lines)
+  if (length(spinup_hdr) != 1L) {
+    stop(
+      "Expected exactly one `SpinUp` section header in ",
+      path,
+      " (found ",
+      length(spinup_hdr),
+      ")",
+      call. = FALSE
+    )
+  }
+  data_idx <- spinup_hdr + 1L
+  while (data_idx <= length(lines) && grepl("^[[:space:]]*>>", lines[data_idx])) {
+    data_idx <- data_idx + 1L
+  }
+  if (data_idx > length(lines)) {
+    stop("SpinUp data row not found in ", path, call. = FALSE)
+  }
+  lines[data_idx] <- "0  0  1  20"
+
+  writeLines(lines, path)
+  invisible(lines)
+}
+
+#' Build a calibration spinup scenario directory
+#'
+#' Materialises a self-contained LANDIS-II scenario whose only purpose is to run
+#' ForCS for a single year with both spinup flags ON, emit a snapshot of the
+#' spun-up cohort community via the Output Biomass Community extension, and exit.
+#'
+#' The Output Biomass Community extension emits at multiples of its Timestep
+#' starting from **year 0** (post-init, pre-step), so with Timestep = 1 and
+#' Duration = 1 we get two snapshot CSVs: `community-input-file-0.csv`
+#' (post-spinup state -- this is the one we want) and `community-input-file-1.csv`
+#' (after one year of ANPP). The TIF (`output-community-0.tif`) is emitted only
+#' once at year 0 -- cohort communities don't repartition in a no-disturbance
+#' run, so one raster suffices for both years.
+#'
+#' Note on CSV schema: LANDIS-II Output Biomass Community v3 writes a 5-column
+#' file (`MapCode, SpeciesName, CohortAge, CohortBiomass, CohortANPP`). LANDIS-II's
+#' initial-communities parser tolerates the extra `CohortANPP` column, so the
+#' file is drop-in usable as `InitialCommunitiesFiles` without post-processing.
+#'
+#' Implementation: copy every top-level file from `template_dir` (a production
+#' scenario directory), strip the disturbance stack from the copied scenario.txt,
+#' add an Output Biomass Community extension, and rewrite scenario.txt with
+#' Duration = `duration`. Rep subdirectories are NOT copied.
+#'
+#' @param out_dir Character. Destination directory (created or overwritten).
+#' @param template_dir Character. Existing production scenario directory to copy
+#'   from. Must contain `forc-succession.txt`, `species.txt`, `ecoregions.txt`,
+#'   `ecoregions.tif`, `climate.txt`, `ForCS_DM.txt`, `initial-communities.csv`,
+#'   `initial-communities.tif`, and the ForCS data CSVs.
+#' @param duration Integer. Simulation duration in years. LANDIS-II minimum 1.
+#' @param community_output_year Integer. Year at which the snapshot is consumed
+#'   downstream (caller chooses 0 for post-spinup state; default 0).
+#' @param cell_length Integer. Raster cell size in metres.
+#'
+#' @returns Character scalar: absolute path to the written `scenario.txt`.
+#'
+#' @family Dynamic Fire calibration helpers
+#'
+#' @export
+build_calibration_spinup_scenario <- function(
+  out_dir,
+  template_dir,
+  duration = 1L,
+  community_output_year = 0L,
+  cell_length
+) {
+  stopifnot(
+    fs::dir_exists(template_dir),
+    is.numeric(duration),
+    duration >= 1L,
+    is.numeric(community_output_year),
+    community_output_year >= 0L,
+    community_output_year <= duration,
+    is.numeric(cell_length),
+    cell_length > 0
+  )
+
+  if (fs::dir_exists(out_dir)) {
+    fs::dir_delete(out_dir)
+  }
+  fs::dir_create(out_dir)
+
+  for (f in fs::dir_ls(template_dir, type = "file")) {
+    fs::file_copy(f, fs::path(out_dir, basename(f)))
+  }
+
+  ## Output Biomass Community: Timestep = 1 emits at every year (we consume year 0).
+  ## Timestep = 0 would skip emission entirely (LANDIS treats 0 as "never").
+  obc <- OutputBiomassCommunity$new(path = out_dir, Timestep = 1L)
+  obc$write()
+
+  forcs_file <- fs::path(out_dir, "forc-succession.txt")
+  species_file <- fs::path(out_dir, "species.txt")
+  eco_files <- c(fs::path(out_dir, "ecoregions.txt"), fs::path(out_dir, "ecoregions.tif"))
+  obc_file <- fs::path(out_dir, "output-biomass-community.txt")
+  stopifnot(
+    fs::file_exists(forcs_file),
+    fs::file_exists(species_file),
+    all(fs::file_exists(eco_files)),
+    fs::file_exists(obc_file)
+  )
+
+  write_landis_scenario_file(
+    path = out_dir,
+    duration = as.integer(duration),
+    cell_length = as.integer(cell_length),
+    species_file = species_file,
+    ecoregions_files = eco_files,
+    succession_ext_files = c("ForC Succession" = forcs_file),
+    disturbance_ext_files = NULL,
+    other_ext_files = c("Output Biomass Community" = obc_file),
+    output_manifest = c(
+      "log_BiomassC.csv",
+      "log_FluxBio.csv",
+      "log_Flux.csv",
+      "log_FluxDOM.csv",
+      "log_Pools.csv",
+      "log_Summary.csv",
+      sprintf("community-input-file-%d.csv", as.integer(community_output_year)),
+      sprintf("output-community-%d.tif", as.integer(community_output_year))
+    )
+  )
+}
+
+#' Build the calibration scenario template directory
+#'
+#' Materialises a self-contained LANDIS-II scenario directory that DEoptim
+#' workers copy from. Each per-trial worker copies this template into a scratch
+#' dir, patches just `dynamic-fire.txt` with candidate parameters, and runs
+#' LANDIS-II. Anything that does NOT vary across trials (ForCS config, fire
+#' ecoregions map, ground slope, weather DB, species file, ...) lives in this
+#' template so it's built once.
+#'
+#' Composition:
+#' \itemize{
+#'   \item ForC Succession backend with both spinup flags OFF and a frozen
+#'         Timestep (succession effectively a no-op).
+#'   \item Dynamic Fire System + Dynamic Fuel System as the only disturbances.
+#'   \item Initial communities point at the spun-up snapshot from
+#'         [build_calibration_spinup_scenario()] (renamed to the standard
+#'         `initial-communities.csv` + `.tif` so the existing ForCS config
+#'         references work without further modification).
+#'   \item Duration = `sim_years`.
+#' }
+#'
+#' When the baseline fire-config tables are supplied (recommended), the function
+#' overwrites the copied `dynamic-fire.txt` with a fresh un-calibrated config
+#' built from these tables. This breaks the otherwise-circular dependency
+#' between the production fire config and the calibration loop (production fire
+#' config -> calibrated_fire_params -> calibration -> production fire config).
+#'
+#' @param out_dir Character. Destination directory (created or overwritten).
+#' @param template_dir Character. Existing production fire scenario directory
+#'   to copy from.
+#' @param snapshot_ic_csv,snapshot_ic_tif Character. Paths to the spun-up
+#'   community CSV / TIF (return of [build_calibration_spinup_scenario()]).
+#' @param baseline_fire_size_table,baseline_fuel_type_table,baseline_fire_damage_table,baseline_seasons_sim_table
+#'   data.frame or NULL. Baseline (un-calibrated) tables. When all four are
+#'   supplied, the function writes a fresh `dynamic-fire.txt` from them.
+#' @param sim_years Integer. Calibration sim duration (years). Default 10.
+#' @param cell_length Integer. Raster cell size in metres.
+#'
+#' @returns Character scalar: absolute path to the written `scenario.txt`.
+#'
+#' @family Dynamic Fire calibration helpers
+#'
+#' @export
+build_calibration_scenario_template <- function(
+  out_dir,
+  template_dir,
+  snapshot_ic_csv,
+  snapshot_ic_tif,
+  baseline_fire_size_table = NULL,
+  baseline_fuel_type_table = NULL,
+  baseline_fire_damage_table = NULL,
+  baseline_seasons_sim_table = NULL,
+  sim_years = 10L,
+  cell_length
+) {
+  stopifnot(
+    fs::dir_exists(template_dir),
+    fs::file_exists(snapshot_ic_csv),
+    fs::file_exists(snapshot_ic_tif),
+    is.numeric(sim_years),
+    sim_years >= 1L,
+    is.numeric(cell_length),
+    cell_length > 0
+  )
+  write_baseline_fire_config <- !is.null(baseline_fire_size_table) &&
+    !is.null(baseline_fuel_type_table) &&
+    !is.null(baseline_fire_damage_table) &&
+    !is.null(baseline_seasons_sim_table)
+
+  if (fs::dir_exists(out_dir)) {
+    fs::dir_delete(out_dir)
+  }
+  fs::dir_create(out_dir)
+
+  for (f in fs::dir_ls(template_dir, type = "file")) {
+    fs::file_copy(f, fs::path(out_dir, basename(f)))
+  }
+
+  ## Replace production IC with the post-spinup snapshot, renaming to the
+  ## standard filenames so the existing ForCS config refs work as-is.
+  ic_csv_dst <- fs::path(out_dir, "initial-communities.csv")
+  ic_tif_dst <- fs::path(out_dir, "initial-communities.tif")
+  fs::file_copy(snapshot_ic_csv, ic_csv_dst, overwrite = TRUE)
+  fs::file_copy(snapshot_ic_tif, ic_tif_dst, overwrite = TRUE)
+  for (sidecar_ext in c(".aux.xml", ".tfw")) {
+    src_side <- paste0(snapshot_ic_tif, sidecar_ext)
+    if (fs::file_exists(src_side)) {
+      fs::file_copy(src_side, paste0(ic_tif_dst, sidecar_ext), overwrite = TRUE)
+    }
+  }
+
+  ## Patch ForCS config for calibration (spinup off + freeze succession).
+  .patch_forcs_for_calibration(fs::path(out_dir, "forc-succession.txt"), sim_years = sim_years)
+
+  ## Overwrite dynamic-fire.txt with a fresh un-calibrated config. Relative
+  ## file-path references inside (fire-ecoregions.tif, ground_slope.tif, ...)
+  ## resolve against out_dir, where production copies of those files were just
+  ## placed by the dir_ls() loop above.
+  if (isTRUE(write_baseline_fire_config)) {
+    ext_fire <- DynamicFire$new(
+      path = out_dir,
+      Timestep = 1L,
+      EventSizeType = "size_based",
+      BuildUpIndex = "yes",
+      WeatherRandomizer = 0L,
+      FireSizesTable = baseline_fire_size_table,
+      InitialFireEcoregionsMap = fs::path(out_dir, "fire-ecoregions.tif"),
+      DynamicEcoregionTable = prepDynamicEcoregionTable(),
+      GroundSlopeFile = fs::path(out_dir, "ground_slope.tif"),
+      UphillSlopeAzimuthMap = fs::path(out_dir, "uphill_slope_azimuth.tif"),
+      SeasonTable = baseline_seasons_sim_table,
+      InitialWeatherDatabase = fs::path(out_dir, "initial_weather_database.csv"),
+      DynamicWeatherTable = NULL,
+      FuelTypeTable = baseline_fuel_type_table,
+      SeverityCalibrationFactor = 1.0, ## baseline; calibrated factor is applied production-side
+      FireDamageTable = baseline_fire_damage_table,
+      Species_CSV_File = fs::path(out_dir, "DynamicFire_Spp_Table.csv"),
+      MapNames = NULL,
+      LogFile = file.path(out_dir, "fire/dynamic-fire-event-log.csv"),
+      SummaryLogFile = file.path(out_dir, "fire/dynamic-fire-summary-log.csv")
+    )
+    ext_fire$write()
+  }
+
+  forcs_file <- fs::path(out_dir, "forc-succession.txt")
+  fuels_file <- fs::path(out_dir, "dynamic-fuels.txt")
+  fire_file <- fs::path(out_dir, "dynamic-fire.txt")
+  species_file <- fs::path(out_dir, "species.txt")
+  eco_files <- c(fs::path(out_dir, "ecoregions.txt"), fs::path(out_dir, "ecoregions.tif"))
+  stopifnot(
+    fs::file_exists(forcs_file),
+    fs::file_exists(fuels_file),
+    fs::file_exists(fire_file),
+    fs::file_exists(species_file),
+    all(fs::file_exists(eco_files))
+  )
+
+  write_landis_scenario_file(
+    path = out_dir,
+    duration = as.integer(sim_years),
+    cell_length = as.integer(cell_length),
+    species_file = species_file,
+    ecoregions_files = eco_files,
+    succession_ext_files = c("ForC Succession" = forcs_file),
+    disturbance_ext_files = c(
+      "Dynamic Fuel System" = fuels_file,
+      "Dynamic Fire System" = fire_file
+    ),
+    other_ext_files = NULL,
+    output_manifest = c(
+      "log_BiomassC.csv",
+      "log_FluxBio.csv",
+      "log_Flux.csv",
+      "log_FluxDOM.csv",
+      "log_Pools.csv",
+      "log_Summary.csv",
+      "fire/dynamic-fire-event-log.csv",
+      "fire/dynamic-fire-summary-log.csv"
+    )
+  )
+}

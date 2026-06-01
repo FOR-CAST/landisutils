@@ -244,3 +244,88 @@ insertRandomNumberSeed <- function(seed) {
     )
   }
 }
+
+#' Write a LANDIS-II `scenario.txt` file (lower-level helper)
+#'
+#' Generates a `scenario.txt` in `path` using the `insert*()` helpers.
+#' Lower-level than [scenario()]: takes already-written extension config-file
+#' paths (named character vectors keyed by extension name) rather than R6
+#' [LandisExtension] objects. Useful when project pipelines write extension
+#' configs in separate `targets`-managed steps and just want to assemble the
+#' top-level scenario file from those paths.
+#'
+#' The `RandomNumberSeed` line is written in commented-out form so that
+#' [landis_replicate()] can overwrite it with a per-replicate deterministic
+#' seed (controlled by its `base_seed` argument).
+#'
+#' @param path Character. Scenario directory path (absolute or relative).
+#' @param duration Integer. Simulation duration in years.
+#' @param cell_length Integer. Raster cell size in metres.
+#' @param species_file Character. Path to the core species input file.
+#' @param ecoregions_files Character vector of length 2: paths to the
+#'   ecoregions text file and the ecoregions raster map.
+#' @param succession_ext_files Named character vector. Names are extension
+#'   names (e.g. `"ForC Succession"`); values are absolute paths to the
+#'   per-extension init files. Exactly one entry is required.
+#' @param disturbance_ext_files,other_ext_files Named character vector or
+#'   `NULL`. Same structure as `succession_ext_files`; zero or more entries.
+#' @param output_manifest Character vector of fixed-name output files (paths
+#'   relative to each replicate directory) that the scenario will produce at
+#'   run time. Written to `output_manifest.txt` so [tar_landis()] can track
+#'   these files alongside the recursive `output_dir` scan.
+#'
+#' @returns Character scalar: absolute path to the written `scenario.txt`.
+#'
+#' @family LANDIS-II execution helpers
+#' @seealso [scenario()]
+#'
+#' @export
+write_landis_scenario_file <- function(
+  path,
+  duration,
+  cell_length,
+  species_file,
+  ecoregions_files,
+  succession_ext_files,
+  disturbance_ext_files = NULL,
+  other_ext_files = NULL,
+  output_manifest = character(0)
+) {
+  path <- fs::path_real(path)
+  out_file <- fs::path(path, "scenario.txt")
+
+  if (length(output_manifest) > 0L) {
+    writeLines(output_manifest, fs::path(path, "output_manifest.txt"))
+  }
+
+  make_rel_list <- function(named_files) {
+    named_files <- named_files[nzchar(named_files)]
+    if (is.null(named_files) || length(named_files) == 0L) {
+      return(NULL)
+    }
+    vals <- vapply(named_files, function(f) fs::path_rel(fs::path_real(f), path), character(1))
+    as.list(setNames(vals, names(named_files)))
+  }
+
+  succession_rel <- make_rel_list(succession_ext_files)
+  disturbance_rel <- make_rel_list(disturbance_ext_files)
+  other_rel <- make_rel_list(other_ext_files)
+
+  writeLines(
+    c(
+      insertLandisData("Scenario"),
+      insertValue("Duration", as.integer(duration)),
+      insertSpeciesDataFile(fs::path_rel(fs::path_real(species_file), path), core = TRUE),
+      insertEcoregionsFiles(fs::path_rel(fs::path_real(ecoregions_files), path)),
+      insertValue("CellLength", as.integer(cell_length)),
+      insertSuccessionExtensions(succession_rel),
+      insertDisturbanceExtensions(disturbance_rel),
+      insertValue("DisturbancesRandomOrder", yesno(FALSE)),
+      insertOtherExtensions(other_rel),
+      insertRandomNumberSeed(NULL)
+    ),
+    out_file
+  )
+
+  out_file
+}
