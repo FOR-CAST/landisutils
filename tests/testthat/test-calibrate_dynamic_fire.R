@@ -398,6 +398,140 @@ test_that("write_landis_scenario_file() writes a syntactically clean scenario.tx
   expect_equal(readLines(manifest_path), "fire/dynamic-fire-event-log.csv")
 })
 
+test_that("sim_mock() returns parse_dynamic_fire_logs()-shaped output", {
+  cand <- c(
+    SeverityCalibrationFactor = 1.2,
+    SpHiProp = 0.4,
+    SumHiProp = 0.6,
+    FallHiProp = 0.2,
+    IgnProb_Conifer = 1,
+    IgnProb_ConiferPlantation = 1,
+    IgnProb_Deciduous = 1,
+    IgnProb_Slash = 1,
+    IgnProb_Open = 1
+  )
+  out <- sim_mock(par_vec = cand, sim_years = 5L, base_seed = 42L)
+  expect_named(
+    out,
+    c("n_fires_by_year", "fire_sizes_ha", "events", "total_sites_burned", "n_events")
+  )
+  expect_s3_class(out$n_fires_by_year, "tbl_df")
+  expect_equal(nrow(out$n_fires_by_year), 5L)
+  expect_true(is.numeric(out$fire_sizes_ha))
+  ## deterministic given the seed
+  out2 <- sim_mock(par_vec = cand, sim_years = 5L, base_seed = 42L)
+  expect_equal(out$fire_sizes_ha, out2$fire_sizes_ha)
+})
+
+test_that("calibrate_dynamic_fire() runs end-to-end with sim_mock (no Docker)", {
+  skip_if_not_installed("DEoptim")
+  observed <- list(
+    primary = list(
+      lambda_obs = 4,
+      n_fires_by_year = tibble::tibble(year = 1:20, n = sample.int(8, 20, replace = TRUE)),
+      fire_sizes_ha = sort(stats::rlnorm(50, 3, 2))
+    ),
+    secondary = NULL
+  )
+  observed$fru59 <- observed$primary ## back-compat alias for loss_from_stats()
+  obs_path <- withr::local_tempfile(fileext = ".rds")
+  saveRDS(observed, obs_path)
+
+  ## Minimal scenario.txt fixture for the path check inside calibrate_dynamic_fire()
+  scen_dir <- withr::local_tempdir()
+  scen_txt <- fs::path(scen_dir, "scenario.txt")
+  writeLines(c("LandisData  \"Scenario\""), scen_txt)
+  out_dir <- withr::local_tempdir()
+
+  cfg <- list(
+    lower = c(
+      SeverityCalibrationFactor = 0.5,
+      SpHiProp = 0,
+      SumHiProp = 0,
+      FallHiProp = 0,
+      IgnProb_Conifer = 0,
+      IgnProb_ConiferPlantation = 0,
+      IgnProb_Deciduous = 0,
+      IgnProb_Slash = 0,
+      IgnProb_Open = 0
+    ),
+    upper = c(
+      SeverityCalibrationFactor = 2.5,
+      SpHiProp = 1,
+      SumHiProp = 1,
+      FallHiProp = 1,
+      IgnProb_Conifer = 1.5,
+      IgnProb_ConiferPlantation = 1.5,
+      IgnProb_Deciduous = 1.5,
+      IgnProb_Slash = 1.5,
+      IgnProb_Open = 1.5
+    ),
+    NP = 6L,
+    itermax = 2L,
+    n_reps = 1L,
+    sim_years = 5L,
+    weights = c(count = 1, size = 1, area_fuel = 0, severity = 0),
+    n_cores = 1L,
+    parallel = FALSE,
+    simulator = "mock",
+    base_seed = 12345L,
+    trace = FALSE
+  )
+
+  res <- calibrate_dynamic_fire(
+    observed_targets_path = obs_path,
+    scenario_template = scen_txt,
+    cfg = cfg,
+    out_dir = out_dir
+  )
+
+  expect_named(
+    res,
+    c("best_params", "objective", "deoptim", "trace_path", "cfg", "pool_image", "pool_digest")
+  )
+  expect_equal(length(res$best_params), 9L)
+  expect_setequal(names(res$best_params), calibration_par_names())
+  expect_true(is.finite(res$objective))
+  expect_true(fs::file_exists(res$trace_path))
+  ## No pool was started (mock simulator)
+  expect_true(is.na(res$pool_image))
+})
+
+test_that("calibrate_dynamic_fire() rejects unknown simulator names", {
+  skip_if_not_installed("DEoptim")
+  observed <- list(
+    primary = list(
+      lambda_obs = 1,
+      n_fires_by_year = tibble::tibble(year = 1:5, n = 1L:5L),
+      fire_sizes_ha = c(1, 2, 3)
+    ),
+    fru59 = list(
+      lambda_obs = 1,
+      n_fires_by_year = tibble::tibble(year = 1:5, n = 1L:5L),
+      fire_sizes_ha = c(1, 2, 3)
+    )
+  )
+  obs_path <- withr::local_tempfile(fileext = ".rds")
+  saveRDS(observed, obs_path)
+  scen_dir <- withr::local_tempdir()
+  scen_txt <- fs::path(scen_dir, "scenario.txt")
+  writeLines("x", scen_txt)
+  out_dir <- withr::local_tempdir()
+  cfg <- list(
+    lower = setNames(rep(0, 9), calibration_par_names()),
+    upper = setNames(rep(1, 9), calibration_par_names()),
+    NP = 4L,
+    itermax = 1L,
+    n_reps = 1L,
+    sim_years = 2L,
+    n_cores = 1L,
+    parallel = FALSE,
+    simulator = "not-a-simulator",
+    base_seed = 1L
+  )
+  expect_error(calibrate_dynamic_fire(obs_path, scen_txt, cfg, out_dir), "Unknown simulator")
+})
+
 test_that("loss_from_stats() handles empty-fires reps with a finite penalty", {
   rep_empty <- list(
     n_fires_by_year = tibble::tibble(year = 1:10, n_fires = rep(0L, 10L)),

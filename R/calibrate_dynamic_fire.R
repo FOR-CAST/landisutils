@@ -1141,3 +1141,275 @@ sim_landis <- function(
 sim_r_reimpl <- function(...) {
   stop("sim_r_reimpl() not yet implemented; use sim_landis() for now.", call. = FALSE)
 }
+
+
+## Phase 8e: DEoptim driver + mock simulator for tests ------------------------------------------
+
+#' Mock simulator backend for testing the calibration driver without LANDIS-II
+#'
+#' Returns plausibly-shaped [parse_dynamic_fire_logs()] output without invoking
+#' the real simulator. The output varies with `par_vec` so DEoptim sees a
+#' non-trivial loss surface (a few of the calibrated parameters bias the mock's
+#' fire count and size distribution; this is illustrative, not biophysical).
+#'
+#' Use this in unit tests of [calibrate_dynamic_fire()] when Docker is not
+#' available; do NOT use for actual calibration.
+#'
+#' @param par_vec Numeric. Named candidate parameter vector.
+#' @param par_names Character. Names in canonical order ([calibration_par_names()]).
+#' @param paths Named list. Currently unused; accepted for [sim_landis()] signature parity.
+#' @param sim_years Integer. Number of simulated years.
+#' @param base_seed Integer. RNG seed for deterministic mock output.
+#' @param ... Ignored. Lets callers pass `pool`, `pool_idx`, `method`, etc.
+#'
+#' @returns A list matching the shape of [parse_dynamic_fire_logs()] output.
+#'
+#' @family Dynamic Fire calibration helpers
+#'
+#' @export
+sim_mock <- function(
+  par_vec,
+  par_names = NULL,
+  paths = NULL,
+  sim_years = 10L,
+  base_seed = 1L,
+  ...
+) {
+  if (is.null(names(par_vec)) && !is.null(par_names)) {
+    names(par_vec) <- par_names
+  }
+  set.seed(base_seed)
+  ## Couple fire count to SeverityCalibrationFactor + Sp/SumHiProp so the loss
+  ## surface has detectable gradient.
+  lambda <- max(
+    0.5,
+    8 *
+      (par_vec[["SeverityCalibrationFactor"]] %||% 1) *
+      (1 + (par_vec[["SpHiProp"]] %||% 0)) *
+      (1 + (par_vec[["SumHiProp"]] %||% 0)) /
+      4
+  )
+  n_fires_per_year <- as.integer(stats::rpois(sim_years, lambda = lambda))
+  total_fires <- sum(n_fires_per_year)
+  fire_sizes_ha <- if (total_fires > 0L) {
+    sort(stats::rlnorm(
+      total_fires,
+      meanlog = 3 + 1.5 * (par_vec[["IgnProb_Conifer"]] %||% 1),
+      sdlog = 2
+    ))
+  } else {
+    numeric(0)
+  }
+  list(
+    n_fires_by_year = tibble::tibble(
+      year = as.integer(seq_len(sim_years)),
+      n_fires = n_fires_per_year
+    ),
+    fire_sizes_ha = fire_sizes_ha,
+    events = tibble::tibble(
+      year = if (total_fires > 0L) rep.int(seq_len(sim_years), n_fires_per_year) else integer(0),
+      eco = if (total_fires > 0L) rep("MOCK", total_fires) else character(0),
+      init_fuel = if (total_fires > 0L) rep(2L, total_fires) else integer(0),
+      sites = as.integer(fire_sizes_ha),
+      mean_severity = if (total_fires > 0L) {
+        stats::runif(total_fires, min = 0, max = 5)
+      } else {
+        numeric(0)
+      }
+    ),
+    total_sites_burned = sum(as.integer(fire_sizes_ha)),
+    n_events = length(fire_sizes_ha)
+  )
+}
+
+#' DEoptim driver for Dynamic Fire calibration
+#'
+#' Sets up a warm Docker pool (for the `landis` simulator on Docker) and a FORK
+#' cluster of `n_cores` workers, then invokes [DEoptim::DEoptim()] with the
+#' multi-component loss as the objective. Pool + cluster are torn down via
+#' `on.exit()` regardless of success / error / interrupt.
+#'
+#' Designed to be called from a `tar_target` with `deployment = "main"` so the
+#' outer `targets` crew doesn't try to dispatch this as a single worker while
+#' it manages its own internal cluster.
+#'
+#' Per-worker container assignment: each FORK worker sets its
+#' `LANDIS_POOL_CONTAINER_IDX` env var to its 1-based pool index.
+#' [sim_landis()] reads this when running inside the worker.
+#'
+#' DEoptim is gated on `requireNamespace("DEoptim")`; install via
+#' `renv::install("DEoptim")` before calling.
+#'
+#' @param observed_targets_path Character. Path to the `.rds` from
+#'   [save_observed_fire_targets()].
+#' @param scenario_template Character. Path to the calibration scenario's
+#'   `scenario.txt` (the return of [build_calibration_scenario_template()]).
+#' @param cfg List. Calibration config. Expected keys:
+#'   \describe{
+#'     \item{lower, upper}{Named numeric vectors keyed by [calibration_par_names()].}
+#'     \item{NP, itermax, strategy}{DEoptim control args.}
+#'     \item{n_reps, sim_years, weights, base_seed}{Per-trial settings.}
+#'     \item{n_cores, parallel}{Parallelism settings.}
+#'     \item{simulator}{`"landis"` (default), `"r_reimpl"`, or `"mock"`.}
+#'     \item{method}{`"docker"` (default) or `"local"`.}
+#'     \item{image, cpu_limit, mem_limit, pull}{Pool settings (Docker only).}
+#'   }
+#' @param out_dir Character. Where to write the DEoptim trace + scratch
+#'   sub-directory. Created if missing.
+#'
+#' @returns List with `best_params` (named numeric), `objective` (scalar),
+#'   `deoptim` (full DEoptim return), `trace_path` (CSV path), `cfg` (echo),
+#'   `pool_image` / `pool_digest` (provenance; NA when no pool was started).
+#'
+#' @family Dynamic Fire calibration helpers
+#'
+#' @export
+calibrate_dynamic_fire <- function(observed_targets_path, scenario_template, cfg, out_dir) {
+  if (!requireNamespace("DEoptim", quietly = TRUE)) {
+    stop(
+      "Package `DEoptim` is required for calibrate_dynamic_fire() but is not installed. ",
+      "Install via `renv::install('DEoptim')`.",
+      call. = FALSE
+    )
+  }
+  stopifnot(
+    is.character(observed_targets_path),
+    length(observed_targets_path) == 1L,
+    fs::file_exists(observed_targets_path),
+    is.character(scenario_template),
+    length(scenario_template) == 1L,
+    fs::file_exists(scenario_template),
+    is.list(cfg)
+  )
+  fs::dir_create(out_dir)
+
+  template_dir <- fs::path_real(dirname(scenario_template))
+  scratch_root <- fs::path_real(fs::dir_create(fs::path(out_dir, "scratch")))
+  observed <- readRDS(observed_targets_path)
+  par_names <- calibration_par_names()
+  stopifnot(setequal(names(cfg$lower), par_names), setequal(names(cfg$upper), par_names))
+  cfg$lower <- cfg$lower[par_names]
+  cfg$upper <- cfg$upper[par_names]
+
+  paths <- list(scenario_template = template_dir, scratch_root = scratch_root)
+  n_reps <- as.integer(cfg$n_reps %||% 5L)
+  weights <- cfg$weights %||% c(count = 1, size = 1, area_fuel = 0, severity = 0)
+  base_seed <- as.integer(cfg$base_seed %||% 12345L)
+  sim_years <- as.integer(cfg$sim_years %||% 10L)
+  simulator_name <- cfg$simulator %||% "landis"
+  simulator <- switch(
+    simulator_name,
+    landis = sim_landis,
+    r_reimpl = sim_r_reimpl,
+    mock = sim_mock,
+    stop("Unknown simulator: ", simulator_name, call. = FALSE)
+  )
+  method <- cfg$method %||%
+    getOption(
+      "landisutils.run.method",
+      default = if (.Platform$OS.type == "windows") "local" else "docker"
+    )
+
+  n_cores <- as.integer(cfg$n_cores %||% max(1L, parallel::detectCores() - 2L))
+  use_parallel <- isTRUE(cfg$parallel %||% TRUE) && n_cores > 1L
+
+  ## Pool lifecycle: only LANDIS-II Docker + parallel needs a pool. Mock /
+  ## r_reimpl / local-method runs don't touch Docker.
+  pool <- NULL
+  if (simulator_name == "landis" && method == "docker" && use_parallel) {
+    pool <- landis_pool_start(
+      n = n_cores,
+      image = cfg$image,
+      scratch_root = scratch_root,
+      cpu_limit = cfg$cpu_limit %||% 4,
+      mem_limit = cfg$mem_limit %||% "8g",
+      pull = isTRUE(cfg$pull %||% FALSE),
+      name_prefix = paste0("landis-cal-", Sys.getpid())
+    )
+    ## Tear down the pool before the cluster (FORK children inherit the pool's
+    ## state but don't own its containers; clean up containers first).
+    on.exit(landis_pool_stop(pool), add = TRUE)
+  }
+
+  ## FORK cluster -- workers inherit the parent's environment including `pool`.
+  cl <- NULL
+  if (use_parallel && .Platform$OS.type != "windows") {
+    cl <- parallel::makeCluster(n_cores, type = "FORK")
+    on.exit(parallel::stopCluster(cl), add = TRUE, after = FALSE)
+    if (!is.null(pool)) {
+      parallel::clusterApply(cl, seq_len(n_cores), function(i) {
+        Sys.setenv(LANDIS_POOL_CONTAINER_IDX = as.character(i))
+      })
+    }
+  }
+
+  objfn <- function(par_vec) {
+    names(par_vec) <- par_names
+    pool_idx <- if (!is.null(pool)) {
+      as.integer(Sys.getenv("LANDIS_POOL_CONTAINER_IDX", "1"))
+    } else {
+      NULL
+    }
+    reps <- lapply(seq_len(n_reps), function(i) {
+      simulator(
+        par_vec = par_vec,
+        par_names = par_names,
+        paths = paths,
+        sim_years = sim_years,
+        base_seed = base_seed + i,
+        pool = pool,
+        pool_idx = pool_idx,
+        method = method
+      )
+    })
+    loss_from_stats(reps, observed, weights)$total
+  }
+
+  control_args <- list(
+    NP = as.integer(cfg$NP %||% 60L),
+    itermax = as.integer(cfg$itermax %||% 100L),
+    strategy = as.integer(cfg$strategy %||% 3L),
+    trace = isTRUE(cfg$trace %||% TRUE),
+    storepopfrom = 1L,
+    storepopfreq = 5L
+  )
+  if (!is.null(cl)) {
+    control_args$parallelType <- 1L
+    control_args$cluster <- cl
+  }
+  control <- do.call(DEoptim::DEoptim.control, control_args)
+
+  message(glue::glue(
+    "calibrate_dynamic_fire: simulator={simulator_name}, NP={control_args$NP}, ",
+    "itermax={control_args$itermax}, n_reps={n_reps}, sim_years={sim_years}, ",
+    "n_cores={if (is.null(cl)) 1L else n_cores}, pool={!is.null(pool)}"
+  ))
+
+  res <- DEoptim::DEoptim(
+    fn = objfn,
+    lower = unname(cfg$lower),
+    upper = unname(cfg$upper),
+    control = control
+  )
+
+  best_params <- setNames(as.numeric(res$optim$bestmem), par_names)
+  trace_path <- fs::path(
+    out_dir,
+    sprintf("deoptim_trace_%s.csv", format(Sys.time(), "%Y%m%d_%H%M%S"))
+  )
+  utils::write.csv(
+    data.frame(iter = seq_along(res$member$bestvalit), best_value = res$member$bestvalit),
+    trace_path,
+    row.names = FALSE
+  )
+
+  list(
+    best_params = best_params,
+    objective = as.numeric(res$optim$bestval),
+    deoptim = res,
+    trace_path = as.character(trace_path),
+    cfg = cfg,
+    pool_image = if (!is.null(pool)) pool$image else NA_character_,
+    pool_digest = if (!is.null(pool)) pool$digest else NA_character_
+  )
+}
