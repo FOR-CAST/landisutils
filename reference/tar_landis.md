@@ -20,6 +20,9 @@ tar_landis(
   base_seed = NULL,
   pull = FALSE,
   force = FALSE,
+  cpu_limit = 4,
+  mem_limit = "8g",
+  mem_margin = 1.5,
   pattern = NULL,
   packages = targets::tar_option_get("packages"),
   library = targets::tar_option_get("library"),
@@ -121,6 +124,14 @@ tar_landis(
 
   - `rep_index` + `scenario_file`). When `TRUE`, the skip check is
     bypassed and LANDIS-II is invoked unconditionally.
+
+- cpu_limit, mem_limit, mem_margin:
+
+  Passed to
+  [`landis_run_docker()`](https://for-cast.github.io/landisutils/reference/landis_run_docker.md)
+  when `method = "docker"`. See that function's documentation for
+  semantics; defaults are `4`, `"8g"`, and `1.5` respectively. No effect
+  for `method = "local"`.
 
 - pattern:
 

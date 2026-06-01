@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.22</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.23</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -39,6 +39,24 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.23" id="landisutils-0023">landisutils 0.0.23<a class="anchor" aria-label="anchor" href="#landisutils-0023"></a></h2>
+<div class="section level3">
+<h3 id="landis_run_docker-accepts-resource-constraints-0-0-23">
+<code>landis_run_docker()</code> accepts resource constraints<a class="anchor" aria-label="anchor" href="#landis_run_docker-accepts-resource-constraints-0-0-23"></a></h3>
+<ul><li>New arguments to <code><a href="../reference/landis_run_docker.html">landis_run_docker()</a></code> (and proxied through <code><a href="../reference/tar_landis.html">tar_landis()</a></code>):
+<ul><li>
+<code>cpu_limit = 4</code>: maps to <code>docker run --cpus</code>. LANDIS-II compute is single-threaded (~1 core), but the .NET runtime spins up 9-11 OS threads for GC and the thread pool, so 4 is a comfortable default. Pass <code>NULL</code> for no limit.</li>
+<li>
+<code>mem_limit = "8g"</code>: baseline RAM cap (maps to <code>docker run --memory</code>). Accepts a numeric byte count or a string like <code>"4g"</code> / <code>"512m"</code>. Pass <code>NULL</code> (or <code>mem_limit = Inf</code>) for no limit.</li>
+<li>
+<code>mem_margin = 1.5</code>: headroom factor applied to a previously-observed peak (see auto-resolution below).</li>
+</ul></li>
+<li>
+<strong>Auto-resolution from prior resource logs.</strong> Before running, the function reads any existing <code>&lt;rep_dir&gt;/log/{docker,local}_resources.log</code> for the rep. If <code>peak_mem_bytes * mem_margin</code> exceeds the baseline <code>mem_limit</code>, the limit is raised to that value so a rep that ran fine last time is never killed by the cap on a rerun. If <strong>no</strong> prior log exists for the rep (first run, or rep dir freshly deleted), the memory cap is dropped entirely so the first run can discover what it needs; subsequent runs inherit the empirically observed peak.</li>
+<li>The CPU limit is constant regardless of history: LANDIS-II is single-threaded and the .NET runtime doesn’t scale with available cores.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.22" id="landisutils-0022">landisutils 0.0.22<a class="anchor" aria-label="anchor" href="#landisutils-0022"></a></h2>
 <div class="section level3">

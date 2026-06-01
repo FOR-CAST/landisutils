@@ -11,7 +11,7 @@ replicate's output files."><meta property="og:image" content="https://for-cast.g
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.22</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.23</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -65,6 +65,9 @@ replicate's output files.</p>
 <span>  base_seed <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  pull <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  force <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  cpu_limit <span class="op">=</span> <span class="fl">4</span>,</span>
+<span>  mem_limit <span class="op">=</span> <span class="st">"8g"</span>,</span>
+<span>  mem_margin <span class="op">=</span> <span class="fl">1.5</span>,</span>
 <span>  pattern <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  packages <span class="op">=</span> <span class="fu">targets</span><span class="fu">::</span><span class="fu"><a href="https://docs.ropensci.org/targets/reference/tar_option_get.html" class="external-link">tar_option_get</a></span><span class="op">(</span><span class="st">"packages"</span><span class="op">)</span>,</span>
 <span>  library <span class="op">=</span> <span class="fu">targets</span><span class="fu">::</span><span class="fu"><a href="https://docs.ropensci.org/targets/reference/tar_option_get.html" class="external-link">tar_option_get</a></span><span class="op">(</span><span class="st">"library"</span><span class="op">)</span>,</span>
@@ -162,6 +165,13 @@ completed <code>Landis-log.txt</code> <em>and</em> a <code>log/input_hash.json</
 recorded hash matches the current inputs (per-input-file MD5 + <code>base_seed</code></p><ul><li><p><code>rep_index</code> + <code>scenario_file</code>). When <code>TRUE</code>, the skip check is bypassed
 and LANDIS-II is invoked unconditionally.</p></li>
 </ul></dd>
+
+
+<dt id="arg-cpu-limit-mem-limit-mem-margin">cpu_limit, mem_limit, mem_margin<a class="anchor" aria-label="anchor" href="#arg-cpu-limit-mem-limit-mem-margin"></a></dt>
+<dd><p>Passed to <code><a href="landis_run_docker.html">landis_run_docker()</a></code> when
+<code>method = "docker"</code>. See that function's documentation for semantics;
+defaults are <code>4</code>, <code>"8g"</code>, and <code>1.5</code> respectively. No effect for
+<code>method = "local"</code>.</p></dd>
 
 
 <dt id="arg-pattern">pattern<a class="anchor" aria-label="anchor" href="#arg-pattern"></a></dt>

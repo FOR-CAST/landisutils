@@ -19,7 +19,10 @@ landis_run_docker(
   scenario_file = "scenario.txt",
   image = NULL,
   console = NULL,
-  pull = FALSE
+  pull = FALSE,
+  cpu_limit = 4,
+  mem_limit = "8g",
+  mem_margin = 1.5
 )
 ```
 
@@ -53,6 +56,29 @@ landis_run_docker(
   so the recorded digest reflects the current registry rather than a
   stale local copy. Defaults to `FALSE` to keep runs reproducible across
   iterations of an already-cached image.
+
+- cpu_limit:
+
+  Numeric or `NULL`. Hard CPU cap for the container
+  (`docker run --cpus`). Default `4`: LANDIS-II compute is
+  single-threaded but the .NET runtime spins up 9-11 OS threads, so 4 is
+  a comfortable headroom default. Pass `NULL` for no CPU limit.
+
+- mem_limit:
+
+  Numeric byte count, character (e.g. `"8g"`, `"512m"`), `NULL`, or
+  `Inf`. Baseline RAM cap (`docker run --memory`). Default `"8g"`. When
+  a prior `<rep_dir>/log/*_resources.log` exists with a recorded
+  `peak_mem_bytes`, the cap is raised to `peak_mem_bytes * mem_margin`
+  if that exceeds the baseline – a rep that fit last time will never be
+  killed by this cap on a rerun. When **no** prior log exists for the
+  rep (first run, or rep dir freshly deleted), the cap is dropped
+  entirely so the first run can discover what it needs.
+
+- mem_margin:
+
+  Numeric. Headroom factor applied to a previously observed peak when
+  auto-raising `mem_limit`. Default `1.5`.
 
 ## Value
 

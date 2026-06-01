@@ -1,5 +1,36 @@
 # Changelog
 
+## landisutils 0.0.23
+
+### `landis_run_docker()` accepts resource constraints
+
+- New arguments to
+  [`landis_run_docker()`](https://for-cast.github.io/landisutils/reference/landis_run_docker.md)
+  (and proxied through
+  [`tar_landis()`](https://for-cast.github.io/landisutils/reference/tar_landis.md)):
+  - `cpu_limit = 4`: maps to `docker run --cpus`. LANDIS-II compute is
+    single-threaded (~1 core), but the .NET runtime spins up 9-11 OS
+    threads for GC and the thread pool, so 4 is a comfortable default.
+    Pass `NULL` for no limit.
+  - `mem_limit = "8g"`: baseline RAM cap (maps to
+    `docker run --memory`). Accepts a numeric byte count or a string
+    like `"4g"` / `"512m"`. Pass `NULL` (or `mem_limit = Inf`) for no
+    limit.
+  - `mem_margin = 1.5`: headroom factor applied to a previously-observed
+    peak (see auto-resolution below).
+- **Auto-resolution from prior resource logs.** Before running, the
+  function reads any existing
+  `<rep_dir>/log/{docker,local}_resources.log` for the rep. If
+  `peak_mem_bytes * mem_margin` exceeds the baseline `mem_limit`, the
+  limit is raised to that value so a rep that ran fine last time is
+  never killed by the cap on a rerun. If **no** prior log exists for the
+  rep (first run, or rep dir freshly deleted), the memory cap is dropped
+  entirely so the first run can discover what it needs; subsequent runs
+  inherit the empirically observed peak.
+- The CPU limit is constant regardless of history: LANDIS-II is
+  single-threaded and the .NET runtime doesn’t scale with available
+  cores.
+
 ## landisutils 0.0.22
 
 ### Resource logs now self-describe the host

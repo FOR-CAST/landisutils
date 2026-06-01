@@ -25,7 +25,7 @@ pin runs to a specific image regardless of subsequent tag movement."><meta prope
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.22</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.23</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -78,7 +78,10 @@ pin runs to a specific image regardless of subsequent tag movement.</p>
 <span>  scenario_file <span class="op">=</span> <span class="st">"scenario.txt"</span>,</span>
 <span>  image <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  console <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  pull <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>  pull <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  cpu_limit <span class="op">=</span> <span class="fl">4</span>,</span>
+<span>  mem_limit <span class="op">=</span> <span class="st">"8g"</span>,</span>
+<span>  mem_margin <span class="op">=</span> <span class="fl">1.5</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -112,6 +115,30 @@ run time (reads <code>getOption("landisutils.docker.console")</code>).</p></dd>
 simulation so the recorded digest reflects the current registry rather
 than a stale local copy. Defaults to <code>FALSE</code> to keep runs reproducible
 across iterations of an already-cached image.</p></dd>
+
+
+<dt id="arg-cpu-limit">cpu_limit<a class="anchor" aria-label="anchor" href="#arg-cpu-limit"></a></dt>
+<dd><p>Numeric or <code>NULL</code>. Hard CPU cap for the container
+(<code>docker run --cpus</code>). Default <code>4</code>: LANDIS-II compute is single-threaded
+but the .NET runtime spins up 9-11 OS threads, so 4 is a comfortable
+headroom default. Pass <code>NULL</code> for no CPU limit.</p></dd>
+
+
+<dt id="arg-mem-limit">mem_limit<a class="anchor" aria-label="anchor" href="#arg-mem-limit"></a></dt>
+<dd><p>Numeric byte count, character (e.g. <code>"8g"</code>, <code>"512m"</code>),
+<code>NULL</code>, or <code>Inf</code>. Baseline RAM cap (<code>docker run --memory</code>). Default
+<code>"8g"</code>. When a prior <code>&lt;rep_dir&gt;/log/*_resources.log</code> exists with a
+recorded <code>peak_mem_bytes</code>, the cap is raised to
+<code>peak_mem_bytes * mem_margin</code> if that exceeds the baseline – a rep
+that fit last time will never be killed by this cap on a rerun. When
+<strong>no</strong> prior log exists for the rep (first run, or rep dir freshly
+deleted), the cap is dropped entirely so the first run can discover
+what it needs.</p></dd>
+
+
+<dt id="arg-mem-margin">mem_margin<a class="anchor" aria-label="anchor" href="#arg-mem-margin"></a></dt>
+<dd><p>Numeric. Headroom factor applied to a previously
+observed peak when auto-raising <code>mem_limit</code>. Default <code>1.5</code>.</p></dd>
 
 </dl></div>
     <div class="section level2">
