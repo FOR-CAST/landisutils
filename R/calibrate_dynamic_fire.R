@@ -897,3 +897,247 @@ build_calibration_scenario_template <- function(
     )
   )
 }
+## Phase 8d: simulator orchestrator + spinup runner ----------------------------------------------
+
+#' Run the calibration spinup scenario (blocking)
+#'
+#' Invokes LANDIS-II once against the scenario in `scenario_dir`, blocks until
+#' completion, and verifies that the year-0 snapshot files emitted by the
+#' Output Biomass Community extension landed on disk.
+#'
+#' Dispatches to [landis_run_local()] or [landis_run_docker()] based on
+#' `method` -- both are synchronous and stop on a non-zero exit, so this
+#' wrapper only has to verify the expected files appeared.
+#'
+#' Per LANDIS-II convention, scenarios are invoked from a numbered replicate
+#' sub-directory (`rep01/`); [landis_replicate()] materialises that with a
+#' `base_seed`-derived `RandomNumberSeed`, then the run happens inside it.
+#' Top-level `scenario_dir` stays clean (output files land under `rep01/`).
+#'
+#' @param scenario_dir Character. Spinup scenario directory (containing
+#'   `scenario.txt`), typically the return of
+#'   [build_calibration_spinup_scenario()].
+#' @param base_seed Integer. Random seed passed to LANDIS-II via the per-rep
+#'   `RandomNumberSeed` rewrite.
+#' @param method Character. `"docker"` or `"local"`. Default from
+#'   `getOption("landisutils.run.method")`.
+#' @param image Character or NULL. Docker image (Docker only).
+#' @param pull Logical. `docker pull` before running (Docker only). Default FALSE.
+#'
+#' @returns Character scalar: absolute path to the year-0 snapshot CSV
+#'   (`<scenario_dir>/rep01/community-input-file-0.csv`). The TIF
+#'   (`output-community-0.tif`) lives alongside.
+#'
+#' @family Dynamic Fire calibration helpers
+#'
+#' @export
+run_calibration_spinup <- function(
+  scenario_dir,
+  base_seed = 12345L,
+  method = NULL,
+  image = NULL,
+  pull = FALSE
+) {
+  stopifnot(fs::dir_exists(scenario_dir), is.numeric(base_seed), base_seed > 0)
+  scenario_dir <- fs::path_real(scenario_dir)
+
+  method <- method %||%
+    getOption(
+      "landisutils.run.method",
+      default = if (.Platform$OS.type == "windows") "local" else "docker"
+    )
+  stopifnot(method %in% c("local", "docker"))
+
+  rep_dir <- fs::path(scenario_dir, "rep01")
+  if (fs::dir_exists(rep_dir)) {
+    fs::dir_delete(rep_dir)
+  }
+  landis_replicate(
+    scenario_dir = scenario_dir,
+    rep_index = 1L,
+    files = NULL,
+    base_seed = as.integer(base_seed)
+  )
+
+  if (method == "docker") {
+    landis_run_docker(
+      scenario_dir = rep_dir,
+      scenario_file = "scenario.txt",
+      image = image,
+      pull = isTRUE(pull)
+    )
+  } else {
+    landis_run_local(scenario_dir = rep_dir, scenario_file = "scenario.txt")
+  }
+
+  csv_path <- fs::path(rep_dir, "community-input-file-0.csv")
+  tif_path <- fs::path(rep_dir, "output-community-0.tif")
+  if (!fs::file_exists(csv_path) || !fs::file_exists(tif_path)) {
+    stop(
+      "LANDIS-II ran but did not produce expected Output Biomass Community files:\n  ",
+      csv_path,
+      "\n  ",
+      tif_path,
+      call. = FALSE
+    )
+  }
+  as.character(csv_path)
+}
+
+#' Run one DEoptim trial for a candidate parameter vector (blocking)
+#'
+#' One calibration trial: copy `paths$scenario_template` into a scratch dir
+#' under `paths$scratch_root`, patch `dynamic-fire.txt` with `par_vec`, run
+#' LANDIS-II via the warm Docker pool (or a one-off Docker/local invocation if
+#' no pool is supplied), parse the resulting Dynamic Fire logs.
+#'
+#' `paths` carries only file PATHS so the function is FORK-safe (no terra/sf
+#' objects in the worker's environment).
+#'
+#' Isolation between trials in the same pool container: each trial uses a
+#' unique scratch directory; `landis_pool_exec()` sets per-call env vars to
+#' redirect dotnet caches; the trial directory is deleted after parsing unless
+#' `keep_scratch = TRUE`.
+#'
+#' @param par_vec Numeric. Named candidate parameter vector.
+#' @param par_names Character or NULL. Names in canonical order
+#'   ([calibration_par_names()]). Used to re-attach names if DEoptim strips
+#'   them when calling the objective function with positional args.
+#' @param paths Named list of strings. Required entries:
+#'   \describe{
+#'     \item{scenario_template}{Directory built by
+#'       [build_calibration_scenario_template()].}
+#'     \item{scratch_root}{Where per-trial dirs are created. Must equal the
+#'       pool's `scratch_root` when `pool` is supplied. NULL = `tempdir()`.}
+#'   }
+#' @param sim_years Integer. Calibration sim duration in years (informational;
+#'   the actual Duration comes from the template's scenario.txt).
+#' @param base_seed Integer. Random seed for this trial.
+#' @param pool A `landis_pool` from [landis_pool_start()], or NULL for one-off.
+#' @param pool_idx Integer. 1-based container index in `pool`. Required when
+#'   `pool` is non-NULL.
+#' @param method Character. `"docker"` or `"local"`. Used only when `pool` is
+#'   NULL. Default from `getOption("landisutils.run.method")`.
+#' @param pixel_area_ha Numeric. Hectares per cell. Default 1.
+#' @param keep_scratch Logical. Leave the per-trial scratch dir in place for
+#'   debugging. Default FALSE.
+#'
+#' @returns The output of [parse_dynamic_fire_logs()] for the trial's `rep01/`.
+#'
+#' @family Dynamic Fire calibration helpers
+#'
+#' @export
+sim_landis <- function(
+  par_vec,
+  par_names = NULL,
+  paths,
+  sim_years,
+  base_seed,
+  pool = NULL,
+  pool_idx = NULL,
+  method = NULL,
+  pixel_area_ha = 1.0,
+  keep_scratch = FALSE
+) {
+  if (is.null(names(par_vec)) && !is.null(par_names)) {
+    names(par_vec) <- par_names
+  }
+  stopifnot(
+    is.numeric(par_vec),
+    !is.null(names(par_vec)),
+    is.list(paths),
+    !is.null(paths$scenario_template),
+    fs::dir_exists(paths$scenario_template)
+  )
+  scratch_root <- paths$scratch_root %||% tempdir()
+  fs::dir_create(scratch_root)
+
+  if (!is.null(pool)) {
+    stopifnot(
+      inherits(pool, "landis_pool"),
+      !is.null(pool_idx),
+      ## scratch_root must be inside the pool's bind-mount root so the container
+      ## sees the trial dir.
+      identical(fs::path_real(scratch_root), fs::path_real(pool$scratch_root))
+    )
+  }
+
+  trial_dir <- fs::file_temp(pattern = "dynfire_trial_", tmp_dir = scratch_root)
+  fs::dir_create(trial_dir)
+  if (!isTRUE(keep_scratch)) {
+    on.exit(try(fs::dir_delete(trial_dir), silent = TRUE), add = TRUE)
+  }
+
+  ## Copy template -> scratch dir
+  for (f in fs::dir_ls(paths$scenario_template, type = "file")) {
+    fs::file_copy(f, fs::path(trial_dir, basename(f)))
+  }
+  ## Patch only the fire config
+  patch_fire_config(trial_dir, par_vec)
+  ## Per-rep dir with seed
+  rep_dir <- fs::path(trial_dir, "rep01")
+  if (fs::dir_exists(rep_dir)) {
+    fs::dir_delete(rep_dir)
+  }
+  landis_replicate(
+    scenario_dir = trial_dir,
+    rep_index = 1L,
+    files = NULL,
+    base_seed = as.integer(base_seed)
+  )
+
+  if (!is.null(pool)) {
+    ## Warm-pool path: docker exec into the assigned container, in the container-side
+    ## path corresponding to rep_dir.
+    rel_rep <- fs::path_rel(rep_dir, start = pool$scratch_root)
+    container_workdir <- fs::path("/scratch", rel_rep)
+    console <- getOption(
+      "landisutils.docker.console",
+      default = "/opt/landis-ii/Core-Model-v8-LINUX/build/Release/Landis.Console.dll"
+    )
+    log_dir <- fs::dir_create(fs::path(rep_dir, "log"))
+    landis_pool_exec(
+      pool = pool,
+      idx = pool_idx,
+      workdir = container_workdir,
+      command = "dotnet",
+      args = c(console, "scenario.txt"),
+      stdout_log = fs::path(log_dir, "pool_stdout.log"),
+      stderr_log = fs::path(log_dir, "pool_stderr.log")
+    )
+  } else {
+    method <- method %||%
+      getOption(
+        "landisutils.run.method",
+        default = if (.Platform$OS.type == "windows") "local" else "docker"
+      )
+    if (method == "docker") {
+      landis_run_docker(scenario_dir = rep_dir, scenario_file = "scenario.txt")
+    } else {
+      landis_run_local(scenario_dir = rep_dir, scenario_file = "scenario.txt")
+    }
+  }
+
+  parse_dynamic_fire_logs(rep_dir, pixel_area_ha = pixel_area_ha)
+}
+
+#' Standalone-R Dynamic Fire reimplementation (stub)
+#'
+#' Reserved slot for a future pure-R reimplementation of LANDIS-II Dynamic Fire,
+#' usable as a faster simulator backend for calibration. Signature matches
+#' [sim_landis()] so it can be swapped in via the calibration driver's
+#' `simulator` argument without touching the loss function or observed-target
+#' contract.
+#'
+#' Currently raises; see the comparison-of-approaches discussion in the
+#' gitanyow-partial-harvest project's `_tmp_dynamic_fire_calibration.md` for
+#' design notes.
+#'
+#' @param ... Same shape as [sim_landis()].
+#'
+#' @family Dynamic Fire calibration helpers
+#'
+#' @export
+sim_r_reimpl <- function(...) {
+  stop("sim_r_reimpl() not yet implemented; use sim_landis() for now.", call. = FALSE)
+}

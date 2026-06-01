@@ -118,6 +118,7 @@ Collate:
     'ext_social_climate_fire.R'
     'initial_communities.R'
     'landis.R'
+    'landis_pool.R'
     'landisutils-package.R'
     'plot_transitions.R'
     'scenarios.R'
