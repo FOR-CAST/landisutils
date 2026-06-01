@@ -1,0 +1,165 @@
+## Run package-generated LANDIS-II scenario files through a natively
+## installed LANDIS-II v8 console on a Windows runner -- the counterpart
+## to `landis-integration.yaml` which uses Docker on Linux. Validates
+## that the package's writers produce config files the v8 console
+## accepts on Windows as well, and exercises the same
+## `build_scenarios.R` fixtures end-to-end.
+##
+## When this workflow runs:
+##   * `release` published                            (every release)
+##   * `workflow_dispatch`                            (manual)
+##   * commit subject contains `[ci-windows]`         (opt-in)
+##
+## The sentinel is matched against the *first line* of the commit
+## message only, so documentation of the trigger elsewhere in the
+## commit body does not accidentally fire the workflow.
+##
+## It does NOT run on every push because the Windows native install
+## (Core MSI + ~28 Inno Setup extension installers) takes ~5-15 min.
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+name: landis-integration-windows.yaml
+
+permissions: read-all
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    outputs:
+      run: ${{ steps.decide.outputs.run }}
+    steps:
+      - id: decide
+        env:
+          EVENT: ${{ github.event_name }}
+          MSG_PUSH: ${{ github.event.head_commit.message }}
+          MSG_PR: ${{ github.event.pull_request.title }}
+        run: |
+          should_run=false
+          ## Match the trigger sentinel only against the SUBJECT line
+          ## (first line of the commit message / PR title) so that
+          ## documentation prose in the commit body cannot accidentally
+          ## spawn the matrix.
+          subject_push=$(printf '%s\n' "$MSG_PUSH" | head -n1)
+          subject_pr=$(printf '%s\n' "$MSG_PR" | head -n1)
+          case "$EVENT" in
+            workflow_dispatch|release)
+              should_run=true ;;
+            push)
+              [[ "$subject_push" == *"[ci-windows]"* ]] && should_run=true ;;
+            pull_request)
+              [[ "$subject_pr" == *"[ci-windows]"* ]] && should_run=true ;;
+          esac
+          echo "run=$should_run" >> "$GITHUB_OUTPUT"
+          echo "Gate: event=$EVENT subject_push='$subject_push' subject_pr='$subject_pr' -> run=$should_run"
+
+  landis-integration-windows:
+    needs: gate
+    if: needs.gate.outputs.run == 'true'
+    runs-on: windows-latest
+
+    name: LANDIS-II v8 integration (Windows native)
+
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      R_KEEP_PKG_SOURCE: yes
+      DOTNET_VERSION: '8.0.x'
+
+    defaults:
+      run:
+        shell: pwsh
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - uses: r-lib/actions/setup-pandoc@v2
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: 'release'
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: |
+            any::tibble
+            any::gh
+            any::cli
+          dependencies: '"hard"'
+
+      ## `R CMD INSTALL` tokenizes badly under PowerShell ("A positional
+      ## parameter cannot be found that accepts argument 'INSTALL'.").
+      ## Invoke R via -e instead.
+      - name: Install landisutils
+        run: |
+          & R.exe -e "install.packages('.', repos = NULL, type = 'source', INSTALL_opts = c('--no-multiarch','--with-keep.source'))"
+          if ($LASTEXITCODE -ne 0) { throw "R install exited $LASTEXITCODE" }
+
+      - name: Cache LANDIS installers
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}\landis-installers
+          key: landis-installers-${{ hashFiles('inst/integration-tests/_pins.R') }}
+
+      - name: Install LANDIS-II native (MSI + Inno Setup extensions)
+        env:
+          LANDIS_DOWNLOAD_DIR: ${{ runner.temp }}\landis-installers
+        run: |
+          Rscript inst/integration-tests/install_landis_windows.R
+
+      - name: Verify LANDIS-II install
+        run: |
+          if (-not $env:LANDIS_CONSOLE_DLL) {
+            Write-Error "LANDIS_CONSOLE_DLL not set; install step failed to discover the console DLL."
+            exit 1
+          }
+          Write-Host "LANDIS_CONSOLE_DLL = $env:LANDIS_CONSOLE_DLL"
+          if (-not (Test-Path -LiteralPath $env:LANDIS_CONSOLE_DLL)) {
+            Write-Error "LANDIS_CONSOLE_DLL points at a missing file."
+            exit 1
+          }
+          dotnet --info
+
+      - name: Build LANDIS-II scenarios
+        run: |
+          $scen_root = Join-Path $env:RUNNER_TEMP "landis-scenarios"
+          New-Item -ItemType Directory -Force -Path $scen_root | Out-Null
+          $list = Join-Path $env:RUNNER_TEMP "landis-scenarios.list"
+          Rscript inst/integration-tests/build_scenarios.R $scen_root > $list
+          Write-Host "Scenarios built:"
+          Get-Content $list
+
+      - name: Run LANDIS-II on each scenario
+        run: |
+          $list = Join-Path $env:RUNNER_TEMP "landis-scenarios.list"
+          $fail = 0
+          foreach ($scen_path in (Get-Content $list)) {
+            if (-not $scen_path) { continue }
+            $scen_name = Split-Path -Leaf $scen_path
+            Write-Host "::group::LANDIS-II run: $scen_name"
+            Rscript inst/integration-tests/run_native.R $scen_path
+            if ($LASTEXITCODE -ne 0) {
+              Write-Host "::error::LANDIS-II run failed for scenario '$scen_name' (exit $LASTEXITCODE)"
+              $fail = 1
+            }
+            Write-Host "::endgroup::"
+          }
+          exit $fail
+
+      - name: Upload scenario directories
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: landis-scenarios-windows
+          path: ${{ runner.temp }}/landis-scenarios
+          retention-days: 7

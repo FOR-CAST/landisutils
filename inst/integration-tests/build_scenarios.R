@@ -289,10 +289,9 @@ scenarios <- character(0)
 ## package's R6 class names via `EXT_REPO_TO_CLASS` below.
 ## ===========================================================================
 
-## Upstream-source pins are shared with install_landis_windows.R and
-## install_landis_linux.sh via inst/integration-tests/_pins.R. Bump SHAs
-## there to flow them through to both the docker and the native install
-## paths.
+## Upstream-source pins are shared with install_landis_windows.R via
+## inst/integration-tests/_pins.R. Bump SHAs there to flow them through
+## to both the docker and the native install paths.
 .this_script_dir <- (function() {
   cargs <- commandArgs(trailingOnly = FALSE)
   m <- regmatches(cargs, regexpr("(?<=--file=).+", cargs, perl = TRUE))

@@ -9,12 +9,11 @@ container) to validate the syntax of the package's writers, beyond what
 
 | File | Purpose |
 | --- | --- |
-| [`_pins.R`](_pins.R) | Shared upstream-source pins (Tool-Docker-Apptainer SHA, ForCS SHA, Core MSI URL, Docker image refs). Sourced by `build_scenarios.R` and `install_landis_windows.R`; read by `install_landis_linux.sh`. |
+| [`_pins.R`](_pins.R) | Shared upstream-source pins (Tool-Docker-Apptainer SHA, ForCS SHA, Core MSI URL). Sourced by `build_scenarios.R` and `install_landis_windows.R`. |
 | [`build_scenarios.R`](build_scenarios.R) | `Rscript`-runnable script that downloads upstream reference inputs and uses the `landisutils` API to (re)generate scenario `.txt` files + per-extension config files on top. Prints one absolute scenario directory per line on stdout. |
 | [`run_in_docker.sh`](run_in_docker.sh) | Linux Docker driver: runs a single scenario in an ephemeral Docker container. The image is selected per scenario (see [Image selection](#image-selection)). |
-| [`install_landis_linux.sh`](install_landis_linux.sh) | Linux native install: extracts `/opt/landis-ii/` from the release docker image into a host dir and exports `LANDIS_CONSOLE_DLL`. |
 | [`install_landis_windows.R`](install_landis_windows.R) | Windows native install: downloads the Core WiX MSI and every extension Inno Setup installer (from `extensions-v8-release.yaml`), runs each silently, and exports `LANDIS_CONSOLE_DLL`. |
-| [`run_native.R`](run_native.R) | Cross-platform native driver: runs a single scenario via `dotnet Landis.Console.dll` (no container). Used by both `ubuntu-24.04`/`ubuntu-26.04` and `windows-latest` matrix cells of `landis-integration-native.yaml`. |
+| [`run_native.R`](run_native.R) | Native driver: runs a single scenario via `dotnet Landis.Console.dll` (no container). Used by the Windows workflow; works on any host with a native LANDIS-II install. |
 | [`README.md`](README.md) | This file. |
 
 ## Quickstart
@@ -154,56 +153,53 @@ runs on every push to `main`/`master` and every PR, on
    7 days, regardless of pass/fail -- handy for inspecting parser
    errors offline.
 
-### Native install (opt-in / release / manual)
+### Windows native (opt-in / release / manual)
 
-[`.github/workflows/landis-integration-native.yaml`](../../.github/workflows/landis-integration-native.yaml)
-runs a matrix of `ubuntu-24.04`, `ubuntu-26.04`, and `windows-latest`
-**only when** one of the following is true:
+[`.github/workflows/landis-integration-windows.yaml`](../../.github/workflows/landis-integration-windows.yaml)
+runs on `windows-latest` **only when** one of the following is true:
 
 | Trigger | How to invoke |
 | --- | --- |
 | Released | Publish a release on GitHub. The workflow runs against the released ref. |
 | Manual | "Run workflow" button on the Actions tab (`workflow_dispatch`). |
-| Opt-in commit | Include `[ci-windows]` anywhere in the commit message (or PR title / body). |
+| Opt-in commit | Include `[ci-windows]` in the commit *subject line* (or PR title). The sentinel is matched against the first line of the message only, so prose mentioning the trigger in the commit body does not accidentally fire the workflow. |
 
-The native install is skipped on every other push/PR because the
-Windows install step is expensive (~5-15 min). The "ubuntu-26 vs
-ubuntu-24" pair is there to catch Ubuntu-LTS drift in the docker
-runtime environment.
+The native install is skipped on every other push/PR because it is
+expensive (Core MSI + ~28 Inno Setup extension installers, ~5-15 min).
 
-Per-OS install strategy:
+Install strategy: `install_landis_windows.R` downloads the WiX MSI
+for the Core console (pinned in `_pins.R`) and runs
+`msiexec /i ... /quiet /norestart /l*v <log>`. Then iterates every
+extension repo in `extensions-v8-release.yaml`, fetches the latest
+`LANDIS-II-V8*-setup.exe`, and runs each silently (`/VERYSILENT
+/SUPPRESSMSGBOXES /NORESTART /SP-`; all extension installers are
+Inno Setup 6, confirmed by file inspection). `LANDIS_CONSOLE_DLL` is
+exported to `$GITHUB_ENV` so the run step finds the console without
+re-scanning the install tree.
 
-| OS | Strategy |
-| --- | --- |
-| Linux | `install_landis_linux.sh` pulls `ghcr.io/landis-ii-foundation/landis-ii-v8-release:main` and `docker cp`s `/opt/landis-ii/` into `$RUNNER_TEMP/landis-install/`. Reuses the build the Docker workflow trusts -- no rebuild needed. |
-| Windows | `install_landis_windows.R` downloads the WiX MSI for the Core console (pinned in `_pins.R`) and runs `msiexec /i ... /quiet /norestart /l*v <log>`. Then iterates every extension repo in `extensions-v8-release.yaml`, fetches the latest `LANDIS-II-V8*-setup.exe`, and runs each silently (`/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP-`; all extension installers are Inno Setup 6, confirmed by file inspection). |
-
-Both install paths export `LANDIS_CONSOLE_DLL` to `$GITHUB_ENV` so the
-run step can find the console without scanning the install tree
-again. The install dirs / installer downloads are cached via
-`actions/cache@v4` keyed on `hashFiles('inst/integration-tests/_pins.R')`,
-so bumping `_pins.R` invalidates the cache; otherwise the second run
-of each matrix cell skips the install download.
+`actions/cache@v4` keyed on `hashFiles('inst/integration-tests/_pins.R')`
+caches the installer downloads, so a subsequent run skips the
+downloads unless `_pins.R` changes.
 
 After install, the workflow:
 
-1. runs `build_scenarios.R` against `$RUNNER_TEMP/landis-scenarios/`;
+1. runs `build_scenarios.R` against `$RUNNER_TEMP\landis-scenarios\`;
 2. invokes `run_native.R` per scenario; the helper reads
    `LANDIS_CONSOLE_DLL` and runs `dotnet <dll> <scen.txt>`;
-3. uploads scenario directories as
-   `landis-scenarios-native-<os>` for 7 days.
+3. uploads scenario directories as `landis-scenarios-windows` for 7 days.
 
-The native workflow runs every scenario `build_scenarios.R` emits --
+The workflow runs every scenario `build_scenarios.R` emits --
 including the `__uclv2` variants. The marker file is only consulted
-by `run_in_docker.sh`; native installs ship the full release-image
-extension set (a superset of UCL v2), so the same scenario can run on
-either side.
+by `run_in_docker.sh`; the Windows install ships the full
+release-image extension set (a superset of UCL v2), so the same
+scenario can run on either side.
 
 A failed scenario surfaces as a `::error::` annotation on the
-workflow run; other scenarios continue. **macOS is intentionally not
-in the matrix** -- there is no expectation that LANDIS-II runs
-natively on macOS, but the package is still useful there for
-generating config files (covered by `R-CMD-check.yaml`).
+workflow run; other scenarios continue. **macOS and native Linux are
+intentionally not covered** -- there is no expectation that LANDIS-II
+runs natively on macOS, and on Linux the docker workflow already
+covers the same code path (the docker image *is* the canonical Linux
+build of LANDIS-II).
 
 ## Caveats / known limitations
 

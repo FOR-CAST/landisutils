@@ -1,6 +1,5 @@
 ## Shared upstream-source pins for the integration-test harness. Sourced
-## by build_scenarios.R, install_landis_windows.R, and install_landis_
-## linux.sh (via R --vanilla -e 'source(...)'). Keep all upstream-pin
+## by build_scenarios.R and install_landis_windows.R. Keep all upstream-pin
 ## constants here so bumping the snapshot upstream-source is one edit.
 ##
 ## Conventions:
@@ -22,8 +21,7 @@ FORCS_REPO <- "LANDIS-II-Foundation/Extension-ForCS-Succession"
 FORCS_REF <- "b761895100a7b30174dd78523d57cc63c592c887" ## 2026-05
 
 ## Core console Windows installer. WiX-built MSI checked into master of
-## Core-Model-v8. Used by install_landis_windows.R; the Linux native
-## install path extracts the runtime from the docker image instead.
+## Core-Model-v8. Used by install_landis_windows.R.
 CORE_MSI_REPO <- "LANDIS-II-Foundation/Core-Model-v8"
 CORE_MSI_REF <- "master"
 CORE_MSI_PATH <- "deploy/installer/en-us/LANDIS-II-8.0-setup64.msi"
@@ -33,9 +31,3 @@ CORE_MSI_URL <- sprintf(
   CORE_MSI_REF,
   CORE_MSI_PATH
 )
-
-## Docker images used by run_in_docker.sh and as the source of the native
-## LANDIS install on Linux runners (install_landis_linux.sh extracts the
-## release image's /opt/landis-ii tree).
-LANDIS_IMAGE_RELEASE <- "ghcr.io/landis-ii-foundation/landis-ii-v8-release:main"
-LANDIS_IMAGE_UCLV2 <- "ghcr.io/landis-ii-foundation/landis-ii-v8-uclv2-release:main"
