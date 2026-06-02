@@ -1,5 +1,111 @@
 # landisutils 0.0.24
 
+## Per-file input overrides on `build_calibration_scenario_template()`
+
+* New `overrides = list()` argument lets callers substitute individual
+  template files post-copy without touching the production scenario.
+  Useful for cropping / aggregating specific inputs for calibration
+  (e.g., a coarser fuel raster, a smaller weather DB, a substitute slope
+  raster) without forking the whole template. Accepted keys:
+  `ground_slope.tif`, `uphill_slope_azimuth.tif`, `fire-ecoregions.tif`,
+  `initial_weather_database.csv`, `DynamicFire_Spp_Table.csv`,
+  `species.txt`, `ecoregions.txt`, `ecoregions.tif`, `climate.txt`.
+  `.tif` overrides also carry their `.aux.xml` / `.tfw` sidecars.
+  Backward compatible: `overrides = list()` (the default) preserves the
+  original "copy everything from `template_dir`" behaviour.
+
+## Warm Docker pool resilience
+
+* New exported `landis_pool_restart_one(pool, idx)` -- stops + removes the
+  container at index `idx` and starts a fresh replacement with identical config (image,
+  scratch_root bind-mount, user, cpu_limit, mem_limit) using a new
+  auto-generated container name. Pool state (`$names[idx]`) is updated in
+  place and also propagated to the caller's frame so loops can use the
+  current container name on the next iteration.
+* `landis_pool_exec()` gains `retries = 0L`. When > 0 and the exec command
+  fails with non-zero status, the container is restarted via
+  `landis_pool_restart_one()` and the command retried, up to `retries`
+  additional attempts. Useful for long calibrations that occasionally hit
+  OOM kills or daemon hiccups without wanting the whole DEoptim run to
+  abort. Returns an additional `attempts` field counting actual attempts
+  (1 = no retry needed; >1 = some retries consumed).
+* Pool object now carries the start-time args (`user_args`, `cpu_args`,
+  `mem_args`) so restarts produce containers with matching config.
+* Refactor: container-creation logic moved into the internal
+  `.landis_pool_start_one()` so `landis_pool_start()` and
+  `landis_pool_restart_one()` share one code path.
+
+## Pre-flight checks in `calibrate_dynamic_fire()`
+
+The driver now runs a battery of cheap pre-flight checks at function entry
+-- before starting the warm Docker pool or FORK cluster -- to catch common
+config / scenario / payload errors fast. Hard errors include:
+
+* `cfg$lower >= cfg$upper` for any parameter (lists the offending names).
+* `cfg$NP < 4` (DEoptim minimum), `cfg$itermax < 1`, `cfg$n_reps < 1`.
+* `cfg$weights` all zero (DEoptim would have nothing to optimise).
+* Unknown `cfg$simulator` (one of `"landis"`, `"r_reimpl"`, `"mock"`).
+* For `simulator = "landis"`: the calibration scenario template missing any
+  of the LANDIS-II input files normally produced by
+  `build_calibration_scenario_template()`.
+* Observed-targets payload missing required `$primary` shape.
+* Docker not available when `method = "docker"`; LANDIS console not findable
+  when `method = "local"`.
+* Scratch root not writable.
+
+Soft signals (warnings / messages):
+
+* `NP < 10 * length(par_names)` (DEoptim's own advisory, surfaced earlier).
+* `cfg$weights['area_fuel'] > 0` but observed lacks `area_by_fuel_ha` /
+  `fuel_code_to_base`; or `cfg$weights['severity'] > 0` but observed lacks
+  `severity_dist`. In both cases the corresponding loss component
+  contributes 0.
+
+## Calibration smoke-test script
+
+* New `inst/scripts/calibration_smoke_test.R` -- a complete 5-stage smoke
+  test of the calibration plumbing (observed targets, spinup, scenario
+  template, sim_landis trial, DEoptim loop) at minimal scale (NP=4,
+  itermax=2, n_reps=1, n_cores=2). Useful for first-time setup, post-
+  upgrade verification, and confirming Docker + DEoptim are installed
+  correctly. Runs in ~5-20 min via the warm Docker pool.
+
+  Usage:
+  ```r
+  source(system.file("scripts/calibration_smoke_test.R", package = "landisutils"))
+  ```
+
+## Tier 2 calibration loss components
+
+`loss_from_stats()` now computes `L_area_fuel` and `L_severity` when the
+corresponding observed components are present in the payload; previously both
+were stubbed at zero. Components are still gated by their `weights` entry, so
+projects that aren't ready to use them stay on the Tier 1 (count + size) loss
+by default.
+
+* `L_area_fuel` is a chi-squared distance between simulated and observed
+  burn-area-by-base-fuel-type *proportions*. Simulated area-by-fuel is
+  derived from each event's `init_fuel` (the ignition cell's fuel code)
+  times its `DamagedSites`, mapped to the five base fuel types via
+  `observed$fuel_code_to_base`. Activated when `observed$primary$area_by_fuel_ha`
+  AND `observed$fuel_code_to_base` are both set; contributes 0 otherwise.
+
+* `L_severity` is a chi-squared distance between simulated and observed
+  severity-class *proportions*. Simulated severities come from each event's
+  `MeanSeverity` (binned into integer classes 1..5 at half-integer
+  boundaries); observed comes from `observed$primary$severity_dist`, a
+  named numeric vector summing to 1. Activated when `severity_dist` is
+  non-NULL.
+
+* `save_observed_fire_targets()` gains a `severity_dist = NULL` argument
+  that callers can pass to embed a prior in the observed payload (e.g.,
+  the new `default_severity_prior_sturtevant2009()`).
+
+* New exported helper: `default_severity_prior_sturtevant2009()` returns a
+  named 5-element vector of severity-class proportions derived from
+  Sturtevant et al. 2009. Intended as a starting point; projects should
+  override with empirical priors when available.
+
 ## Dynamic Fire System extension calibration
 
 A new function family for calibrating the LANDIS-II Dynamic Fire System

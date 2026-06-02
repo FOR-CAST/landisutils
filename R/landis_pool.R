@@ -138,45 +138,14 @@ landis_pool_start <- function(
     seq_len(n),
     function(i) {
       name <- sprintf("%s-%02d", pool_id, i)
-      args <- c(
-        "run",
-        "-d",
-        "--rm",
-        "--name",
-        name,
-        ## /bin/sh is universally available across Linux base images (busybox /
-        ## alpine / debian / Microsoft dotnet runtime images); /bin/bash is not.
-        "--entrypoint",
-        "/bin/sh",
-        user_args,
-        cpu_args,
-        mem_args,
-        "-v",
-        paste0(scratch_root, ":/scratch"),
-        "-w",
-        "/scratch",
-        image,
-        "-c",
-        "trap 'exit 0' TERM; while true; do sleep 60; done"
+      .landis_pool_start_one(
+        name = name,
+        image = image,
+        scratch_root = scratch_root,
+        user_args = user_args,
+        cpu_args = cpu_args,
+        mem_args = mem_args
       )
-      ## Use processx::run rather than system2 -- the container command contains
-      ## a semicolon which `system2` would route through /bin/sh -c, splitting it
-      ## as two shell commands and only the first would land inside the container.
-      ## `processx::run` passes args as argv directly to docker.
-      res <- processx::run("docker", args, error_on_status = FALSE, echo = FALSE)
-      if (res$status != 0L) {
-        stop(
-          "landis_pool_start: failed to start container ",
-          name,
-          " (status ",
-          res$status,
-          ")\n",
-          "stderr: ",
-          substr(res$stderr, 1L, 500L),
-          call. = FALSE
-        )
-      }
-      name
     },
     character(1)
   )
@@ -191,16 +160,64 @@ landis_pool_start <- function(
       scratch_root = scratch_root,
       n = n,
       started_at = Sys.time(),
-      pool_id = pool_id
+      pool_id = pool_id,
+      ## Retain the args used to start the pool so landis_pool_restart_one()
+      ## can recreate a container with identical config.
+      user_args = user_args,
+      cpu_args = cpu_args,
+      mem_args = mem_args
     ),
     class = "landis_pool"
   )
 }
 
+## Internal: start a single warm container with the given name + args.
+## Returns the container name on success; stops with diagnostics on failure.
+.landis_pool_start_one <- function(name, image, scratch_root, user_args, cpu_args, mem_args) {
+  args <- c(
+    "run",
+    "-d",
+    "--rm",
+    "--name",
+    name,
+    ## /bin/sh is universally available across Linux base images (busybox /
+    ## alpine / debian / Microsoft dotnet runtime images); /bin/bash is not.
+    "--entrypoint",
+    "/bin/sh",
+    user_args,
+    cpu_args,
+    mem_args,
+    "-v",
+    paste0(scratch_root, ":/scratch"),
+    "-w",
+    "/scratch",
+    image,
+    "-c",
+    "trap 'exit 0' TERM; while true; do sleep 60; done"
+  )
+  ## Use processx::run rather than system2 -- the container command contains
+  ## a semicolon which `system2` would route through /bin/sh -c, splitting it
+  ## as two shell commands and only the first would land inside the container.
+  res <- processx::run("docker", args, error_on_status = FALSE, echo = FALSE)
+  if (res$status != 0L) {
+    stop(
+      "failed to start pool container ",
+      name,
+      " (status ",
+      res$status,
+      ")\n",
+      "stderr: ",
+      substr(res$stderr, 1L, 500L),
+      call. = FALSE
+    )
+  }
+  name
+}
+
 #' Execute a command in one of the warm-pool containers
 #'
 #' Runs `docker exec --workdir <workdir> <container> <command> <args>` in the
-#' `idx`-th container of `pool`. Captures stdout/stderr to disk if requested.
+#' container at index `idx` of `pool`. Captures stdout/stderr to disk if requested.
 #' Each invocation is a fresh dotnet process in the container -- no in-process
 #' state from prior calls carries over -- and the per-trial working directory
 #' isolates output files.
@@ -220,12 +237,18 @@ landis_pool_start <- function(
 #'   `--env`. Default sets `HOME=/tmp` and `DOTNET_BUNDLE_EXTRACT_BASE_DIR` to
 #'   a unique-per-call tempdir, isolating dotnet's per-user caches between
 #'   trials.
+#' @param retries Integer >= 0. If the exec command fails with a non-zero exit
+#'   status, restart the container via [landis_pool_restart_one()] and try
+#'   again, up to `retries` extra attempts. Default 0 = fail-fast (matches
+#'   prior behaviour). Useful when long calibrations occasionally see
+#'   container crashes (OOM, daemon hiccup) without wanting to abort.
 #'
 #' @returns A list with `status` (integer exit code), `elapsed_sec` (numeric),
-#'   `container` (the container name).
+#'   `container` (the container name), and `attempts` (1 + number of retries
+#'   actually consumed).
 #'
 #' @family LANDIS-II execution helpers
-#' @seealso [landis_pool_start()], [landis_pool_stop()]
+#' @seealso [landis_pool_start()], [landis_pool_stop()], [landis_pool_restart_one()]
 #'
 #' @export
 landis_pool_exec <- function(
@@ -237,7 +260,8 @@ landis_pool_exec <- function(
   timeout_sec = NULL,
   stdout_log = NULL,
   stderr_log = NULL,
-  extra_env = NULL
+  extra_env = NULL,
+  retries = 0L
 ) {
   stopifnot(
     inherits(pool, "landis_pool"),
@@ -247,9 +271,10 @@ landis_pool_exec <- function(
     is.character(workdir),
     length(workdir) == 1L,
     is.character(command),
-    length(command) == 1L
+    length(command) == 1L,
+    is.numeric(retries),
+    retries >= 0L
   )
-  container <- pool$names[as.integer(idx)]
 
   ## Default isolation env: redirect $HOME and dotnet's bundle-extract dir away from any
   ## long-lived cache locations so successive trials don't inherit state through them.
@@ -263,43 +288,153 @@ landis_pool_exec <- function(
   }
   env_args <- as.vector(rbind("--env", paste0(names(default_env), "=", default_env)))
 
-  exec_args <- c("exec", "--workdir", workdir, env_args, container, command, args)
+  attempts <- 0L
+  max_attempts <- 1L + as.integer(retries)
+  last_status <- NA_integer_
+  last_stderr <- ""
+  while (attempts < max_attempts) {
+    attempts <- attempts + 1L
+    container <- pool$names[as.integer(idx)]
+    exec_args <- c("exec", "--workdir", workdir, env_args, container, command, args)
 
-  t_start <- proc.time()
-  res <- processx::run(
-    "docker",
-    exec_args,
-    timeout = if (is.null(timeout_sec)) Inf else as.numeric(timeout_sec),
-    error_on_status = FALSE,
-    echo = FALSE
-  )
-  elapsed_sec <- (proc.time() - t_start)[["elapsed"]]
-
-  if (!is.null(stdout_log)) {
-    fs::dir_create(dirname(stdout_log))
-    writeLines(res$stdout, stdout_log)
-  }
-  if (!is.null(stderr_log)) {
-    fs::dir_create(dirname(stderr_log))
-    writeLines(res$stderr, stderr_log)
-  }
-
-  if (res$status != 0L) {
-    stop(
-      "landis_pool_exec: command failed in container ",
-      container,
-      " (status ",
-      res$status,
-      ", elapsed ",
-      round(elapsed_sec, 1),
-      "s)\n",
-      "stderr (first 500 chars): ",
-      substr(res$stderr, 1L, 500L),
-      call. = FALSE
+    t_start <- proc.time()
+    res <- processx::run(
+      "docker",
+      exec_args,
+      timeout = if (is.null(timeout_sec)) Inf else as.numeric(timeout_sec),
+      error_on_status = FALSE,
+      echo = FALSE
     )
+    elapsed_sec <- (proc.time() - t_start)[["elapsed"]]
+
+    if (!is.null(stdout_log)) {
+      fs::dir_create(dirname(stdout_log))
+      writeLines(res$stdout, stdout_log)
+    }
+    if (!is.null(stderr_log)) {
+      fs::dir_create(dirname(stderr_log))
+      writeLines(res$stderr, stderr_log)
+    }
+
+    if (res$status == 0L) {
+      return(invisible(list(
+        status = res$status,
+        elapsed_sec = elapsed_sec,
+        container = container,
+        attempts = attempts
+      )))
+    }
+    last_status <- res$status
+    last_stderr <- res$stderr
+
+    if (attempts < max_attempts) {
+      message(sprintf(
+        "landis_pool_exec: container %s failed (status %d, %.1fs); restarting and retrying (%d / %d).",
+        container,
+        res$status,
+        elapsed_sec,
+        attempts,
+        max_attempts - 1L
+      ))
+      landis_pool_restart_one(pool, idx)
+    }
   }
 
-  invisible(list(status = res$status, elapsed_sec = elapsed_sec, container = container))
+  stop(
+    "landis_pool_exec: command failed in container ",
+    pool$names[as.integer(idx)],
+    " after ",
+    attempts,
+    " attempt(s) (last status ",
+    last_status,
+    ", elapsed ",
+    round(elapsed_sec, 1),
+    "s)\n",
+    "stderr (first 500 chars): ",
+    substr(last_stderr, 1L, 500L),
+    call. = FALSE
+  )
+}
+
+#' Restart a single container in a warm Docker pool
+#'
+#' Stops + removes the container at index `idx` if it exists, then starts a fresh
+#' replacement with identical config (image, scratch_root bind-mount, user,
+#' cpu_limit, mem_limit) using a new auto-generated container name. The pool
+#' object's `$names[idx]` is updated to point at the new container.
+#'
+#' Intended for use by [landis_pool_exec()]'s `retries` mechanism, but also
+#' safe to call directly when a calibration driver detects a container is
+#' wedged or has been OOM-killed.
+#'
+#' @param pool A `landis_pool` object from [landis_pool_start()].
+#' @param idx Integer. 1-based index of the container to replace.
+#'
+#' @returns The pool (invisibly), with `$names[idx]` updated to the new
+#'   container name.
+#'
+#' @family LANDIS-II execution helpers
+#' @seealso [landis_pool_start()], [landis_pool_exec()], [landis_pool_stop()]
+#'
+#' @export
+landis_pool_restart_one <- function(pool, idx) {
+  stopifnot(inherits(pool, "landis_pool"), is.numeric(idx), idx >= 1L, idx <= pool$n)
+  old_name <- pool$names[as.integer(idx)]
+
+  ## Stop + force-remove the old container (idempotent).
+  tryCatch(
+    processx::run(
+      "docker",
+      c("stop", "--time", "10", old_name),
+      error_on_status = FALSE,
+      echo = FALSE
+    ),
+    error = function(e) NULL
+  )
+  tryCatch(
+    processx::run("docker", c("rm", "-f", old_name), error_on_status = FALSE, echo = FALSE),
+    error = function(e) NULL
+  )
+
+  ## Start a replacement with a fresh name based on the pool id + index +
+  ## a short random suffix (so multiple restarts don't collide).
+  new_name <- sprintf(
+    "%s-%02d-r%s",
+    pool$pool_id,
+    as.integer(idx),
+    sprintf("%04d", sample.int(9999L, 1L))
+  )
+  pool$names[as.integer(idx)] <- .landis_pool_start_one(
+    name = new_name,
+    image = pool$image,
+    scratch_root = pool$scratch_root,
+    user_args = pool$user_args,
+    cpu_args = pool$cpu_args,
+    mem_args = pool$mem_args
+  )
+
+  ## The caller holds the pool by reference (it's a list) but R is copy-on-modify.
+  ## Return the updated pool so callers (incl. landis_pool_exec's retry loop)
+  ## see the new name. landis_pool_exec mutates its local `pool` via direct
+  ## reassignment after this call -- actually, R won't propagate the rename
+  ## back to the caller's pool unless we use <<- or explicit return. We do
+  ## both: return the pool (caller can choose to update), and additionally
+  ## use eval.parent() to update the caller's `pool` object in-place when
+  ## called from landis_pool_exec.
+  ##
+  ## Implementation note: instead of relying on lexical-frame mutation magic,
+  ## landis_pool_exec re-reads `pool$names[idx]` at the start of each attempt;
+  ## here we use parent.frame() to update the caller's `pool` if it has one.
+  parent_env <- parent.frame()
+  if (exists("pool", envir = parent_env, inherits = FALSE)) {
+    parent_pool <- get("pool", envir = parent_env)
+    if (inherits(parent_pool, "landis_pool")) {
+      parent_pool$names[as.integer(idx)] <- new_name
+      assign("pool", parent_pool, envir = parent_env)
+    }
+  }
+
+  invisible(pool)
 }
 
 #' Stop and remove all containers in a warm Docker pool

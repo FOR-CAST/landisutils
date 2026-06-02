@@ -14,33 +14,46 @@ loss_from_stats(
 \item{reps}{List. Each element is the return value of
 \code{\link[=parse_dynamic_fire_logs]{parse_dynamic_fire_logs()}} for one replicate.}
 
-\item{observed}{List. Output of \code{save_observed_fire_targets()} (Phase 8b).
-Must contain \verb{$fru59} with \verb{$lambda_obs}, \verb{$n_fires_by_year}, \verb{$fire_sizes_ha}.}
+\item{observed}{List. Output of \code{\link[=save_observed_fire_targets]{save_observed_fire_targets()}}. Must contain
+\verb{$primary} (or \verb{$fru59} back-compat alias) with \verb{$lambda_obs},
+\verb{$n_fires_by_year}, \verb{$fire_sizes_ha}. May contain
+\verb{$primary$area_by_fuel_ha}, \verb{$primary$severity_dist},
+\verb{$fuel_code_to_base}, and \verb{$pixel_area_ha} to activate Tier 2 components.}
 
-\item{weights}{Named numeric vector. Components: \code{count}, \code{size}, \code{area_fuel},
-\code{severity}. Missing components default to 0.}
+\item{weights}{Named numeric vector. Components: \code{count}, \code{size},
+\code{area_fuel}, \code{severity}. Missing components default to 0.}
 }
 \value{
-Named list with \code{total} (the scalar minimised by DEoptim), \code{components}
-(per-component contributions), and \code{weights} (echoed weight vector).
+Named list with \code{total} (the scalar minimised by DEoptim),
+\code{components} (per-component contributions), and \code{weights} (echoed weights).
 }
 \description{
 Combines per-replicate \code{\link[=parse_dynamic_fire_logs]{parse_dynamic_fire_logs()}} outputs into the multi-
-component weighted loss against observed targets from \code{save_observed_fire_targets()}
-(Phase 8b).
+component weighted loss against observed targets from
+\code{\link[=save_observed_fire_targets]{save_observed_fire_targets()}}.
 }
 \details{
-Tier 1 implementation: \code{L_count} + \code{L_size}.
+Components:
 \itemize{
 \item \verb{L_count = |mean(n_fires_sim) - lambda_obs| / sd(n_fires_obs)} --
-annual-rate match against the primary ecoregion target (default \code{fru59}).
-\item \verb{L_size = KS_D(empirical CDF of sim sizes, empirical CDF of obs sizes)} --
-shape match between simulated and observed fire-size distributions.
+annual-rate match against the primary ecoregion target.
+\item \verb{L_size = KS_D(empirical CDF of sim sizes, empirical CDF of obs sizes)} -- shape match for the fire-size distribution.
+\item \code{L_area_fuel}: chi-squared distance between simulated and observed
+burn-area-by-base-fuel-type \emph{proportions}. Simulated area-by-fuel
+comes from each event's ignition fuel code times its \code{DamagedSites},
+mapped to base fuel types via \code{observed$fuel_code_to_base}. Skipped
+(contributes 0) when either \code{observed$primary$area_by_fuel_ha} is
+NULL or \code{observed$fuel_code_to_base} is missing.
+\item \code{L_severity}: chi-squared distance between simulated and observed
+severity-class proportions. Simulated severities come from each
+event's \code{MeanSeverity} binned into integer classes 1..5; observed
+comes from \code{observed$primary$severity_dist} (a 5-element named
+numeric vector summing to 1). Skipped when observed is NULL.
 }
 
-Tier 2 (future): \code{L_area_fuel} and \code{L_severity}. Stubbed here as zeros when
-the corresponding observed component is NULL; weights default to 0 so they
-contribute nothing until implemented.
+All component values are unitless and non-negative; chi-squared components
+use a small epsilon in the denominator to avoid division by zero on empty
+observed bins.
 }
 \seealso{
 Other Dynamic Fire calibration helpers:
@@ -51,6 +64,7 @@ Other Dynamic Fire calibration helpers:
 \code{\link[=build_calibration_spinup_scenario]{build_calibration_spinup_scenario()}},
 \code{\link[=calibrate_dynamic_fire]{calibrate_dynamic_fire()}},
 \code{\link[=calibration_par_names]{calibration_par_names()}},
+\code{\link[=default_severity_prior_sturtevant2009]{default_severity_prior_sturtevant2009()}},
 \code{\link[=parse_dynamic_fire_logs]{parse_dynamic_fire_logs()}},
 \code{\link[=patch_fire_config]{patch_fire_config()}},
 \code{\link[=run_calibration_spinup]{run_calibration_spinup()}},

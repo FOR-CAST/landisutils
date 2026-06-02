@@ -225,33 +225,70 @@ patch_fire_config <- function(scenario_dir, par_vec) {
   fs::path_real(fire_txt)
 }
 
+#' Default severity-class prior (Sturtevant et al. 2009)
+#'
+#' Returns a named 5-element vector of expected proportions across the
+#' integer severity classes (1 = low, 5 = high) produced by the
+#' Dynamic Fire System. Default values are illustrative starting points
+#' derived from the modelled distribution in the original Dynamic Fire
+#' extension paper; callers should override with empirical priors when
+#' available for their specific fire regime.
+#'
+#' @returns Named numeric vector of length 5, summing to 1.
+#'
+#' @references Sturtevant, B.R., Scheller, R.M., Miranda, B.R., Shinneman, D.,
+#'   and Syphard, A. 2009. Simulating dynamic and mixed-severity fire regimes:
+#'   A process-based fire extension for LANDIS-II. Ecological Modelling
+#'   220(23): 3380-3393. <https://doi.org/10.1016/j.ecolmodel.2009.07.030>
+#'
+#' @family Dynamic Fire calibration helpers
+#'
+#' @export
+default_severity_prior_sturtevant2009 <- function() {
+  c("1" = 0.30, "2" = 0.25, "3" = 0.20, "4" = 0.15, "5" = 0.10)
+}
+
 #' Compute the calibration loss from N replicate trial outputs
 #'
 #' Combines per-replicate [parse_dynamic_fire_logs()] outputs into the multi-
-#' component weighted loss against observed targets from `save_observed_fire_targets()`
-#' (Phase 8b).
+#' component weighted loss against observed targets from
+#' [save_observed_fire_targets()].
 #'
-#' Tier 1 implementation: `L_count` + `L_size`.
+#' Components:
 #' \itemize{
 #'   \item `L_count = |mean(n_fires_sim) - lambda_obs| / sd(n_fires_obs)` --
-#'         annual-rate match against the primary ecoregion target (default `fru59`).
-#'   \item `L_size = KS_D(empirical CDF of sim sizes, empirical CDF of obs sizes)` --
-#'         shape match between simulated and observed fire-size distributions.
+#'         annual-rate match against the primary ecoregion target.
+#'   \item `L_size = KS_D(empirical CDF of sim sizes, empirical CDF of obs
+#'         sizes)` -- shape match for the fire-size distribution.
+#'   \item `L_area_fuel`: chi-squared distance between simulated and observed
+#'         burn-area-by-base-fuel-type *proportions*. Simulated area-by-fuel
+#'         comes from each event's ignition fuel code times its `DamagedSites`,
+#'         mapped to base fuel types via `observed$fuel_code_to_base`. Skipped
+#'         (contributes 0) when either `observed$primary$area_by_fuel_ha` is
+#'         NULL or `observed$fuel_code_to_base` is missing.
+#'   \item `L_severity`: chi-squared distance between simulated and observed
+#'         severity-class proportions. Simulated severities come from each
+#'         event's `MeanSeverity` binned into integer classes 1..5; observed
+#'         comes from `observed$primary$severity_dist` (a 5-element named
+#'         numeric vector summing to 1). Skipped when observed is NULL.
 #' }
 #'
-#' Tier 2 (future): `L_area_fuel` and `L_severity`. Stubbed here as zeros when
-#' the corresponding observed component is NULL; weights default to 0 so they
-#' contribute nothing until implemented.
+#' All component values are unitless and non-negative; chi-squared components
+#' use a small epsilon in the denominator to avoid division by zero on empty
+#' observed bins.
 #'
 #' @param reps List. Each element is the return value of
 #'   [parse_dynamic_fire_logs()] for one replicate.
-#' @param observed List. Output of `save_observed_fire_targets()` (Phase 8b).
-#'   Must contain `$fru59` with `$lambda_obs`, `$n_fires_by_year`, `$fire_sizes_ha`.
-#' @param weights Named numeric vector. Components: `count`, `size`, `area_fuel`,
-#'   `severity`. Missing components default to 0.
+#' @param observed List. Output of [save_observed_fire_targets()]. Must contain
+#'   `$primary` (or `$fru59` back-compat alias) with `$lambda_obs`,
+#'   `$n_fires_by_year`, `$fire_sizes_ha`. May contain
+#'   `$primary$area_by_fuel_ha`, `$primary$severity_dist`,
+#'   `$fuel_code_to_base`, and `$pixel_area_ha` to activate Tier 2 components.
+#' @param weights Named numeric vector. Components: `count`, `size`,
+#'   `area_fuel`, `severity`. Missing components default to 0.
 #'
-#' @returns Named list with `total` (the scalar minimised by DEoptim), `components`
-#'   (per-component contributions), and `weights` (echoed weight vector).
+#' @returns Named list with `total` (the scalar minimised by DEoptim),
+#'   `components` (per-component contributions), and `weights` (echoed weights).
 #'
 #' @family Dynamic Fire calibration helpers
 #'
@@ -261,7 +298,9 @@ loss_from_stats <- function(
   observed,
   weights = c(count = 1, size = 1, area_fuel = 0, severity = 0)
 ) {
-  stopifnot(is.list(reps), length(reps) >= 1L, is.list(observed), !is.null(observed$fru59))
+  stopifnot(is.list(reps), length(reps) >= 1L, is.list(observed))
+  primary <- observed$primary %||% observed$fru59
+  stopifnot(!is.null(primary))
 
   ## L_count: pool simulated annual counts per rep, compare mean to observed lambda
   n_fires_per_year_per_rep <- vapply(
@@ -269,25 +308,37 @@ loss_from_stats <- function(
     function(r) sum(r$n_fires_by_year$n_fires) / max(1L, nrow(r$n_fires_by_year)),
     numeric(1)
   )
-  obs_n <- observed$fru59$n_fires_by_year$n
+  obs_n <- primary$n_fires_by_year$n
   obs_sd <- stats::sd(obs_n)
   if (!is.finite(obs_sd) || obs_sd <= 0) {
     obs_sd <- 1
   }
-  L_count <- abs(mean(n_fires_per_year_per_rep) - observed$fru59$lambda_obs) / obs_sd
+  L_count <- abs(mean(n_fires_per_year_per_rep) - primary$lambda_obs) / obs_sd
 
   ## L_size: pool simulated sizes across reps, compute KS distance to observed
   sim_sizes <- unlist(lapply(reps, function(r) r$fire_sizes_ha), use.names = FALSE)
-  obs_sizes <- observed$fru59$fire_sizes_ha
+  obs_sizes <- primary$fire_sizes_ha
   if (length(sim_sizes) == 0L || length(obs_sizes) == 0L) {
     L_size <- 1.0
   } else {
     L_size <- suppressWarnings(stats::ks.test(sim_sizes, obs_sizes)$statistic |> as.numeric())
   }
 
-  ## Tier 2 stubs
-  L_area_fuel <- 0.0
-  L_severity <- 0.0
+  ## L_area_fuel: chi-squared on burn-area-by-base-fuel-type proportions.
+  ## Active when observed has area_by_fuel_ha AND fuel_code_to_base is supplied.
+  L_area_fuel <- if (!is.null(primary$area_by_fuel_ha) && !is.null(observed$fuel_code_to_base)) {
+    .chi_sq_area_by_fuel(reps, primary, observed)
+  } else {
+    0.0
+  }
+
+  ## L_severity: chi-squared on severity-class proportions.
+  ## Active when observed$primary$severity_dist is non-NULL.
+  L_severity <- if (!is.null(primary$severity_dist)) {
+    .chi_sq_severity(reps, primary$severity_dist)
+  } else {
+    0.0
+  }
 
   components <- c(count = L_count, size = L_size, area_fuel = L_area_fuel, severity = L_severity)
   w <- stats::setNames(rep(0, length(components)), names(components))
@@ -295,6 +346,81 @@ loss_from_stats <- function(
   total <- sum(w * components)
 
   list(total = total, components = components, weights = w)
+}
+
+## Chi-squared on burn-area-by-base-fuel-type proportions (internal).
+## Returns a finite scalar; degenerates to a small value when either side has
+## no data (the L_count / L_size components handle the no-fires case more
+## meaningfully).
+.chi_sq_area_by_fuel <- function(reps, primary, observed) {
+  fuel_to_base <- observed$fuel_code_to_base
+  pixel_area_ha <- observed$pixel_area_ha %||% 1.0
+
+  sim_events <- do.call(
+    rbind,
+    lapply(reps, function(r) {
+      if (nrow(r$events) == 0L) {
+        return(NULL)
+      }
+      r$events[, c("init_fuel", "sites"), drop = FALSE]
+    })
+  )
+  if (is.null(sim_events) || nrow(sim_events) == 0L) {
+    return(1.0) ## penalty for no simulated fires
+  }
+  sim_events$base <- unname(fuel_to_base[as.character(sim_events$init_fuel)])
+  sim_events <- sim_events[!is.na(sim_events$base), , drop = FALSE]
+  if (nrow(sim_events) == 0L) {
+    return(1.0)
+  }
+  sim_area_by_base <- tapply(sim_events$sites, sim_events$base, sum) * pixel_area_ha
+
+  obs_area_by_base <- stats::setNames(primary$area_by_fuel_ha$area_ha, primary$area_by_fuel_ha$base)
+
+  ## Pool both distributions over the union of base types, with 0 padding.
+  bases <- union(names(sim_area_by_base), names(obs_area_by_base))
+  sim_v <- as.numeric(sim_area_by_base[bases])
+  sim_v[is.na(sim_v)] <- 0
+  obs_v <- as.numeric(obs_area_by_base[bases])
+  obs_v[is.na(obs_v)] <- 0
+
+  sim_p <- if (sum(sim_v) > 0) sim_v / sum(sim_v) else sim_v
+  obs_p <- if (sum(obs_v) > 0) obs_v / sum(obs_v) else obs_v
+
+  ## Chi-squared with epsilon in the denominator for empty observed bins.
+  eps <- 1e-6
+  sum((sim_p - obs_p)^2 / pmax(obs_p, eps))
+}
+
+## Chi-squared on severity-class proportions (internal).
+.chi_sq_severity <- function(reps, severity_dist) {
+  sim_sev <- unlist(
+    lapply(reps, function(r) {
+      if (nrow(r$events) == 0L) {
+        return(numeric(0))
+      }
+      r$events$mean_severity
+    }),
+    use.names = FALSE
+  )
+  if (length(sim_sev) == 0L) {
+    return(1.0)
+  }
+  ## Bin MeanSeverity (continuous, ~0-5) into integer classes 1-5 using
+  ## half-integer boundaries.
+  sim_bins <- cut(
+    sim_sev,
+    breaks = c(-Inf, 1.5, 2.5, 3.5, 4.5, Inf),
+    labels = c("1", "2", "3", "4", "5"),
+    right = TRUE
+  )
+  sim_counts <- table(sim_bins)
+  sim_p <- as.numeric(sim_counts) / sum(sim_counts)
+  obs_p <- as.numeric(severity_dist[names(sim_counts)])
+  obs_p[is.na(obs_p)] <- 0
+
+  eps <- 1e-6
+  sum((sim_p - obs_p)^2 / pmax(obs_p, eps))
 }
 
 #' Apply per-base-fuel-type IgnProb multipliers to a FuelTypeTable
@@ -452,6 +578,12 @@ bc_fuel_code_to_base <- function() {
 #'   `fuel_types_rast` integer codes (as character names) to the five base
 #'   fuel types from [defaultFuelTypeTable()]. NA values mark non-fuel codes
 #'   to be excluded. Default: [bc_fuel_code_to_base()].
+#' @param severity_dist Named numeric vector or NULL. Expected proportions
+#'   across the 5 Dynamic Fire severity classes (names `"1"`..`"5"`). Stored
+#'   on the primary-ecoregion summary; consumed by `loss_from_stats()`'s
+#'   `L_severity` component. NULL = skip severity calibration (the loss
+#'   contributes 0). For a literature-prior default, see
+#'   [default_severity_prior_sturtevant2009()].
 #' @param path Character. Output `.rds` path. Parent dir created if missing.
 #'
 #' @returns Character. Absolute path to the written file.
@@ -469,7 +601,8 @@ save_observed_fire_targets <- function(
   secondary_polys = NULL,
   primary_label = "primary",
   secondary_label = "secondary",
-  fuel_code_to_base = bc_fuel_code_to_base()
+  fuel_code_to_base = bc_fuel_code_to_base(),
+  severity_dist = NULL
 ) {
   stopifnot(
     inherits(primary_points, "SpatVector"),
@@ -482,7 +615,8 @@ save_observed_fire_targets <- function(
     is.character(path),
     length(path) == 1L,
     is.character(fuel_code_to_base),
-    !is.null(names(fuel_code_to_base))
+    !is.null(names(fuel_code_to_base)),
+    is.null(severity_dist) || (is.numeric(severity_dist) && !is.null(names(severity_dist)))
   )
 
   fs::dir_create(dirname(path))
@@ -533,11 +667,12 @@ save_observed_fire_targets <- function(
       n_fires_by_year = n_fires_by_year,
       fire_sizes_ha = fire_sizes_ha,
       area_by_fuel_ha = area_by_fuel_ha,
-      severity_dist = NULL
+      severity_dist = NULL ## set on the primary summary below if a prior was passed
     )
   }
 
   primary <- .summarise(primary_points, primary_polys, primary_label, compute_area_by_fuel = TRUE)
+  primary$severity_dist <- severity_dist
   secondary <- if (!is.null(secondary_points)) {
     .summarise(secondary_points, secondary_polys, secondary_label, compute_area_by_fuel = FALSE)
   } else {
@@ -560,7 +695,11 @@ save_observed_fire_targets <- function(
       "Fire counts come from NFDB ignition points (one row = one ignition).",
       "Fire sizes are NFDB point SIZE_HA values (zeros dropped).",
       "area_by_fuel_ha is computed for the primary ecoregion only (LANDIS sim extent).",
-      "severity_dist is NULL; Tier 2 will populate from literature priors."
+      paste(
+        "severity_dist on primary is",
+        if (is.null(severity_dist)) "NULL (L_severity will contribute 0);" else "set from caller;",
+        "see default_severity_prior_sturtevant2009() for a Sturtevant 2009 prior."
+      )
     )
   )
 
@@ -761,7 +900,7 @@ build_calibration_spinup_scenario <- function(
 #' }
 #'
 #' When the baseline fire-config tables are supplied (recommended), the function
-#' overwrites the copied `dynamic-fire.txt` with a fresh un-calibrated config
+#' overwrites the copied `dynamic-fire.txt` with a fresh uncalibrated config
 #' built from these tables. This breaks the otherwise-circular dependency
 #' between the production fire config and the calibration loop (production fire
 #' config -> calibrated_fire_params -> calibration -> production fire config).
@@ -772,10 +911,21 @@ build_calibration_spinup_scenario <- function(
 #' @param snapshot_ic_csv,snapshot_ic_tif Character. Paths to the spun-up
 #'   community CSV / TIF (return of [build_calibration_spinup_scenario()]).
 #' @param baseline_fire_size_table,baseline_fuel_type_table,baseline_fire_damage_table,baseline_seasons_sim_table
-#'   data.frame or NULL. Baseline (un-calibrated) tables. When all four are
+#'   data.frame or NULL. Baseline (uncalibrated) tables. When all four are
 #'   supplied, the function writes a fresh `dynamic-fire.txt` from them.
 #' @param sim_years Integer. Calibration sim duration (years). Default 10.
 #' @param cell_length Integer. Raster cell size in metres.
+#' @param overrides Named list. Optional per-file overrides applied AFTER the
+#'   bulk template-dir copy. Keys are output filenames (relative to `out_dir`);
+#'   values are paths to source files to copy in place of whatever was copied
+#'   from `template_dir`. Useful for swapping in a coarser fuel raster, a
+#'   cropped slope/aspect, alternative weather, etc. for calibration without
+#'   touching the production scenario. Accepted keys: `"ground_slope.tif"`,
+#'   `"uphill_slope_azimuth.tif"`, `"fire-ecoregions.tif"`,
+#'   `"initial_weather_database.csv"`, `"DynamicFire_Spp_Table.csv"`,
+#'   `"species.txt"`, `"ecoregions.txt"`, `"ecoregions.tif"`, `"climate.txt"`.
+#'   `.tif` overrides also copy their `.aux.xml` / `.tfw` sidecars if present
+#'   alongside the source.
 #'
 #' @returns Character scalar: absolute path to the written `scenario.txt`.
 #'
@@ -792,7 +942,8 @@ build_calibration_scenario_template <- function(
   baseline_fire_damage_table = NULL,
   baseline_seasons_sim_table = NULL,
   sim_years = 10L,
-  cell_length
+  cell_length,
+  overrides = list()
 ) {
   stopifnot(
     fs::dir_exists(template_dir),
@@ -801,8 +952,40 @@ build_calibration_scenario_template <- function(
     is.numeric(sim_years),
     sim_years >= 1L,
     is.numeric(cell_length),
-    cell_length > 0
+    cell_length > 0,
+    is.list(overrides),
+    is.null(names(overrides)) || all(nzchar(names(overrides)))
   )
+  ## Validate override target filenames against the set of files we know how to
+  ## replace post-copy. Catches typos like `overrides = list(ground_slope.tif = ...)`
+  ## (would silently fail if we let unknown names through).
+  allowed_overrides <- c(
+    "ground_slope.tif",
+    "uphill_slope_azimuth.tif",
+    "fire-ecoregions.tif",
+    "initial_weather_database.csv",
+    "DynamicFire_Spp_Table.csv",
+    "species.txt",
+    "ecoregions.txt",
+    "ecoregions.tif",
+    "climate.txt"
+  )
+  bad_overrides <- setdiff(names(overrides), allowed_overrides)
+  if (length(bad_overrides) > 0L) {
+    stop(
+      "Unknown override target(s): ",
+      paste(bad_overrides, collapse = ", "),
+      ". Allowed: ",
+      paste(allowed_overrides, collapse = ", "),
+      call. = FALSE
+    )
+  }
+  ## Confirm each override path exists before we begin copying.
+  for (nm in names(overrides)) {
+    if (!fs::file_exists(overrides[[nm]])) {
+      stop("Override for `", nm, "` not found: ", overrides[[nm]], call. = FALSE)
+    }
+  }
   write_baseline_fire_config <- !is.null(baseline_fire_size_table) &&
     !is.null(baseline_fuel_type_table) &&
     !is.null(baseline_fire_damage_table) &&
@@ -815,6 +998,20 @@ build_calibration_scenario_template <- function(
 
   for (f in fs::dir_ls(template_dir, type = "file")) {
     fs::file_copy(f, fs::path(out_dir, basename(f)))
+  }
+
+  ## Apply per-file overrides AFTER the bulk copy, so they win.
+  for (nm in names(overrides)) {
+    fs::file_copy(overrides[[nm]], fs::path(out_dir, nm), overwrite = TRUE)
+    ## Carry GDAL sidecars (.tif.aux.xml / .tfw) alongside any overridden .tif.
+    if (grepl("\\.tif$", nm, ignore.case = TRUE)) {
+      for (sidecar_ext in c(".aux.xml", ".tfw")) {
+        src_side <- paste0(overrides[[nm]], sidecar_ext)
+        if (fs::file_exists(src_side)) {
+          fs::file_copy(src_side, fs::path(out_dir, paste0(nm, sidecar_ext)), overwrite = TRUE)
+        }
+      }
+    }
   }
 
   ## Replace production IC with the post-spinup snapshot, renaming to the
@@ -833,7 +1030,7 @@ build_calibration_scenario_template <- function(
   ## Patch ForCS config for calibration (spinup off + freeze succession).
   .patch_forcs_for_calibration(fs::path(out_dir, "forc-succession.txt"), sim_years = sim_years)
 
-  ## Overwrite dynamic-fire.txt with a fresh un-calibrated config. Relative
+  ## Overwrite dynamic-fire.txt with a fresh uncalibrated config. Relative
   ## file-path references inside (fire-ecoregions.tif, ground_slope.tif, ...)
   ## resolve against out_dir, where production copies of those files were just
   ## placed by the dir_ls() loop above.
@@ -1225,6 +1422,200 @@ sim_mock <- function(
   )
 }
 
+## Internal pre-flight validation. Catches common cfg / scenario / payload
+## errors before any expensive resource setup (pool / cluster / first trial).
+## Errors are fail-fast; soft issues (e.g., NP < 10 * npar advisory, missing
+## severity_dist with non-zero severity weight) are warnings.
+.preflight_calibrate <- function(cfg, par_names, template_dir, observed, scratch_root) {
+  npar <- length(par_names)
+
+  ## ---- cfg shape -----------------------------------------------------------
+  bad_bounds <- par_names[cfg$lower[par_names] >= cfg$upper[par_names]]
+  if (length(bad_bounds) > 0L) {
+    stop(
+      "cfg$lower must be strictly less than cfg$upper for every parameter; ",
+      "violations: ",
+      paste(bad_bounds, collapse = ", "),
+      call. = FALSE
+    )
+  }
+  NP <- as.integer(cfg$NP %||% 60L)
+  itermax <- as.integer(cfg$itermax %||% 100L)
+  n_reps <- as.integer(cfg$n_reps %||% 5L)
+  if (NP < 4L) {
+    stop("cfg$NP must be >= 4 (DEoptim minimum); got ", NP, call. = FALSE)
+  }
+  if (itermax < 1L) {
+    stop("cfg$itermax must be >= 1; got ", itermax, call. = FALSE)
+  }
+  if (n_reps < 1L) {
+    stop("cfg$n_reps must be >= 1; got ", n_reps, call. = FALSE)
+  }
+  if (NP < 10L * npar) {
+    message(
+      sprintf("calibrate_dynamic_fire: NP (%d) < 10 * length(par_names) (= %d); ", NP, 10L * npar),
+      "DEoptim will issue an advisory warning. Bump NP to ~",
+      10L * npar,
+      " for production calibration runs."
+    )
+  }
+
+  ## weights: at least one component must be non-zero, otherwise DEoptim has
+  ## nothing to optimise
+  w <- cfg$weights %||% c(count = 1, size = 1, area_fuel = 0, severity = 0)
+  if (all(w == 0)) {
+    stop(
+      "cfg$weights are all zero; DEoptim has nothing to optimise. ",
+      "Set at least one of count / size / area_fuel / severity to > 0.",
+      call. = FALSE
+    )
+  }
+  unknown_w <- setdiff(names(w), c("count", "size", "area_fuel", "severity"))
+  if (length(unknown_w) > 0L) {
+    warning(
+      "cfg$weights has unrecognised components (ignored): ",
+      paste(unknown_w, collapse = ", "),
+      call. = FALSE
+    )
+  }
+
+  ## ---- simulator name (cheap enum check, do early) ------------------------
+  simulator_name <- cfg$simulator %||% "landis"
+  if (!simulator_name %in% c("landis", "r_reimpl", "mock")) {
+    stop("Unknown simulator: ", simulator_name, call. = FALSE)
+  }
+
+  ## ---- scenario template ---------------------------------------------------
+  ## sim_mock / sim_r_reimpl don't actually invoke LANDIS-II, so the full
+  ## set of LANDIS-II input files isn't needed. Only sim_landis requires it.
+  ## Even for mock / r_reimpl we still expect scenario.txt to exist (caller
+  ## already passed its path to calibrate_dynamic_fire) -- skip the rest.
+  required_files <- if (simulator_name == "landis") {
+    c(
+      "scenario.txt",
+      "forc-succession.txt",
+      "dynamic-fire.txt",
+      "dynamic-fuels.txt",
+      "species.txt",
+      "ecoregions.txt",
+      "ecoregions.tif",
+      "initial-communities.csv",
+      "initial-communities.tif",
+      "ground_slope.tif",
+      "uphill_slope_azimuth.tif",
+      "fire-ecoregions.tif",
+      "initial_weather_database.csv",
+      "DynamicFire_Spp_Table.csv"
+    )
+  } else {
+    "scenario.txt"
+  }
+  missing_files <- required_files[!fs::file_exists(fs::path(template_dir, required_files))]
+  if (length(missing_files) > 0L) {
+    stop(
+      "calibration scenario template at ",
+      template_dir,
+      " is missing required files: ",
+      paste(missing_files, collapse = ", "),
+      ". Did you call build_calibration_scenario_template() first?",
+      call. = FALSE
+    )
+  }
+
+  ## ---- observed payload shape ---------------------------------------------
+  primary <- observed$primary %||% observed$fru59
+  if (is.null(primary)) {
+    stop(
+      "observed_targets payload is missing $primary (or back-compat $fru59); ",
+      "did save_observed_fire_targets() complete successfully?",
+      call. = FALSE
+    )
+  }
+  required_obs <- c("lambda_obs", "n_fires_by_year", "fire_sizes_ha")
+  missing_obs <- required_obs[!required_obs %in% names(primary)]
+  if (length(missing_obs) > 0L) {
+    stop(
+      "observed$primary is missing required fields: ",
+      paste(missing_obs, collapse = ", "),
+      call. = FALSE
+    )
+  }
+  if (!is.numeric(primary$lambda_obs) || length(primary$lambda_obs) != 1L) {
+    stop("observed$primary$lambda_obs must be a numeric scalar.", call. = FALSE)
+  }
+
+  ## ---- weight / observed coherence (warnings only) ------------------------
+  if (
+    (w["area_fuel"] %||% 0) > 0 &&
+      (is.null(primary$area_by_fuel_ha) || is.null(observed$fuel_code_to_base))
+  ) {
+    warning(
+      "cfg$weights['area_fuel'] > 0 but the observed payload is missing ",
+      "area_by_fuel_ha or fuel_code_to_base; L_area_fuel will contribute 0. ",
+      "Either set the weight to 0 or populate the payload via ",
+      "save_observed_fire_targets() with a fuel-code mapping.",
+      call. = FALSE
+    )
+  }
+  if ((w["severity"] %||% 0) > 0 && is.null(primary$severity_dist)) {
+    warning(
+      "cfg$weights['severity'] > 0 but observed$primary$severity_dist is NULL; ",
+      "L_severity will contribute 0. Pass `severity_dist = ",
+      "default_severity_prior_sturtevant2009()` to save_observed_fire_targets().",
+      call. = FALSE
+    )
+  }
+
+  ## ---- method coherence (simulator name was validated earlier) ------------
+  method <- cfg$method %||%
+    getOption(
+      "landisutils.run.method",
+      default = if (.Platform$OS.type == "windows") "local" else "docker"
+    )
+  if (simulator_name == "landis") {
+    if (method == "docker") {
+      docker_rc <- suppressWarnings(system2("docker", "version", stdout = FALSE, stderr = FALSE))
+      if (!identical(as.integer(docker_rc), 0L)) {
+        stop(
+          "simulator = 'landis' + method = 'docker' but `docker version` failed. ",
+          "Either install Docker, point cfg$method = 'local', or use ",
+          "simulator = 'mock' for testing.",
+          call. = FALSE
+        )
+      }
+    } else if (method == "local") {
+      console <- landis_find()
+      if (is.null(console) || is.na(console) || !nzchar(console)) {
+        stop(
+          "simulator = 'landis' + method = 'local' but landis_find() did not ",
+          "return a usable Landis.Console.dll path. Set the LANDIS_CONSOLE env ",
+          "var or use method = 'docker'.",
+          call. = FALSE
+        )
+      }
+    }
+  }
+
+  ## ---- scratch root writability -------------------------------------------
+  if (!fs::dir_exists(scratch_root)) {
+    stop("scratch_root does not exist: ", scratch_root, call. = FALSE)
+  }
+  test_file <- fs::file_temp(pattern = "preflight_", tmp_dir = scratch_root, ext = ".test")
+  ok <- tryCatch(
+    {
+      writeLines("ok", test_file)
+      fs::file_delete(test_file)
+      TRUE
+    },
+    error = function(e) FALSE
+  )
+  if (!isTRUE(ok)) {
+    stop("scratch_root is not writable: ", scratch_root, call. = FALSE)
+  }
+
+  invisible(TRUE)
+}
+
 #' DEoptim driver for Dynamic Fire calibration
 #'
 #' Sets up a warm Docker pool (for the `landis` simulator on Docker) and a FORK
@@ -1293,6 +1684,16 @@ calibrate_dynamic_fire <- function(observed_targets_path, scenario_template, cfg
   stopifnot(setequal(names(cfg$lower), par_names), setequal(names(cfg$upper), par_names))
   cfg$lower <- cfg$lower[par_names]
   cfg$upper <- cfg$upper[par_names]
+
+  ## Pre-flight checks: fail fast on common config / scenario / payload errors
+  ## BEFORE starting the warm pool or FORK cluster.
+  .preflight_calibrate(
+    cfg = cfg,
+    par_names = par_names,
+    template_dir = template_dir,
+    observed = observed,
+    scratch_root = scratch_root
+  )
 
   paths <- list(scenario_template = template_dir, scratch_root = scratch_root)
   n_reps <- as.integer(cfg$n_reps %||% 5L)

@@ -14,7 +14,8 @@ build_calibration_scenario_template(
   baseline_fire_damage_table = NULL,
   baseline_seasons_sim_table = NULL,
   sim_years = 10L,
-  cell_length
+  cell_length,
+  overrides = list()
 )
 }
 \arguments{
@@ -26,12 +27,24 @@ to copy from.}
 \item{snapshot_ic_csv, snapshot_ic_tif}{Character. Paths to the spun-up
 community CSV / TIF (return of \code{\link[=build_calibration_spinup_scenario]{build_calibration_spinup_scenario()}}).}
 
-\item{baseline_fire_size_table, baseline_fuel_type_table, baseline_fire_damage_table, baseline_seasons_sim_table}{data.frame or NULL. Baseline (un-calibrated) tables. When all four are
+\item{baseline_fire_size_table, baseline_fuel_type_table, baseline_fire_damage_table, baseline_seasons_sim_table}{data.frame or NULL. Baseline (uncalibrated) tables. When all four are
 supplied, the function writes a fresh \code{dynamic-fire.txt} from them.}
 
 \item{sim_years}{Integer. Calibration sim duration (years). Default 10.}
 
 \item{cell_length}{Integer. Raster cell size in metres.}
+
+\item{overrides}{Named list. Optional per-file overrides applied AFTER the
+bulk template-dir copy. Keys are output filenames (relative to \code{out_dir});
+values are paths to source files to copy in place of whatever was copied
+from \code{template_dir}. Useful for swapping in a coarser fuel raster, a
+cropped slope/aspect, alternative weather, etc. for calibration without
+touching the production scenario. Accepted keys: \code{"ground_slope.tif"},
+\code{"uphill_slope_azimuth.tif"}, \code{"fire-ecoregions.tif"},
+\code{"initial_weather_database.csv"}, \code{"DynamicFire_Spp_Table.csv"},
+\code{"species.txt"}, \code{"ecoregions.txt"}, \code{"ecoregions.tif"}, \code{"climate.txt"}.
+\code{.tif} overrides also copy their \code{.aux.xml} / \code{.tfw} sidecars if present
+alongside the source.}
 }
 \value{
 Character scalar: absolute path to the written \code{scenario.txt}.
@@ -58,7 +71,7 @@ references work without further modification).
 }
 
 When the baseline fire-config tables are supplied (recommended), the function
-overwrites the copied \code{dynamic-fire.txt} with a fresh un-calibrated config
+overwrites the copied \code{dynamic-fire.txt} with a fresh uncalibrated config
 built from these tables. This breaks the otherwise-circular dependency
 between the production fire config and the calibration loop (production fire
 config -> calibrated_fire_params -> calibration -> production fire config).
@@ -71,6 +84,7 @@ Other Dynamic Fire calibration helpers:
 \code{\link[=build_calibration_spinup_scenario]{build_calibration_spinup_scenario()}},
 \code{\link[=calibrate_dynamic_fire]{calibrate_dynamic_fire()}},
 \code{\link[=calibration_par_names]{calibration_par_names()}},
+\code{\link[=default_severity_prior_sturtevant2009]{default_severity_prior_sturtevant2009()}},
 \code{\link[=loss_from_stats]{loss_from_stats()}},
 \code{\link[=parse_dynamic_fire_logs]{parse_dynamic_fire_logs()}},
 \code{\link[=patch_fire_config]{patch_fire_config()}},

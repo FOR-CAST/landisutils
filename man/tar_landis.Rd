@@ -156,6 +156,7 @@ Other LANDIS-II execution helpers:
 \code{\link[=landis_find]{landis_find()}},
 \code{\link[=landis_find_docker]{landis_find_docker()}},
 \code{\link[=landis_pool_exec]{landis_pool_exec()}},
+\code{\link[=landis_pool_restart_one]{landis_pool_restart_one()}},
 \code{\link[=landis_pool_start]{landis_pool_start()}},
 \code{\link[=landis_pool_stop]{landis_pool_stop()}},
 \code{\link[=landis_replicate]{landis_replicate()}},

@@ -13,7 +13,8 @@ landis_pool_exec(
   timeout_sec = NULL,
   stdout_log = NULL,
   stderr_log = NULL,
-  extra_env = NULL
+  extra_env = NULL,
+  retries = 0L
 )
 }
 \arguments{
@@ -36,14 +37,21 @@ under \verb{/scratch/}). Must correspond to a host path under \code{pool$scratch
 \code{--env}. Default sets \verb{HOME=/tmp} and \code{DOTNET_BUNDLE_EXTRACT_BASE_DIR} to
 a unique-per-call tempdir, isolating dotnet's per-user caches between
 trials.}
+
+\item{retries}{Integer >= 0. If the exec command fails with a non-zero exit
+status, restart the container via \code{\link[=landis_pool_restart_one]{landis_pool_restart_one()}} and try
+again, up to \code{retries} extra attempts. Default 0 = fail-fast (matches
+prior behaviour). Useful when long calibrations occasionally see
+container crashes (OOM, daemon hiccup) without wanting to abort.}
 }
 \value{
 A list with \code{status} (integer exit code), \code{elapsed_sec} (numeric),
-\code{container} (the container name).
+\code{container} (the container name), and \code{attempts} (1 + number of retries
+actually consumed).
 }
 \description{
 Runs \verb{docker exec --workdir <workdir> <container> <command> <args>} in the
-\code{idx}-th container of \code{pool}. Captures stdout/stderr to disk if requested.
+container at index \code{idx} of \code{pool}. Captures stdout/stderr to disk if requested.
 Each invocation is a fresh dotnet process in the container -- no in-process
 state from prior calls carries over -- and the per-trial working directory
 isolates output files.
@@ -53,12 +61,13 @@ For LANDIS-II calibration trials specifically, see \code{\link[=sim_landis]{sim_
 wraps this with the trial-directory copy + dynamic-fire.txt patch logic.
 }
 \seealso{
-\code{\link[=landis_pool_start]{landis_pool_start()}}, \code{\link[=landis_pool_stop]{landis_pool_stop()}}
+\code{\link[=landis_pool_start]{landis_pool_start()}}, \code{\link[=landis_pool_stop]{landis_pool_stop()}}, \code{\link[=landis_pool_restart_one]{landis_pool_restart_one()}}
 
 Other LANDIS-II execution helpers:
 \code{\link[=host_cpu_info]{host_cpu_info()}},
 \code{\link[=landis_find]{landis_find()}},
 \code{\link[=landis_find_docker]{landis_find_docker()}},
+\code{\link[=landis_pool_restart_one]{landis_pool_restart_one()}},
 \code{\link[=landis_pool_start]{landis_pool_start()}},
 \code{\link[=landis_pool_stop]{landis_pool_stop()}},
 \code{\link[=landis_replicate]{landis_replicate()}},

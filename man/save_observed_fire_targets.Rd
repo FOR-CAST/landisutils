@@ -14,7 +14,8 @@ save_observed_fire_targets(
   secondary_polys = NULL,
   primary_label = "primary",
   secondary_label = "secondary",
-  fuel_code_to_base = bc_fuel_code_to_base()
+  fuel_code_to_base = bc_fuel_code_to_base(),
+  severity_dist = NULL
 )
 }
 \arguments{
@@ -40,6 +41,13 @@ for the secondary (see Details).}
 \code{fuel_types_rast} integer codes (as character names) to the five base
 fuel types from \code{\link[=defaultFuelTypeTable]{defaultFuelTypeTable()}}. NA values mark non-fuel codes
 to be excluded. Default: \code{\link[=bc_fuel_code_to_base]{bc_fuel_code_to_base()}}.}
+
+\item{severity_dist}{Named numeric vector or NULL. Expected proportions
+across the 5 Dynamic Fire severity classes (names \code{"1"}..\code{"5"}). Stored
+on the primary-ecoregion summary; consumed by \code{loss_from_stats()}'s
+\code{L_severity} component. NULL = skip severity calibration (the loss
+contributes 0). For a literature-prior default, see
+\code{\link[=default_severity_prior_sturtevant2009]{default_severity_prior_sturtevant2009()}}.}
 }
 \value{
 Character. Absolute path to the written file.
@@ -83,6 +91,7 @@ Other Dynamic Fire calibration helpers:
 \code{\link[=build_calibration_spinup_scenario]{build_calibration_spinup_scenario()}},
 \code{\link[=calibrate_dynamic_fire]{calibrate_dynamic_fire()}},
 \code{\link[=calibration_par_names]{calibration_par_names()}},
+\code{\link[=default_severity_prior_sturtevant2009]{default_severity_prior_sturtevant2009()}},
 \code{\link[=loss_from_stats]{loss_from_stats()}},
 \code{\link[=parse_dynamic_fire_logs]{parse_dynamic_fire_logs()}},
 \code{\link[=patch_fire_config]{patch_fire_config()}},

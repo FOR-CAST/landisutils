@@ -25,11 +25,11 @@ test_that("parse_dynamic_fire_logs() reads sample event + summary logs", {
   rep_dir <- withr::local_tempdir()
   fs::dir_create(fs::path(rep_dir, "fire"))
   fs::file_copy(
-    test_path("..", "..", "inst", "testdata", "dynamic-fire-event-log-sample.csv"),
+    system.file("testdata", "dynamic-fire-event-log-sample.csv", package = "landisutils"),
     fs::path(rep_dir, "fire", "dynamic-fire-event-log.csv")
   )
   fs::file_copy(
-    test_path("..", "..", "inst", "testdata", "dynamic-fire-summary-log-sample.csv"),
+    system.file("testdata", "dynamic-fire-summary-log-sample.csv", package = "landisutils"),
     fs::path(rep_dir, "fire", "dynamic-fire-summary-log.csv")
   )
 
@@ -58,7 +58,7 @@ test_that("parse_dynamic_fire_logs() errors clearly when logs are missing", {
 test_that("patch_fire_config() rewrites SeverityCalibrationFactor / HiProp / IgnProb", {
   scenario_dir <- withr::local_tempdir()
   fs::file_copy(
-    test_path("..", "..", "inst", "testdata", "dynamic-fire-sample.txt"),
+    system.file("testdata", "dynamic-fire-sample.txt", package = "landisutils"),
     fs::path(scenario_dir, "dynamic-fire.txt")
   )
 
@@ -126,7 +126,7 @@ test_that("patch_fire_config() rewrites SeverityCalibrationFactor / HiProp / Ign
 test_that("patch_fire_config() rejects par_vec with wrong names", {
   scenario_dir <- withr::local_tempdir()
   fs::file_copy(
-    test_path("..", "..", "inst", "testdata", "dynamic-fire-sample.txt"),
+    system.file("testdata", "dynamic-fire-sample.txt", package = "landisutils"),
     fs::path(scenario_dir, "dynamic-fire.txt")
   )
   bad <- c(SeverityCalibrationFactor = 1, NotARealParam = 2)
@@ -330,7 +330,7 @@ test_that("save_observed_fire_targets() accepts a custom fuel_code_to_base mappi
 })
 
 test_that(".patch_forcs_for_calibration() rewrites Timestep + SpinUp", {
-  fixture <- test_path("..", "..", "inst", "testdata", "forc-succession-sample.txt")
+  fixture <- system.file("testdata", "forc-succession-sample.txt", package = "landisutils")
   tmp <- withr::local_tempfile(fileext = ".txt")
   fs::file_copy(fixture, tmp)
   landisutils:::.patch_forcs_for_calibration(tmp, sim_years = 10L)
@@ -547,4 +547,399 @@ test_that("loss_from_stats() handles empty-fires reps with a finite penalty", {
   loss <- loss_from_stats(list(rep_empty), observed)
   expect_true(is.finite(loss$total))
   expect_equal(loss$components[["size"]], 1.0)
+})
+
+## ---- Tier 2 ----------------------------------------------------------------
+
+test_that("default_severity_prior_sturtevant2009() returns a 5-element vector that sums to 1", {
+  p <- default_severity_prior_sturtevant2009()
+  expect_named(p, c("1", "2", "3", "4", "5"))
+  expect_equal(sum(p), 1, tolerance = 1e-9)
+  expect_true(all(p > 0))
+})
+
+test_that("L_area_fuel activates when observed has area_by_fuel_ha + fuel_code_to_base", {
+  rep1 <- list(
+    n_fires_by_year = tibble::tibble(year = 1:10, n_fires = c(0, 1, 1, 0, 1, 0, 0, 1, 0, 0)),
+    fire_sizes_ha = c(10, 50, 200, 100),
+    events = tibble::tibble(
+      year = c(2L, 3L, 5L, 8L),
+      eco = "MOCK",
+      init_fuel = c(2L, 2L, 8L, 2L), ## 3x Conifer (C-2), 1x Deciduous (D-1/2)
+      sites = c(10L, 50L, 200L, 100L),
+      mean_severity = c(2.0, 3.0, 4.0, 1.0)
+    )
+  )
+  observed <- list(
+    primary = list(
+      lambda_obs = 4,
+      n_fires_by_year = tibble::tibble(year = 1:74, n = sample.int(8, 74, replace = TRUE)),
+      fire_sizes_ha = sort(stats::rlnorm(50, 3, 2)),
+      area_by_fuel_ha = tibble::tibble(
+        base = c("Conifer", "Deciduous"),
+        area_ha = c(150, 50),
+        cells = c(150L, 50L)
+      ),
+      severity_dist = NULL
+    ),
+    fuel_code_to_base = bc_fuel_code_to_base(),
+    pixel_area_ha = 1.0
+  )
+  loss <- loss_from_stats(list(rep1), observed, weights = c(area_fuel = 1))
+  expect_true(is.finite(loss$components[["area_fuel"]]))
+  expect_true(loss$components[["area_fuel"]] >= 0)
+  expect_equal(loss$total, loss$components[["area_fuel"]])
+})
+
+test_that("L_area_fuel contributes 0 when fuel_code_to_base is missing", {
+  rep1 <- list(
+    n_fires_by_year = tibble::tibble(year = 1:5, n_fires = c(0, 1, 0, 0, 0)),
+    fire_sizes_ha = 10,
+    events = tibble::tibble(year = 2L, eco = "X", init_fuel = 2L, sites = 10L, mean_severity = 2.0)
+  )
+  observed <- list(
+    primary = list(
+      lambda_obs = 1,
+      n_fires_by_year = tibble::tibble(year = 1:5, n = 1L:5L),
+      fire_sizes_ha = c(1, 5),
+      area_by_fuel_ha = tibble::tibble(base = "Conifer", area_ha = 10, cells = 10L)
+    )
+    ## fuel_code_to_base intentionally absent
+  )
+  loss <- loss_from_stats(list(rep1), observed, weights = c(area_fuel = 1))
+  expect_equal(loss$components[["area_fuel"]], 0)
+})
+
+test_that("L_severity activates when observed$primary$severity_dist is non-NULL", {
+  rep1 <- list(
+    n_fires_by_year = tibble::tibble(year = 1:5, n_fires = c(0, 2, 0, 1, 0)),
+    fire_sizes_ha = c(20, 30, 80),
+    events = tibble::tibble(
+      year = c(2L, 2L, 4L),
+      eco = "MOCK",
+      init_fuel = 2L,
+      sites = c(20L, 30L, 80L),
+      mean_severity = c(1.0, 3.0, 5.0)
+    )
+  )
+  observed <- list(
+    primary = list(
+      lambda_obs = 1,
+      n_fires_by_year = tibble::tibble(year = 1:74, n = sample.int(5, 74, replace = TRUE)),
+      fire_sizes_ha = c(5, 10, 30, 60, 120),
+      severity_dist = default_severity_prior_sturtevant2009()
+    )
+  )
+  loss <- loss_from_stats(list(rep1), observed, weights = c(severity = 1))
+  expect_true(is.finite(loss$components[["severity"]]))
+  expect_true(loss$components[["severity"]] >= 0)
+})
+
+test_that("L_severity contributes 0 when severity_dist is NULL", {
+  rep1 <- list(
+    n_fires_by_year = tibble::tibble(year = 1:3, n_fires = c(0, 1, 0)),
+    fire_sizes_ha = 50,
+    events = tibble::tibble(year = 2L, eco = "X", init_fuel = 2L, sites = 50L, mean_severity = 3.0)
+  )
+  observed <- list(
+    primary = list(
+      lambda_obs = 0.3,
+      n_fires_by_year = tibble::tibble(year = 1:3, n = c(0L, 1L, 0L)),
+      fire_sizes_ha = c(5, 10, 30)
+      ## severity_dist absent (effectively NULL)
+    )
+  )
+  loss <- loss_from_stats(list(rep1), observed, weights = c(severity = 1))
+  expect_equal(loss$components[["severity"]], 0)
+})
+
+## ---- 9c: pre-flight checks -------------------------------------------------
+
+## Helper: build a minimal valid template_dir for pre-flight tests.
+.make_min_template_dir <- function() {
+  dir <- withr::local_tempdir(.local_envir = parent.frame())
+  files <- c(
+    "scenario.txt",
+    "forc-succession.txt",
+    "dynamic-fire.txt",
+    "dynamic-fuels.txt",
+    "species.txt",
+    "ecoregions.txt",
+    "ecoregions.tif",
+    "initial-communities.csv",
+    "initial-communities.tif",
+    "ground_slope.tif",
+    "uphill_slope_azimuth.tif",
+    "fire-ecoregions.tif",
+    "initial_weather_database.csv",
+    "DynamicFire_Spp_Table.csv"
+  )
+  for (f in files) {
+    fs::file_create(fs::path(dir, f))
+  }
+  dir
+}
+
+.make_min_observed <- function() {
+  list(
+    primary = list(
+      lambda_obs = 8.23,
+      n_fires_by_year = tibble::tibble(year = 1:74, n = sample.int(20, 74, replace = TRUE)),
+      fire_sizes_ha = sort(stats::rlnorm(50, 3, 2))
+    ),
+    fru59 = NULL ## set below
+  )
+}
+
+.make_default_cfg <- function() {
+  list(
+    lower = stats::setNames(rep(0, 9), calibration_par_names()),
+    upper = stats::setNames(rep(1, 9), calibration_par_names()),
+    NP = 90L, ## = 10 * 9 to avoid the NP-advisory message in expect_silent()
+    itermax = 10L,
+    n_reps = 1L,
+    sim_years = 5L,
+    weights = c(count = 1, size = 1, area_fuel = 0, severity = 0),
+    simulator = "mock",
+    method = "local",
+    n_cores = 1L,
+    parallel = FALSE,
+    base_seed = 1L,
+    trace = FALSE
+  )
+}
+
+test_that("pre-flight: lower >= upper errors with the offending parameter names", {
+  cfg <- .make_default_cfg()
+  cfg$lower[["SpHiProp"]] <- 0.8
+  cfg$upper[["SpHiProp"]] <- 0.5
+  expect_error(
+    landisutils:::.preflight_calibrate(
+      cfg = cfg,
+      par_names = calibration_par_names(),
+      template_dir = .make_min_template_dir(),
+      observed = .make_min_observed(),
+      scratch_root = withr::local_tempdir()
+    ),
+    "SpHiProp"
+  )
+})
+
+test_that("pre-flight: NP < 4 errors", {
+  cfg <- .make_default_cfg()
+  cfg$NP <- 3L
+  expect_error(
+    landisutils:::.preflight_calibrate(
+      cfg = cfg,
+      par_names = calibration_par_names(),
+      template_dir = .make_min_template_dir(),
+      observed = .make_min_observed(),
+      scratch_root = withr::local_tempdir()
+    ),
+    "NP must be >= 4"
+  )
+})
+
+test_that("pre-flight: all-zero weights errors", {
+  cfg <- .make_default_cfg()
+  cfg$weights <- c(count = 0, size = 0, area_fuel = 0, severity = 0)
+  expect_error(
+    landisutils:::.preflight_calibrate(
+      cfg = cfg,
+      par_names = calibration_par_names(),
+      template_dir = .make_min_template_dir(),
+      observed = .make_min_observed(),
+      scratch_root = withr::local_tempdir()
+    ),
+    "all zero"
+  )
+})
+
+test_that("pre-flight: missing scenario template files surfaces a clear error", {
+  cfg <- .make_default_cfg()
+  bad_dir <- withr::local_tempdir()
+  ## intentionally don't populate with the required files
+  expect_error(
+    landisutils:::.preflight_calibrate(
+      cfg = cfg,
+      par_names = calibration_par_names(),
+      template_dir = bad_dir,
+      observed = .make_min_observed(),
+      scratch_root = withr::local_tempdir()
+    ),
+    "missing required files"
+  )
+})
+
+test_that("pre-flight: observed payload missing $primary errors", {
+  cfg <- .make_default_cfg()
+  bad_obs <- list(some_other_key = TRUE)
+  expect_error(
+    landisutils:::.preflight_calibrate(
+      cfg = cfg,
+      par_names = calibration_par_names(),
+      template_dir = .make_min_template_dir(),
+      observed = bad_obs,
+      scratch_root = withr::local_tempdir()
+    ),
+    "primary"
+  )
+})
+
+test_that("pre-flight: severity weight > 0 with NULL severity_dist warns", {
+  cfg <- .make_default_cfg()
+  cfg$weights <- c(count = 1, size = 1, area_fuel = 0, severity = 1)
+  expect_warning(
+    landisutils:::.preflight_calibrate(
+      cfg = cfg,
+      par_names = calibration_par_names(),
+      template_dir = .make_min_template_dir(),
+      observed = .make_min_observed(),
+      scratch_root = withr::local_tempdir()
+    ),
+    "severity_dist is NULL"
+  )
+})
+
+test_that("pre-flight: passes cleanly with a fully-populated minimal config", {
+  cfg <- .make_default_cfg()
+  expect_silent(landisutils:::.preflight_calibrate(
+    cfg = cfg,
+    par_names = calibration_par_names(),
+    template_dir = .make_min_template_dir(),
+    observed = .make_min_observed(),
+    scratch_root = withr::local_tempdir()
+  ))
+})
+
+## ---- 9e: override slots on build_calibration_scenario_template -------------
+
+test_that("build_calibration_scenario_template() overrides replace specific template files", {
+  template_dir <- withr::local_tempdir()
+  template_files <- c(
+    "scenario.txt",
+    "forc-succession.txt",
+    "dynamic-fire.txt",
+    "dynamic-fuels.txt",
+    "species.txt",
+    "ecoregions.txt",
+    "ecoregions.tif",
+    "initial-communities.csv",
+    "initial-communities.tif",
+    "ground_slope.tif",
+    "uphill_slope_azimuth.tif",
+    "fire-ecoregions.tif",
+    "initial_weather_database.csv",
+    "DynamicFire_Spp_Table.csv"
+  )
+  for (f in template_files) {
+    writeLines("template-content", fs::path(template_dir, f))
+  }
+  ## forc-succession.txt needs SpinUp + Timestep lines for the patcher
+  writeLines(
+    c(
+      "LandisData  \"ForC Succession\"",
+      "Timestep    1",
+      "SpinUp",
+      ">>  On/Off  Biomass    Tolerance  Max",
+      ">>  Flag    Spin-up    %          Iterations",
+      ">>          Flag",
+      ">>  ----------------------------------------",
+      "1  1  1  20"
+    ),
+    fs::path(template_dir, "forc-succession.txt")
+  )
+
+  snap_csv <- withr::local_tempfile(fileext = ".csv")
+  writeLines("snap-csv-content", snap_csv)
+  snap_tif <- withr::local_tempfile(fileext = ".tif")
+  writeLines("snap-tif-content", snap_tif)
+
+  override_slope <- withr::local_tempfile(fileext = ".tif")
+  writeLines("CUSTOM-SLOPE-CONTENT", override_slope)
+
+  out_dir <- withr::local_tempdir()
+  build_calibration_scenario_template(
+    out_dir = out_dir,
+    template_dir = template_dir,
+    snapshot_ic_csv = snap_csv,
+    snapshot_ic_tif = snap_tif,
+    sim_years = 5L,
+    cell_length = 100L,
+    overrides = list(ground_slope.tif = override_slope)
+  )
+
+  expect_equal(readLines(fs::path(out_dir, "ground_slope.tif")), "CUSTOM-SLOPE-CONTENT")
+  expect_equal(readLines(fs::path(out_dir, "uphill_slope_azimuth.tif")), "template-content")
+})
+
+test_that("build_calibration_scenario_template() rejects unknown override keys", {
+  template_dir <- withr::local_tempdir()
+  for (f in c("scenario.txt", "forc-succession.txt", "ground_slope.tif")) {
+    writeLines("x", fs::path(template_dir, f))
+  }
+  snap_csv <- withr::local_tempfile(fileext = ".csv")
+  writeLines("x", snap_csv)
+  snap_tif <- withr::local_tempfile(fileext = ".tif")
+  writeLines("x", snap_tif)
+  expect_error(
+    build_calibration_scenario_template(
+      out_dir = withr::local_tempdir(),
+      template_dir = template_dir,
+      snapshot_ic_csv = snap_csv,
+      snapshot_ic_tif = snap_tif,
+      cell_length = 100L,
+      overrides = list(notarealfile.tif = "/tmp/whatever")
+    ),
+    "Unknown override target"
+  )
+})
+
+test_that("build_calibration_scenario_template() rejects missing override source files", {
+  template_dir <- withr::local_tempdir()
+  for (f in c("scenario.txt", "forc-succession.txt", "ground_slope.tif")) {
+    writeLines("x", fs::path(template_dir, f))
+  }
+  snap_csv <- withr::local_tempfile(fileext = ".csv")
+  writeLines("x", snap_csv)
+  snap_tif <- withr::local_tempfile(fileext = ".tif")
+  writeLines("x", snap_tif)
+  expect_error(
+    build_calibration_scenario_template(
+      out_dir = withr::local_tempdir(),
+      template_dir = template_dir,
+      snapshot_ic_csv = snap_csv,
+      snapshot_ic_tif = snap_tif,
+      cell_length = 100L,
+      overrides = list(ground_slope.tif = "/no/such/file.tif")
+    ),
+    "Override for"
+  )
+})
+
+test_that("save_observed_fire_targets() stores severity_dist on primary when supplied", {
+  r <- terra::rast(nrow = 5, ncol = 5, xmin = 0, xmax = 500, ymin = 0, ymax = 500)
+  terra::values(r) <- 2L ## Conifer C-2
+  pts <- terra::vect(
+    data.frame(lon = 250, lat = 250, YEAR = 2010L, SIZE_HA = 1.0),
+    geom = c("lon", "lat"),
+    crs = terra::crs(r)
+  )
+  polys <- terra::vect(
+    "POLYGON ((100 100, 400 100, 400 400, 100 400, 100 100))",
+    crs = terra::crs(r)
+  )
+  polys$YEAR <- 2010L
+  polys$SIZE_HA <- 9.0
+  out_path <- withr::local_tempfile(fileext = ".rds")
+  save_observed_fire_targets(
+    primary_points = pts,
+    primary_polys = polys,
+    fire_years = 2010L:2015L,
+    fuel_types_rast = r,
+    path = out_path,
+    severity_dist = default_severity_prior_sturtevant2009()
+  )
+  payload <- readRDS(out_path)
+  expect_equal(payload$primary$severity_dist, default_severity_prior_sturtevant2009())
 })

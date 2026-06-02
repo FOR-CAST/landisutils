@@ -48,6 +48,7 @@ Other Dynamic Fire calibration helpers:
 \code{\link[=build_calibration_spinup_scenario]{build_calibration_spinup_scenario()}},
 \code{\link[=calibrate_dynamic_fire]{calibrate_dynamic_fire()}},
 \code{\link[=calibration_par_names]{calibration_par_names()}},
+\code{\link[=default_severity_prior_sturtevant2009]{default_severity_prior_sturtevant2009()}},
 \code{\link[=loss_from_stats]{loss_from_stats()}},
 \code{\link[=parse_dynamic_fire_logs]{parse_dynamic_fire_logs()}},
 \code{\link[=patch_fire_config]{patch_fire_config()}},

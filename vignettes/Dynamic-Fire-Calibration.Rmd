@@ -170,7 +170,7 @@ function calls inside `tar_target()`. Three things to watch for:
   `calibrate_dynamic_fire()`), then the calibration's scenario template
   must NOT transitively depend on that target. Use
   `build_calibration_scenario_template()`'s `baseline_*` arguments to
-  write a fresh un-calibrated dynamic-fire.txt inline, and depend on the
+  write a fresh uncalibrated dynamic-fire.txt inline, and depend on the
   per-extension *file* targets that populate your production scenario
   directory directly, NOT on your scenario-assembly target.
 
@@ -233,7 +233,7 @@ under `sim_mock()` are not meaningful.
 
 - `vignette("Dynamic-Fire-Fuels", package = "landisutils")` -- preparing
   the Dynamic Fire and Dynamic Fuels extension inputs in the first place.
-- `?DynamicFire` -- the R6 class that backs the un-calibrated baseline
+- `?DynamicFire` -- the R6 class that backs the uncalibrated baseline
   config writer used inside `build_calibration_scenario_template()`.
 - `?landis_pool_start` -- the warm Docker pool that
   `calibrate_dynamic_fire()` starts internally; also usable standalone.
