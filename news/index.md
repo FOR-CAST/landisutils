@@ -1,5 +1,22 @@
 # Changelog
 
+## landisutils 0.0.28
+
+### Enable DOM spinup in calibration scenario template
+
+- [`build_calibration_scenario_template()`](https://for-cast.github.io/landisutils/reference/build_calibration_scenario_template.md)
+  now patches the calibration scenario’s `forc-succession.txt` `SpinUp`
+  row to `1 0 1 20` (DOM spinup ON, biomass spinup OFF), instead of the
+  prior `0 0 1 20` (both OFF). Biomass spinup stays off so the
+  pre-calibration snapshot IC’s `CohortBiomass` values are preserved
+  verbatim, but the DOM spinup pass equilibrates ForCS’s soil-pool state
+  via `SpinupSoils()`. Without it, `DisturbFireFromBiomassPools` is left
+  in a partly-initialised state and the first cohort that Dynamic Fire
+  damages triggers a `NullReferenceException` in
+  `Extension-ForCS-Succession/src/Soil.cs:DisturbanceImpactsBiomass`,
+  aborting every calibration trial. Cost: ~30-60s extra startup per
+  LANDIS-II trial.
+
 ## landisutils 0.0.27
 
 ### Parallel pool teardown in `landis_pool_stop()`
