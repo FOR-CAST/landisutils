@@ -775,7 +775,22 @@ save_observed_fire_targets <- function(
   if (data_idx > length(lines)) {
     stop("SpinUp data row not found in ", path, call. = FALSE)
   }
-  lines[data_idx] <- "0  0  1  20"
+  ## SpinUp flags for calibration:
+  ##   * `Flag` = 1: enable DOM spinup (SpinupSoils iteratively equilibrates
+  ##     each ecoregion x species DOM pool). Required for fires to actually
+  ##     damage cohorts -- otherwise ForCS's DisturbFireFromBiomassPools is
+  ##     left in a partly-initialised state and Dynamic Fire's CohortMortality
+  ##     handler hits a NullReferenceException in
+  ##     Extension-ForCS-Succession/src/Soil.cs:DisturbanceImpactsBiomass.
+  ##   * `BiomassSpinUpFlag` = 0: keep biomass-cohort spinup OFF so the
+  ##     snapshot IC's CohortBiomass values are preserved verbatim (the whole
+  ##     point of the pre-calibration spinup pipeline). Biomass spinup would
+  ##     overwrite the snapshot by walking ANPP from age 0 to each cohort's
+  ##     age, which we explicitly DON'T want here.
+  ## Cost: ~30-60s startup per LANDIS-II trial for DOM equilibration; one-time
+  ## per simulation, so calibration wall-time bumps marginally (and only on
+  ## trials that wouldn't have started fires anyway).
+  lines[data_idx] <- "1  0  1  20"
 
   writeLines(lines, path)
   invisible(lines)
