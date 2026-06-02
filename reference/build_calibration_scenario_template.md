@@ -20,7 +20,8 @@ build_calibration_scenario_template(
   baseline_fire_damage_table = NULL,
   baseline_seasons_sim_table = NULL,
   sim_years = 10L,
-  cell_length
+  cell_length,
+  overrides = list()
 )
 ```
 
@@ -42,7 +43,7 @@ build_calibration_scenario_template(
 - baseline_fire_size_table, baseline_fuel_type_table,
   baseline_fire_damage_table, baseline_seasons_sim_table:
 
-  data.frame or NULL. Baseline (un-calibrated) tables. When all four are
+  data.frame or NULL. Baseline (uncalibrated) tables. When all four are
   supplied, the function writes a fresh `dynamic-fire.txt` from them.
 
 - sim_years:
@@ -52,6 +53,20 @@ build_calibration_scenario_template(
 - cell_length:
 
   Integer. Raster cell size in metres.
+
+- overrides:
+
+  Named list. Optional per-file overrides applied AFTER the bulk
+  template-dir copy. Keys are output filenames (relative to `out_dir`);
+  values are paths to source files to copy in place of whatever was
+  copied from `template_dir`. Useful for swapping in a coarser fuel
+  raster, a cropped slope/aspect, alternative weather, etc. for
+  calibration without touching the production scenario. Accepted keys:
+  `"ground_slope.tif"`, `"uphill_slope_azimuth.tif"`,
+  `"fire-ecoregions.tif"`, `"initial_weather_database.csv"`,
+  `"DynamicFire_Spp_Table.csv"`, `"species.txt"`, `"ecoregions.txt"`,
+  `"ecoregions.tif"`, `"climate.txt"`. `.tif` overrides also copy their
+  `.aux.xml` / `.tfw` sidecars if present alongside the source.
 
 ## Value
 
@@ -75,7 +90,7 @@ Composition:
 
 When the baseline fire-config tables are supplied (recommended), the
 function overwrites the copied `dynamic-fire.txt` with a fresh
-un-calibrated config built from these tables. This breaks the
+uncalibrated config built from these tables. This breaks the
 otherwise-circular dependency between the production fire config and the
 calibration loop (production fire config -\> calibrated_fire_params -\>
 calibration -\> production fire config).
@@ -89,6 +104,7 @@ Other Dynamic Fire calibration helpers:
 [`build_calibration_spinup_scenario()`](https://for-cast.github.io/landisutils/reference/build_calibration_spinup_scenario.md),
 [`calibrate_dynamic_fire()`](https://for-cast.github.io/landisutils/reference/calibrate_dynamic_fire.md),
 [`calibration_par_names()`](https://for-cast.github.io/landisutils/reference/calibration_par_names.md),
+[`default_severity_prior_sturtevant2009()`](https://for-cast.github.io/landisutils/reference/default_severity_prior_sturtevant2009.md),
 [`loss_from_stats()`](https://for-cast.github.io/landisutils/reference/loss_from_stats.md),
 [`parse_dynamic_fire_logs()`](https://for-cast.github.io/landisutils/reference/parse_dynamic_fire_logs.md),
 [`patch_fire_config()`](https://for-cast.github.io/landisutils/reference/patch_fire_config.md),

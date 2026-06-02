@@ -76,6 +76,7 @@
 <url><loc>https://for-cast.github.io/landisutils/reference/defaultPnETDisturbanceReductions.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/defaultPnETOutputFiles.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/defaultWindSeverities.html</loc></url>
+<url><loc>https://for-cast.github.io/landisutils/reference/default_severity_prior_sturtevant2009.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/dot-bdaDispersalTemplate.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/dot-bdaNeighborShape.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/dot-bdaNeighborSpeedUp.html</loc></url>
@@ -234,6 +235,7 @@
 <url><loc>https://for-cast.github.io/landisutils/reference/landis_find.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/landis_find_docker.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/landis_pool_exec.html</loc></url>
+<url><loc>https://for-cast.github.io/landisutils/reference/landis_pool_restart_one.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/landis_pool_start.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/landis_pool_stop.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/landis_replicate.html</loc></url>

@@ -49,6 +49,7 @@ Other Dynamic Fire calibration helpers:
 [`build_calibration_spinup_scenario()`](https://for-cast.github.io/landisutils/reference/build_calibration_spinup_scenario.md),
 [`calibrate_dynamic_fire()`](https://for-cast.github.io/landisutils/reference/calibrate_dynamic_fire.md),
 [`calibration_par_names()`](https://for-cast.github.io/landisutils/reference/calibration_par_names.md),
+[`default_severity_prior_sturtevant2009()`](https://for-cast.github.io/landisutils/reference/default_severity_prior_sturtevant2009.md),
 [`loss_from_stats()`](https://for-cast.github.io/landisutils/reference/loss_from_stats.md),
 [`parse_dynamic_fire_logs()`](https://for-cast.github.io/landisutils/reference/parse_dynamic_fire_logs.md),
 [`run_calibration_spinup()`](https://for-cast.github.io/landisutils/reference/run_calibration_spinup.md),

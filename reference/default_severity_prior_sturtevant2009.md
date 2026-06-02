@@ -1,44 +1,28 @@
-# Parse a Dynamic Fire run's event and summary logs
+# Default severity-class prior (Sturtevant et al. 2009)
 
-Reads `<rep_dir>/fire/dynamic-fire-event-log.csv` (one row per fire
-event) and `<rep_dir>/fire/dynamic-fire-summary-log.csv` (one row per
-simulation year per fire ecoregion), returning a small list of summary
-statistics suitable for loss-function comparison.
+Returns a named 5-element vector of expected proportions across the
+integer severity classes (1 = low, 5 = high) produced by the Dynamic
+Fire System. Default values are illustrative starting points derived
+from the modelled distribution in the original Dynamic Fire extension
+paper; callers should override with empirical priors when available for
+their specific fire regime.
 
 ## Usage
 
 ``` r
-parse_dynamic_fire_logs(rep_dir, pixel_area_ha = 1)
+default_severity_prior_sturtevant2009()
 ```
-
-## Arguments
-
-- rep_dir:
-
-  Character. Path to the per-rep directory (the `rep01/` under the
-  scenario directory). Must contain `fire/dynamic-fire-event-log.csv`
-  and `fire/dynamic-fire-summary-log.csv`.
-
-- pixel_area_ha:
-
-  Numeric. Hectares per cell. Default `1.0`.
 
 ## Value
 
-Named list with `n_fires_by_year` (tibble: `year`, `n_fires`),
-`fire_sizes_ha` (sorted numeric vector), `events` (per-event tibble),
-`total_sites_burned` (integer), `n_events` (integer).
+Named numeric vector of length 5, summing to 1.
 
-## Details
+## References
 
-Columns parsed (Dynamic Fire System v4):
-
-- event-log: `Time`, `InitFireRegion`, `InitFuel`, `DamagedSites`,
-  `MeanSeverity`.
-
-- summary-log: `Time`, `NumberFires`, `TotalSitesBurned`.
-
-Cells -\> hectares uses `pixel_area_ha` (1 ha for a 100 m x 100 m grid).
+Sturtevant, B.R., Scheller, R.M., Miranda, B.R., Shinneman, D., and
+Syphard, A. 2009. Simulating dynamic and mixed-severity fire regimes: A
+process-based fire extension for LANDIS-II. Ecological Modelling
+220(23): 3380-3393. <https://doi.org/10.1016/j.ecolmodel.2009.07.030>
 
 ## See also
 
@@ -50,8 +34,8 @@ Other Dynamic Fire calibration helpers:
 [`build_calibration_spinup_scenario()`](https://for-cast.github.io/landisutils/reference/build_calibration_spinup_scenario.md),
 [`calibrate_dynamic_fire()`](https://for-cast.github.io/landisutils/reference/calibrate_dynamic_fire.md),
 [`calibration_par_names()`](https://for-cast.github.io/landisutils/reference/calibration_par_names.md),
-[`default_severity_prior_sturtevant2009()`](https://for-cast.github.io/landisutils/reference/default_severity_prior_sturtevant2009.md),
 [`loss_from_stats()`](https://for-cast.github.io/landisutils/reference/loss_from_stats.md),
+[`parse_dynamic_fire_logs()`](https://for-cast.github.io/landisutils/reference/parse_dynamic_fire_logs.md),
 [`patch_fire_config()`](https://for-cast.github.io/landisutils/reference/patch_fire_config.md),
 [`run_calibration_spinup()`](https://for-cast.github.io/landisutils/reference/run_calibration_spinup.md),
 [`save_observed_fire_targets()`](https://for-cast.github.io/landisutils/reference/save_observed_fire_targets.md),

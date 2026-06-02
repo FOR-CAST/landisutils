@@ -43,6 +43,57 @@
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.24" id="landisutils-0024">landisutils 0.0.24<a class="anchor" aria-label="anchor" href="#landisutils-0024"></a></h2>
 <div class="section level3">
+<h3 id="per-file-input-overrides-on-build_calibration_scenario_template-0-0-24">Per-file input overrides on <code>build_calibration_scenario_template()</code>
+<a class="anchor" aria-label="anchor" href="#per-file-input-overrides-on-build_calibration_scenario_template-0-0-24"></a></h3>
+<ul><li>New <code>overrides = list()</code> argument lets callers substitute individual template files post-copy without touching the production scenario. Useful for cropping / aggregating specific inputs for calibration (e.g., a coarser fuel raster, a smaller weather DB, a substitute slope raster) without forking the whole template. Accepted keys: <code>ground_slope.tif</code>, <code>uphill_slope_azimuth.tif</code>, <code>fire-ecoregions.tif</code>, <code>initial_weather_database.csv</code>, <code>DynamicFire_Spp_Table.csv</code>, <code>species.txt</code>, <code>ecoregions.txt</code>, <code>ecoregions.tif</code>, <code>climate.txt</code>. <code>.tif</code> overrides also carry their <code>.aux.xml</code> / <code>.tfw</code> sidecars. Backward compatible: <code>overrides = list()</code> (the default) preserves the original “copy everything from <code>template_dir</code>” behaviour.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="warm-docker-pool-resilience-0-0-24">Warm Docker pool resilience<a class="anchor" aria-label="anchor" href="#warm-docker-pool-resilience-0-0-24"></a></h3>
+<ul><li>New exported <code>landis_pool_restart_one(pool, idx)</code> – stops + removes the container at index <code>idx</code> and starts a fresh replacement with identical config (image, scratch_root bind-mount, user, cpu_limit, mem_limit) using a new auto-generated container name. Pool state (<code>$names[idx]</code>) is updated in place and also propagated to the caller’s frame so loops can use the current container name on the next iteration.</li>
+<li>
+<code><a href="../reference/landis_pool_exec.html">landis_pool_exec()</a></code> gains <code>retries = 0L</code>. When &gt; 0 and the exec command fails with non-zero status, the container is restarted via <code><a href="../reference/landis_pool_restart_one.html">landis_pool_restart_one()</a></code> and the command retried, up to <code>retries</code> additional attempts. Useful for long calibrations that occasionally hit OOM kills or daemon hiccups without wanting the whole DEoptim run to abort. Returns an additional <code>attempts</code> field counting actual attempts (1 = no retry needed; &gt;1 = some retries consumed).</li>
+<li>Pool object now carries the start-time args (<code>user_args</code>, <code>cpu_args</code>, <code>mem_args</code>) so restarts produce containers with matching config.</li>
+<li>Refactor: container-creation logic moved into the internal <code>.landis_pool_start_one()</code> so <code><a href="../reference/landis_pool_start.html">landis_pool_start()</a></code> and <code><a href="../reference/landis_pool_restart_one.html">landis_pool_restart_one()</a></code> share one code path.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="pre-flight-checks-in-calibrate_dynamic_fire-0-0-24">Pre-flight checks in <code>calibrate_dynamic_fire()</code>
+<a class="anchor" aria-label="anchor" href="#pre-flight-checks-in-calibrate_dynamic_fire-0-0-24"></a></h3>
+<p>The driver now runs a battery of cheap pre-flight checks at function entry – before starting the warm Docker pool or FORK cluster – to catch common config / scenario / payload errors fast. Hard errors include:</p>
+<ul><li>
+<code>cfg$lower &gt;= cfg$upper</code> for any parameter (lists the offending names).</li>
+<li>
+<code>cfg$NP &lt; 4</code> (DEoptim minimum), <code>cfg$itermax &lt; 1</code>, <code>cfg$n_reps &lt; 1</code>.</li>
+<li>
+<code>cfg$weights</code> all zero (DEoptim would have nothing to optimise).</li>
+<li>Unknown <code>cfg$simulator</code> (one of <code>"landis"</code>, <code>"r_reimpl"</code>, <code>"mock"</code>).</li>
+<li>For <code>simulator = "landis"</code>: the calibration scenario template missing any of the LANDIS-II input files normally produced by <code><a href="../reference/build_calibration_scenario_template.html">build_calibration_scenario_template()</a></code>.</li>
+<li>Observed-targets payload missing required <code>$primary</code> shape.</li>
+<li>Docker not available when <code>method = "docker"</code>; LANDIS console not findable when <code>method = "local"</code>.</li>
+<li>Scratch root not writable.</li>
+</ul><p>Soft signals (warnings / messages):</p>
+<ul><li>
+<code>NP &lt; 10 * length(par_names)</code> (DEoptim’s own advisory, surfaced earlier).</li>
+<li>
+<code>cfg$weights['area_fuel'] &gt; 0</code> but observed lacks <code>area_by_fuel_ha</code> / <code>fuel_code_to_base</code>; or <code>cfg$weights['severity'] &gt; 0</code> but observed lacks <code>severity_dist</code>. In both cases the corresponding loss component contributes 0.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="calibration-smoke-test-script-0-0-24">Calibration smoke-test script<a class="anchor" aria-label="anchor" href="#calibration-smoke-test-script-0-0-24"></a></h3>
+<ul><li>
+<p>New <code>inst/scripts/calibration_smoke_test.R</code> – a complete 5-stage smoke test of the calibration plumbing (observed targets, spinup, scenario template, sim_landis trial, DEoptim loop) at minimal scale (NP=4, itermax=2, n_reps=1, n_cores=2). Useful for first-time setup, post- upgrade verification, and confirming Docker + DEoptim are installed correctly. Runs in ~5-20 min via the warm Docker pool.</p>
+<p>Usage:</p>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/source.html" class="external-link">source</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"scripts/calibration_smoke_test.R"</span>, package <span class="op">=</span> <span class="st">"landisutils"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+</li>
+</ul></div>
+<div class="section level3">
+<h3 id="tier-calibration-loss-components-0-0-24">Tier 2 calibration loss components<a class="anchor" aria-label="anchor" href="#tier-calibration-loss-components-0-0-24"></a></h3>
+<p><code><a href="../reference/loss_from_stats.html">loss_from_stats()</a></code> now computes <code>L_area_fuel</code> and <code>L_severity</code> when the corresponding observed components are present in the payload; previously both were stubbed at zero. Components are still gated by their <code>weights</code> entry, so projects that aren’t ready to use them stay on the Tier 1 (count + size) loss by default.</p>
+<ul><li><p><code>L_area_fuel</code> is a chi-squared distance between simulated and observed burn-area-by-base-fuel-type <em>proportions</em>. Simulated area-by-fuel is derived from each event’s <code>init_fuel</code> (the ignition cell’s fuel code) times its <code>DamagedSites</code>, mapped to the five base fuel types via <code>observed$fuel_code_to_base</code>. Activated when <code>observed$primary$area_by_fuel_ha</code> AND <code>observed$fuel_code_to_base</code> are both set; contributes 0 otherwise.</p></li>
+<li><p><code>L_severity</code> is a chi-squared distance between simulated and observed severity-class <em>proportions</em>. Simulated severities come from each event’s <code>MeanSeverity</code> (binned into integer classes 1..5 at half-integer boundaries); observed comes from <code>observed$primary$severity_dist</code>, a named numeric vector summing to 1. Activated when <code>severity_dist</code> is non-NULL.</p></li>
+<li><p><code><a href="../reference/save_observed_fire_targets.html">save_observed_fire_targets()</a></code> gains a <code>severity_dist = NULL</code> argument that callers can pass to embed a prior in the observed payload (e.g., the new <code><a href="../reference/default_severity_prior_sturtevant2009.html">default_severity_prior_sturtevant2009()</a></code>).</p></li>
+<li><p>New exported helper: <code><a href="../reference/default_severity_prior_sturtevant2009.html">default_severity_prior_sturtevant2009()</a></code> returns a named 5-element vector of severity-class proportions derived from Sturtevant et al. 2009. Intended as a starting point; projects should override with empirical priors when available.</p></li>
+</ul></div>
+<div class="section level3">
 <h3 id="dynamic-fire-system-extension-calibration-0-0-24">Dynamic Fire System extension calibration<a class="anchor" aria-label="anchor" href="#dynamic-fire-system-extension-calibration-0-0-24"></a></h3>
 <p>A new function family for calibrating the LANDIS-II Dynamic Fire System extension. The calibration tunes <code>SeverityCalibrationFactor</code>, per-season FMC <code>HiProp</code> values, and per-base-fuel-type <code>IgnProb</code> multipliers so simulated fires match observed regional fire statistics; the empirically-fit parameters (<code>Mu</code>, <code>Sigma</code>, <code>Max</code>, <code>NumFires</code>, seasonal <code>PropFire</code>) are fit at the data layer upstream and are not part of the optimisation.</p>
 <ul><li>
@@ -188,7 +239,7 @@ host_ram_bytes: &lt;N&gt;                   # total system memory in bytes</code
 <ul><li><p><strong>Breaking API change:</strong> <code><a href="../reference/tar_landis.html">tar_landis()</a></code> no longer accepts <code>n_reps</code>. It now takes an explicit <code>rep_index</code> argument (an unquoted upstream target symbol) and returns a <strong>single</strong> <code>tar_target</code> object (same as the original API).</p></li>
 <li>
 <p>The caller creates the rep-index target explicitly inside the module <code><a href="https://rdrr.io/r/base/list.html" class="external-link">list()</a></code> alongside the <code><a href="../reference/tar_landis.html">tar_landis()</a></code> call. This keeps both targets visible to tarborist’s static AST analysis (<code>tarborist.additionalSingleTargetFactories</code> handles the run target; the literal <code>tar_target()</code> call handles the rep-index target):</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>  <span class="fu">tar_target</span><span class="op">(</span>name <span class="op">=</span> <span class="va">..._rep_index</span>, command <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="fl">5L</span><span class="op">)</span>, iteration <span class="op">=</span> <span class="st">"vector"</span><span class="op">)</span>,</span>
 <span>  <span class="fu">landisutils</span><span class="fu">::</span><span class="fu"><a href="../reference/tar_landis.html">tar_landis</a></span><span class="op">(</span>name <span class="op">=</span> <span class="va">...</span>, rep_index <span class="op">=</span> <span class="va">..._rep_index</span>, <span class="va">...</span>,</span>

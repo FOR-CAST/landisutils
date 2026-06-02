@@ -161,7 +161,7 @@ function calls inside `tar_target()`. Three things to watch for:
   then the calibration’s scenario template must NOT transitively depend
   on that target. Use
   [`build_calibration_scenario_template()`](https://for-cast.github.io/landisutils/reference/build_calibration_scenario_template.md)’s
-  `baseline_*` arguments to write a fresh un-calibrated dynamic-fire.txt
+  `baseline_*` arguments to write a fresh uncalibrated dynamic-fire.txt
   inline, and depend on the per-extension *file* targets that populate
   your production scenario directory directly, NOT on your
   scenario-assembly target.
@@ -234,8 +234,8 @@ are not meaningful.
   – preparing the Dynamic Fire and Dynamic Fuels extension inputs in the
   first place.
 - [`?DynamicFire`](https://for-cast.github.io/landisutils/reference/DynamicFire.md)
-  – the R6 class that backs the un-calibrated baseline config writer
-  used inside
+  – the R6 class that backs the uncalibrated baseline config writer used
+  inside
   [`build_calibration_scenario_template()`](https://for-cast.github.io/landisutils/reference/build_calibration_scenario_template.md).
 - [`?landis_pool_start`](https://for-cast.github.io/landisutils/reference/landis_pool_start.md)
   – the warm Docker pool that

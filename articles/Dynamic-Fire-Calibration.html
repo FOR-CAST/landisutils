@@ -274,7 +274,7 @@ consumes <code>calibrated_fire_params</code> (the result of
 <code><a href="../reference/calibrate_dynamic_fire.html">calibrate_dynamic_fire()</a></code>), then the calibration’s scenario
 template must NOT transitively depend on that target. Use
 <code><a href="../reference/build_calibration_scenario_template.html">build_calibration_scenario_template()</a></code>’s
-<code>baseline_*</code> arguments to write a fresh un-calibrated
+<code>baseline_*</code> arguments to write a fresh uncalibrated
 dynamic-fire.txt inline, and depend on the per-extension <em>file</em>
 targets that populate your production scenario directory directly, NOT
 on your scenario-assembly target.</p></li>
@@ -347,8 +347,8 @@ meaningful.</p>
 – preparing the Dynamic Fire and Dynamic Fuels extension inputs in the
 first place.</li>
 <li>
-<code><a href="../reference/DynamicFire.html">?DynamicFire</a></code> – the R6 class that backs the
-un-calibrated baseline config writer used inside
+<code><a href="../reference/DynamicFire.html">?DynamicFire</a></code> – the R6 class that backs the uncalibrated
+baseline config writer used inside
 <code><a href="../reference/build_calibration_scenario_template.html">build_calibration_scenario_template()</a></code>.</li>
 <li>
 <code><a href="../reference/landis_pool_start.html">?landis_pool_start</a></code> – the warm Docker pool that

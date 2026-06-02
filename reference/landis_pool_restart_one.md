@@ -1,13 +1,15 @@
-# Stop and remove all containers in a warm Docker pool
+# Restart a single container in a warm Docker pool
 
-Sends `docker stop` (graceful SIGTERM, the container's trap exits
-cleanly) then `docker rm -f` (idempotent belt-and-suspenders) for every
-container in the pool. Safe to call multiple times.
+Stops + removes the container at index `idx` if it exists, then starts a
+fresh replacement with identical config (image, scratch_root bind-mount,
+user, cpu_limit, mem_limit) using a new auto-generated container name.
+The pool object's `$names[idx]` is updated to point at the new
+container.
 
 ## Usage
 
 ``` r
-landis_pool_stop(pool, timeout_sec = 10)
+landis_pool_restart_one(pool, idx)
 ```
 
 ## Arguments
@@ -17,31 +19,35 @@ landis_pool_stop(pool, timeout_sec = 10)
   A `landis_pool` object from
   [`landis_pool_start()`](https://for-cast.github.io/landisutils/reference/landis_pool_start.md).
 
-- timeout_sec:
+- idx:
 
-  Numeric. Graceful-stop timeout passed to `docker stop`. Default 10.
+  Integer. 1-based index of the container to replace.
 
 ## Value
 
-The pool (invisibly), with `stopped_at` added.
+The pool (invisibly), with `$names[idx]` updated to the new container
+name.
 
 ## Details
 
-Typical use is via `on.exit(landis_pool_stop(pool), add = TRUE)` so the
-pool is cleaned up even when the calling DEoptim driver errors out.
+Intended for use by
+[`landis_pool_exec()`](https://for-cast.github.io/landisutils/reference/landis_pool_exec.md)'s
+`retries` mechanism, but also safe to call directly when a calibration
+driver detects a container is wedged or has been OOM-killed.
 
 ## See also
 
 [`landis_pool_start()`](https://for-cast.github.io/landisutils/reference/landis_pool_start.md),
-[`landis_pool_exec()`](https://for-cast.github.io/landisutils/reference/landis_pool_exec.md)
+[`landis_pool_exec()`](https://for-cast.github.io/landisutils/reference/landis_pool_exec.md),
+[`landis_pool_stop()`](https://for-cast.github.io/landisutils/reference/landis_pool_stop.md)
 
 Other LANDIS-II execution helpers:
 [`host_cpu_info()`](https://for-cast.github.io/landisutils/reference/host_cpu_info.md),
 [`landis_find()`](https://for-cast.github.io/landisutils/reference/landis_find.md),
 [`landis_find_docker()`](https://for-cast.github.io/landisutils/reference/landis_find_docker.md),
 [`landis_pool_exec()`](https://for-cast.github.io/landisutils/reference/landis_pool_exec.md),
-[`landis_pool_restart_one()`](https://for-cast.github.io/landisutils/reference/landis_pool_restart_one.md),
 [`landis_pool_start()`](https://for-cast.github.io/landisutils/reference/landis_pool_start.md),
+[`landis_pool_stop()`](https://for-cast.github.io/landisutils/reference/landis_pool_stop.md),
 [`landis_replicate()`](https://for-cast.github.io/landisutils/reference/landis_replicate.md),
 [`landis_run_docker()`](https://for-cast.github.io/landisutils/reference/landis_run_docker.md),
 [`landis_run_local()`](https://for-cast.github.io/landisutils/reference/landis_run_local.md),

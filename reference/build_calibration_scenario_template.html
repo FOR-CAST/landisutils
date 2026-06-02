@@ -72,7 +72,8 @@ template so it's built once.</p>
 <span>  baseline_fire_damage_table <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  baseline_seasons_sim_table <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  sim_years <span class="op">=</span> <span class="fl">10L</span>,</span>
-<span>  <span class="va">cell_length</span></span>
+<span>  <span class="va">cell_length</span>,</span>
+<span>  overrides <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -95,7 +96,7 @@ community CSV / TIF (return of <code><a href="build_calibration_spinup_scenario.
 
 
 <dt id="arg-baseline-fire-size-table-baseline-fuel-type-table-baseline-fire-damage-table-baseline-seasons-sim-table">baseline_fire_size_table, baseline_fuel_type_table, baseline_fire_damage_table, baseline_seasons_sim_table<a class="anchor" aria-label="anchor" href="#arg-baseline-fire-size-table-baseline-fuel-type-table-baseline-fire-damage-table-baseline-seasons-sim-table"></a></dt>
-<dd><p>data.frame or NULL. Baseline (un-calibrated) tables. When all four are
+<dd><p>data.frame or NULL. Baseline (uncalibrated) tables. When all four are
 supplied, the function writes a fresh <code>dynamic-fire.txt</code> from them.</p></dd>
 
 
@@ -105,6 +106,20 @@ supplied, the function writes a fresh <code>dynamic-fire.txt</code> from them.</
 
 <dt id="arg-cell-length">cell_length<a class="anchor" aria-label="anchor" href="#arg-cell-length"></a></dt>
 <dd><p>Integer. Raster cell size in metres.</p></dd>
+
+
+<dt id="arg-overrides">overrides<a class="anchor" aria-label="anchor" href="#arg-overrides"></a></dt>
+<dd><p>Named list. Optional per-file overrides applied AFTER the
+bulk template-dir copy. Keys are output filenames (relative to <code>out_dir</code>);
+values are paths to source files to copy in place of whatever was copied
+from <code>template_dir</code>. Useful for swapping in a coarser fuel raster, a
+cropped slope/aspect, alternative weather, etc. for calibration without
+touching the production scenario. Accepted keys: <code>"ground_slope.tif"</code>,
+<code>"uphill_slope_azimuth.tif"</code>, <code>"fire-ecoregions.tif"</code>,
+<code>"initial_weather_database.csv"</code>, <code>"DynamicFire_Spp_Table.csv"</code>,
+<code>"species.txt"</code>, <code>"ecoregions.txt"</code>, <code>"ecoregions.tif"</code>, <code>"climate.txt"</code>.
+<code>.tif</code> overrides also copy their <code>.aux.xml</code> / <code>.tfw</code> sidecars if present
+alongside the source.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -122,7 +137,7 @@ Timestep (succession effectively a no-op).</p></li>
 references work without further modification).</p></li>
 <li><p>Duration = <code>sim_years</code>.</p></li>
 </ul><p>When the baseline fire-config tables are supplied (recommended), the function
-overwrites the copied <code>dynamic-fire.txt</code> with a fresh un-calibrated config
+overwrites the copied <code>dynamic-fire.txt</code> with a fresh uncalibrated config
 built from these tables. This breaks the otherwise-circular dependency
 between the production fire config and the calibration loop (production fire
 config -&gt; calibrated_fire_params -&gt; calibration -&gt; production fire config).</p>
@@ -136,6 +151,7 @@ config -&gt; calibrated_fire_params -&gt; calibration -&gt; production fire conf
 <code><a href="build_calibration_spinup_scenario.html">build_calibration_spinup_scenario()</a></code>,
 <code><a href="calibrate_dynamic_fire.html">calibrate_dynamic_fire()</a></code>,
 <code><a href="calibration_par_names.html">calibration_par_names()</a></code>,
+<code><a href="default_severity_prior_sturtevant2009.html">default_severity_prior_sturtevant2009()</a></code>,
 <code><a href="loss_from_stats.html">loss_from_stats()</a></code>,
 <code><a href="parse_dynamic_fire_logs.html">parse_dynamic_fire_logs()</a></code>,
 <code><a href="patch_fire_config.html">patch_fire_config()</a></code>,

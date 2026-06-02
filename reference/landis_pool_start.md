@@ -78,6 +78,7 @@ Other LANDIS-II execution helpers:
 [`landis_find()`](https://for-cast.github.io/landisutils/reference/landis_find.md),
 [`landis_find_docker()`](https://for-cast.github.io/landisutils/reference/landis_find_docker.md),
 [`landis_pool_exec()`](https://for-cast.github.io/landisutils/reference/landis_pool_exec.md),
+[`landis_pool_restart_one()`](https://for-cast.github.io/landisutils/reference/landis_pool_restart_one.md),
 [`landis_pool_stop()`](https://for-cast.github.io/landisutils/reference/landis_pool_stop.md),
 [`landis_replicate()`](https://for-cast.github.io/landisutils/reference/landis_replicate.md),
 [`landis_run_docker()`](https://for-cast.github.io/landisutils/reference/landis_run_docker.md),

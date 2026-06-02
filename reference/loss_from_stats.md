@@ -4,8 +4,7 @@ Combines per-replicate
 [`parse_dynamic_fire_logs()`](https://for-cast.github.io/landisutils/reference/parse_dynamic_fire_logs.md)
 outputs into the multi- component weighted loss against observed targets
 from
-[`save_observed_fire_targets()`](https://for-cast.github.io/landisutils/reference/save_observed_fire_targets.md)
-(Phase 8b).
+[`save_observed_fire_targets()`](https://for-cast.github.io/landisutils/reference/save_observed_fire_targets.md).
 
 ## Usage
 
@@ -28,9 +27,12 @@ loss_from_stats(
 - observed:
 
   List. Output of
-  [`save_observed_fire_targets()`](https://for-cast.github.io/landisutils/reference/save_observed_fire_targets.md)
-  (Phase 8b). Must contain `$fru59` with `$lambda_obs`,
-  `$n_fires_by_year`, `$fire_sizes_ha`.
+  [`save_observed_fire_targets()`](https://for-cast.github.io/landisutils/reference/save_observed_fire_targets.md).
+  Must contain `$primary` (or `$fru59` back-compat alias) with
+  `$lambda_obs`, `$n_fires_by_year`, `$fire_sizes_ha`. May contain
+  `$primary$area_by_fuel_ha`, `$primary$severity_dist`,
+  `$fuel_code_to_base`, and `$pixel_area_ha` to activate Tier 2
+  components.
 
 - weights:
 
@@ -40,22 +42,34 @@ loss_from_stats(
 ## Value
 
 Named list with `total` (the scalar minimised by DEoptim), `components`
-(per-component contributions), and `weights` (echoed weight vector).
+(per-component contributions), and `weights` (echoed weights).
 
 ## Details
 
-Tier 1 implementation: `L_count` + `L_size`.
+Components:
 
 - `L_count = |mean(n_fires_sim) - lambda_obs| / sd(n_fires_obs)` –
-  annual-rate match against the primary ecoregion target (default
-  `fru59`).
+  annual-rate match against the primary ecoregion target.
 
 - `L_size = KS_D(empirical CDF of sim sizes, empirical CDF of obs sizes)`
-  – shape match between simulated and observed fire-size distributions.
+  – shape match for the fire-size distribution.
 
-Tier 2 (future): `L_area_fuel` and `L_severity`. Stubbed here as zeros
-when the corresponding observed component is NULL; weights default to 0
-so they contribute nothing until implemented.
+- `L_area_fuel`: chi-squared distance between simulated and observed
+  burn-area-by-base-fuel-type *proportions*. Simulated area-by-fuel
+  comes from each event's ignition fuel code times its `DamagedSites`,
+  mapped to base fuel types via `observed$fuel_code_to_base`. Skipped
+  (contributes 0) when either `observed$primary$area_by_fuel_ha` is NULL
+  or `observed$fuel_code_to_base` is missing.
+
+- `L_severity`: chi-squared distance between simulated and observed
+  severity-class proportions. Simulated severities come from each
+  event's `MeanSeverity` binned into integer classes 1..5; observed
+  comes from `observed$primary$severity_dist` (a 5-element named numeric
+  vector summing to 1). Skipped when observed is NULL.
+
+All component values are unitless and non-negative; chi-squared
+components use a small epsilon in the denominator to avoid division by
+zero on empty observed bins.
 
 ## See also
 
@@ -67,6 +81,7 @@ Other Dynamic Fire calibration helpers:
 [`build_calibration_spinup_scenario()`](https://for-cast.github.io/landisutils/reference/build_calibration_spinup_scenario.md),
 [`calibrate_dynamic_fire()`](https://for-cast.github.io/landisutils/reference/calibrate_dynamic_fire.md),
 [`calibration_par_names()`](https://for-cast.github.io/landisutils/reference/calibration_par_names.md),
+[`default_severity_prior_sturtevant2009()`](https://for-cast.github.io/landisutils/reference/default_severity_prior_sturtevant2009.md),
 [`parse_dynamic_fire_logs()`](https://for-cast.github.io/landisutils/reference/parse_dynamic_fire_logs.md),
 [`patch_fire_config()`](https://for-cast.github.io/landisutils/reference/patch_fire_config.md),
 [`run_calibration_spinup()`](https://for-cast.github.io/landisutils/reference/run_calibration_spinup.md),

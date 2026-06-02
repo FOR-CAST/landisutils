@@ -1,9 +1,9 @@
 # Execute a command in one of the warm-pool containers
 
 Runs `docker exec --workdir <workdir> <container> <command> <args>` in
-the `idx`-th container of `pool`. Captures stdout/stderr to disk if
-requested. Each invocation is a fresh dotnet process in the container –
-no in-process state from prior calls carries over – and the per-trial
+the container at index `idx` of `pool`. Captures stdout/stderr to disk
+if requested. Each invocation is a fresh dotnet process in the container
+– no in-process state from prior calls carries over – and the per-trial
 working directory isolates output files.
 
 ## Usage
@@ -18,7 +18,8 @@ landis_pool_exec(
   timeout_sec = NULL,
   stdout_log = NULL,
   stderr_log = NULL,
-  extra_env = NULL
+  extra_env = NULL,
+  retries = 0L
 )
 ```
 
@@ -62,10 +63,20 @@ landis_pool_exec(
   unique-per-call tempdir, isolating dotnet's per-user caches between
   trials.
 
+- retries:
+
+  Integer \>= 0. If the exec command fails with a non-zero exit status,
+  restart the container via
+  [`landis_pool_restart_one()`](https://for-cast.github.io/landisutils/reference/landis_pool_restart_one.md)
+  and try again, up to `retries` extra attempts. Default 0 = fail-fast
+  (matches prior behaviour). Useful when long calibrations occasionally
+  see container crashes (OOM, daemon hiccup) without wanting to abort.
+
 ## Value
 
 A list with `status` (integer exit code), `elapsed_sec` (numeric),
-`container` (the container name).
+`container` (the container name), and `attempts` (1 + number of retries
+actually consumed).
 
 ## Details
 
@@ -77,12 +88,14 @@ logic.
 ## See also
 
 [`landis_pool_start()`](https://for-cast.github.io/landisutils/reference/landis_pool_start.md),
-[`landis_pool_stop()`](https://for-cast.github.io/landisutils/reference/landis_pool_stop.md)
+[`landis_pool_stop()`](https://for-cast.github.io/landisutils/reference/landis_pool_stop.md),
+[`landis_pool_restart_one()`](https://for-cast.github.io/landisutils/reference/landis_pool_restart_one.md)
 
 Other LANDIS-II execution helpers:
 [`host_cpu_info()`](https://for-cast.github.io/landisutils/reference/host_cpu_info.md),
 [`landis_find()`](https://for-cast.github.io/landisutils/reference/landis_find.md),
 [`landis_find_docker()`](https://for-cast.github.io/landisutils/reference/landis_find_docker.md),
+[`landis_pool_restart_one()`](https://for-cast.github.io/landisutils/reference/landis_pool_restart_one.md),
 [`landis_pool_start()`](https://for-cast.github.io/landisutils/reference/landis_pool_start.md),
 [`landis_pool_stop()`](https://for-cast.github.io/landisutils/reference/landis_pool_stop.md),
 [`landis_replicate()`](https://for-cast.github.io/landisutils/reference/landis_replicate.md),

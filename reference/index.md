@@ -212,6 +212,9 @@
 
   Default `WindSeverities` table for the Original Wind extension
 
+- [`default_severity_prior_sturtevant2009()`](https://for-cast.github.io/landisutils/reference/default_severity_prior_sturtevant2009.md)
+  : Default severity-class prior (Sturtevant et al. 2009)
+
 - [`edaAgent()`](https://for-cast.github.io/landisutils/reference/edaAgent.md)
   : Construct an EDA agent
 
@@ -459,6 +462,9 @@
 
 - [`landis_pool_exec()`](https://for-cast.github.io/landisutils/reference/landis_pool_exec.md)
   : Execute a command in one of the warm-pool containers
+
+- [`landis_pool_restart_one()`](https://for-cast.github.io/landisutils/reference/landis_pool_restart_one.md)
+  : Restart a single container in a warm Docker pool
 
 - [`landis_pool_start()`](https://for-cast.github.io/landisutils/reference/landis_pool_start.md)
   : Start a warm Docker pool for LANDIS-II calibration
