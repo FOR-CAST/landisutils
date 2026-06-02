@@ -1,3 +1,16 @@
+# landisutils 0.0.26
+
+## `cfg$scratch_root` override for `calibrate_dynamic_fire()`
+
+* The warm Docker pool's bind-mount source defaults to `<out_dir>/scratch`,
+  but this fails when `out_dir` lives on a filesystem the Docker daemon
+  cannot see (e.g. user-space autofs / sshfs / NFS mounts). The daemon
+  errors with `mkdir <mount-root>: permission denied` while resolving the
+  bind-mount path. `cfg$scratch_root` lets callers route the pool's
+  scratch onto docker-visible local storage while keeping `out_dir` on
+  the project mount so the calibration trace CSV and final outputs land
+  alongside the rest of the project.
+
 # landisutils 0.0.25
 
 ## Connection-aware default `n_cores`

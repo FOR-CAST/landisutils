@@ -1701,7 +1701,11 @@ calibrate_dynamic_fire <- function(observed_targets_path, scenario_template, cfg
   fs::dir_create(out_dir)
 
   template_dir <- fs::path_real(dirname(scenario_template))
-  scratch_root <- fs::path_real(fs::dir_create(fs::path(out_dir, "scratch")))
+  ## Per-trial scratch dir for the warm Docker pool. Defaults to
+  ## `<out_dir>/scratch`, but `cfg$scratch_root` lets callers route the bind
+  ## mount to docker-visible storage when `out_dir` lives on a filesystem the
+  ## Docker daemon cannot see (e.g. user-space autofs / sshfs / NFS mounts).
+  scratch_root <- fs::path_real(fs::dir_create(cfg$scratch_root %||% fs::path(out_dir, "scratch")))
   observed <- readRDS(observed_targets_path)
   par_names <- calibration_par_names()
   stopifnot(setequal(names(cfg$lower), par_names), setequal(names(cfg$upper), par_names))
