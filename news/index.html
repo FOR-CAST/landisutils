@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.26</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.27</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -40,6 +40,15 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.27" id="landisutils-0027">landisutils 0.0.27<a class="anchor" aria-label="anchor" href="#landisutils-0027"></a></h2>
+<div class="section level3">
+<h3 id="parallel-pool-teardown-in-landis_pool_stop-0-0-27">Parallel pool teardown in <code>landis_pool_stop()</code>
+<a class="anchor" aria-label="anchor" href="#parallel-pool-teardown-in-landis_pool_stop-0-0-27"></a></h3>
+<ul><li>
+<code><a href="../reference/landis_pool_stop.html">landis_pool_stop()</a></code> now passes every container name to a single <code>docker stop --time T &lt;name1&gt; &lt;name2&gt; ...</code> and a single <code>docker rm -f &lt;name1&gt; &lt;name2&gt; ...</code>, instead of looping one-container-at-a-time. The Docker daemon parallelises stops internally, so a 90-container pool teardown drops from ~15 minutes (90 x 10s SIGTERM deadlines, sequential) to roughly <code>timeout_sec</code> wall time. The function remains idempotent and tolerant of already-removed containers.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.26" id="landisutils-0026">landisutils 0.0.26<a class="anchor" aria-label="anchor" href="#landisutils-0026"></a></h2>
 <div class="section level3">

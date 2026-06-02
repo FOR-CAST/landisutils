@@ -1,5 +1,19 @@
 # Changelog
 
+## landisutils 0.0.27
+
+### Parallel pool teardown in `landis_pool_stop()`
+
+- [`landis_pool_stop()`](https://for-cast.github.io/landisutils/reference/landis_pool_stop.md)
+  now passes every container name to a single
+  `docker stop --time T <name1> <name2> ...` and a single
+  `docker rm -f <name1> <name2> ...`, instead of looping
+  one-container-at-a-time. The Docker daemon parallelises stops
+  internally, so a 90-container pool teardown drops from ~15 minutes (90
+  x 10s SIGTERM deadlines, sequential) to roughly `timeout_sec` wall
+  time. The function remains idempotent and tolerant of already-removed
+  containers.
+
 ## landisutils 0.0.26
 
 ### `cfg$scratch_root` override for `calibrate_dynamic_fire()`
