@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.24</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.25</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -40,6 +40,30 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.25" id="landisutils-0025">landisutils 0.0.25<a class="anchor" aria-label="anchor" href="#landisutils-0025"></a></h2>
+<div class="section level3">
+<h3 id="connection-aware-default-n_cores-0-0-25">Connection-aware default <code>n_cores</code>
+<a class="anchor" aria-label="anchor" href="#connection-aware-default-n_cores-0-0-25"></a></h3>
+<ul><li>
+<code><a href="../reference/calibrate_dynamic_fire.html">calibrate_dynamic_fire()</a></code> now picks its default cluster size from <code>parallelly::availableCores(constraints = "connections", omit = 2)</code> when parallelly is installed, falling back to <code>parallel::detectCores() - 2L</code> otherwise. <code>detectCores()</code> reports the logical core count and ignores R’s per-session connection cap (~125 on default builds), so on very large hosts (e.g. 256-core machines) a naive default silently over-provisions the FORK cluster beyond what the R session can support. Explicitly setting <code>cfg$n_cores</code> short-circuits both defaults. <code>parallelly</code> is now a <code>Suggests</code>.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="work-around-deoptim-cluster-cleanup-bug-0-0-25">Work around DEoptim 2.2.8 cluster-cleanup bug<a class="anchor" aria-label="anchor" href="#work-around-deoptim-cluster-cleanup-bug-0-0-25"></a></h3>
+<ul><li>
+<code><a href="../reference/calibrate_dynamic_fire.html">calibrate_dynamic_fire()</a></code> no longer passes <code>parallelType = 1L</code> to <code><a href="https://rdrr.io/pkg/DEoptim/man/DEoptim.html" class="external-link">DEoptim::DEoptim()</a></code> when supplying its own FORK cluster via <code>control$cluster</code>. DEoptim 2.2.8’s <code>ctrl$cluster</code> branch uses the supplied cluster without binding a local <code>cl</code> variable, but its post-loop cleanup unconditionally evaluates <code>parallel::stopCluster(cl)</code> whenever <code>parallelType == "parallel"</code>, which errors with <code>object 'cl' not found</code>. Leaving <code>parallelType</code> at its default (“none”) skips that cleanup path while still triggering the parallel <code>parApply(cl = ctrl$cluster, ...)</code> evaluation in DEoptim’s body. The FORK cluster lifecycle is fully managed by <code><a href="../reference/calibrate_dynamic_fire.html">calibrate_dynamic_fire()</a></code> via <code>on.exit</code>.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="clamp-ignprob-to-landis-iis-permitted-range-0-0-25">Clamp <code>IgnProb</code> to LANDIS-II’s permitted range<a class="anchor" aria-label="anchor" href="#clamp-ignprob-to-landis-iis-permitted-range-0-0-25"></a></h3>
+<ul><li>
+<code><a href="../reference/patch_fire_config.html">patch_fire_config()</a></code> and <code><a href="../reference/apply_calibrated_ignprob.html">apply_calibrated_ignprob()</a></code> now clamp the per-fuel <code>IgnProb</code> value to <code>[0, 1]</code> after applying the calibration multiplier. The Dynamic Fire System parser rejects any <code>IgnProb</code> outside this range with <code>Error with the input value for Fuel type initiation probability: Value must be between 0 and 1.0</code> and aborts the run, which previously caused every DEoptim trial whose multiplier pushed the product above 1.0 (e.g., <code>IgnProb_Conifer = 1.5</code> against the default <code>IgnProb = 1.0</code> for Conifer surfaces C1-C5/C7/M1-M4) to fail immediately. The multiplier ranges in the smoke test and <code><a href="../reference/calibration_par_names.html">calibration_par_names()</a></code> are unchanged; clamping just makes the search-space boundary explicit instead of relying on every multiplier being &lt;= 1.0.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="retain-failed-trial-scratch-directories-for-post-mortem-0-0-25">Retain failed-trial scratch directories for post-mortem<a class="anchor" aria-label="anchor" href="#retain-failed-trial-scratch-directories-for-post-mortem-0-0-25"></a></h3>
+<ul><li>
+<code><a href="../reference/sim_landis.html">sim_landis()</a></code> now keeps a failing trial’s per-rep scratch directory on disk (and prints its path) when the LANDIS-II invocation errors. The scratch was previously deleted unconditionally by an <code>on.exit</code> cleanup, which made it impossible to inspect <code>&lt;trial_dir&gt;/rep01/log/</code> for the underlying LANDIS-II stderr/stdout from a failed calibration trial. Successful trials are still cleaned up as before, so this only adds disk usage on failure. The behaviour can still be opted out of by passing <code>keep_scratch = TRUE</code> (which now retains the dir on both success and failure – the prior <code>keep_scratch = FALSE</code> default still means “clean up after success only”).</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.24" id="landisutils-0024">landisutils 0.0.24<a class="anchor" aria-label="anchor" href="#landisutils-0024"></a></h2>
 <div class="section level3">
