@@ -36,6 +36,7 @@ FWI
 FireSizesTable
 ForC
 ForCS
+ForCS's
 FuelTypeTable
 GC
 GCM
@@ -52,6 +53,7 @@ Henn
 Henne
 HiProp
 IC
+IC's
 II's
 IPCC
 IgnProb
@@ -132,6 +134,7 @@ downscaling
 ecoregion
 ecoregions
 env
+equilibrates
 equilibration
 et
 filesystem
@@ -142,6 +145,7 @@ gitanyow
 github
 gridded
 idempotency
+initialised
 itermax
 labelled
 landis
