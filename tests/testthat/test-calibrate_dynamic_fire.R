@@ -392,7 +392,12 @@ test_that(".patch_forcs_for_calibration() rewrites Timestep + SpinUp", {
   while (grepl("^[[:space:]]*>>", patched[data_idx])) {
     data_idx <- data_idx + 1L
   }
-  expect_equal(trimws(patched[data_idx]), "0  0  1  20")
+  ## SpinUp row patched to enable DOM spinup (Flag = 1) while keeping
+  ## biomass spinup OFF (BiomassSpinUpFlag = 0): the snapshot IC has the
+  ## cohort biomass already, but DOM pools must be equilibrated each run
+  ## or Dynamic Fire's CohortMortality handler hits an NRE in ForCS's
+  ## Soil.cs:DisturbanceImpactsBiomass (v0.0.28).
+  expect_equal(trimws(patched[data_idx]), "1  0  1  20")
 })
 
 test_that(".patch_forcs_for_calibration() errors when expected sections are missing", {
