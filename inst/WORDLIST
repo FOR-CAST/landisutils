@@ -67,6 +67,7 @@ McNiP
 Modelling
 NECN
 NFDB
+NFS
 NRD
 NoData
 OOM
@@ -78,6 +79,7 @@ Pasteris
 Physiographically
 Phytophthora
 PnET
+Pre
 PredictiveEcology
 RCP
 Rawls
@@ -109,6 +111,7 @@ Wotton
 accreting
 al
 args
+autofs
 bcgov
 behaviour
 buildable
@@ -142,6 +145,7 @@ idempotency
 itermax
 labelled
 landis
+lifecycle
 lon
 materialised
 materialises
@@ -159,7 +163,9 @@ normalised
 optimisation
 optimise
 orchestrator
+parallelises
 parallelizing
+parallelly
 params
 parser's
 pre
@@ -172,6 +178,7 @@ replicate's
 sd
 severities
 spinup
+sshfs
 stderr
 subclass's
 subprocess

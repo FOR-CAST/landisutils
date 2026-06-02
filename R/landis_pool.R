@@ -458,13 +458,17 @@ landis_pool_restart_one <- function(pool, idx) {
 #' @export
 landis_pool_stop <- function(pool, timeout_sec = 10) {
   stopifnot(inherits(pool, "landis_pool"))
-  for (name in pool$names) {
-    ## Use processx::run rather than system2 (consistent with landis_pool_start;
-    ## avoids the shell quoting tax).
+  ## `docker stop` and `docker rm` both accept many container names per invocation
+  ## and parallelise internally on the daemon side. The prior per-container loop
+  ## was O(n * timeout_sec) on graceful stop -- 15+ minutes for a 90-container
+  ## calibration pool -- because each docker-stop call serialises on its own
+  ## SIGTERM/SIGKILL deadline. Passing all names in one shot lets the daemon
+  ## run the stops concurrently, so the wall time becomes ~timeout_sec total.
+  if (length(pool$names) > 0L) {
     tryCatch(
       processx::run(
         "docker",
-        c("stop", "--time", as.character(timeout_sec), name),
+        c("stop", "--time", as.character(timeout_sec), pool$names),
         error_on_status = FALSE,
         echo = FALSE
       ),
@@ -473,7 +477,7 @@ landis_pool_stop <- function(pool, timeout_sec = 10) {
     ## --rm at run time should auto-clean, but force-remove in case the container
     ## already exited non-cleanly.
     tryCatch(
-      processx::run("docker", c("rm", "-f", name), error_on_status = FALSE, echo = FALSE),
+      processx::run("docker", c("rm", "-f", pool$names), error_on_status = FALSE, echo = FALSE),
       error = function(e) NULL
     )
   }
