@@ -214,7 +214,11 @@ patch_fire_config <- function(scenario_dir, par_vec) {
       default_ignprob <- suppressWarnings(as.numeric(parts[4L]))
       mult <- base_multipliers[[base]]
       if (!is.null(mult) && !is.na(default_ignprob)) {
-        parts[4L] <- sprintf("%g", default_ignprob * mult)
+        ## LANDIS-II Dynamic Fire requires IgnProb in [0, 1.0]; clamp so a
+        ## DEoptim trial whose multiplier pushes the product above 1.0 (e.g.,
+        ## `IgnProb_Conifer = 1.5` against a default IgnProb of 1.0) does not
+        ## abort the run with a parser error.
+        parts[4L] <- sprintf("%g", min(max(default_ignprob * mult, 0), 1))
         lines[j] <- paste(parts, collapse = "    ")
       }
     }
@@ -459,7 +463,10 @@ apply_calibrated_ignprob <- function(fuel_type_table, calibrated_fire_params) {
   )
   m <- multipliers[fuel_type_table$Base]
   m[is.na(m)] <- 1.0
-  fuel_type_table$IgnProb <- fuel_type_table$IgnProb * m
+  ## LANDIS-II Dynamic Fire requires IgnProb in [0, 1.0]; clamp the product so
+  ## production scenarios assembled from a calibrated parameter vector do not
+  ## emit out-of-range values into `dynamic-fire.txt`.
+  fuel_type_table$IgnProb <- pmin(pmax(fuel_type_table$IgnProb * m, 0), 1)
   fuel_type_table
 }
 
@@ -1264,8 +1271,22 @@ sim_landis <- function(
 
   trial_dir <- fs::file_temp(pattern = "dynfire_trial_", tmp_dir = scratch_root)
   fs::dir_create(trial_dir)
+  ## Default: clean up the trial scratch dir only on a CLEAN exit (so post-mortem
+  ## LANDIS-II stdout/stderr stays available when a trial fails). `keep_scratch =
+  ## TRUE` retains it unconditionally. Cleanup is gated on this local flag, which
+  ## is set TRUE just before the function returns successfully.
+  trial_succeeded <- FALSE
   if (!isTRUE(keep_scratch)) {
-    on.exit(try(fs::dir_delete(trial_dir), silent = TRUE), add = TRUE)
+    on.exit(
+      {
+        if (isTRUE(trial_succeeded)) {
+          try(fs::dir_delete(trial_dir), silent = TRUE)
+        } else {
+          message("sim_landis: trial scratch retained for diagnostics: ", trial_dir)
+        }
+      },
+      add = TRUE
+    )
   }
 
   ## Copy template -> scratch dir
@@ -1318,7 +1339,9 @@ sim_landis <- function(
     }
   }
 
-  parse_dynamic_fire_logs(rep_dir, pixel_area_ha = pixel_area_ha)
+  result <- parse_dynamic_fire_logs(rep_dir, pixel_area_ha = pixel_area_ha)
+  trial_succeeded <- TRUE ## triggers scratch cleanup in the on.exit handler
+  result
 }
 
 #' Standalone-R Dynamic Fire reimplementation (stub)
@@ -1714,7 +1737,18 @@ calibrate_dynamic_fire <- function(observed_targets_path, scenario_template, cfg
       default = if (.Platform$OS.type == "windows") "local" else "docker"
     )
 
-  n_cores <- as.integer(cfg$n_cores %||% max(1L, parallel::detectCores() - 2L))
+  ## Default core count: prefer `parallelly::availableCores(constraints =
+  ## "connections", omit = 2)` if available, since `parallel::detectCores()`
+  ## ignores R's per-session connection cap (~125) and over-provisions FORK
+  ## clusters on very large hosts (e.g. 256 logical cores). `omit = 2`
+  ## reserves two cores for the main session and shell. Fall back to
+  ## detectCores() so parallelly remains an optional dependency.
+  default_cores <- if (requireNamespace("parallelly", quietly = TRUE)) {
+    as.integer(parallelly::availableCores(constraints = "connections", omit = 2L))
+  } else {
+    max(1L, parallel::detectCores() - 2L)
+  }
+  n_cores <- as.integer(cfg$n_cores %||% default_cores)
   use_parallel <- isTRUE(cfg$parallel %||% TRUE) && n_cores > 1L
 
   ## Pool lifecycle: only LANDIS-II Docker + parallel needs a pool. Mock /
@@ -1778,7 +1812,14 @@ calibrate_dynamic_fire <- function(observed_targets_path, scenario_template, cfg
     storepopfreq = 5L
   )
   if (!is.null(cl)) {
-    control_args$parallelType <- 1L
+    ## DEoptim 2.2.8: the `ctrl$cluster` branch uses the supplied cluster
+    ## without binding a local `cl` variable, but the post-loop cleanup runs
+    ## `parallel::stopCluster(cl)` whenever `parallelType == "parallel"`,
+    ## which errors with `object 'cl' not found`. Leave parallelType at its
+    ## default ("none") so DEoptim skips that cleanup path -- we still get
+    ## the parallel objfn evaluation because `parApply(cl = ctrl$cluster, ...)`
+    ## fires from the `!is.null(ctrl$cluster)` branch -- and our on.exit
+    ## handler stops the FORK cluster.
     control_args$cluster <- cl
   }
   control <- do.call(DEoptim::DEoptim.control, control_args)

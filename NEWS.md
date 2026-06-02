@@ -1,3 +1,59 @@
+# landisutils 0.0.25
+
+## Connection-aware default `n_cores`
+
+* `calibrate_dynamic_fire()` now picks its default cluster size from
+  `parallelly::availableCores(constraints = "connections", omit = 2)`
+  when parallelly is installed, falling back to
+  `parallel::detectCores() - 2L` otherwise. `detectCores()` reports the
+  logical core count and ignores R's per-session connection cap (~125
+  on default builds), so on very large hosts (e.g. 256-core machines)
+  a naive default silently over-provisions the FORK cluster beyond
+  what the R session can support. Explicitly setting `cfg$n_cores`
+  short-circuits both defaults. `parallelly` is now a `Suggests`.
+
+## Work around DEoptim 2.2.8 cluster-cleanup bug
+
+* `calibrate_dynamic_fire()` no longer passes `parallelType = 1L` to
+  `DEoptim::DEoptim()` when supplying its own FORK cluster via
+  `control$cluster`. DEoptim 2.2.8's `ctrl$cluster` branch uses the
+  supplied cluster without binding a local `cl` variable, but its
+  post-loop cleanup unconditionally evaluates `parallel::stopCluster(cl)`
+  whenever `parallelType == "parallel"`, which errors with
+  `object 'cl' not found`. Leaving `parallelType` at its default
+  ("none") skips that cleanup path while still triggering the parallel
+  `parApply(cl = ctrl$cluster, ...)` evaluation in DEoptim's body. The
+  FORK cluster lifecycle is fully managed by `calibrate_dynamic_fire()`
+  via `on.exit`.
+
+## Clamp `IgnProb` to LANDIS-II's permitted range
+
+* `patch_fire_config()` and `apply_calibrated_ignprob()` now clamp the
+  per-fuel `IgnProb` value to `[0, 1]` after applying the calibration
+  multiplier. The Dynamic Fire System parser rejects any `IgnProb`
+  outside this range with `Error with the input value for Fuel type
+  initiation probability: Value must be between 0 and 1.0` and aborts
+  the run, which previously caused every DEoptim trial whose multiplier
+  pushed the product above 1.0 (e.g., `IgnProb_Conifer = 1.5` against
+  the default `IgnProb = 1.0` for Conifer surfaces C1-C5/C7/M1-M4) to
+  fail immediately. The multiplier ranges in the smoke test and
+  `calibration_par_names()` are unchanged; clamping just makes the
+  search-space boundary explicit instead of relying on every multiplier
+  being <= 1.0.
+
+## Retain failed-trial scratch directories for post-mortem
+
+* `sim_landis()` now keeps a failing trial's per-rep scratch directory on
+  disk (and prints its path) when the LANDIS-II invocation errors. The
+  scratch was previously deleted unconditionally by an `on.exit` cleanup,
+  which made it impossible to inspect `<trial_dir>/rep01/log/` for the
+  underlying LANDIS-II stderr/stdout from a failed calibration trial.
+  Successful trials are still cleaned up as before, so this only adds
+  disk usage on failure. The behaviour can still be opted out of by
+  passing `keep_scratch = TRUE` (which now retains the dir on both
+  success and failure -- the prior `keep_scratch = FALSE` default still
+  means "clean up after success only").
+
 # landisutils 0.0.24
 
 ## Per-file input overrides on `build_calibration_scenario_template()`

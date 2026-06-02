@@ -28,10 +28,9 @@
 host_cpu_info <- function() {
   os <- Sys.info()[["sysname"]]
   ## Logical cores: parallel::detectCores() is cross-platform (base R).
-  n_logical <- tryCatch(
-    as.integer(parallel::detectCores(logical = TRUE)),
-    error = function(e) NA_integer_
-  )
+  n_logical <- tryCatch(as.integer(parallel::detectCores(logical = TRUE)), error = function(e) {
+    NA_integer_
+  })
   model <- NA_character_
   ram_bytes <- NA_real_
 
@@ -53,12 +52,9 @@ host_cpu_info <- function() {
     }
   } else if (identical(os, "Darwin")) {
     model <- tryCatch(
-      trimws(system2(
-        "sysctl",
-        c("-n", "machdep.cpu.brand_string"),
-        stdout = TRUE,
-        stderr = FALSE
-      )[1L]),
+      trimws(system2("sysctl", c("-n", "machdep.cpu.brand_string"), stdout = TRUE, stderr = FALSE)[
+        1L
+      ]),
       error = function(e) NA_character_
     )
     ram_bytes <- tryCatch(
@@ -179,7 +175,10 @@ read_landis_resource_logs <- function(run_dir) {
   s <- trimws(tolower(as.character(x)))
   m <- regmatches(s, regexec("^([0-9.]+)\\s*([kmgt]?)b?$", s))[[1L]]
   if (length(m) != 3L) {
-    stop(sprintf("Could not parse mem_limit '%s' (expected e.g. '8g', '512m', or numeric bytes).", x), call. = FALSE)
+    stop(
+      sprintf("Could not parse mem_limit '%s' (expected e.g. '8g', '512m', or numeric bytes).", x),
+      call. = FALSE
+    )
   }
   val <- as.numeric(m[2L])
   suffix <- m[3L]
@@ -215,7 +214,10 @@ read_landis_resource_logs <- function(run_dir) {
   prior_peak <- tryCatch(
     {
       ## Pick the most recently modified log if multiple exist.
-      lines <- readLines(prior_logs[order(file.info(prior_logs)$mtime, decreasing = TRUE)[1L]], warn = FALSE)
+      lines <- readLines(
+        prior_logs[order(file.info(prior_logs)$mtime, decreasing = TRUE)[1L]],
+        warn = FALSE
+      )
       m <- regmatches(lines, regexec("^peak_mem_bytes:\\s*([0-9.eE+-]+)\\s*$", lines))
       m <- Filter(function(x) length(x) == 2L, m)
       if (length(m) == 0L) NA_real_ else as.numeric(m[[1L]][2L])
@@ -355,7 +357,10 @@ landis_run_local <- function(scenario_dir, scenario_file = "scenario.txt", conso
       sprintf("peak_mem_bytes: %.0f", peak_mem_bytes),
       sprintf("host_cpu_model: %s", host$model %||% "NA"),
       sprintf("host_cpu_cores: %s", host$n_logical %||% "NA"),
-      sprintf("host_ram_bytes: %s", if (is.na(host$ram_bytes)) "NA" else sprintf("%.0f", host$ram_bytes))
+      sprintf(
+        "host_ram_bytes: %s",
+        if (is.na(host$ram_bytes)) "NA" else sprintf("%.0f", host$ram_bytes)
+      )
     ),
     fs::path(log_dir, "local_resources.log")
   )
@@ -600,7 +605,10 @@ landis_run_docker <- function(
       sprintf("peak_mem_bytes: %.0f", peak_mem_bytes),
       sprintf("host_cpu_model: %s", host$model %||% "NA"),
       sprintf("host_cpu_cores: %s", host$n_logical %||% "NA"),
-      sprintf("host_ram_bytes: %s", if (is.na(host$ram_bytes)) "NA" else sprintf("%.0f", host$ram_bytes))
+      sprintf(
+        "host_ram_bytes: %s",
+        if (is.na(host$ram_bytes)) "NA" else sprintf("%.0f", host$ram_bytes)
+      )
     ),
     fs::path(log_dir, "docker_resources.log")
   )

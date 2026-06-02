@@ -17,8 +17,7 @@ testthat::test_that("tar_landis() embeds hash-based skip check in command", {
     base_seed = 12345L
   )
 
-  cmd_chr <- deparse(tgt$command$expr, width.cutoff = 500L) |>
-    paste(collapse = "\n")
+  cmd_chr <- deparse(tgt$command$expr, width.cutoff = 500L) |> paste(collapse = "\n")
 
   ## Hash sidecar path is named
   testthat::expect_match(cmd_chr, "input_hash\\.json", fixed = FALSE)
@@ -42,8 +41,7 @@ testthat::test_that("tar_landis(force = TRUE) bakes the force flag into the skip
     method = "local",
     force = TRUE
   )
-  cmd_chr <- deparse(forced$command$expr, width.cutoff = 500L) |>
-    paste(collapse = "\n")
+  cmd_chr <- deparse(forced$command$expr, width.cutoff = 500L) |> paste(collapse = "\n")
   ## When force = TRUE the literal value TRUE is baked into the
   ## "!isTRUE(...)" guard, short-circuiting the skip check.
   testthat::expect_match(cmd_chr, "isTRUE(TRUE)", fixed = TRUE)
@@ -56,7 +54,6 @@ testthat::test_that("tar_landis(force = TRUE) bakes the force flag into the skip
     deps = list("fake/scenario/scenario.txt"),
     method = "local"
   )
-  cmd_chr2 <- deparse(unforced$command$expr, width.cutoff = 500L) |>
-    paste(collapse = "\n")
+  cmd_chr2 <- deparse(unforced$command$expr, width.cutoff = 500L) |> paste(collapse = "\n")
   testthat::expect_match(cmd_chr2, "isTRUE(FALSE)", fixed = TRUE)
 })

@@ -39,10 +39,7 @@ write_prior_log <- function(rep_dir, peak_mem_bytes, source = "docker") {
   log_dir <- file.path(rep_dir, "log")
   dir.create(log_dir, recursive = TRUE, showWarnings = FALSE)
   writeLines(
-    c(
-      "elapsed_sec: 1000.0",
-      sprintf("peak_mem_bytes: %.0f", peak_mem_bytes)
-    ),
+    c("elapsed_sec: 1000.0", sprintf("peak_mem_bytes: %.0f", peak_mem_bytes)),
     file.path(log_dir, paste0(source, "_resources.log"))
   )
   rep_dir

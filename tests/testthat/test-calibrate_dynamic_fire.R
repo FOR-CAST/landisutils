@@ -95,10 +95,11 @@ test_that("patch_fire_config() rewrites SeverityCalibrationFactor / HiProp / Ign
   expect_equal(as.numeric(parts[11L]), 0.63)
   expect_equal(as.numeric(parts[14L]), 0.17)
 
-  ## (3) FuelTypeTable: IgnProb (col 4) multiplied by base-type-specific candidate.
-  ## Conifer rows had IgnProb = 1.0 -> 0.8 (cand for Conifer = 0.8).
-  ## ConiferPlantation row (C6) had 1.0 -> 1.2.
-  ## Deciduous row (D1) had 0.5 -> 0.5 (cand = 1.0).
+  ## (3) FuelTypeTable: IgnProb (col 4) = clamp(default * multiplier, [0, 1]).
+  ## Conifer rows had IgnProb = 1.0 -> 0.8 (cand for Conifer = 0.8; no clamp).
+  ## ConiferPlantation row (C6) had 1.0 -> 1.2, clamped to 1.0.
+  ## Deciduous row (D1) had 0.5 -> 0.5 (cand = 1.0; no clamp).
+  ## Open rows had 1.0 -> 1.5, clamped to 1.0.
   ftt_hdr <- grep("^FuelTypeTable[[:space:]]*$", patched)
   j <- ftt_hdr + 1L
   while (grepl("^[[:space:]]*>>", patched[j]) || !nzchar(trimws(patched[j]))) {
@@ -108,19 +109,40 @@ test_that("patch_fire_config() rewrites SeverityCalibrationFactor / HiProp / Ign
   row1 <- strsplit(trimws(patched[j]), "\\s+")[[1]]
   expect_equal(row1[2L], "Conifer")
   expect_equal(as.numeric(row1[4L]), 0.8)
-  ## look ahead for the ConiferPlantation row (Index 6)
+  ## look ahead for the ConiferPlantation, Deciduous, and Open rows
+  saw_cp <- FALSE
+  saw_open <- FALSE
   for (k in seq(j, j + 16L)) {
     if (k > length(patched) || !nzchar(trimws(patched[k]))) {
       break
     }
     pk <- strsplit(trimws(patched[k]), "\\s+")[[1]]
     if (length(pk) >= 4L && identical(pk[2L], "ConiferPlantation")) {
-      expect_equal(as.numeric(pk[4L]), 1.2)
+      expect_equal(as.numeric(pk[4L]), 1.0) ## 1.0 * 1.2 -> clamped
+      saw_cp <- TRUE
     }
     if (length(pk) >= 4L && identical(pk[2L], "Deciduous")) {
       expect_equal(as.numeric(pk[4L]), 0.5)
     }
+    if (length(pk) >= 4L && identical(pk[2L], "Open")) {
+      expect_equal(as.numeric(pk[4L]), 1.0) ## 1.0 * 1.5 -> clamped
+      saw_open <- TRUE
+    }
   }
+  expect_true(saw_cp)
+  expect_true(saw_open)
+  ## All emitted IgnProb values must be parseable and within [0, 1]
+  emitted <- numeric()
+  for (k in seq(j, j + 16L)) {
+    if (k > length(patched) || !nzchar(trimws(patched[k]))) {
+      break
+    }
+    pk <- strsplit(trimws(patched[k]), "\\s+")[[1]]
+    if (length(pk) >= 4L) {
+      emitted <- c(emitted, as.numeric(pk[4L]))
+    }
+  }
+  expect_true(all(emitted >= 0 & emitted <= 1))
 })
 
 test_that("patch_fire_config() rejects par_vec with wrong names", {
@@ -148,18 +170,42 @@ test_that("apply_calibrated_ignprob() multiplies by base-type multipliers", {
   )
   out <- apply_calibrated_ignprob(ft, cand)
 
-  ## row-wise: out$IgnProb == ft$IgnProb * multiplier[ft$Base]
+  ## row-wise: out$IgnProb == pmin(pmax(ft$IgnProb * multiplier[ft$Base], 0), 1)
+  ## Clamping kicks in for ConiferPlantation (1.0 * 1.2 -> 1.0) and Slash
+  ## (1.0 * 1.5 -> 1.0); others stay within [0, 1] and clamp is a no-op.
   expect_equal(out$IgnProb[ft$Base == "Conifer"], ft$IgnProb[ft$Base == "Conifer"] * 0.8)
   expect_equal(
     out$IgnProb[ft$Base == "ConiferPlantation"],
-    ft$IgnProb[ft$Base == "ConiferPlantation"] * 1.2
+    pmin(ft$IgnProb[ft$Base == "ConiferPlantation"] * 1.2, 1)
   )
   expect_equal(out$IgnProb[ft$Base == "Deciduous"], ft$IgnProb[ft$Base == "Deciduous"] * 0.5)
-  expect_equal(out$IgnProb[ft$Base == "Slash"], ft$IgnProb[ft$Base == "Slash"] * 1.5)
+  expect_equal(out$IgnProb[ft$Base == "Slash"], pmin(ft$IgnProb[ft$Base == "Slash"] * 1.5, 1))
   expect_equal(out$IgnProb[ft$Base == "Open"], rep(0, sum(ft$Base == "Open")))
   ## non-IgnProb columns untouched
   expect_equal(out$a, ft$a)
   expect_equal(out$Base, ft$Base)
+})
+
+test_that("apply_calibrated_ignprob() clamps to LANDIS-II's [0, 1] range", {
+  ## LANDIS-II Dynamic Fire's parser rejects IgnProb outside [0, 1] with
+  ## "Value must be between 0 and 1.0", so the helper must clamp.
+  ft <- defaultFuelTypeTable()
+  cand <- c(
+    SeverityCalibrationFactor = 1,
+    SpHiProp = 0,
+    SumHiProp = 0,
+    FallHiProp = 0,
+    IgnProb_Conifer = 5, ## way above 1/default_IgnProb
+    IgnProb_ConiferPlantation = 5,
+    IgnProb_Deciduous = 5,
+    IgnProb_Slash = 5,
+    IgnProb_Open = 5
+  )
+  out <- apply_calibrated_ignprob(ft, cand)
+  expect_true(all(out$IgnProb >= 0))
+  expect_true(all(out$IgnProb <= 1))
+  ## upper boundary actually reached
+  expect_true(any(out$IgnProb == 1))
 })
 
 test_that("apply_calibrated_hi_prop() overwrites the three HiProp columns", {

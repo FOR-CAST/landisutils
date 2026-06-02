@@ -77,7 +77,8 @@ testthat::test_that("read_landis_resource_logs() aggregates multiple reps", {
   td <- withr::local_tempdir()
   for (i in 1:5) {
     make_rep_log(
-      td, "scen",
+      td,
+      "scen",
       sprintf("rep%02d", i),
       "docker",
       sub("1234.5", as.character(1000 + i), full_log_content)

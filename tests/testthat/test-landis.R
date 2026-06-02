@@ -2,7 +2,11 @@ testthat::test_that("landis_replicate creates rep subdirs inside scenario_dir", 
   tmp <- withr::local_tempdir("test_landis_replicate_")
   file.create(file.path(tmp, c("scenario.txt", "species.txt")))
 
-  rep_dirs <- landis_replicate(tmp, n_reps = 2L, files = file.path(tmp, c("scenario.txt", "species.txt")))
+  rep_dirs <- landis_replicate(
+    tmp,
+    n_reps = 2L,
+    files = file.path(tmp, c("scenario.txt", "species.txt"))
+  )
 
   testthat::expect_length(rep_dirs, 2L)
   testthat::expect_match(rep_dirs[1], "rep01$")
@@ -90,8 +94,11 @@ testthat::test_that("landis_replicate rep_index creates exactly one directory", 
   tmp <- withr::local_tempdir("test_lr_rep_index_")
   file.create(file.path(tmp, c("scenario.txt", "species.txt")))
 
-  result <- landis_replicate(tmp, rep_index = 3L,
-                             files = file.path(tmp, c("scenario.txt", "species.txt")))
+  result <- landis_replicate(
+    tmp,
+    rep_index = 3L,
+    files = file.path(tmp, c("scenario.txt", "species.txt"))
+  )
 
   testthat::expect_length(result, 1L)
   testthat::expect_match(result, "rep03$")
@@ -110,8 +117,7 @@ testthat::test_that("landis_replicate rep_index sets the correct seed", {
   )
 
   ## rep_index = 3 -> seed = base_seed + 2
-  landis_replicate(tmp, rep_index = 3L,
-                   files = file.path(tmp, "scenario.txt"), base_seed = 100L)
+  landis_replicate(tmp, rep_index = 3L, files = file.path(tmp, "scenario.txt"), base_seed = 100L)
 
   seed_line <- grep(
     "RandomNumberSeed",
@@ -130,15 +136,24 @@ testthat::test_that("landis_replicate rep_index seed matches n_reps mode for the
   )
   file.copy(file.path(tmp_a, "scenario.txt"), file.path(tmp_b, "scenario.txt"))
 
-  landis_replicate(tmp_a, n_reps = 5L,
-                   files = file.path(tmp_a, "scenario.txt"), base_seed = 12345L)
-  landis_replicate(tmp_b, rep_index = 4L,
-                   files = file.path(tmp_b, "scenario.txt"), base_seed = 12345L)
+  landis_replicate(tmp_a, n_reps = 5L, files = file.path(tmp_a, "scenario.txt"), base_seed = 12345L)
+  landis_replicate(
+    tmp_b,
+    rep_index = 4L,
+    files = file.path(tmp_b, "scenario.txt"),
+    base_seed = 12345L
+  )
 
-  seed_a <- grep("RandomNumberSeed", readLines(file.path(tmp_a, "rep04", "scenario.txt")),
-                 value = TRUE)
-  seed_b <- grep("RandomNumberSeed", readLines(file.path(tmp_b, "rep04", "scenario.txt")),
-                 value = TRUE)
+  seed_a <- grep(
+    "RandomNumberSeed",
+    readLines(file.path(tmp_a, "rep04", "scenario.txt")),
+    value = TRUE
+  )
+  seed_b <- grep(
+    "RandomNumberSeed",
+    readLines(file.path(tmp_b, "rep04", "scenario.txt")),
+    value = TRUE
+  )
   testthat::expect_identical(seed_a, seed_b)
 })
 
