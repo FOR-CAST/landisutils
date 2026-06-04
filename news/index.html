@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.28</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.29</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -40,6 +40,19 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.29" id="landisutils-0029">landisutils 0.0.29<a class="anchor" aria-label="anchor" href="#landisutils-0029"></a></h2>
+<div class="section level3">
+<h3 id="optional-spinupcohorts--spinupmortalityfraction-in-biomasssuccession-0-0-29">Optional <code>SpinupCohorts</code> / <code>SpinupMortalityFraction</code> in <code>BiomassSuccession</code>
+<a class="anchor" aria-label="anchor" href="#optional-spinupcohorts--spinupmortalityfraction-in-biomasssuccession-0-0-29"></a></h3>
+<ul><li>
+<code>BiomassSuccession$new()</code> no longer force-writes <code>SpinupCohorts</code> and <code>SpinupMortalityFraction</code>: these keywords are absent from the Core8 <code>CoreV8.0-BiomassSuccession7.0</code> grammar, and the LANDIS-II v8 parser aborts (“Found the name "SpinupCohorts" but expected "MinRelativeBiomass"”) when they appear. They are now optional and emitted only when set to a non-<code>NULL</code> value, so a default <code>BiomassSuccession</code> config parses and runs against the stock <code>landis-ii-v8-release</code> image.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="request-throttling--backoff-for-biosim-weather-fetches-0-0-29">Request throttling + backoff for BioSIM weather fetches<a class="anchor" aria-label="anchor" href="#request-throttling--backoff-for-biosim-weather-fetches-0-0-29"></a></h3>
+<ul><li>BioSIM weather retrieval now staggers requests and retries with exponential backoff. The <code>BioSIM</code> web API can be slow or transiently unavailable under load, and the <code>BioSIM</code> R client exposes no timeout/retry knobs, so <code><a href="../reference/get_clim_monthly.html">get_clim_monthly()</a></code>, <code><a href="../reference/get_clim_daily.html">get_clim_daily()</a></code>, and <code><a href="../reference/get_fwi_daily.html">get_fwi_daily()</a></code> route their <code>generateWeather()</code> calls through a shared wrapper that adds a random pre-request delay, exponential-backoff retries, and an optional per-attempt timeout (resetting the J4R client on timeout). Behaviour is tunable via the <code>landisutils.biosim.request_delay</code>, <code>landisutils.biosim.max_attempts</code>, <code>landisutils.biosim.backoff_base</code>, and <code>landisutils.biosim.timeout</code> options; set them where the fetch process can see them (e.g. a worker-inherited <code>.Rprofile</code>).</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.28" id="landisutils-0028">landisutils 0.0.28<a class="anchor" aria-label="anchor" href="#landisutils-0028"></a></h2>
 <div class="section level3">

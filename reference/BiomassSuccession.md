@@ -59,11 +59,12 @@ Other Biomass Succession helpers:
 
 - `SpinupCohorts`:
 
-  Logical, or character indicating "yes" or "no".
+  Logical, or character indicating "yes" or "no". Optional (NULL =
+  omit).
 
 - `SpinupMortalityFraction`:
 
-  Real.
+  Real. Optional (NULL = omit).
 
 - `MinRelativeBiomass`:
 
