@@ -127,3 +127,24 @@ testthat::test_that("Dynamic Fuel & Fire inputs are properly created", {
 
   withr::deferred_run()
 })
+
+testthat::test_that("insertSeasonTable quantises ProportionFire to dyadic 1/128 (float-exact sum 1.0)", {
+  ## The Dynamic Fire System reads ProportionFire as single-precision float and rejects the table
+  ## ("Season Probabilities don't add to 1.0") unless the values sum to 1.0 with ~zero tolerance.
+  ## Arbitrary decimals (e.g. NFDB counts / total) fail; insertSeasonTable() must quantise them to
+  ## dyadic 1/128 fractions, which are float-exact and sum to exactly 1.0.
+  season <- tibble::tribble(
+    ~Name    , ~LeafStatus , ~PropFire , ~PercentCuring , ~DayLengthProp ,
+    "Spring" , "LeafOff"   , 0.5357    ,             50 , 1.0            ,
+    "Summer" , "LeafOn"    , 0.4345    ,             51 , 1.0            ,
+    "Fall"   , "LeafOff"   , 0.0298    ,            100 , 1.0
+  )
+
+  lines <- insertSeasonTable(season)
+  rows <- grep("^(Spring|Summer|Fall)\\b", lines, value = TRUE)
+  props <- as.numeric(vapply(strsplit(trimws(rows), "\\s+"), `[`, character(1L), 3L))
+
+  testthat::expect_length(props, 3L)
+  testthat::expect_equal(sum(props), 1.0) ## exact dyadic sum
+  testthat::expect_equal(props * 128, round(props * 128)) ## each value is k/128
+})

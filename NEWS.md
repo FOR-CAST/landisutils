@@ -1,3 +1,20 @@
+# landisutils 0.0.30
+
+## Dyadic season proportions in `insertSeasonTable()`
+
+* `insertSeasonTable()` now quantises the `ProportionFire` column to dyadic
+  `1/128` fractions before writing. The Dynamic Fire System reads these
+  proportions as single-precision floats and rejects the table ("Season
+  Probabilities don't add to 1.0") unless they sum to 1.0 with essentially zero
+  tolerance, so arbitrary decimal proportions (e.g. observed fire counts divided
+  by the total, which only sum to 1.0 in exact or double-precision arithmetic)
+  failed the check unpredictably depending on the data. Dyadic `1/128` fractions
+  are exactly representable in float, sum to exactly 1.0 regardless of summation
+  order, and round-trip through the table formatting; the largest season absorbs
+  the rounding so the values still sum to 1.0. Callers can now pass raw
+  normalised season proportions and rely on the table writer for LANDIS-II
+  compatibility (1/128 is ~0.8% granularity).
+
 # landisutils 0.0.29
 
 ## Optional `SpinupCohorts` / `SpinupMortalityFraction` in `BiomassSuccession`

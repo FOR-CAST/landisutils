@@ -585,6 +585,19 @@ insertSeasonTable <- function(df) {
     all(dplyr::between(df[["DayLengthProp"]], 0.0, 1.0))
   )
 
+  ## The Dynamic Fire System reads the season ProportionFire values as single-precision floats and
+  ## rejects the table ("Season Probabilities don't add to 1.0") unless they sum to 1.0 with essentially
+  ## zero tolerance. Arbitrary decimal proportions (e.g. NFDB counts / total) only sum to 1.0 in exact or
+  ## double arithmetic, so they fail the float check unpredictably. Quantise to DYADIC 1/128 fractions:
+  ## these are exactly representable in float (and double), sum to exactly 1.0 regardless of summation
+  ## order, and have <= 7 significant figures so they survive the formatting below. The largest season
+  ## absorbs the rounding so the three integer counts sum to 128. (1/128 ~= 0.8% granularity.)
+  pf <- df[["PropFire"]] / sum(df[["PropFire"]])
+  denom <- 128L
+  counts <- round(pf * denom)
+  counts[which.max(counts)] <- counts[which.max(counts)] + (denom - sum(counts))
+  df[["PropFire"]] <- counts / denom
+
   df[["PercentCuring"]] <- as.integer(df[["PercentCuring"]])
 
   c(
