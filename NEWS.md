@@ -1,3 +1,29 @@
+# landisutils 0.0.29
+
+## Optional `SpinupCohorts` / `SpinupMortalityFraction` in `BiomassSuccession`
+
+* `BiomassSuccession$new()` no longer force-writes `SpinupCohorts` and
+  `SpinupMortalityFraction`: these keywords are absent from the Core8
+  `CoreV8.0-BiomassSuccession7.0` grammar, and the LANDIS-II v8 parser aborts
+  ("Found the name \"SpinupCohorts\" but expected \"MinRelativeBiomass\"") when
+  they appear. They are now optional and emitted only when set to a non-`NULL`
+  value, so a default `BiomassSuccession` config parses and runs against the
+  stock `landis-ii-v8-release` image.
+
+## Request throttling + backoff for BioSIM weather fetches
+
+* BioSIM weather retrieval now staggers requests and retries with exponential
+  backoff. The `BioSIM` web API can be slow or transiently unavailable under
+  load, and the `BioSIM` R client exposes no timeout/retry knobs, so
+  `get_clim_monthly()`, `get_clim_daily()`, and `get_fwi_daily()` route their
+  `generateWeather()` calls through a shared wrapper that adds a random
+  pre-request delay, exponential-backoff retries, and an optional per-attempt
+  timeout (resetting the J4R client on timeout). Behaviour is tunable via the
+  `landisutils.biosim.request_delay`, `landisutils.biosim.max_attempts`,
+  `landisutils.biosim.backoff_base`, and `landisutils.biosim.timeout` options;
+  set them where the fetch process can see them (e.g. a worker-inherited
+  `.Rprofile`).
+
 # landisutils 0.0.28
 
 ## Enable DOM spinup in calibration scenario template

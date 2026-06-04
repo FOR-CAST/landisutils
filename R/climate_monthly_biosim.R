@@ -108,7 +108,7 @@ get_clim_monthly <- function(
   out_file <- file.path(dataset, paste0("YEAR=", year), paste0("BatchID=", batch_id), "part-0.csv")
 
   if (!file.exists(out_file)) {
-    raw <- BioSIM::generateWeather(
+    raw <- .biosim_generate_weather(
       modelNames = c("Climatic_Monthly", "ClimaticWind_Monthly"),
       fromYr = year,
       toYr = year,

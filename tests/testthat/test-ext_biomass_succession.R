@@ -78,3 +78,60 @@ testthat::test_that("Biomass Succession inputs are properly created", {
 
   withr::deferred_run()
 })
+
+testthat::test_that("SpinupCohorts / SpinupMortalityFraction are optional (omitted when NULL)", {
+  ## The Core8 CoreV8.0-BiomassSuccession7.0 grammar has no Spinup* keywords; the v8 parser aborts on
+  ## them. They must therefore be written only when explicitly set (they remain available for v7.1).
+  tmp_pth <- withr::local_tempdir("test_BiomassSuccession_spinup_")
+
+  min_rel_b <- tibble::tribble(
+    ~ShadeClass , ~Eco1 ,
+    NA_integer_ , "101" ,
+    1L          , "25%"
+  )
+  suff_light <- tibble::tribble(
+    ~class , ~X0 , ~X1 , ~X2  , ~X3 , ~X4 , ~X5 ,
+    1L     , 1.0 , 0.5 , 0.25 , 0.0 , 0.0 , 0.0
+  )
+  frp_df <- tibble::tribble(
+    ~Severity , ~WoodLitterReduct , ~LitterReduct ,
+    1L        , 0.0               , 0.5
+  )
+  hrp_df <- tibble::tribble(
+    ~Name            , ~WoodLitterReduct , ~LitterReduct , ~CohortWoodRemoval , ~CohortLeafRemoval ,
+    "MaxAgeClearcut" , 0.5               , 0.15          , 0.8                , 0.0
+  )
+
+  mk <- function(spinup_cohorts, spinup_mort) {
+    BiomassSuccession$new(
+      path = tmp_pth,
+      Timestep = 10,
+      InitialCommunitiesFiles = file.path(tmp_pth, "ic.csv"),
+      ClimateConfigFile = file.path(tmp_pth, "climate.txt"),
+      SpinupCohorts = spinup_cohorts,
+      SpinupMortalityFraction = spinup_mort,
+      MinRelativeBiomass = min_rel_b,
+      SufficientLight = suff_light,
+      SpeciesDataFile = file.path(tmp_pth, "spp.csv"),
+      EcoregionParameters = tibble::tibble(ecoregion = "101", AET = 600),
+      SpeciesEcoregionDataFile = file.path(tmp_pth, "sppeco.csv"),
+      FireReductionParameters = frp_df,
+      HarvestReductionParameters = hrp_df
+    )
+  }
+
+  ## referenced input files must exist (add_file() checks); contents are irrelevant here
+  ref_files <- file.path(tmp_pth, c("ic.csv", "climate.txt", "spp.csv", "sppeco.csv"))
+  purrr::walk2(.x = rep("", length(ref_files)), .y = ref_files, .f = writeLines)
+
+  ## NULL (default) -> Spinup* lines absent
+  mk(NULL, NULL)$write()
+  omitted <- readLines(file.path(tmp_pth, "biomass-succession.txt"))
+  testthat::expect_length(grep("Spinup", omitted), 0L)
+
+  ## explicitly set -> both lines present
+  mk(FALSE, 0.05)$write()
+  present <- readLines(file.path(tmp_pth, "biomass-succession.txt"))
+  testthat::expect_length(grep("^SpinupCohorts", present), 1L)
+  testthat::expect_length(grep("^SpinupMortalityFraction", present), 1L)
+})

@@ -4,6 +4,77 @@
   getOption("landisutils.cache.path", defaultCacheDir)
 }
 
+#' Robust `BioSIM::generateWeather()` wrapper: request staggering + exponential-backoff retry
+#'
+#' The BioSIM web API can be slow or transiently unavailable when many requests arrive at once, and the
+#' `BioSIM` R client exposes no timeout/retry/delay knobs (`biosimclient.config()` only tunes
+#' `nbNearestNeighbours` and climate-generation/test flags). A bare `generateWeather()` call therefore has
+#' no protection: a transient failure aborts the whole fetch, and a stalled call hangs indefinitely. This
+#' wrapper adds (all tunable via `options()`):
+#' \itemize{
+#'   \item a random pre-request **stagger delay** so concurrent `furrr` workers don't hit the server in
+#'         lockstep -- `landisutils.biosim.request_delay` = `c(min, max)` seconds (default `c(1, 5)`);
+#'   \item **exponential backoff with jitter** on failure -- `landisutils.biosim.max_attempts` (default
+#'         `5L`) total tries, waiting `landisutils.biosim.backoff_base * 2^(attempt - 1)` seconds (base
+#'         default `15`) between tries, so repeated failures back off progressively (gentler on an
+#'         overwhelmed server);
+#'   \item an optional **per-attempt timeout** -- `landisutils.biosim.timeout` seconds (default `Inf` =
+#'         off) via [base::setTimeLimit()]; on timeout the J4R client is reset
+#'         ([BioSIM::shutdownClient()]) before the next try so a stalled socket can't poison it.
+#' }
+#'
+#' NOTE: these options are read at call time INSIDE the fetch (which often runs in a `furrr`/`crew`
+#' worker), so to tune them set the `options()` somewhere the worker inherits -- e.g. the project
+#' `.Rprofile` -- NOT a file only the main process sources (a `targets` `_local.R`).
+#'
+#' @param ... passed verbatim to [BioSIM::generateWeather()].
+#' @returns the [BioSIM::generateWeather()] result; errors after exhausting `max_attempts`.
+#' @keywords internal
+.biosim_generate_weather <- function(...) {
+  delay <- getOption("landisutils.biosim.request_delay", c(1, 5))
+  max_attempts <- as.integer(getOption("landisutils.biosim.max_attempts", 5L))
+  backoff_base <- getOption("landisutils.biosim.backoff_base", 15)
+  timeout <- getOption("landisutils.biosim.timeout", Inf)
+
+  ## stagger this worker's first hit so concurrent workers don't fire simultaneously
+  if (length(delay) == 2L && max(delay) > 0) {
+    Sys.sleep(stats::runif(1L, min(delay), max(delay)))
+  }
+
+  for (attempt in seq_len(max_attempts)) {
+    if (is.finite(timeout)) {
+      setTimeLimit(elapsed = timeout, transient = FALSE)
+    }
+    res <- tryCatch(BioSIM::generateWeather(...), error = function(e) e)
+    if (is.finite(timeout)) {
+      setTimeLimit() ## clear the limit
+    }
+
+    if (!inherits(res, "error")) {
+      return(res)
+    }
+
+    ## a timeout likely left the J4R socket mid-response -- reset the client before retrying
+    if (is.finite(timeout)) {
+      try(BioSIM::shutdownClient(), silent = TRUE)
+    }
+    if (attempt == max_attempts) {
+      stop(
+        glue::glue(
+          "BioSIM::generateWeather() failed after {max_attempts} attempts: {conditionMessage(res)}"
+        ),
+        call. = FALSE
+      )
+    }
+    wait <- backoff_base * 2^(attempt - 1L) * stats::runif(1L, 0.75, 1.25)
+    message(glue::glue(
+      "[landisutils] BioSIM request failed (attempt {attempt}/{max_attempts}): ",
+      "{conditionMessage(res)} -- backing off {round(wait)}s"
+    ))
+    Sys.sleep(wait)
+  }
+}
+
 #' Stable short hash of a study-area object
 #'
 #' Returns a short hexadecimal hash (`xxhash64`) of the serialized object, used

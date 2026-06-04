@@ -51,9 +51,9 @@ One of \code{"WardSeedDispersal"}, \code{"NoDispersal"}, \code{"UniversalDispers
 
     \item{\code{CalibrateMode}}{Logical, or character indicating "yes" or "no".}
 
-    \item{\code{SpinupCohorts}}{Logical, or character indicating "yes" or "no".}
+    \item{\code{SpinupCohorts}}{Logical, or character indicating "yes" or "no". Optional (NULL = omit).}
 
-    \item{\code{SpinupMortalityFraction}}{Real.}
+    \item{\code{SpinupMortalityFraction}}{Real. Optional (NULL = omit).}
 
     \item{\code{MinRelativeBiomass}}{\code{data.frame}.}
 

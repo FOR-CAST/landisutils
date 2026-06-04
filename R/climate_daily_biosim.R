@@ -199,7 +199,7 @@ get_clim_daily <- function(
   out_file <- file.path(dataset, paste0("YEAR=", year), paste0("BatchID=", batch_id), "part-0.csv")
 
   if (!file.exists(out_file)) {
-    ClimaticEx_Daily_year <- BioSIM::generateWeather(
+    ClimaticEx_Daily_year <- .biosim_generate_weather(
       modelNames = "ClimaticEx_Daily",
       fromYr = year,
       toYr = year,
@@ -724,9 +724,8 @@ get_fwi_daily <- function(
   out_file <- file.path(dataset, paste0("YEAR=", year), paste0("BatchID=", batch_id), "part-0.csv")
 
   if (!file.exists(out_file)) {
-    Sys.sleep(sample(seq(5, 30, 1), 1)) ## spread BioSIM hits across workers
-
-    FWI_Daily_year <- BioSIM::generateWeather(
+    ## request staggering + exponential-backoff retry handled by .biosim_generate_weather()
+    FWI_Daily_year <- .biosim_generate_weather(
       modelNames = "FWI_Daily",
       fromYr = year,
       toYr = year,

@@ -94,8 +94,13 @@ BiomassSuccession <- R6Class(
           insertInitialCommunities(self$InitialCommunitiesFiles), ## TODO
           insertFile("ClimateConfigFile", self$ClimateConfigFile),
           insertValue("CalibrateMode", self$CalibrateMode),
-          insertValue("SpinupCohorts", self$SpinupCohorts),
-          insertValue("SpinupMortalityFraction", self$SpinupMortalityFraction),
+          ## SpinupCohorts / SpinupMortalityFraction are OPTIONAL and absent from the Core8
+          ## CoreV8.0-BiomassSuccession7.0 grammar -- the v8 parser aborts ("Found SpinupCohorts but
+          ## expected MinRelativeBiomass") if they appear. Only emit them when explicitly set.
+          if (!is.null(self$SpinupCohorts)) insertValue("SpinupCohorts", self$SpinupCohorts),
+          if (!is.null(self$SpinupMortalityFraction)) {
+            insertValue("SpinupMortalityFraction", self$SpinupMortalityFraction)
+          },
           insertMinRelativeBiomass(self$MinRelativeBiomass),
           insertSufficientLight(self$SufficientLight),
           insertSpeciesDataFile(self$SpeciesDataFile, core = FALSE),
@@ -170,19 +175,21 @@ BiomassSuccession <- R6Class(
       }
     },
 
-    #' @field SpinupCohorts Logical, or character indicating "yes" or "no".
+    #' @field SpinupCohorts Logical, or character indicating "yes" or "no". Optional (NULL = omit).
     SpinupCohorts = function(value) {
       if (missing(value)) {
         return(private$.SpinupCohorts)
       } else {
-        private$.SpinupCohorts <- yesno(value)
+        private$.SpinupCohorts <- if (is.null(value)) NULL else yesno(value)
       }
     },
 
-    #' @field SpinupMortalityFraction Real.
+    #' @field SpinupMortalityFraction Real. Optional (NULL = omit).
     SpinupMortalityFraction = function(value) {
       if (missing(value)) {
         return(private$.SpinupMortalityFraction)
+      } else if (is.null(value)) {
+        private$.SpinupMortalityFraction <- NULL
       } else {
         stopifnot(value >= 0.0, value <= 0.5)
         private$.SpinupMortalityFraction <- value
