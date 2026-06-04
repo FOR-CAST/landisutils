@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.29</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.30</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -40,6 +40,15 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.30" id="landisutils-0030">landisutils 0.0.30<a class="anchor" aria-label="anchor" href="#landisutils-0030"></a></h2>
+<div class="section level3">
+<h3 id="dyadic-season-proportions-in-insertseasontable-0-0-30">Dyadic season proportions in <code>insertSeasonTable()</code>
+<a class="anchor" aria-label="anchor" href="#dyadic-season-proportions-in-insertseasontable-0-0-30"></a></h3>
+<ul><li>
+<code><a href="../reference/insertSeasonTable.html">insertSeasonTable()</a></code> now quantises the <code>ProportionFire</code> column to dyadic <code>1/128</code> fractions before writing. The Dynamic Fire System reads these proportions as single-precision floats and rejects the table (“Season Probabilities don’t add to 1.0”) unless they sum to 1.0 with essentially zero tolerance, so arbitrary decimal proportions (e.g. observed fire counts divided by the total, which only sum to 1.0 in exact or double-precision arithmetic) failed the check unpredictably depending on the data. Dyadic <code>1/128</code> fractions are exactly representable in float, sum to exactly 1.0 regardless of summation order, and round-trip through the table formatting; the largest season absorbs the rounding so the values still sum to 1.0. Callers can now pass raw normalised season proportions and rely on the table writer for LANDIS-II compatibility (1/128 is ~0.8% granularity).</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.29" id="landisutils-0029">landisutils 0.0.29<a class="anchor" aria-label="anchor" href="#landisutils-0029"></a></h2>
 <div class="section level3">
