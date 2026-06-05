@@ -32,7 +32,8 @@ Character scalar: absolute path to the written \code{scenario.txt}.
 }
 \description{
 Materialises a self-contained LANDIS-II scenario whose only purpose is to run
-ForCS for a single year with both spinup flags ON, emit a snapshot of the
+the succession backend (ForC Succession or Biomass Succession, auto-detected
+from the template's config file) for \code{duration} years, emit a snapshot of the
 spun-up cohort community via the Output Biomass Community extension, and exit.
 }
 \details{

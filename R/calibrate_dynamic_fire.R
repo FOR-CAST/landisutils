@@ -796,10 +796,78 @@ save_observed_fire_targets <- function(
   invisible(lines)
 }
 
+#' Freeze Biomass Succession for the calibration scenario (the Biomass-Succession analog of
+#' [.patch_forcs_for_calibration()]).
+#'
+#' Biomass Succession has no `SpinUp` section and (unlike ForCS) no `Soil.cs` DisturbFireFromBiomassPools
+#' path, so there is no DOM-spinup / NullReferenceException workaround to apply. The only requirement is
+#' that succession does NOT change the (spun-up) fuel landscape during the short calibration sims, so the
+#' fire behaviour reflects the candidate Dynamic Fire parameters rather than vegetation change. We freeze
+#' it by setting the succession `Timestep` greater than the calibration `sim_years`: the extension
+#' initialises but its first scheduled succession event falls beyond the run Duration, so it never
+#' executes and the initial-communities biomass is held static.
+#' @keywords internal
+.patch_biomass_for_calibration <- function(path, sim_years) {
+  stopifnot(fs::file_exists(path), is.numeric(sim_years), sim_years >= 1L)
+  lines <- readLines(path)
+  ts_idx <- grep("^Timestep[[:space:]]", lines)
+  if (length(ts_idx) != 1L) {
+    stop(
+      "Expected exactly one `Timestep` line in ",
+      path,
+      " (found ",
+      length(ts_idx),
+      ")",
+      call. = FALSE
+    )
+  }
+  lines[ts_idx] <- sprintf("Timestep    %d", as.integer(sim_years) + 1L)
+  writeLines(lines, path)
+  invisible(lines)
+}
+
+#' Detect the succession backend of a (calibration) scenario directory and return the per-backend
+#' bits the calibration spinup/template need: the LandisData extension name, the config filename, the
+#' calibration freeze/spinup patcher, and any fixed-name succession logs to track. ForCS and Biomass
+#' Succession are supported; the rest of the calibration setup (Output Biomass Community snapshot,
+#' Dynamic Fire/Fuels, fire logs) is backend-independent.
+#' @keywords internal
+.calibration_succession_backend <- function(dir) {
+  if (fs::file_exists(fs::path(dir, "forc-succession.txt"))) {
+    list(
+      name = "ForC Succession",
+      file = "forc-succession.txt",
+      patch = .patch_forcs_for_calibration,
+      logs = c(
+        "log_BiomassC.csv",
+        "log_FluxBio.csv",
+        "log_Flux.csv",
+        "log_FluxDOM.csv",
+        "log_Pools.csv",
+        "log_Summary.csv"
+      )
+    )
+  } else if (fs::file_exists(fs::path(dir, "biomass-succession.txt"))) {
+    list(
+      name = "Biomass Succession",
+      file = "biomass-succession.txt",
+      patch = .patch_biomass_for_calibration,
+      logs = character(0) ## no fixed-name Biomass Succession logs are needed by the calibration loss
+    )
+  } else {
+    stop(
+      "no recognised succession config (forc-succession.txt or biomass-succession.txt) in ",
+      dir,
+      call. = FALSE
+    )
+  }
+}
+
 #' Build a calibration spinup scenario directory
 #'
 #' Materialises a self-contained LANDIS-II scenario whose only purpose is to run
-#' ForCS for a single year with both spinup flags ON, emit a snapshot of the
+#' the succession backend (ForC Succession or Biomass Succession, auto-detected
+#' from the template's config file) for `duration` years, emit a snapshot of the
 #' spun-up cohort community via the Output Biomass Community extension, and exit.
 #'
 #' The Output Biomass Community extension emits at multiples of its Timestep
@@ -867,12 +935,13 @@ build_calibration_spinup_scenario <- function(
   obc <- OutputBiomassCommunity$new(path = out_dir, Timestep = 1L)
   obc$write()
 
-  forcs_file <- fs::path(out_dir, "forc-succession.txt")
+  backend <- .calibration_succession_backend(out_dir) ## ForCS or Biomass Succession
+  succession_file <- fs::path(out_dir, backend$file)
   species_file <- fs::path(out_dir, "species.txt")
   eco_files <- c(fs::path(out_dir, "ecoregions.txt"), fs::path(out_dir, "ecoregions.tif"))
   obc_file <- fs::path(out_dir, "output-biomass-community.txt")
   stopifnot(
-    fs::file_exists(forcs_file),
+    fs::file_exists(succession_file),
     fs::file_exists(species_file),
     all(fs::file_exists(eco_files)),
     fs::file_exists(obc_file)
@@ -884,16 +953,11 @@ build_calibration_spinup_scenario <- function(
     cell_length = as.integer(cell_length),
     species_file = species_file,
     ecoregions_files = eco_files,
-    succession_ext_files = c("ForC Succession" = forcs_file),
+    succession_ext_files = stats::setNames(succession_file, backend$name),
     disturbance_ext_files = NULL,
     other_ext_files = c("Output Biomass Community" = obc_file),
     output_manifest = c(
-      "log_BiomassC.csv",
-      "log_FluxBio.csv",
-      "log_Flux.csv",
-      "log_FluxDOM.csv",
-      "log_Pools.csv",
-      "log_Summary.csv",
+      backend$logs,
       sprintf("community-input-file-%d.csv", as.integer(community_output_year)),
       sprintf("output-community-%d.tif", as.integer(community_output_year))
     )
@@ -911,8 +975,12 @@ build_calibration_spinup_scenario <- function(
 #'
 #' Composition:
 #' \itemize{
-#'   \item ForC Succession backend with both spinup flags OFF and a frozen
-#'         Timestep (succession effectively a no-op).
+#'   \item The template's succession backend (ForC Succession or Biomass
+#'         Succession, auto-detected), frozen for the calibration: ForCS gets a
+#'         frozen Timestep + DOM-spinup-on/biomass-spinup-off flags; Biomass
+#'         Succession just gets a frozen Timestep (no SpinUp section). Either way
+#'         succession is effectively a no-op so fire behaviour reflects the
+#'         candidate parameters, not vegetation change.
 #'   \item Dynamic Fire System + Dynamic Fuel System as the only disturbances.
 #'   \item Initial communities point at the spun-up snapshot from
 #'         [build_calibration_spinup_scenario()] (renamed to the standard
@@ -1049,8 +1117,9 @@ build_calibration_scenario_template <- function(
     }
   }
 
-  ## Patch ForCS config for calibration (spinup off + freeze succession).
-  .patch_forcs_for_calibration(fs::path(out_dir, "forc-succession.txt"), sim_years = sim_years)
+  ## Patch the succession config for calibration (ForCS: spinup flags + freeze; Biomass: freeze only).
+  backend <- .calibration_succession_backend(out_dir)
+  backend$patch(fs::path(out_dir, backend$file), sim_years = sim_years)
 
   ## Overwrite dynamic-fire.txt with a fresh uncalibrated config. Relative
   ## file-path references inside (fire-ecoregions.tif, ground_slope.tif, ...)
@@ -1082,13 +1151,13 @@ build_calibration_scenario_template <- function(
     ext_fire$write()
   }
 
-  forcs_file <- fs::path(out_dir, "forc-succession.txt")
+  succession_file <- fs::path(out_dir, backend$file)
   fuels_file <- fs::path(out_dir, "dynamic-fuels.txt")
   fire_file <- fs::path(out_dir, "dynamic-fire.txt")
   species_file <- fs::path(out_dir, "species.txt")
   eco_files <- c(fs::path(out_dir, "ecoregions.txt"), fs::path(out_dir, "ecoregions.tif"))
   stopifnot(
-    fs::file_exists(forcs_file),
+    fs::file_exists(succession_file),
     fs::file_exists(fuels_file),
     fs::file_exists(fire_file),
     fs::file_exists(species_file),
@@ -1101,19 +1170,14 @@ build_calibration_scenario_template <- function(
     cell_length = as.integer(cell_length),
     species_file = species_file,
     ecoregions_files = eco_files,
-    succession_ext_files = c("ForC Succession" = forcs_file),
+    succession_ext_files = stats::setNames(succession_file, backend$name),
     disturbance_ext_files = c(
       "Dynamic Fuel System" = fuels_file,
       "Dynamic Fire System" = fire_file
     ),
     other_ext_files = NULL,
     output_manifest = c(
-      "log_BiomassC.csv",
-      "log_FluxBio.csv",
-      "log_Flux.csv",
-      "log_FluxDOM.csv",
-      "log_Pools.csv",
-      "log_Summary.csv",
+      backend$logs,
       "fire/dynamic-fire-event-log.csv",
       "fire/dynamic-fire-summary-log.csv"
     )

@@ -529,11 +529,17 @@ test_that("calibrate_dynamic_fire() runs end-to-end with sim_mock (no Docker)", 
     trace = FALSE
   )
 
-  res <- calibrate_dynamic_fire(
-    observed_targets_path = obs_path,
-    scenario_template = scen_txt,
-    cfg = cfg,
-    out_dir = out_dir
+  ## NP = 6 (set small above to keep this test fast) is below DEoptim's recommended 10 * npar, so
+  ## DEoptim emits its standard advisory warning. Assert it explicitly so the expectation is encoded
+  ## (and the suite stays warning-clean) rather than letting it bubble up as an uncaught test warning.
+  expect_warning(
+    res <- calibrate_dynamic_fire(
+      observed_targets_path = obs_path,
+      scenario_template = scen_txt,
+      cfg = cfg,
+      out_dir = out_dir
+    ),
+    regexp = "ten times the length of the parameter vector"
   )
 
   expect_named(
@@ -993,4 +999,43 @@ test_that("save_observed_fire_targets() stores severity_dist on primary when sup
   )
   payload <- readRDS(out_path)
   expect_equal(payload$primary$severity_dist, default_severity_prior_sturtevant2009())
+})
+
+test_that(".calibration_succession_backend detects ForCS vs Biomass Succession", {
+  d <- withr::local_tempdir()
+  ## Biomass Succession backend
+  writeLines("LandisData  \"Biomass Succession\"", fs::path(d, "biomass-succession.txt"))
+  bk <- .calibration_succession_backend(d)
+  expect_equal(bk$name, "Biomass Succession")
+  expect_equal(bk$file, "biomass-succession.txt")
+  expect_length(bk$logs, 0L) ## no fixed-name succession logs needed for Biomass
+
+  ## ForCS backend (takes precedence + carries the ForCS logs)
+  writeLines("LandisData  \"ForC Succession\"", fs::path(d, "forc-succession.txt"))
+  bk2 <- .calibration_succession_backend(d)
+  expect_equal(bk2$name, "ForC Succession")
+  expect_true("log_Summary.csv" %in% bk2$logs)
+})
+
+test_that(".calibration_succession_backend errors when no succession config is present", {
+  ## regexp (not snapshot): the error message embeds the temp dir path, which is non-deterministic.
+  d <- withr::local_tempdir()
+  expect_error(.calibration_succession_backend(d), "no recognised succession config")
+})
+
+test_that(".patch_biomass_for_calibration freezes the succession Timestep past sim_years", {
+  f <- fs::path(withr::local_tempdir(), "biomass-succession.txt")
+  writeLines(
+    c(
+      "LandisData  \"Biomass Succession\"",
+      "",
+      "Timestep    20",
+      "",
+      "SeedingAlgorithm  WardSeedDispersal"
+    ),
+    f
+  )
+  .patch_biomass_for_calibration(f, sim_years = 10L)
+  ts <- grep("^Timestep", readLines(f), value = TRUE)
+  expect_equal(ts, "Timestep    11") ## sim_years + 1 -> succession never executes during calibration
 })

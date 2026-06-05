@@ -9,8 +9,10 @@ inst/doc
 outputs
 outputs/
 /.quarto/
+tests/testthat/_problems/
 
 ## files
+tests/testthat/testthat-problems.rds
 **/*.quarto_ipynb
 .Rproj.user
 .Rhistory

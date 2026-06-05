@@ -1,3 +1,15 @@
+# landisutils 0.0.31
+
+## Biomass Succession support in the Dynamic Fire calibration setup
+
+* `build_calibration_spinup_scenario()` and `build_calibration_scenario_template()` now auto-detect the
+  succession backend (ForC Succession vs Biomass Succession) from the template directory and wire the
+  appropriate succession extension, calibration freeze, and output manifest. Previously both were
+  hard-wired to ForC Succession (they required `forc-succession.txt`), so a Biomass Succession project
+  could not build a Dynamic Fire calibration scenario. Biomass Succession is frozen for the calibration
+  by setting its `Timestep` greater than `sim_years` (it has no `SpinUp` section, and no ForCS `Soil.cs`
+  DOM-spinup workaround is needed); ForCS behaviour is unchanged.
+
 # landisutils 0.0.30
 
 ## Dyadic season proportions in `insertSeasonTable()`

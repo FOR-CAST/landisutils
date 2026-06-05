@@ -60,8 +60,12 @@ template so it's built once.
 \details{
 Composition:
 \itemize{
-\item ForC Succession backend with both spinup flags OFF and a frozen
-Timestep (succession effectively a no-op).
+\item The template's succession backend (ForC Succession or Biomass
+Succession, auto-detected), frozen for the calibration: ForCS gets a
+frozen Timestep + DOM-spinup-on/biomass-spinup-off flags; Biomass
+Succession just gets a frozen Timestep (no SpinUp section). Either way
+succession is effectively a no-op so fire behaviour reflects the
+candidate parameters, not vegetation change.
 \item Dynamic Fire System + Dynamic Fuel System as the only disturbances.
 \item Initial communities point at the spun-up snapshot from
 \code{\link[=build_calibration_spinup_scenario]{build_calibration_spinup_scenario()}} (renamed to the standard
