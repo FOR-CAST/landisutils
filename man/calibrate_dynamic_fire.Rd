@@ -17,6 +17,13 @@ calibrate_dynamic_fire(observed_targets_path, scenario_template, cfg, out_dir)
 \describe{
 \item{lower, upper}{Named numeric vectors keyed by \code{\link[=calibration_par_names]{calibration_par_names()}}.}
 \item{NP, itermax, strategy}{DEoptim control args.}
+\item{reltol, steptol}{Optional DEoptim early-stopping controls. When set,
+DEoptim halts before \code{itermax} if the best-of-population objective fails
+to improve by more than \code{reltol} for \code{steptol} consecutive generations.
+Defaults: \code{reltol = 1e-3} (0.1\% relative improvement) and
+\code{steptol = 25} generations. Pass \code{steptol = itermax} (or any value \verb{>= itermax}) to disable early stopping and always run the full schedule.
+Pass \code{cfg$steptol = NULL} to fall back to the upstream DEoptim default
+(\code{steptol = itermax}).}
 \item{n_reps, sim_years, weights, base_seed}{Per-trial settings.}
 \item{n_cores, parallel}{Parallelism settings.}
 \item{simulator}{\code{"landis"} (default), \code{"r_reimpl"}, or \code{"mock"}.}

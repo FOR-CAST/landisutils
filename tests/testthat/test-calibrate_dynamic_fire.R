@@ -276,7 +276,7 @@ test_that("bc_fuel_code_to_base() maps the 13 BC FUEL_TYPE_CD levels", {
 test_that("save_observed_fire_targets() writes a payload with expected shape", {
   ## Build a tiny synthetic landscape + NFDB.
   ## Raster: 10x10 grid, fuel codes 2 (Conifer C-2) on left half, 8 (Deciduous) on right.
-  r <- terra::rast(nrow = 10, ncol = 10, xmin = 0, xmax = 1000, ymin = 0, ymax = 1000)
+  r <- terra::rast(nrows = 10, ncols = 10, xmin = 0, xmax = 1000, ymin = 0, ymax = 1000)
   terra::values(r) <- rep(c(rep(2L, 5), rep(8L, 5)), 10)
 
   ## Two synthetic ignition points: one in conifer, one in deciduous.
@@ -347,7 +347,7 @@ test_that("save_observed_fire_targets() writes a payload with expected shape", {
 })
 
 test_that("save_observed_fire_targets() accepts a custom fuel_code_to_base mapping", {
-  r <- terra::rast(nrow = 5, ncol = 5, xmin = 0, xmax = 500, ymin = 0, ymax = 500)
+  r <- terra::rast(nrows = 5, ncols = 5, xmin = 0, xmax = 500, ymin = 0, ymax = 500)
   terra::values(r) <- 1L ## all the same custom code
   pts <- terra::vect(
     data.frame(lon = 250, lat = 250, YEAR = 2010L, SIZE_HA = 1.0),
@@ -552,6 +552,85 @@ test_that("calibrate_dynamic_fire() runs end-to-end with sim_mock (no Docker)", 
   expect_true(fs::file_exists(res$trace_path))
   ## No pool was started (mock simulator)
   expect_true(is.na(res$pool_image))
+})
+
+test_that("calibrate_dynamic_fire() forwards reltol/steptol to DEoptim.control", {
+  skip_if_not_installed("DEoptim")
+  observed <- list(
+    primary = list(
+      lambda_obs = 4,
+      n_fires_by_year = tibble::tibble(year = 1:20, n = sample.int(8, 20, replace = TRUE)),
+      fire_sizes_ha = sort(stats::rlnorm(50, 3, 2))
+    ),
+    secondary = NULL
+  )
+  observed$fru59 <- observed$primary
+  obs_path <- withr::local_tempfile(fileext = ".rds")
+  saveRDS(observed, obs_path)
+
+  scen_dir <- withr::local_tempdir()
+  scen_txt <- fs::path(scen_dir, "scenario.txt")
+  writeLines(c("LandisData  \"Scenario\""), scen_txt)
+
+  base_cfg <- list(
+    lower = c(
+      SeverityCalibrationFactor = 0.5,
+      SpHiProp = 0,
+      SumHiProp = 0,
+      FallHiProp = 0,
+      IgnProb_Conifer = 0,
+      IgnProb_ConiferPlantation = 0,
+      IgnProb_Deciduous = 0,
+      IgnProb_Slash = 0,
+      IgnProb_Open = 0
+    ),
+    upper = c(
+      SeverityCalibrationFactor = 2.5,
+      SpHiProp = 1,
+      SumHiProp = 1,
+      FallHiProp = 1,
+      IgnProb_Conifer = 1.5,
+      IgnProb_ConiferPlantation = 1.5,
+      IgnProb_Deciduous = 1.5,
+      IgnProb_Slash = 1.5,
+      IgnProb_Open = 1.5
+    ),
+    NP = 6L,
+    itermax = 2L,
+    n_reps = 1L,
+    sim_years = 5L,
+    weights = c(count = 1, size = 1, area_fuel = 0, severity = 0),
+    n_cores = 1L,
+    parallel = FALSE,
+    simulator = "mock",
+    base_seed = 12345L,
+    trace = FALSE
+  )
+
+  ## Default path: cfg omits reltol/steptol -> defaults applied (reltol = 1e-3,
+  ## steptol = 25). Verify via the startup-message tag rather than try to coax
+  ## a stochastic mock objective into triggering steptol.
+  expect_message(
+    suppressWarnings(calibrate_dynamic_fire(
+      observed_targets_path = obs_path,
+      scenario_template = scen_txt,
+      cfg = base_cfg,
+      out_dir = withr::local_tempdir()
+    )),
+    regexp = "reltol=0\\.001.*steptol=25"
+  )
+
+  ## Caller overrides flow through verbatim.
+  cfg_custom <- c(base_cfg, list(reltol = 0.05, steptol = 7L))
+  expect_message(
+    suppressWarnings(calibrate_dynamic_fire(
+      observed_targets_path = obs_path,
+      scenario_template = scen_txt,
+      cfg = cfg_custom,
+      out_dir = withr::local_tempdir()
+    )),
+    regexp = "reltol=0\\.05.*steptol=7"
+  )
 })
 
 test_that("calibrate_dynamic_fire() rejects unknown simulator names", {
@@ -975,7 +1054,7 @@ test_that("build_calibration_scenario_template() rejects missing override source
 })
 
 test_that("save_observed_fire_targets() stores severity_dist on primary when supplied", {
-  r <- terra::rast(nrow = 5, ncol = 5, xmin = 0, xmax = 500, ymin = 0, ymax = 500)
+  r <- terra::rast(nrows = 5, ncols = 5, xmin = 0, xmax = 500, ymin = 0, ymax = 500)
   terra::values(r) <- 2L ## Conifer C-2
   pts <- terra::vect(
     data.frame(lon = 250, lat = 250, YEAR = 2010L, SIZE_HA = 1.0),

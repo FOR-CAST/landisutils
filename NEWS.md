@@ -1,3 +1,20 @@
+# landisutils 0.0.33
+
+## Early-stopping convergence criteria in `calibrate_dynamic_fire()`
+
+* `calibrate_dynamic_fire()` now forwards `reltol` and `steptol` to
+  `DEoptim::DEoptim.control()`, with project-friendly defaults of
+  `reltol = 1e-3` (0.1% relative improvement) and `steptol = 25`
+  generations. DEoptim halts before `itermax` if the best-of-population
+  objective fails to improve by more than `reltol` for `steptol`
+  consecutive generations. The previous behaviour (run the full `itermax`
+  schedule regardless of convergence) was the DEoptim default of
+  `steptol = itermax`; that default left the optimiser exposed to long
+  no-improvement tails which, on this project, intersected an external
+  Docker daemon restart and aborted an otherwise-converged run mid-trace.
+  Callers can disable early stopping by setting `cfg$steptol >= cfg$itermax`,
+  or restore the upstream default by setting `cfg$steptol = NULL`.
+
 # landisutils 0.0.32
 
 ## Post-completion watchdog in `landis_run_docker()`

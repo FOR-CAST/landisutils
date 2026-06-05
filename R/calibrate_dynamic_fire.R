@@ -1744,6 +1744,14 @@ sim_mock <- function(
 #'   \describe{
 #'     \item{lower, upper}{Named numeric vectors keyed by [calibration_par_names()].}
 #'     \item{NP, itermax, strategy}{DEoptim control args.}
+#'     \item{reltol, steptol}{Optional DEoptim early-stopping controls. When set,
+#'       DEoptim halts before `itermax` if the best-of-population objective fails
+#'       to improve by more than `reltol` for `steptol` consecutive generations.
+#'       Defaults: `reltol = 1e-3` (0.1% relative improvement) and
+#'       `steptol = 25` generations. Pass `steptol = itermax` (or any value `>=
+#'       itermax`) to disable early stopping and always run the full schedule.
+#'       Pass `cfg$steptol = NULL` to fall back to the upstream DEoptim default
+#'       (`steptol = itermax`).}
 #'     \item{n_reps, sim_years, weights, base_seed}{Per-trial settings.}
 #'     \item{n_cores, parallel}{Parallelism settings.}
 #'     \item{simulator}{`"landis"` (default), `"r_reimpl"`, or `"mock"`.}
@@ -1892,7 +1900,14 @@ calibrate_dynamic_fire <- function(observed_targets_path, scenario_template, cfg
     strategy = as.integer(cfg$strategy %||% 3L),
     trace = isTRUE(cfg$trace %||% TRUE),
     storepopfrom = 1L,
-    storepopfreq = 5L
+    storepopfreq = 5L,
+    ## Early-stopping (DEoptim halts when bestvalit fails to improve by more
+    ## than `reltol` for `steptol` consecutive generations). Caller can disable
+    ## by setting cfg$steptol >= cfg$itermax or by passing cfg$steptol = NULL
+    ## (the latter falls through to DEoptim's upstream default of steptol =
+    ## itermax, i.e. never stop early).
+    reltol = as.numeric(cfg$reltol %||% 1e-3),
+    steptol = as.integer(cfg$steptol %||% 25L)
   )
   if (!is.null(cl)) {
     ## DEoptim 2.2.8: the `ctrl$cluster` branch uses the supplied cluster
@@ -1909,7 +1924,8 @@ calibrate_dynamic_fire <- function(observed_targets_path, scenario_template, cfg
 
   message(glue::glue(
     "calibrate_dynamic_fire: simulator={simulator_name}, NP={control_args$NP}, ",
-    "itermax={control_args$itermax}, n_reps={n_reps}, sim_years={sim_years}, ",
+    "itermax={control_args$itermax}, reltol={control_args$reltol}, ",
+    "steptol={control_args$steptol}, n_reps={n_reps}, sim_years={sim_years}, ",
     "n_cores={if (is.null(cl)) 1L else n_cores}, pool={!is.null(pool)}"
   ))
 
