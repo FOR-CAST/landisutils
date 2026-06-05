@@ -10,10 +10,15 @@ editor_options:
 ---
 
 ```{r, include = FALSE}
+## All chunks are illustrative — they reference project-specific objects
+## (e.g. `nfdb_point_fru59`) and spin up real LANDIS-II containers, so we
+## disable both rendering (`eval = FALSE`) and code extraction
+## (`purl = FALSE`) so `R CMD check` does not try to source them.
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
-  eval = FALSE
+  eval = FALSE,
+  purl = FALSE
 )
 ```
 

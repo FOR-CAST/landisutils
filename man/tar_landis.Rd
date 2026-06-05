@@ -20,6 +20,7 @@ tar_landis(
   cpu_limit = 4,
   mem_limit = "8g",
   mem_margin = 1.5,
+  post_completion_timeout_sec = 300,
   pattern = NULL,
   packages = targets::tar_option_get("packages"),
   library = targets::tar_option_get("library"),
@@ -96,6 +97,15 @@ and LANDIS-II is invoked unconditionally.
 \item{cpu_limit, mem_limit, mem_margin}{Passed to \code{\link[=landis_run_docker]{landis_run_docker()}} when
 \code{method = "docker"}. See that function's documentation for semantics;
 defaults are \code{4}, \code{"8g"}, and \code{1.5} respectively. No effect for
+\code{method = "local"}.}
+
+\item{post_completion_timeout_sec}{Numeric. Passed to \code{\link[=landis_run_docker]{landis_run_docker()}}
+when \code{method = "docker"}: grace period (seconds) after the LANDIS-II
+console logs \code{"Model run is complete."} before the container is SIGTERMed
+if \code{dotnet} has not exited on its own. Guards against the known v8
+post-completion hang (long ForCS + Dynamic Fire sims spin at 100\% CPU in
+the .NET shutdown path after outputs are already on disk). Default \code{300}
+(5 min); pass \code{Inf} to disable the watchdog. No effect for
 \code{method = "local"}.}
 
 \item{pattern}{Expression (unquoted). Dynamic-branching pattern covering

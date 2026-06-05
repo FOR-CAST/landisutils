@@ -57,3 +57,64 @@ testthat::test_that("tar_landis(force = TRUE) bakes the force flag into the skip
   cmd_chr2 <- deparse(unforced$command$expr, width.cutoff = 500L) |> paste(collapse = "\n")
   testthat::expect_match(cmd_chr2, "isTRUE(FALSE)", fixed = TRUE)
 })
+
+testthat::test_that("tar_landis(method = 'docker') forwards post_completion_timeout_sec", {
+  testthat::skip_if_not_installed("targets")
+
+  ## Default: 300 s grace period baked into the landis_run_docker() call.
+  default_tgt <- landisutils::tar_landis(
+    name = test_run_docker,
+    scenario_dir = "fake/scenario",
+    rep_index = 1L,
+    deps = list("fake/scenario/scenario.txt"),
+    method = "docker"
+  )
+  cmd_default <- deparse(default_tgt$command$expr, width.cutoff = 500L) |> paste(collapse = "\n")
+  testthat::expect_match(cmd_default, "landisutils::landis_run_docker", fixed = TRUE)
+  testthat::expect_match(cmd_default, "post_completion_timeout_sec = 300", fixed = TRUE)
+
+  ## Inf disables the watchdog and must be reachable from the factory.
+  disabled_tgt <- landisutils::tar_landis(
+    name = test_run_docker_nowatchdog,
+    scenario_dir = "fake/scenario",
+    rep_index = 1L,
+    deps = list("fake/scenario/scenario.txt"),
+    method = "docker",
+    post_completion_timeout_sec = Inf
+  )
+  cmd_disabled <- deparse(disabled_tgt$command$expr, width.cutoff = 500L) |> paste(collapse = "\n")
+  testthat::expect_match(cmd_disabled, "post_completion_timeout_sec = Inf", fixed = TRUE)
+})
+
+testthat::test_that(".watchdog_should_stop() fires only after the grace period (Inf disables)", {
+  should_stop <- landisutils:::.watchdog_should_stop
+
+  ## Marker not yet seen: never stop (and tolerate an NA arming time).
+  testthat::expect_false(should_stop(
+    completion_seen = FALSE,
+    seen_at = NA_real_,
+    now = 100,
+    timeout = 300
+  ))
+  ## Seen, but still inside the grace period.
+  testthat::expect_false(should_stop(
+    completion_seen = TRUE,
+    seen_at = 100,
+    now = 350,
+    timeout = 300
+  ))
+  ## Seen, grace period exceeded -> stop.
+  testthat::expect_true(should_stop(
+    completion_seen = TRUE,
+    seen_at = 100,
+    now = 401,
+    timeout = 300
+  ))
+  ## Inf timeout disables the watchdog even long after the marker.
+  testthat::expect_false(should_stop(
+    completion_seen = TRUE,
+    seen_at = 100,
+    now = 1e6,
+    timeout = Inf
+  ))
+})

@@ -284,6 +284,15 @@ read_landis_resource_logs <- function(run_dir) {
   val * (mult[[unit]] %||% 1)
 }
 
+## Post-completion watchdog decision (pure; see landis_run_docker()).
+## Returns TRUE when the grace period after the "Model run is complete." marker
+## has elapsed and the container should be SIGTERMed. A non-finite `timeout`
+## (e.g. Inf) disables the watchdog, so this always returns FALSE. Safe against
+## an NA `seen_at` (the marker not yet seen) via the `completion_seen` guard.
+.watchdog_should_stop <- function(completion_seen, seen_at, now, timeout) {
+  isTRUE(completion_seen) && is.finite(timeout) && !is.na(seen_at) && (now - seen_at) > timeout
+}
+
 #' Run a LANDIS-II simulation locally (synchronous)
 #'
 #' Runs LANDIS-II directly via `dotnet`, blocking until the simulation
@@ -425,6 +434,14 @@ landis_run_local <- function(scenario_dir, scenario_file = "scenario.txt", conso
 #'   what it needs.
 #' @param mem_margin Numeric. Headroom factor applied to a previously
 #'   observed peak when auto-raising `mem_limit`. Default `1.5`.
+#' @param post_completion_timeout_sec Numeric. Grace period (seconds) after
+#'   the string `"Model run is complete."` first appears in the container's
+#'   stdout before the watchdog SIGTERMs the container. Some long ForCS +
+#'   Dynamic Fire scenarios with many output extensions log this completion
+#'   marker but then spin in the .NET runtime shutdown path indefinitely
+#'   (outputs are already on disk, so the sim itself completed cleanly). On
+#'   timeout the container is stopped and exit codes 137/143 are remapped to
+#'   `0`. Set to `Inf` to disable the watchdog. Default `300` (5 min).
 #'
 #' @returns Named list with `exit_code` (integer), `elapsed_sec` (numeric), and
 #'   `peak_mem_bytes` (numeric), returned invisibly.
@@ -440,7 +457,8 @@ landis_run_docker <- function(
   pull = FALSE,
   cpu_limit = 4,
   mem_limit = "8g",
-  mem_margin = 1.5
+  mem_margin = 1.5,
+  post_completion_timeout_sec = 300
 ) {
   image <- image %||% getOption("landisutils.docker.image")
   console <- console %||% landis_find_docker()
@@ -578,7 +596,20 @@ landis_run_docker <- function(
   )
 
   ## Poll docker stats every 2 s, tracking peak memory across samples.
+  ##
+  ## Post-completion watchdog: some LANDIS-II runs (particularly long ForCS +
+  ## Dynamic Fire scenarios with many output extensions) print
+  ## "Model run is complete." but the dotnet process then hangs spinning at
+  ## 100% CPU in the .NET runtime shutdown phase. Outputs are already on disk
+  ## at that point, so we watch the stdout log for the completion marker and
+  ## SIGTERM the container `post_completion_timeout_sec` later if the process
+  ## hasn't exited on its own. The post-completion stop is treated as success
+  ## (the sim itself finished cleanly).
   peak_mem_bytes <- 0
+  completion_marker <- "Model run is complete."
+  completion_seen <- FALSE
+  completion_seen_at <- NA_real_
+  stopped_for_timeout <- FALSE
   while (docker_proc$is_alive()) {
     stats_raw <- tryCatch(
       system2(
@@ -592,10 +623,55 @@ landis_run_docker <- function(
     if (length(stats_raw) && nzchar(trimws(stats_raw[1L]))) {
       peak_mem_bytes <- max(peak_mem_bytes, .parse_docker_mem_bytes(stats_raw[1L]))
     }
+    if (!completion_seen && fs::file_exists(stdout_log)) {
+      ## Cheap tail-grep: read the file as raw lines and look for the marker.
+      ## `readLines()` with `warn = FALSE` to suppress the no-newline-at-eof
+      ## complaint that LANDIS-II's stdout occasionally triggers.
+      tail_lines <- tryCatch(
+        utils::tail(readLines(stdout_log, warn = FALSE), n = 50L),
+        error = function(e) character(0)
+      )
+      if (any(grepl(completion_marker, tail_lines, fixed = TRUE))) {
+        completion_seen <- TRUE
+        completion_seen_at <- proc.time()[["elapsed"]]
+        message(glue::glue(
+          "  [{Sys.time()}] '{completion_marker}' detected; ",
+          "post-completion watchdog armed ({post_completion_timeout_sec} s grace period)."
+        ))
+      }
+    }
+    if (
+      !stopped_for_timeout &&
+        .watchdog_should_stop(
+          completion_seen,
+          completion_seen_at,
+          proc.time()[["elapsed"]],
+          post_completion_timeout_sec
+        )
+    ) {
+      message(glue::glue(
+        "  [{Sys.time()}] post-completion timeout exceeded; sending docker stop to {container_name}."
+      ))
+      stopped_for_timeout <- TRUE
+      tryCatch(
+        system2("docker", c("stop", "-t", "30", container_name), stdout = FALSE, stderr = FALSE),
+        error = function(e) NULL
+      )
+    }
     Sys.sleep(2)
   }
 
   rc <- docker_proc$get_result()
+  ## If we forced a stop after completion, treat as success (the sim itself
+  ## finished cleanly; exit code 143 from SIGTERM or 137 from SIGKILL is the
+  ## watchdog firing, not a real failure).
+  if (stopped_for_timeout && rc %in% c(137L, 143L)) {
+    message(glue::glue(
+      "  [{Sys.time()}] docker exit {rc} treated as success ",
+      "(post-completion watchdog; '{completion_marker}' was logged)."
+    ))
+    rc <- 0L
+  }
   elapsed_sec <- (proc.time() - t_start)[["elapsed"]]
 
   host <- host_cpu_info()
@@ -727,6 +803,14 @@ landis_run_docker <- function(
 #'   `method = "docker"`. See that function's documentation for semantics;
 #'   defaults are `4`, `"8g"`, and `1.5` respectively. No effect for
 #'   `method = "local"`.
+#' @param post_completion_timeout_sec Numeric. Passed to [landis_run_docker()]
+#'   when `method = "docker"`: grace period (seconds) after the LANDIS-II
+#'   console logs `"Model run is complete."` before the container is SIGTERMed
+#'   if `dotnet` has not exited on its own. Guards against the known v8
+#'   post-completion hang (long ForCS + Dynamic Fire sims spin at 100% CPU in
+#'   the .NET shutdown path after outputs are already on disk). Default `300`
+#'   (5 min); pass `Inf` to disable the watchdog. No effect for
+#'   `method = "local"`.
 #' @param packages,library,error,memory,resources,storage,retrieval,cue,description
 #'   Standard `{targets}` options; all default to [targets::tar_option_get()].
 #'
@@ -751,6 +835,7 @@ tar_landis <- function(
   cpu_limit = 4,
   mem_limit = "8g",
   mem_margin = 1.5,
+  post_completion_timeout_sec = 300,
   pattern = NULL,
   packages = targets::tar_option_get("packages"),
   library = targets::tar_option_get("library"),
@@ -785,6 +870,7 @@ tar_landis <- function(
   cpu_limit_val <- cpu_limit
   mem_limit_val <- mem_limit
   mem_margin_val <- as.numeric(mem_margin)
+  post_completion_timeout_sec_val <- post_completion_timeout_sec
 
   ## Resolve method and image at factory-call time.
   method <- method %||%
@@ -900,7 +986,8 @@ tar_landis <- function(
           pull = .(pull_val),
           cpu_limit = .(cpu_limit_val),
           mem_limit = .(mem_limit_val),
-          mem_margin = .(mem_margin_val)
+          mem_margin = .(mem_margin_val),
+          post_completion_timeout_sec = .(post_completion_timeout_sec_val)
         )
         .(write_hash_expr)
       }
