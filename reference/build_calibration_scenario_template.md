@@ -76,8 +76,12 @@ Character scalar: absolute path to the written `scenario.txt`.
 
 Composition:
 
-- ForC Succession backend with both spinup flags OFF and a frozen
-  Timestep (succession effectively a no-op).
+- The template's succession backend (ForC Succession or Biomass
+  Succession, auto-detected), frozen for the calibration: ForCS gets a
+  frozen Timestep + DOM-spinup-on/biomass-spinup-off flags; Biomass
+  Succession just gets a frozen Timestep (no SpinUp section). Either way
+  succession is effectively a no-op so fire behaviour reflects the
+  candidate parameters, not vegetation change.
 
 - Dynamic Fire System + Dynamic Fuel System as the only disturbances.
 

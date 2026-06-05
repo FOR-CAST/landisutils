@@ -17,7 +17,7 @@ template so it's built once."><meta property="og:image" content="https://for-cas
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.30</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.31</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -128,8 +128,12 @@ alongside the source.</p></dd>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>Composition:</p><ul><li><p>ForC Succession backend with both spinup flags OFF and a frozen
-Timestep (succession effectively a no-op).</p></li>
+    <p>Composition:</p><ul><li><p>The template's succession backend (ForC Succession or Biomass
+Succession, auto-detected), frozen for the calibration: ForCS gets a
+frozen Timestep + DOM-spinup-on/biomass-spinup-off flags; Biomass
+Succession just gets a frozen Timestep (no SpinUp section). Either way
+succession is effectively a no-op so fire behaviour reflects the
+candidate parameters, not vegetation change.</p></li>
 <li><p>Dynamic Fire System + Dynamic Fuel System as the only disturbances.</p></li>
 <li><p>Initial communities point at the spun-up snapshot from
 <code><a href="build_calibration_spinup_scenario.html">build_calibration_spinup_scenario()</a></code> (renamed to the standard

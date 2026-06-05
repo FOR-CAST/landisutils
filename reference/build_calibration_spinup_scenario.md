@@ -1,8 +1,9 @@
 # Build a calibration spinup scenario directory
 
 Materialises a self-contained LANDIS-II scenario whose only purpose is
-to run ForCS for a single year with both spinup flags ON, emit a
-snapshot of the spun-up cohort community via the Output Biomass
+to run the succession backend (ForC Succession or Biomass Succession,
+auto-detected from the template's config file) for `duration` years,
+emit a snapshot of the spun-up cohort community via the Output Biomass
 Community extension, and exit.
 
 ## Usage

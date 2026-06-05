@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.30</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.31</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -40,6 +40,14 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.31" id="landisutils-0031">landisutils 0.0.31<a class="anchor" aria-label="anchor" href="#landisutils-0031"></a></h2>
+<div class="section level3">
+<h3 id="biomass-succession-support-in-the-dynamic-fire-calibration-setup-0-0-31">Biomass Succession support in the Dynamic Fire calibration setup<a class="anchor" aria-label="anchor" href="#biomass-succession-support-in-the-dynamic-fire-calibration-setup-0-0-31"></a></h3>
+<ul><li>
+<code><a href="../reference/build_calibration_spinup_scenario.html">build_calibration_spinup_scenario()</a></code> and <code><a href="../reference/build_calibration_scenario_template.html">build_calibration_scenario_template()</a></code> now auto-detect the succession backend (ForC Succession vs Biomass Succession) from the template directory and wire the appropriate succession extension, calibration freeze, and output manifest. Previously both were hard-wired to ForC Succession (they required <code>forc-succession.txt</code>), so a Biomass Succession project could not build a Dynamic Fire calibration scenario. Biomass Succession is frozen for the calibration by setting its <code>Timestep</code> greater than <code>sim_years</code> (it has no <code>SpinUp</code> section, and no ForCS <code>Soil.cs</code> DOM-spinup workaround is needed); ForCS behaviour is unchanged.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.30" id="landisutils-0030">landisutils 0.0.30<a class="anchor" aria-label="anchor" href="#landisutils-0030"></a></h2>
 <div class="section level3">
