@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.32</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.33</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -40,6 +40,15 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.33" id="landisutils-0033">landisutils 0.0.33<a class="anchor" aria-label="anchor" href="#landisutils-0033"></a></h2>
+<div class="section level3">
+<h3 id="early-stopping-convergence-criteria-in-calibrate_dynamic_fire-0-0-33">Early-stopping convergence criteria in <code>calibrate_dynamic_fire()</code>
+<a class="anchor" aria-label="anchor" href="#early-stopping-convergence-criteria-in-calibrate_dynamic_fire-0-0-33"></a></h3>
+<ul><li>
+<code><a href="../reference/calibrate_dynamic_fire.html">calibrate_dynamic_fire()</a></code> now forwards <code>reltol</code> and <code>steptol</code> to <code><a href="https://rdrr.io/pkg/DEoptim/man/DEoptim.control.html" class="external-link">DEoptim::DEoptim.control()</a></code>, with project-friendly defaults of <code>reltol = 1e-3</code> (0.1% relative improvement) and <code>steptol = 25</code> generations. DEoptim halts before <code>itermax</code> if the best-of-population objective fails to improve by more than <code>reltol</code> for <code>steptol</code> consecutive generations. The previous behaviour (run the full <code>itermax</code> schedule regardless of convergence) was the DEoptim default of <code>steptol = itermax</code>; that default left the optimiser exposed to long no-improvement tails which, on this project, intersected an external Docker daemon restart and aborted an otherwise-converged run mid-trace. Callers can disable early stopping by setting <code>cfg$steptol &gt;= cfg$itermax</code>, or restore the upstream default by setting <code>cfg$steptol = NULL</code>.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.32" id="landisutils-0032">landisutils 0.0.32<a class="anchor" aria-label="anchor" href="#landisutils-0032"></a></h2>
 <div class="section level3">

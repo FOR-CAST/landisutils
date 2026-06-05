@@ -39,6 +39,17 @@ calibrate_dynamic_fire(observed_targets_path, scenario_template, cfg, out_dir)
 
   :   DEoptim control args.
 
+  reltol, steptol
+
+  :   Optional DEoptim early-stopping controls. When set, DEoptim halts
+      before `itermax` if the best-of-population objective fails to
+      improve by more than `reltol` for `steptol` consecutive
+      generations. Defaults: `reltol = 1e-3` (0.1% relative improvement)
+      and `steptol = 25` generations. Pass `steptol = itermax` (or any
+      value `>= itermax`) to disable early stopping and always run the
+      full schedule. Pass `cfg$steptol = NULL` to fall back to the
+      upstream DEoptim default (`steptol = itermax`).
+
   n_reps, sim_years, weights, base_seed
 
   :   Per-trial settings.
