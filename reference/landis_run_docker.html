@@ -25,7 +25,7 @@ pin runs to a specific image regardless of subsequent tag movement."><meta prope
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.31</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.32</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -82,7 +82,8 @@ pin runs to a specific image regardless of subsequent tag movement.</p>
 <span>  pull <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  cpu_limit <span class="op">=</span> <span class="fl">4</span>,</span>
 <span>  mem_limit <span class="op">=</span> <span class="st">"8g"</span>,</span>
-<span>  mem_margin <span class="op">=</span> <span class="fl">1.5</span></span>
+<span>  mem_margin <span class="op">=</span> <span class="fl">1.5</span>,</span>
+<span>  post_completion_timeout_sec <span class="op">=</span> <span class="fl">300</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -140,6 +141,17 @@ what it needs.</p></dd>
 <dt id="arg-mem-margin">mem_margin<a class="anchor" aria-label="anchor" href="#arg-mem-margin"></a></dt>
 <dd><p>Numeric. Headroom factor applied to a previously
 observed peak when auto-raising <code>mem_limit</code>. Default <code>1.5</code>.</p></dd>
+
+
+<dt id="arg-post-completion-timeout-sec">post_completion_timeout_sec<a class="anchor" aria-label="anchor" href="#arg-post-completion-timeout-sec"></a></dt>
+<dd><p>Numeric. Grace period (seconds) after
+the string <code>"Model run is complete."</code> first appears in the container's
+stdout before the watchdog SIGTERMs the container. Some long ForCS +
+Dynamic Fire scenarios with many output extensions log this completion
+marker but then spin in the .NET runtime shutdown path indefinitely
+(outputs are already on disk, so the sim itself completed cleanly). On
+timeout the container is stopped and exit codes 137/143 are remapped to
+<code>0</code>. Set to <code>Inf</code> to disable the watchdog. Default <code>300</code> (5 min).</p></dd>
 
 </dl></div>
     <div class="section level2">

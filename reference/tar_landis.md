@@ -23,6 +23,7 @@ tar_landis(
   cpu_limit = 4,
   mem_limit = "8g",
   mem_margin = 1.5,
+  post_completion_timeout_sec = 300,
   pattern = NULL,
   packages = targets::tar_option_get("packages"),
   library = targets::tar_option_get("library"),
@@ -131,6 +132,18 @@ tar_landis(
   [`landis_run_docker()`](https://for-cast.github.io/landisutils/reference/landis_run_docker.md)
   when `method = "docker"`. See that function's documentation for
   semantics; defaults are `4`, `"8g"`, and `1.5` respectively. No effect
+  for `method = "local"`.
+
+- post_completion_timeout_sec:
+
+  Numeric. Passed to
+  [`landis_run_docker()`](https://for-cast.github.io/landisutils/reference/landis_run_docker.md)
+  when `method = "docker"`: grace period (seconds) after the LANDIS-II
+  console logs `"Model run is complete."` before the container is
+  SIGTERMed if `dotnet` has not exited on its own. Guards against the
+  known v8 post-completion hang (long ForCS + Dynamic Fire sims spin at
+  100% CPU in the .NET shutdown path after outputs are already on disk).
+  Default `300` (5 min); pass `Inf` to disable the watchdog. No effect
   for `method = "local"`.
 
 - pattern:

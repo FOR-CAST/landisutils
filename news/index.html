@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.31</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.32</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -40,6 +40,17 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.32" id="landisutils-0032">landisutils 0.0.32<a class="anchor" aria-label="anchor" href="#landisutils-0032"></a></h2>
+<div class="section level3">
+<h3 id="post-completion-watchdog-in-landis_run_docker-0-0-32">Post-completion watchdog in <code>landis_run_docker()</code>
+<a class="anchor" aria-label="anchor" href="#post-completion-watchdog-in-landis_run_docker-0-0-32"></a></h3>
+<ul><li>
+<code><a href="../reference/landis_run_docker.html">landis_run_docker()</a></code> now watches the container’s stdout for the LANDIS-II console marker <code>"Model run is complete."</code> and SIGTERMs the container if it fails to exit on its own within <code>post_completion_timeout_sec</code> seconds (default <code>300</code> = 5 min). Some long ForCS + Dynamic Fire scenarios with many output extensions log the completion marker but then spin in the .NET runtime shutdown path indefinitely (observed 25+ h hangs at 100% CPU, outputs already on disk). The watchdog stops these zombie containers and treats exit codes <code>137</code>/<code>143</code> as success when the completion marker was seen, so <code>tar_make()</code> correctly marks the affected reps complete. The sim outputs are byte-identical to a clean exit because the watchdog only fires <em>after</em> the LANDIS-II console reports completion. Pass <code>post_completion_timeout_sec = Inf</code> to restore the old (unbounded-wait) behaviour.</li>
+<li>
+<code><a href="../reference/tar_landis.html">tar_landis()</a></code> gains a matching <code>post_completion_timeout_sec</code> argument (default <code>300</code>) that forwards to <code><a href="../reference/landis_run_docker.html">landis_run_docker()</a></code>, so the watchdog grace period is tunable (or disablable with <code>Inf</code>) from the <a href="https://docs.ropensci.org/targets/" class="external-link">targets</a> pipeline. The decision is factored into a small internal predicate, <code>.watchdog_should_stop()</code>, with unit coverage.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.31" id="landisutils-0031">landisutils 0.0.31<a class="anchor" aria-label="anchor" href="#landisutils-0031"></a></h2>
 <div class="section level3">

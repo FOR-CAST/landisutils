@@ -22,7 +22,8 @@ landis_run_docker(
   pull = FALSE,
   cpu_limit = 4,
   mem_limit = "8g",
-  mem_margin = 1.5
+  mem_margin = 1.5,
+  post_completion_timeout_sec = 300
 )
 ```
 
@@ -79,6 +80,17 @@ landis_run_docker(
 
   Numeric. Headroom factor applied to a previously observed peak when
   auto-raising `mem_limit`. Default `1.5`.
+
+- post_completion_timeout_sec:
+
+  Numeric. Grace period (seconds) after the string
+  `"Model run is complete."` first appears in the container's stdout
+  before the watchdog SIGTERMs the container. Some long ForCS + Dynamic
+  Fire scenarios with many output extensions log this completion marker
+  but then spin in the .NET runtime shutdown path indefinitely (outputs
+  are already on disk, so the sim itself completed cleanly). On timeout
+  the container is stopped and exit codes 137/143 are remapped to `0`.
+  Set to `Inf` to disable the watchdog. Default `300` (5 min).
 
 ## Value
 

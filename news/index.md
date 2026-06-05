@@ -1,5 +1,32 @@
 # Changelog
 
+## landisutils 0.0.32
+
+### Post-completion watchdog in `landis_run_docker()`
+
+- [`landis_run_docker()`](https://for-cast.github.io/landisutils/reference/landis_run_docker.md)
+  now watches the container’s stdout for the LANDIS-II console marker
+  `"Model run is complete."` and SIGTERMs the container if it fails to
+  exit on its own within `post_completion_timeout_sec` seconds (default
+  `300` = 5 min). Some long ForCS + Dynamic Fire scenarios with many
+  output extensions log the completion marker but then spin in the .NET
+  runtime shutdown path indefinitely (observed 25+ h hangs at 100% CPU,
+  outputs already on disk). The watchdog stops these zombie containers
+  and treats exit codes `137`/`143` as success when the completion
+  marker was seen, so `tar_make()` correctly marks the affected reps
+  complete. The sim outputs are byte-identical to a clean exit because
+  the watchdog only fires *after* the LANDIS-II console reports
+  completion. Pass `post_completion_timeout_sec = Inf` to restore the
+  old (unbounded-wait) behaviour.
+- [`tar_landis()`](https://for-cast.github.io/landisutils/reference/tar_landis.md)
+  gains a matching `post_completion_timeout_sec` argument (default
+  `300`) that forwards to
+  [`landis_run_docker()`](https://for-cast.github.io/landisutils/reference/landis_run_docker.md),
+  so the watchdog grace period is tunable (or disablable with `Inf`)
+  from the [targets](https://docs.ropensci.org/targets/) pipeline. The
+  decision is factored into a small internal predicate,
+  `.watchdog_should_stop()`, with unit coverage.
+
 ## landisutils 0.0.31
 
 ### Biomass Succession support in the Dynamic Fire calibration setup
