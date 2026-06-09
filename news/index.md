@@ -12,6 +12,11 @@
   pull the rest (run a district, then a landscape unit within it fetches
   nothing). Without `ref_grid` the previous per-study-area (elevatr `z`)
   behaviour is unchanged.
+- [`create_locations_df()`](https://for-cast.github.io/landisutils/reference/create_locations_df.md)
+  now reprojects grid cell coordinates to lon/lat for BioSIM, so a
+  PROJECTED reference grid (e.g. the aggregated rasterToMatch in an
+  equal-area CRS) yields valid `longDeg`/`latDeg`; a lon/lat grid (the
+  elevatr default) is unaffected.
 - The store is climate-only (keyed by `CellID`); ecoregion grouping is
   applied at assemble time:
   [`assemble_climate_library_file_monthly()`](https://for-cast.github.io/landisutils/reference/assemble_climate_library_file_monthly.md)
