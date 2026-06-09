@@ -544,7 +544,16 @@ test_that("calibrate_dynamic_fire() runs end-to-end with sim_mock (no Docker)", 
 
   expect_named(
     res,
-    c("best_params", "objective", "deoptim", "trace_path", "cfg", "pool_image", "pool_digest")
+    c(
+      "best_params",
+      "objective",
+      "deoptim",
+      "trace_path",
+      "trial_trace_path",
+      "cfg",
+      "pool_image",
+      "pool_digest"
+    )
   )
   expect_equal(length(res$best_params), 9L)
   expect_setequal(names(res$best_params), calibration_par_names())
