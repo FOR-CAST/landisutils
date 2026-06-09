@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.33</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.34</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -40,6 +40,15 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.34" id="landisutils-0034">landisutils 0.0.34<a class="anchor" aria-label="anchor" href="#landisutils-0034"></a></h2>
+<div class="section level3">
+<h3 id="landis_run_docker-no-longer-spawns-a-nested-r-session-0-0-34">
+<code>landis_run_docker()</code> no longer spawns a nested R session<a class="anchor" aria-label="anchor" href="#landis_run_docker-no-longer-spawns-a-nested-r-session-0-0-34"></a></h3>
+<ul><li>
+<code><a href="../reference/landis_run_docker.html">landis_run_docker()</a></code> now launches the <code>docker run</code> child via <code><a href="http://processx.r-lib.org/reference/process.html" class="external-link">processx::process</a></code> instead of <code><a href="https://callr.r-lib.org/reference/r_bg.html" class="external-link">callr::r_bg()</a></code>. The old approach forked a <strong>full background R session</strong> purely to shell out to <code>docker</code>; when that ran on a <a href="https://wlandau.github.io/crew/" class="external-link">crew</a>/<a href="https://mirai.r-lib.org" class="external-link">mirai</a> worker, the nested R process could be orphaned or crash its parent worker (<code>could not start R ... crashed or was killed</code>), which aborted <code>tar_make()</code> and SIGKILLed in-flight LANDIS containers (exit 137, mid-run). <code>processx</code> simply <code>exec()</code>s the docker CLI — the same lightweight child as the existing <code>docker stats</code> polls — eliminating that interaction. Behaviour is otherwise unchanged: <code>docker run</code> stays in the foreground (so the exit status is the container’s), <code>--rm</code> still auto-removes, the post-completion watchdog and resource logging are identical, and the container exit code is read via <code>processx</code>’s <code>get_exit_status()</code>.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.33" id="landisutils-0033">landisutils 0.0.33<a class="anchor" aria-label="anchor" href="#landisutils-0033"></a></h2>
 <div class="section level3">
