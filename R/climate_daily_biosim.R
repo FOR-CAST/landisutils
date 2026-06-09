@@ -94,6 +94,15 @@ create_locations_df <- function(elev, studyArea, id, batch_size = 1000) {
   poly_idx <- cellMatrix[, 1]
   cellIDs <- cellMatrix[, 2]
   coords <- terra::xyFromCell(elev, cellIDs)
+  ## BioSIM needs GEOGRAPHIC lon/lat for longDeg/latDeg. `elev` may be a projected reference grid (e.g.
+  ## the aggregated rasterToMatch), in which case xyFromCell() returns projected metres -- reproject to
+  ## EPSG:4326. For a lon/lat `elev` (the elevatr default) this is a no-op.
+  if (!terra::is.lonlat(elev)) {
+    coords <- terra::crds(terra::project(
+      terra::vect(coords, type = "points", crs = terra::crs(elev)),
+      "EPSG:4326"
+    ))
+  }
   eco_ids <- terra::values(studyArea)[[id]][poly_idx]
   elevations <- terra::values(elev, mat = FALSE)[cellIDs]
 

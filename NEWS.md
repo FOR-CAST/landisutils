@@ -7,6 +7,9 @@
   ids in one shared, accumulating store -- so overlapping / nested study areas reuse cells already
   fetched and only pull the rest (run a district, then a landscape unit within it fetches nothing).
   Without `ref_grid` the previous per-study-area (elevatr `z`) behaviour is unchanged.
+* `create_locations_df()` now reprojects grid cell coordinates to lon/lat for BioSIM, so a PROJECTED
+  reference grid (e.g. the aggregated rasterToMatch in an equal-area CRS) yields valid `longDeg`/`latDeg`;
+  a lon/lat grid (the elevatr default) is unaffected.
 * The store is climate-only (keyed by `CellID`); ecoregion grouping is applied at assemble time:
   `assemble_climate_library_file_monthly()` gains `cell_eco` (a `CellID -> EcoID` map) and `cell_ids`
   (filter to one study area's cells). `get_clim_monthly()`'s public behaviour is unchanged; its BioSIM

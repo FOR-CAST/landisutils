@@ -9,8 +9,10 @@ test_that("global per-cell cache fetches only missing cells across overlapping s
 
   withr::local_options(landisutils.cache.path = withr::local_tempdir())
 
-  ## fixed reference grid (10x10), elevation values = cell number (arbitrary but valid)
-  ref <- terra::rast(
+  ## fixed reference grid, elevation values = cell number (arbitrary but valid). Built lon/lat then
+  ## PROJECTED to BC Albers so the grid is projected like the real climate_ref_grid -- this exercises
+  ## create_locations_df()'s reprojection of grid coords to lon/lat for BioSIM (longDeg/latDeg).
+  ref_ll <- terra::rast(
     xmin = -123,
     xmax = -122,
     ymin = 53,
@@ -18,7 +20,9 @@ test_that("global per-cell cache fetches only missing cells across overlapping s
     resolution = 0.1,
     crs = "EPSG:4326"
   )
-  terra::values(ref) <- as.numeric(seq_len(terra::ncell(ref)))
+  terra::values(ref_ll) <- as.numeric(seq_len(terra::ncell(ref_ll)))
+  ref <- terra::project(ref_ll, "EPSG:3005")
+  expect_false(terra::is.lonlat(ref)) ## guard: the grid must be projected for this test to mean anything
 
   mk_poly <- function(xmin, xmax, eco) {
     sf::st_sf(
