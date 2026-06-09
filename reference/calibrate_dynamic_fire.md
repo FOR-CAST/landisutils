@@ -78,8 +78,13 @@ calibrate_dynamic_fire(observed_targets_path, scenario_template, cfg, out_dir)
 ## Value
 
 List with `best_params` (named numeric), `objective` (scalar), `deoptim`
-(full DEoptim return), `trace_path` (CSV path), `cfg` (echo),
-`pool_image` / `pool_digest` (provenance; NA when no pool was started).
+(full DEoptim return), `trace_path` (per-iter best-value CSV path),
+`trial_trace_path` (per-trial loss-decomposition CSV path, with one row
+per `objfn` evaluation; columns: `wall_clock_iso`, `pid`,
+`par_<name>...`, `total`, `comp_<name>...`, `w_<name>...`,
+`weighted_<name>...`. Useful for plotting how DEoptim trades off the
+four loss components over iterations.), `cfg` (echo), `pool_image` /
+`pool_digest` (provenance; NA when no pool was started).
 
 ## Details
 

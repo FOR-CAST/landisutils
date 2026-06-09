@@ -13,7 +13,7 @@ on.exit() regardless of success / error / interrupt."><meta property="og:image" 
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.35</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.36</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -116,8 +116,13 @@ sub-directory. Created if missing.</p></dd>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>List with <code>best_params</code> (named numeric), <code>objective</code> (scalar),
-<code>deoptim</code> (full DEoptim return), <code>trace_path</code> (CSV path), <code>cfg</code> (echo),
-<code>pool_image</code> / <code>pool_digest</code> (provenance; NA when no pool was started).</p>
+<code>deoptim</code> (full DEoptim return), <code>trace_path</code> (per-iter best-value CSV
+path), <code>trial_trace_path</code> (per-trial loss-decomposition CSV path, with
+one row per <code>objfn</code> evaluation; columns: <code>wall_clock_iso</code>, <code>pid</code>,
+<code>par_&lt;name&gt;...</code>, <code>total</code>, <code>comp_&lt;name&gt;...</code>, <code>w_&lt;name&gt;...</code>,
+<code>weighted_&lt;name&gt;...</code>. Useful for plotting how DEoptim trades off the
+four loss components over iterations.), <code>cfg</code> (echo), <code>pool_image</code> /
+<code>pool_digest</code> (provenance; NA when no pool was started).</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>

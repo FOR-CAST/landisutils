@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.35</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.36</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -40,6 +40,14 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.36" id="landisutils-0036">landisutils 0.0.36<a class="anchor" aria-label="anchor" href="#landisutils-0036"></a></h2>
+<div class="section level3">
+<h3 id="per-trial-loss-decomposition-trace-in-dynamic-fire-calibration-0-0-36">Per-trial loss-decomposition trace in Dynamic Fire calibration<a class="anchor" aria-label="anchor" href="#per-trial-loss-decomposition-trace-in-dynamic-fire-calibration-0-0-36"></a></h3>
+<ul><li>
+<code><a href="../reference/calibrate_dynamic_fire.html">calibrate_dynamic_fire()</a></code> now writes a per-trial CSV alongside the existing per-iter trace. The new CSV (<code>trial_trace_&lt;timestamp&gt;.csv</code> under <code>out_dir</code>) records, for every <code>objfn</code> evaluation, the parameter vector, the total loss, the raw per-component loss, the weights, and the weighted per-component loss. The new path is returned as <code>trial_trace_path</code> in the function’s return list. FORK workers write to per-PID sidecars merged at the end, so the full evaluation history is captured without locking. Useful for plotting how DEoptim trades off the four loss components (<code>count</code>, <code>size</code>, <code>area_fuel</code>, <code>severity</code>) as it converges – not just the per-iter best total. Falls back to <code>NA_character_</code> for mock / parallel-disabled runs that produce no rows.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.35" id="landisutils-0035">landisutils 0.0.35<a class="anchor" aria-label="anchor" href="#landisutils-0035"></a></h2>
 <div class="section level3">

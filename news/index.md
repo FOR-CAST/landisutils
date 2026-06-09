@@ -1,5 +1,22 @@
 # Changelog
 
+## landisutils 0.0.36
+
+### Per-trial loss-decomposition trace in Dynamic Fire calibration
+
+- [`calibrate_dynamic_fire()`](https://for-cast.github.io/landisutils/reference/calibrate_dynamic_fire.md)
+  now writes a per-trial CSV alongside the existing per-iter trace. The
+  new CSV (`trial_trace_<timestamp>.csv` under `out_dir`) records, for
+  every `objfn` evaluation, the parameter vector, the total loss, the
+  raw per-component loss, the weights, and the weighted per-component
+  loss. The new path is returned as `trial_trace_path` in the function’s
+  return list. FORK workers write to per-PID sidecars merged at the end,
+  so the full evaluation history is captured without locking. Useful for
+  plotting how DEoptim trades off the four loss components (`count`,
+  `size`, `area_fuel`, `severity`) as it converges – not just the
+  per-iter best total. Falls back to `NA_character_` for mock /
+  parallel-disabled runs that produce no rows.
+
 ## landisutils 0.0.35
 
 ### Global per-cell BioSIM monthly cache
