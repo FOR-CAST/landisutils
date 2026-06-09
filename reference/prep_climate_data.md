@@ -23,6 +23,7 @@ prep_monthly_weather_biosim(
   id = NULL,
   batch_size = 1000,
   z = 9,
+  ref_grid = NULL,
   rcp = "RCP45",
   clim_model = "RCM4"
 )
@@ -90,6 +91,17 @@ prep_monthly_weather(vars = NULL, years = NULL, studyArea = NULL, id = NULL)
 
   character. BioSIM climate model. One of `"RCM4"`, `"GCM4"`, or
   `"Hadley"`. Default `"RCM4"`. Only used by the BioSIM pipelines.
+
+- ref_grid:
+
+  optional fixed reference `SpatRaster` for the GLOBAL per-cell cache.
+  Its cell numbers are taken as STABLE GLOBAL ids and its cell VALUES
+  are read as the BioSIM elevation (`elevM`) – so it MUST carry
+  elevation values (e.g. a DEM resampled onto the grid). When supplied,
+  the monthly pull is cached by these global ids in one shared,
+  accumulating store, so overlapping / nested study areas reuse cells
+  already fetched. When `NULL` (default), the per-study-area elevatr
+  grid (`z`) is used.
 
 - obs_ts_dataset:
 

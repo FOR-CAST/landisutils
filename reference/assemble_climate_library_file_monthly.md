@@ -13,7 +13,13 @@ returns and is suitable for
 ## Usage
 
 ``` r
-assemble_climate_library_file_monthly(dataset_path, vars, id_col = "EcoID")
+assemble_climate_library_file_monthly(
+  dataset_path,
+  vars,
+  id_col = "EcoID",
+  cell_eco = NULL,
+  cell_ids = NULL
+)
 ```
 
 ## Arguments
@@ -30,8 +36,21 @@ assemble_climate_library_file_monthly(dataset_path, vars, id_col = "EcoID")
 
 - id_col:
 
-  character. Name of the ecoregion-id column in the dataset. Default
-  `"EcoID"`.
+  character. Name of the ecoregion-id column. Default `"EcoID"`.
+
+- cell_eco:
+
+  optional data.frame mapping `CellID` -\> ecoregion id (`id_col`).
+  Supply for the GLOBAL per-cell store (which is climate-only, no
+  `EcoID`): the ecoregion grouping is study-area-specific and is applied
+  here by joining this map. When `NULL`, the dataset is assumed to
+  already carry `id_col`.
+
+- cell_ids:
+
+  optional integer vector of `CellID`s to retain (the calling study
+  area's cells); used to filter a shared global store down to one study
+  area before summarising. `NULL` keeps all cells.
 
 ## Value
 

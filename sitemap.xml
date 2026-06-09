@@ -77,6 +77,7 @@
 <url><loc>https://for-cast.github.io/landisutils/reference/defaultPnETOutputFiles.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/defaultWindSeverities.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/default_severity_prior_sturtevant2009.html</loc></url>
+<url><loc>https://for-cast.github.io/landisutils/reference/dot-append_clim_monthly_global.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/dot-bdaDispersalTemplate.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/dot-bdaNeighborShape.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/dot-bdaNeighborSpeedUp.html</loc></url>
@@ -89,6 +90,7 @@
 <url><loc>https://for-cast.github.io/landisutils/reference/dot-browseForageInReachMethods.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/dot-browseMethods.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/dot-browseSpeciesTableCols.html</loc></url>
+<url><loc>https://for-cast.github.io/landisutils/reference/dot-cached_cellids_global.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/dot-calibration_succession_backend.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/dot-checkSeedingAlgorithm.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/dot-collapseRow.html</loc></url>
@@ -98,6 +100,7 @@
 <url><loc>https://for-cast.github.io/landisutils/reference/dot-edaDispersalType.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/dot-edaSHIMode.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/dot-edaSpeciesParameterCols.html</loc></url>
+<url><loc>https://for-cast.github.io/landisutils/reference/dot-fetch_clim_monthly_batch.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/dot-fmtKeys.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/dot-frsHeuristicForWrite.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/dot-frsHeuristics.html</loc></url>
@@ -119,6 +122,7 @@
 <url><loc>https://for-cast.github.io/landisutils/reference/dot-pnetOutputKeywords.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/dot-pnetSpeciesOptionalCols.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/dot-pnetSpeciesRequiredCols.html</loc></url>
+<url><loc>https://for-cast.github.io/landisutils/reference/dot-ref_grid_hash.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/dot-seedingAlgorithms.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/dot-studyArea_hash.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/edaAgent.html</loc></url>

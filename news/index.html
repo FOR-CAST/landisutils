@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.34</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.35</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -40,6 +40,16 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.35" id="landisutils-0035">landisutils 0.0.35<a class="anchor" aria-label="anchor" href="#landisutils-0035"></a></h2>
+<div class="section level3">
+<h3 id="global-per-cell-biosim-monthly-cache-0-0-35">Global per-cell BioSIM monthly cache<a class="anchor" aria-label="anchor" href="#global-per-cell-biosim-monthly-cache-0-0-35"></a></h3>
+<ul><li>
+<code><a href="../reference/prep_climate_data.html">prep_monthly_weather_biosim()</a></code> gains a <code>ref_grid</code> argument. When supplied with a fixed reference grid (e.g. a region-wide raster), the monthly BioSIM pull is cached by the grid’s STABLE GLOBAL cell ids in one shared, accumulating store – so overlapping / nested study areas reuse cells already fetched and only pull the rest (run a district, then a landscape unit within it fetches nothing). Without <code>ref_grid</code> the previous per-study-area (elevatr <code>z</code>) behaviour is unchanged.</li>
+<li>The store is climate-only (keyed by <code>CellID</code>); ecoregion grouping is applied at assemble time: <code><a href="../reference/assemble_climate_library_file_monthly.html">assemble_climate_library_file_monthly()</a></code> gains <code>cell_eco</code> (a <code>CellID -&gt; EcoID</code> map) and <code>cell_ids</code> (filter to one study area’s cells). <code><a href="../reference/get_clim_monthly.html">get_clim_monthly()</a></code>’s public behaviour is unchanged; its BioSIM fetch is factored into an internal helper shared with the new path.</li>
+<li>Internal: the batch-x-year pull now uses <code><a href="https://purrr.tidyverse.org/reference/map2.html" class="external-link">purrr::map2()</a></code> (sequential within a call) rather than <code><a href="https://furrr.futureverse.org/reference/future_map2.html" class="external-link">furrr::future_map2()</a></code> – the orchestrator (targets/crew) owns cross-branch parallelism, and an internal furrr fan-out under a parallel ambient plan overwhelmed the shared BioSIM web service into an uninterruptible J4R socket hang.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.34" id="landisutils-0034">landisutils 0.0.34<a class="anchor" aria-label="anchor" href="#landisutils-0034"></a></h2>
 <div class="section level3">

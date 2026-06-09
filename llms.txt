@@ -412,7 +412,8 @@ scenario(
   : Fetch a single year of daily BioSIM weather for one location batch
 
 - [`get_clim_monthly()`](https://for-cast.github.io/landisutils/reference/get_clim_monthly.md)
-  : Fetch a single year of monthly BioSIM weather for one location batch
+  : Fetch + cache one year of monthly BioSIM weather for one location
+  batch (per-study-area store)
 
 - [`get_clim_monthly_climr()`](https://for-cast.github.io/landisutils/reference/get_clim_monthly_climr.md)
   : Fetch one year of monthly climr weather and write Arrow CSV
