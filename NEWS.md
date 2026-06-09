@@ -1,3 +1,21 @@
+# landisutils 0.0.34
+
+## `landis_run_docker()` no longer spawns a nested R session
+
+* `landis_run_docker()` now launches the `docker run` child via
+  `processx::process` instead of `callr::r_bg()`. The old approach forked a
+  **full background R session** purely to shell out to `docker`; when that ran
+  on a `{crew}`/`{mirai}` worker, the nested R process could be orphaned or
+  crash its parent worker (`could not start R ... crashed or was killed`),
+  which aborted `tar_make()` and SIGKILLed in-flight LANDIS containers
+  (exit 137, mid-run). `processx` simply `exec()`s the docker CLI — the same
+  lightweight child as the existing `docker stats` polls — eliminating that
+  interaction. Behaviour is otherwise unchanged: `docker run` stays in the
+  foreground (so the exit status is the container's), `--rm` still
+  auto-removes, the post-completion watchdog and resource logging are
+  identical, and the container exit code is read via `processx`'s
+  `get_exit_status()`.
+
 # landisutils 0.0.33
 
 ## Early-stopping convergence criteria in `calibrate_dynamic_fire()`

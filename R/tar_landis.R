@@ -583,16 +583,25 @@ landis_run_docker <- function(
     scenario_file
   )
 
-  ## Run docker in a background R process so we can poll docker stats from the main thread.
+  ## Run docker as a direct child process so we can poll docker stats from the
+  ## main thread. We use `processx::process` (which exec()s the docker CLI)
+  ## rather than `callr::r_bg` (which forks a *full R session*). A nested R
+  ## session launched from inside a `{crew}`/`{mirai}` worker can be orphaned or
+  ## crash the worker when crew recycles/duplicates it ("could not start R");
+  ## the docker CLI child is the same lightweight kind of process as the
+  ## `docker stats` calls below and avoids that interaction entirely. `docker
+  ## run` stays in the foreground (no `-d`), so the CLI's exit status is the
+  ## container's exit status and `--rm` still auto-removes the container.
   t_start <- proc.time()
   stdout_log <- fs::path(log_dir, "docker_stdout.log")
   stderr_log <- fs::path(log_dir, "docker_stderr.log")
 
-  docker_proc <- callr::r_bg(
-    func = function(docker_args, stdout_log, stderr_log) {
-      system2("docker", docker_args, stdout = stdout_log, stderr = stderr_log, wait = TRUE)
-    },
-    args = list(docker_args = docker_args, stdout_log = stdout_log, stderr_log = stderr_log)
+  docker_proc <- processx::process$new(
+    command = "docker",
+    args = docker_args,
+    stdout = stdout_log,
+    stderr = stderr_log,
+    cleanup = TRUE
   )
 
   ## Poll docker stats every 2 s, tracking peak memory across samples.
@@ -661,7 +670,8 @@ landis_run_docker <- function(
     Sys.sleep(2)
   }
 
-  rc <- docker_proc$get_result()
+  docker_proc$wait()
+  rc <- docker_proc$get_exit_status()
   ## If we forced a stop after completion, treat as success (the sim itself
   ## finished cleanly; exit code 143 from SIGTERM or 137 from SIGKILL is the
   ## watchdog firing, not a real failure).
