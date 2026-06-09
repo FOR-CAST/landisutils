@@ -36,8 +36,13 @@ sub-directory. Created if missing.}
 }
 \value{
 List with \code{best_params} (named numeric), \code{objective} (scalar),
-\code{deoptim} (full DEoptim return), \code{trace_path} (CSV path), \code{cfg} (echo),
-\code{pool_image} / \code{pool_digest} (provenance; NA when no pool was started).
+\code{deoptim} (full DEoptim return), \code{trace_path} (per-iter best-value CSV
+path), \code{trial_trace_path} (per-trial loss-decomposition CSV path, with
+one row per \code{objfn} evaluation; columns: \code{wall_clock_iso}, \code{pid},
+\verb{par_<name>...}, \code{total}, \verb{comp_<name>...}, \verb{w_<name>...},
+\verb{weighted_<name>...}. Useful for plotting how DEoptim trades off the
+four loss components over iterations.), \code{cfg} (echo), \code{pool_image} /
+\code{pool_digest} (provenance; NA when no pool was started).
 }
 \description{
 Sets up a warm Docker pool (for the \code{landis} simulator on Docker) and a FORK

@@ -1762,8 +1762,13 @@ sim_mock <- function(
 #'   sub-directory. Created if missing.
 #'
 #' @returns List with `best_params` (named numeric), `objective` (scalar),
-#'   `deoptim` (full DEoptim return), `trace_path` (CSV path), `cfg` (echo),
-#'   `pool_image` / `pool_digest` (provenance; NA when no pool was started).
+#'   `deoptim` (full DEoptim return), `trace_path` (per-iter best-value CSV
+#'   path), `trial_trace_path` (per-trial loss-decomposition CSV path, with
+#'   one row per `objfn` evaluation; columns: `wall_clock_iso`, `pid`,
+#'   `par_<name>...`, `total`, `comp_<name>...`, `w_<name>...`,
+#'   `weighted_<name>...`. Useful for plotting how DEoptim trades off the
+#'   four loss components over iterations.), `cfg` (echo), `pool_image` /
+#'   `pool_digest` (provenance; NA when no pool was started).
 #'
 #' @family Dynamic Fire calibration helpers
 #'
@@ -1872,6 +1877,17 @@ calibrate_dynamic_fire <- function(observed_targets_path, scenario_template, cfg
     }
   }
 
+  ## Per-trial loss-component CSV. Each worker (FORK child + main) appends to
+  ## its own file keyed by PID so concurrent writes don't collide; the files
+  ## are concatenated into `trial_trace.csv` after DEoptim returns. The trace
+  ## captures (par_vec, total, components) for every objfn evaluation, which
+  ## downstream visualisations can use to plot per-component loss evolution
+  ## (not just the per-iter best total that DEoptim already records).
+  trial_trace_dir <- fs::dir_create(fs::path(
+    out_dir,
+    sprintf("trial_trace_%s", format(Sys.time(), "%Y%m%d_%H%M%S"))
+  ))
+
   objfn <- function(par_vec) {
     names(par_vec) <- par_names
     pool_idx <- if (!is.null(pool)) {
@@ -1891,7 +1907,18 @@ calibrate_dynamic_fire <- function(observed_targets_path, scenario_template, cfg
         method = method
       )
     })
-    loss_from_stats(reps, observed, weights)$total
+    .loss <- loss_from_stats(reps, observed, weights)
+    ## Append a row to this worker's trial-trace CSV. Header is written
+    ## lazily on the first write of each PID.
+    .write_trial_trace_row(
+      dir = trial_trace_dir,
+      par_vec = par_vec,
+      par_names = par_names,
+      total = .loss$total,
+      components = .loss$components,
+      weights = .loss$weights
+    )
+    .loss$total
   }
 
   control_args <- list(
@@ -1947,13 +1974,85 @@ calibrate_dynamic_fire <- function(observed_targets_path, scenario_template, cfg
     row.names = FALSE
   )
 
+  ## Merge per-worker trial traces into a single CSV. Workers may have produced
+  ## zero rows (mock simulator, FORK initialisation) which we tolerate.
+  trial_trace_path <- fs::path(
+    out_dir,
+    sprintf("trial_trace_%s.csv", format(Sys.time(), "%Y%m%d_%H%M%S"))
+  )
+  worker_files <- fs::dir_ls(trial_trace_dir, glob = "*.csv")
+  if (length(worker_files) > 0L) {
+    .merge_trial_trace(files = worker_files, out_path = trial_trace_path)
+  } else {
+    trial_trace_path <- NA_character_
+  }
+  ## Best-effort cleanup of the per-worker scratch dir.
+  tryCatch(fs::dir_delete(trial_trace_dir), error = function(e) invisible(NULL))
+
   list(
     best_params = best_params,
     objective = as.numeric(res$optim$bestval),
     deoptim = res,
     trace_path = as.character(trace_path),
+    trial_trace_path = as.character(trial_trace_path),
     cfg = cfg,
     pool_image = if (!is.null(pool)) pool$image else NA_character_,
     pool_digest = if (!is.null(pool)) pool$digest else NA_character_
   )
+}
+
+## Append a single row of per-trial loss-decomposition data to this worker's
+## sidecar CSV. Header is written lazily on first write per PID so concurrent
+## FORK workers don't collide.
+.write_trial_trace_row <- function(dir, par_vec, par_names, total, components, weights) {
+  pid <- Sys.getpid()
+  f <- fs::path(dir, sprintf("worker_%d.csv", pid))
+  comp_names <- names(components)
+  weight_vals <- as.numeric(weights[comp_names])
+  weighted <- as.numeric(components) * weight_vals
+  ## Row schema: wall_clock_iso, pid, par_<name>..., total, comp_<name>..., w_<name>..., weighted_<name>...
+  row <- c(
+    list(
+      wall_clock_iso = format(Sys.time(), "%Y-%m-%dT%H:%M:%OS3%z"),
+      pid = pid
+    ),
+    stats::setNames(as.list(as.numeric(par_vec[par_names])), paste0("par_", par_names)),
+    list(total = total),
+    stats::setNames(as.list(as.numeric(components)), paste0("comp_", comp_names)),
+    stats::setNames(as.list(weight_vals), paste0("w_", comp_names)),
+    stats::setNames(as.list(weighted), paste0("weighted_", comp_names))
+  )
+  is_new <- !fs::file_exists(f)
+  utils::write.table(
+    as.data.frame(row, stringsAsFactors = FALSE),
+    file = f,
+    sep = ",",
+    row.names = FALSE,
+    col.names = is_new,
+    append = !is_new,
+    quote = FALSE
+  )
+  invisible(NULL)
+}
+
+## Merge per-worker trial-trace CSVs into a single CSV, in wall-clock order
+## (approximate DEoptim evaluation order). Each file keeps its own header; we
+## use the first non-empty file's header as the reference.
+.merge_trial_trace <- function(files, out_path) {
+  dfs <- lapply(files, function(f) {
+    tryCatch(utils::read.csv(f, stringsAsFactors = FALSE), error = function(e) NULL)
+  })
+  dfs <- dfs[!vapply(dfs, is.null, logical(1))]
+  if (length(dfs) == 0L) {
+    return(invisible(NULL))
+  }
+  ref_cols <- colnames(dfs[[1]])
+  dfs <- lapply(dfs, function(d) d[, ref_cols, drop = FALSE])
+  merged <- do.call(rbind, dfs)
+  ## Sort by wall-clock if column present; otherwise leave as worker-ordered.
+  if ("wall_clock_iso" %in% colnames(merged)) {
+    merged <- merged[order(merged$wall_clock_iso), , drop = FALSE]
+  }
+  utils::write.csv(merged, out_path, row.names = FALSE)
+  invisible(out_path)
 }
