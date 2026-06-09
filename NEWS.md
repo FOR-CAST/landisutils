@@ -1,3 +1,21 @@
+# landisutils 0.0.35
+
+## Global per-cell BioSIM monthly cache
+
+* `prep_monthly_weather_biosim()` gains a `ref_grid` argument. When supplied with a fixed reference
+  grid (e.g. a region-wide raster), the monthly BioSIM pull is cached by the grid's STABLE GLOBAL cell
+  ids in one shared, accumulating store -- so overlapping / nested study areas reuse cells already
+  fetched and only pull the rest (run a district, then a landscape unit within it fetches nothing).
+  Without `ref_grid` the previous per-study-area (elevatr `z`) behaviour is unchanged.
+* The store is climate-only (keyed by `CellID`); ecoregion grouping is applied at assemble time:
+  `assemble_climate_library_file_monthly()` gains `cell_eco` (a `CellID -> EcoID` map) and `cell_ids`
+  (filter to one study area's cells). `get_clim_monthly()`'s public behaviour is unchanged; its BioSIM
+  fetch is factored into an internal helper shared with the new path.
+* Internal: the batch-x-year pull now uses `purrr::map2()` (sequential within a call) rather than
+  `furrr::future_map2()` -- the orchestrator (targets/crew) owns cross-branch parallelism, and an
+  internal furrr fan-out under a parallel ambient plan overwhelmed the shared BioSIM web service into
+  an uninterruptible J4R socket hang.
+
 # landisutils 0.0.34
 
 ## `landis_run_docker()` no longer spawns a nested R session

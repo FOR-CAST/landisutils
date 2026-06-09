@@ -2,7 +2,7 @@
 % Please edit documentation in R/climate_monthly_biosim.R
 \name{get_clim_monthly}
 \alias{get_clim_monthly}
-\title{Fetch a single year of monthly BioSIM weather for one location batch}
+\title{Fetch + cache one year of monthly BioSIM weather for one location batch (per-study-area store)}
 \usage{
 get_clim_monthly(
   locations_batch,
@@ -14,80 +14,26 @@ get_clim_monthly(
 )
 }
 \arguments{
-\item{locations_batch}{list whose first element is a data frame with columns
-\code{ID}, \code{Latitude}, \code{Longitude}, \code{Elevation}, \code{EcoID}, \code{BatchID}. Typically
-one element of \code{\link[=create_locations_df]{create_locations_df()}}'s output, wrapped in a list.}
+\item{locations_batch}{list whose first element is a data frame with \code{ID}, \code{Latitude}, \code{Longitude},
+\code{Elevation}, \code{EcoID}, \code{BatchID} (one element of \code{\link[=create_locations_df]{create_locations_df()}}'s output, wrapped in a list).}
 
 \item{year}{integer single calendar year to fetch.}
 
-\item{studyArea_hash}{character. Short hash of the study-area object (see
-\code{.studyArea_hash()}) used as a cache subdirectory so that distinct study
-areas don't collide.}
+\item{studyArea_hash}{character. Short study-area hash used as a cache subdirectory.}
 
-\item{path}{character. Directory under which the \verb{Climatic_Monthly/} arrow
-dataset is written. Default uses the package climate cache
-(\code{getOption("landisutils.cache.path")}).}
+\item{path}{character. Directory for the \verb{Climatic_Monthly/} dataset (default: package climate cache).}
 
-\item{rcp}{character. BioSIM representative concentration pathway. One of
-\code{"CONSTANT_CLIMATE"}, \code{"RCP45"}, \code{"RCP85"}. Default \code{"RCP45"}.}
-
-\item{clim_model}{character. BioSIM climate model. One of \code{"RCM4"},
-\code{"GCM4"}, \code{"Hadley"}. Default \code{"RCM4"}.}
+\item{rcp, clim_model}{BioSIM scenario (see \code{\link[=get_clim_daily]{get_clim_daily()}} for the choice sets).}
 }
 \value{
 Path (character) to the partition CSV for \verb{(year, BatchID)}.
 }
 \description{
-Wraps \code{\link[BioSIM:generateWeather]{BioSIM::generateWeather()}} for the \code{Climatic_Monthly} and
-\code{ClimaticWind_Monthly} models, fetching one calendar year for the cells in
-\code{locations_batch[[1]]}. Wind direction is summarised from the model's 36
-directional-frequency columns (\code{W0}, \code{W10}, ..., \code{W350}) into a single
-weighted circular mean (\code{WndD}, degrees from-direction). Output is appended
-to an Arrow CSV dataset under
-\verb{path/Climatic_Monthly/<studyArea_hash>/<rcp>_<clim_model>/}, partitioned by
-\code{YEAR}/\code{BatchID}. The function is intended to be run as a dynamic target
-across many \verb{(batch, year)} combinations; existing partition files are
-detected via \code{file.exists()} and skipped, so re-runs are cheap.
-}
-\details{
-For years within BioSIM's observational range, \code{rcp} and \code{clim_model} have
-no effect on the returned data, but they do still namespace the cache.
-For future years they select the CMIP5-era projection (see
-\code{\link[=get_clim_daily]{get_clim_daily()}} for the choice sets).
-
-Rate-limiting against the BioSIM web service is the \strong{caller's}
-responsibility - cap parallel workers (e.g. \code{future::plan(multisession, workers = 4)}) or stagger orchestrator calls.
-This function performs no internal throttling.
-}
-\section{Topographic considerations}{
-
-The climate data sources used by this package (BioSIM, Daymet, TerraClim)
-are \strong{not PRISM-derived}.
-PRISM (\url{https://prism.oregonstate.edu/}) applies topographically-aware
-interpolation (slope, aspect, elevation, coastal proximity, temperature
-inversions) when downscaling station observations to a grid
-(Daly et al. 2008); the sources wrapped here use simpler interpolation
-schemes that can produce \strong{large discrepancies in areas of complex
-topography} (mountainous terrain, steep elevation gradients, rain
-shadows): inter-product differences of 5-60\% in annual precipitation
-(Henn et al. 2018) and >6 \eqn{^\circ}C in temperature (Walton & Hall
-2018) have been documented in the western US.
-Carefully evaluate the suitability of the chosen source for your study
-area, especially in topographically heterogeneous landscapes.
-}
-
-\references{
-Daly, C., Halbleib, M., Smith, J.I., Gibson, W.P., Doggett, M.K.,
-Taylor, G.H., Curtis, J., & Pasteris, P.P. (2008). Physiographically
-sensitive mapping of climatological temperature and precipitation across
-the conterminous United States. \emph{International Journal of Climatology},
-28(15), 2031-2064. \doi{10.1002/joc.1688}
-
-Henn, B., Newman, A.J., Livneh, B., Daly, C., & Lundquist, J.D. (2018).
-An assessment of differences in gridded precipitation datasets in complex terrain.
-\emph{Journal of Hydrology}, 556, 1205-1219. \doi{10.1016/j.jhydrol.2017.03.008}
+Wraps \code{\link[=.fetch_clim_monthly_batch]{.fetch_clim_monthly_batch()}} and writes the result to an Arrow CSV dataset under
+\verb{path/Climatic_Monthly/<studyArea_hash>/<rcp>_<clim_model>/}, partitioned by \code{YEAR}/\code{BatchID}; existing
+partitions are detected via \code{file.exists()} and skipped, so re-runs are cheap. For the SHARED global-id
+store (cross-study-area reuse) use \code{\link[=prep_monthly_weather_biosim]{prep_monthly_weather_biosim()}}'s \code{ref_grid} path instead.
 }
 \seealso{
-\code{\link[=get_elevation_rast]{get_elevation_rast()}}, \code{\link[=create_locations_df]{create_locations_df()}},
-\code{\link[=assemble_climate_library_file_monthly]{assemble_climate_library_file_monthly()}}
+\code{\link[=create_locations_df]{create_locations_df()}}, \code{\link[=assemble_climate_library_file_monthly]{assemble_climate_library_file_monthly()}}
 }

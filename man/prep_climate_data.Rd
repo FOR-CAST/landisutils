@@ -27,6 +27,7 @@ prep_monthly_weather_biosim(
   id = NULL,
   batch_size = 1000,
   z = 9,
+  ref_grid = NULL,
   rcp = "RCP45",
   clim_model = "RCM4"
 )
@@ -77,6 +78,12 @@ CMIP5)}.}
 \item{clim_model}{character. BioSIM climate model. One of \code{"RCM4"},
 \code{"GCM4"}, or \code{"Hadley"}. Default \code{"RCM4"}. Only used by the BioSIM
 pipelines.}
+
+\item{ref_grid}{optional fixed reference \code{SpatRaster} for the GLOBAL per-cell cache. Its cell numbers
+are taken as STABLE GLOBAL ids and its cell VALUES are read as the BioSIM elevation (\code{elevM}) -- so it
+MUST carry elevation values (e.g. a DEM resampled onto the grid). When supplied, the monthly pull is
+cached by these global ids in one shared, accumulating store, so overlapping / nested study areas
+reuse cells already fetched. When \code{NULL} (default), the per-study-area elevatr grid (\code{z}) is used.}
 
 \item{obs_ts_dataset}{character. climr observational time-series dataset.
 One of \code{"climatena"} or \code{"cru.gpcc"}. Default \code{"climatena"}. Only used

@@ -4,7 +4,13 @@
 \alias{assemble_climate_library_file_monthly}
 \title{Assemble LANDIS-II Climate Library wide-format table from a monthly BioSIM Arrow dataset}
 \usage{
-assemble_climate_library_file_monthly(dataset_path, vars, id_col = "EcoID")
+assemble_climate_library_file_monthly(
+  dataset_path,
+  vars,
+  id_col = "EcoID",
+  cell_eco = NULL,
+  cell_ids = NULL
+)
 }
 \arguments{
 \item{dataset_path}{character. Path to the \code{Climatic_Monthly} Arrow dataset
@@ -13,8 +19,14 @@ directory (containing \code{YEAR=...}/\code{BatchID=...}/\verb{part-0.csv} parti
 \item{vars}{character vector of BioSIM column names to retain (e.g.
 \code{c("TotalPrcp", "MeanTmin", "MeanTmax", "WndS", "WndD")}).}
 
-\item{id_col}{character. Name of the ecoregion-id column in the dataset.
-Default \code{"EcoID"}.}
+\item{id_col}{character. Name of the ecoregion-id column. Default \code{"EcoID"}.}
+
+\item{cell_eco}{optional data.frame mapping \code{CellID} -> ecoregion id (\code{id_col}). Supply for the GLOBAL
+per-cell store (which is climate-only, no \code{EcoID}): the ecoregion grouping is study-area-specific and
+is applied here by joining this map. When \code{NULL}, the dataset is assumed to already carry \code{id_col}.}
+
+\item{cell_ids}{optional integer vector of \code{CellID}s to retain (the calling study area's cells); used
+to filter a shared global store down to one study area before summarising. \code{NULL} keeps all cells.}
 }
 \value{
 \code{tbl_df} with columns \code{Year}, \code{Month}, \code{Variable}, and one
