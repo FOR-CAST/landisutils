@@ -282,6 +282,11 @@ prepMinRelativeBiomass <- function(df = NULL) {
       paste0(val, "%")
     })
     out <- cbind(erg, mrb) |> t() |> data.frame()
+    ## Prepend a leading label column. insertMinRelativeBiomass() formats this table via
+    ## .collapseRow(df, i) = df[i, -1], which DROPS the first column (the ShadeClass/label slot, since
+    ## the shade-class prefixes 1..5 are hard-coded in the output). Without a label column here, that
+    ## drop would silently remove the FIRST ECOREGION from the header and every shade row.
+    out <- cbind(rowlabel = rownames(out), out)
   }
 
   return(out)

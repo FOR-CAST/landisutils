@@ -135,3 +135,15 @@ testthat::test_that("SpinupCohorts / SpinupMortalityFraction are optional (omitt
   testthat::expect_length(grep("^SpinupCohorts", present), 1L)
   testthat::expect_length(grep("^SpinupMortalityFraction", present), 1L)
 })
+
+test_that("prepMinRelativeBiomass -> insertMinRelativeBiomass retains every ecoregion (no leading-ecoregion drop)", {
+  ## Regression: insertMinRelativeBiomass() formats via .collapseRow(df, i) = df[i, -1], dropping the
+  ## first column. prepMinRelativeBiomass() must therefore emit a leading LABEL column, else the first
+  ## ECOREGION is silently dropped from the table header and every shade-class row (observed: a Biomass
+  ## Succession run aborting with "Minimum relative biomass has not been defined for ecoregion 1").
+  df <- data.frame(ecoregionGroup = 1:4, X1 = 0.15, X2 = 0.25, X3 = 0.35, X4 = 0.45, X5 = 0.55)
+  out <- prepMinRelativeBiomass(df)
+  hdr <- insertMinRelativeBiomass(out)[[4]] ## the ecoregion-id header line
+  toks <- suppressWarnings(as.integer(strsplit(trimws(hdr), "\\s+")[[1]]))
+  testthat::expect_setequal(toks[!is.na(toks)], 1:4)
+})
