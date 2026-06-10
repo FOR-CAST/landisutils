@@ -1,5 +1,21 @@
 # Changelog
 
+## landisutils 0.0.37
+
+### Fix: `MinRelativeBiomass` dropped its first ecoregion
+
+- [`prepMinRelativeBiomass()`](https://for-cast.github.io/landisutils/reference/prepMinRelativeBiomass.md)
+  now emits a leading label column.
+  [`insertMinRelativeBiomass()`](https://for-cast.github.io/landisutils/reference/insertMinRelativeBiomass.md)
+  formats the table with `.collapseRow(df, i) = df[i, -1]`, which drops
+  the first column (the ShadeClass/label slot, since the shade-class
+  prefixes `1..5` are hard-coded in the output). Without a leading label
+  column the drop removed the FIRST ECOREGION from the table header and
+  every shade-class row, so a Biomass Succession run aborted with
+  “Minimum relative biomass has not been defined for ecoregion 1”
+  whenever the active ecoregion set started at the lowest map code.
+  Added a `prep -> insert` regression test.
+
 ## landisutils 0.0.36
 
 ### Per-trial loss-decomposition trace in Dynamic Fire calibration
