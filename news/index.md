@@ -1,5 +1,17 @@
 # Changelog
 
+## landisutils 0.0.38
+
+### Fix: corrupt BioSIM `BUI` values reaching downstream weather summaries
+
+- [`get_fwi_daily()`](https://for-cast.github.io/landisutils/reference/get_fwi_daily.md)
+  now recomputes `BUI` from `DMC`/`DC` with `cffdrs`, before (and as
+  input to) the `FWI` recomputation. BioSIM `FWI_Daily` occasionally
+  returns corrupt `BUI` (up to ~5.8e5, with `DMC` up to ~2.9e5);
+  previously only `FFMC`/`ISI`/`FWI` were corrected, so corrupt `BUI`
+  propagated into e.g. the Dynamic Fire weather database (where `BUI` is
+  a column).
+
 ## landisutils 0.0.37
 
 ### Fix: `MinRelativeBiomass` dropped its first ecoregion

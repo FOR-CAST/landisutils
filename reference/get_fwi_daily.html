@@ -19,7 +19,7 @@ are cheap."><meta property="og:image" content="https://for-cast.github.io/landis
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.37</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.38</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -112,12 +112,12 @@ is written. Default uses the package climate cache
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>BioSIM's <code>FWI_Daily</code> model is known to occasionally produce implausibly
-large <code>FFMC</code>, <code>ISI</code>, and <code>FWI</code> values
+large <code>FFMC</code>, <code>ISI</code>, <code>FWI</code>, and <code>BUI</code> values
 (see <a href="https://github.com/RNCan/BioSimClient_R/issues/14" class="external-link">https://github.com/RNCan/BioSimClient_R/issues/14</a>). To work around
 this, <code>FFMC</code> values \(&gt;\) 101 are recomputed from the underlying
-<code>T</code>/<code>RH</code>/<code>WS</code>/<code>Prcp</code> columns using <span class="pkg">cffdrs</span>, and <code>ISI</code> and <code>FWI</code> are
-then recomputed from the corrected <code>FFMC</code>. The unused <code>DSR</code> column is
-dropped.</p>
+<code>T</code>/<code>RH</code>/<code>WS</code>/<code>Prcp</code> columns using <span class="pkg">cffdrs</span>, <code>BUI</code> is recomputed from
+<code>DMC</code>/<code>DC</code>, and <code>ISI</code> and <code>FWI</code> are then recomputed from the corrected
+<code>FFMC</code> and <code>BUI</code>. The unused <code>DSR</code> column is dropped.</p>
 <p>Rate-limiting against the BioSIM web service is the <strong>caller's</strong>
 responsibility - cap parallel workers (e.g. <code>future::plan(multisession, workers = 4)</code>) or stagger orchestrator calls. A small random delay
 (5-30 s) is applied per call to spread BioSIM hits when many parallel

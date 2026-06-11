@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.37</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.38</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -40,6 +40,14 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.38" id="landisutils-0038">landisutils 0.0.38<a class="anchor" aria-label="anchor" href="#landisutils-0038"></a></h2>
+<div class="section level3">
+<h3 id="fix-corrupt-biosim-bui-values-reaching-downstream-weather-summaries-0-0-38">Fix: corrupt BioSIM <code>BUI</code> values reaching downstream weather summaries<a class="anchor" aria-label="anchor" href="#fix-corrupt-biosim-bui-values-reaching-downstream-weather-summaries-0-0-38"></a></h3>
+<ul><li>
+<code><a href="../reference/get_fwi_daily.html">get_fwi_daily()</a></code> now recomputes <code>BUI</code> from <code>DMC</code>/<code>DC</code> with <code>cffdrs</code>, before (and as input to) the <code>FWI</code> recomputation. BioSIM <code>FWI_Daily</code> occasionally returns corrupt <code>BUI</code> (up to ~5.8e5, with <code>DMC</code> up to ~2.9e5); previously only <code>FFMC</code>/<code>ISI</code>/<code>FWI</code> were corrected, so corrupt <code>BUI</code> propagated into e.g. the Dynamic Fire weather database (where <code>BUI</code> is a column).</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.37" id="landisutils-0037">landisutils 0.0.37<a class="anchor" aria-label="anchor" href="#landisutils-0037"></a></h2>
 <div class="section level3">

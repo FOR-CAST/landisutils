@@ -62,12 +62,12 @@ Path (character) to the partition CSV for `(year, BatchID)`.
 ## Details
 
 BioSIM's `FWI_Daily` model is known to occasionally produce implausibly
-large `FFMC`, `ISI`, and `FWI` values (see
+large `FFMC`, `ISI`, `FWI`, and `BUI` values (see
 <https://github.com/RNCan/BioSimClient_R/issues/14>). To work around
 this, `FFMC` values \\\>\\ 101 are recomputed from the underlying
-`T`/`RH`/`WS`/`Prcp` columns using cffdrs, and `ISI` and `FWI` are then
-recomputed from the corrected `FFMC`. The unused `DSR` column is
-dropped.
+`T`/`RH`/`WS`/`Prcp` columns using cffdrs, `BUI` is recomputed from
+`DMC`/`DC`, and `ISI` and `FWI` are then recomputed from the corrected
+`FFMC` and `BUI`. The unused `DSR` column is dropped.
 
 Rate-limiting against the BioSIM web service is the **caller's**
 responsibility - cap parallel workers (e.g.
