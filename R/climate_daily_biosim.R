@@ -674,12 +674,12 @@ assemble_climate_library_file_scf <- function(dataset_path, vars, id_col = "EcoI
 #' are cheap.
 #'
 #' BioSIM's `FWI_Daily` model is known to occasionally produce implausibly
-#' large `FFMC`, `ISI`, and `FWI` values
+#' large `FFMC`, `ISI`, `FWI`, and `BUI` values
 #' (see <https://github.com/RNCan/BioSimClient_R/issues/14>). To work around
 #' this, `FFMC` values \eqn{>} 101 are recomputed from the underlying
-#' `T`/`RH`/`WS`/`Prcp` columns using \pkg{cffdrs}, and `ISI` and `FWI` are
-#' then recomputed from the corrected `FFMC`. The unused `DSR` column is
-#' dropped.
+#' `T`/`RH`/`WS`/`Prcp` columns using \pkg{cffdrs}, `BUI` is recomputed from
+#' `DMC`/`DC`, and `ISI` and `FWI` are then recomputed from the corrected
+#' `FFMC` and `BUI`. The unused `DSR` column is dropped.
 #'
 #' Rate-limiting against the BioSIM web service is the **caller's**
 #' responsibility - cap parallel workers (e.g. `future::plan(multisession,
@@ -763,6 +763,7 @@ get_fwi_daily <- function(
     ## FFMC must be corrected first because ISI (and hence FWI) is derived from it.
     .fine_fuel_moisture_code <- .cffdrs_fn("fine_fuel_moisture_code")
     .initial_spread_index <- .cffdrs_fn("initial_spread_index")
+    .buildup_index <- .cffdrs_fn("buildup_index")
     .fire_weather_index <- .cffdrs_fn("fire_weather_index")
 
     FWI_fixed <- FWI_cleaned |>
@@ -781,6 +782,9 @@ get_fwi_daily <- function(
       ) |>
       dplyr::mutate(
         ISI = .initial_spread_index(FFMC, WS),
+        ## BUI must be recomputed before FWI: BioSIM occasionally returns corrupt BUI
+        ## (up to ~5.8e5), and FWI is derived from it. cffdrs recomputes BUI from DMC/DC.
+        BUI = .buildup_index(DMC, DC),
         FWI = .fire_weather_index(ISI, BUI),
         ## TODO: should also correct DSR; not used downstream so dropped
         DSR = NULL

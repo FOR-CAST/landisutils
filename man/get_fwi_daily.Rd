@@ -44,12 +44,12 @@ are cheap.
 }
 \details{
 BioSIM's \code{FWI_Daily} model is known to occasionally produce implausibly
-large \code{FFMC}, \code{ISI}, and \code{FWI} values
+large \code{FFMC}, \code{ISI}, \code{FWI}, and \code{BUI} values
 (see \url{https://github.com/RNCan/BioSimClient_R/issues/14}). To work around
 this, \code{FFMC} values \eqn{>} 101 are recomputed from the underlying
-\code{T}/\code{RH}/\code{WS}/\code{Prcp} columns using \pkg{cffdrs}, and \code{ISI} and \code{FWI} are
-then recomputed from the corrected \code{FFMC}. The unused \code{DSR} column is
-dropped.
+\code{T}/\code{RH}/\code{WS}/\code{Prcp} columns using \pkg{cffdrs}, \code{BUI} is recomputed from
+\code{DMC}/\code{DC}, and \code{ISI} and \code{FWI} are then recomputed from the corrected
+\code{FFMC} and \code{BUI}. The unused \code{DSR} column is dropped.
 
 Rate-limiting against the BioSIM web service is the \strong{caller's}
 responsibility - cap parallel workers (e.g. \code{future::plan(multisession, workers = 4)}) or stagger orchestrator calls. A small random delay
