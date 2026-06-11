@@ -97,6 +97,19 @@ landis_run_docker(
 Named list with `exit_code` (integer), `elapsed_sec` (numeric), and
 `peak_mem_bytes` (numeric), returned invisibly.
 
+## Details
+
+**Single container per replicate.** The container name is derived
+deterministically from the (real) scenario directory, so docker's own
+name uniqueness acts as a cross-worker mutex: if the same replicate is
+dispatched to two workers at once (for example when `targets` re-runs a
+branch after a false-positive worker crash while the original container
+is still running), the second call cannot start a parallel container and
+instead *adopts* the running one: it waits for that container to finish
+(applying the same post-completion watchdog) and returns its result. A
+duplicate dispatch thus becomes a harmless wait rather than two `dotnet`
+processes truncating each other's outputs.
+
 ## See also
 
 [`landis_find_docker()`](https://for-cast.github.io/landisutils/reference/landis_find_docker.md),

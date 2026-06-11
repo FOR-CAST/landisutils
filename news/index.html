@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.38</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.39</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -40,6 +40,16 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.39" id="landisutils-0039">landisutils 0.0.39<a class="anchor" aria-label="anchor" href="#landisutils-0039"></a></h2>
+<div class="section level3">
+<h3 id="fix-duplicate-dispatch-corruption-in-landis-ii-run-helpers-0-0-39">Fix: duplicate-dispatch corruption in LANDIS-II run helpers<a class="anchor" aria-label="anchor" href="#fix-duplicate-dispatch-corruption-in-landis-ii-run-helpers-0-0-39"></a></h3>
+<ul><li>
+<code><a href="../reference/landis_run_docker.html">landis_run_docker()</a></code> now derives each container’s name deterministically from the scenario directory and relies on docker’s name uniqueness as a cross-worker mutex. If the same replicate is dispatched to two workers at once (for example when <code>targets</code> re-runs a branch after a false-positive worker crash while the original container is still running), the second call no longer starts a parallel container that <code>O_TRUNC</code>s the first run’s half-written outputs. Instead it adopts the in-progress container, waits for it to finish (applying the post-completion watchdog so an orphan whose owning worker died cannot hang), and returns that run’s result, so a duplicate dispatch is reported as success rather than destroying the replicate.</li>
+<li>
+<code><a href="../reference/landis_run_local.html">landis_run_local()</a></code> serializes replicate runs with an advisory <code>filelock</code> lock on the rep’s <code>log/run.lock</code>, preventing two concurrent <code>dotnet</code> processes from corrupting the same directory. Adds <code>filelock</code> to Imports.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.38" id="landisutils-0038">landisutils 0.0.38<a class="anchor" aria-label="anchor" href="#landisutils-0038"></a></h2>
 <div class="section level3">

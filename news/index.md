@@ -1,5 +1,26 @@
 # Changelog
 
+## landisutils 0.0.39
+
+### Fix: duplicate-dispatch corruption in LANDIS-II run helpers
+
+- [`landis_run_docker()`](https://for-cast.github.io/landisutils/reference/landis_run_docker.md)
+  now derives each container’s name deterministically from the scenario
+  directory and relies on docker’s name uniqueness as a cross-worker
+  mutex. If the same replicate is dispatched to two workers at once (for
+  example when `targets` re-runs a branch after a false-positive worker
+  crash while the original container is still running), the second call
+  no longer starts a parallel container that `O_TRUNC`s the first run’s
+  half-written outputs. Instead it adopts the in-progress container,
+  waits for it to finish (applying the post-completion watchdog so an
+  orphan whose owning worker died cannot hang), and returns that run’s
+  result, so a duplicate dispatch is reported as success rather than
+  destroying the replicate.
+- [`landis_run_local()`](https://for-cast.github.io/landisutils/reference/landis_run_local.md)
+  serializes replicate runs with an advisory `filelock` lock on the
+  rep’s `log/run.lock`, preventing two concurrent `dotnet` processes
+  from corrupting the same directory. Adds `filelock` to Imports.
+
 ## landisutils 0.0.38
 
 ### Fix: corrupt BioSIM `BUI` values reaching downstream weather summaries

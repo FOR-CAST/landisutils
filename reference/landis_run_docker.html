@@ -25,7 +25,7 @@ pin runs to a specific image regardless of subsequent tag movement."><meta prope
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.38</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.39</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -158,6 +158,19 @@ timeout the container is stopped and exit codes 137/143 are remapped to
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>Named list with <code>exit_code</code> (integer), <code>elapsed_sec</code> (numeric), and
 <code>peak_mem_bytes</code> (numeric), returned invisibly.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
+    <p><strong>Single container per replicate.</strong> The container name is derived
+deterministically from the (real) scenario directory, so docker's own name
+uniqueness acts as a cross-worker mutex: if the same replicate is dispatched
+to two workers at once (for example when <code>targets</code> re-runs a branch after a
+false-positive worker crash while the original container is still running),
+the second call cannot start a parallel container and instead <em>adopts</em> the
+running one: it waits for that container to finish (applying the same
+post-completion watchdog) and returns its result. A duplicate dispatch thus
+becomes a harmless wait rather than two <code>dotnet</code> processes truncating each
+other's outputs.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
