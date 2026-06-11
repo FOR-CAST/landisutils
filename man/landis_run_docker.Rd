@@ -78,6 +78,18 @@ The image's immutable \code{sha256} digest is captured into
 \verb{<scenario_dir>/log/docker_image.log} so downstream provenance tools can
 pin runs to a specific image regardless of subsequent tag movement.
 }
+\details{
+\strong{Single container per replicate.} The container name is derived
+deterministically from the (real) scenario directory, so docker's own name
+uniqueness acts as a cross-worker mutex: if the same replicate is dispatched
+to two workers at once (for example when \code{targets} re-runs a branch after a
+false-positive worker crash while the original container is still running),
+the second call cannot start a parallel container and instead \emph{adopts} the
+running one: it waits for that container to finish (applying the same
+post-completion watchdog) and returns its result. A duplicate dispatch thus
+becomes a harmless wait rather than two \code{dotnet} processes truncating each
+other's outputs.
+}
 \seealso{
 \code{\link[=landis_find_docker]{landis_find_docker()}}, \code{\link[=landis_find]{landis_find()}}, \code{\link[=landis_run]{landis_run()}}, \code{\link[=landis_run_local]{landis_run_local()}}, \code{\link[=tar_landis]{tar_landis()}}
 

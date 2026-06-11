@@ -293,6 +293,72 @@ read_landis_resource_logs <- function(run_dir) {
   isTRUE(completion_seen) && is.finite(timeout) && !is.na(seen_at) && (now - seen_at) > timeout
 }
 
+## Is a container with exactly this name currently running? The name filter is
+## anchored (^name$) so we only ever match this replicate's container, never a
+## sibling rep whose name shares a prefix. Returns FALSE on any docker error
+## (treated as "no longer running").
+.docker_container_running <- function(name) {
+  out <- tryCatch(
+    system2(
+      "docker",
+      c("ps", "-q", "--filter", sprintf("name=^%s$", name)),
+      stdout = TRUE,
+      stderr = FALSE
+    ),
+    error = function(e) character(0)
+  )
+  length(out) > 0L && any(nzchar(trimws(out)))
+}
+
+## Has this replicate's LANDIS-II run completed? Mirrors tar_landis()'s skip
+## check: Landis-log.txt exists and records the completion marker.
+.landis_run_complete <- function(scenario_dir) {
+  log <- fs::path(scenario_dir, "Landis-log.txt")
+  fs::file_exists(log) && any(grepl("Model run is complete", readLines(log, warn = FALSE)))
+}
+
+## Adopt an in-progress container started by another worker (or orphaned by a
+## worker that was declared crashed): wait for it to exit, applying the same
+## post-completion watchdog as landis_run_docker() so that an orphan whose
+## owning worker is no longer polling cannot hang at 100% CPU in the .NET
+## shutdown path forever. `stdout_log` is the shared per-rep docker_stdout.log
+## that the owning run is writing to.
+.adopt_and_wait <- function(name, stdout_log, post_completion_timeout_sec) {
+  completion_marker <- "Model run is complete."
+  completion_seen <- FALSE
+  completion_seen_at <- NA_real_
+  stopped_for_timeout <- FALSE
+  while (.docker_container_running(name)) {
+    if (!completion_seen && fs::file_exists(stdout_log)) {
+      tail_lines <- tryCatch(
+        utils::tail(readLines(stdout_log, warn = FALSE), n = 50L),
+        error = function(e) character(0)
+      )
+      if (any(grepl(completion_marker, tail_lines, fixed = TRUE))) {
+        completion_seen <- TRUE
+        completion_seen_at <- proc.time()[["elapsed"]]
+      }
+    }
+    if (
+      !stopped_for_timeout &&
+        .watchdog_should_stop(
+          completion_seen,
+          completion_seen_at,
+          proc.time()[["elapsed"]],
+          post_completion_timeout_sec
+        )
+    ) {
+      stopped_for_timeout <- TRUE
+      tryCatch(
+        system2("docker", c("stop", "-t", "30", name), stdout = FALSE, stderr = FALSE),
+        error = function(e) NULL
+      )
+    }
+    Sys.sleep(2)
+  }
+  invisible(stopped_for_timeout)
+}
+
 #' Run a LANDIS-II simulation locally (synchronous)
 #'
 #' Runs LANDIS-II directly via `dotnet`, blocking until the simulation
@@ -327,6 +393,15 @@ landis_run_local <- function(scenario_dir, scenario_file = "scenario.txt", conso
   }
 
   log_dir <- fs::dir_create(fs::path(scenario_dir, "log"))
+
+  ## Serialize replicate runs: a duplicate dispatch (e.g. {targets} re-running a
+  ## branch after a false-positive worker crash) must never start a second
+  ## dotnet against this directory concurrently and O_TRUNC its half-written
+  ## outputs. An exclusive advisory lock blocks the duplicate until the first
+  ## run frees it. Unlike a sentinel file, the lock is released automatically if
+  ## the holder dies, so a crashed worker cannot deadlock the replicate.
+  run_lock <- filelock::lock(fs::path(log_dir, "run.lock"))
+  on.exit(if (!is.null(run_lock)) filelock::unlock(run_lock), add = TRUE)
 
   message(glue::glue("Starting LANDIS-II local run ({Sys.time()})"))
   message(glue::glue("  scenario_dir:  {scenario_dir}"))
@@ -405,6 +480,17 @@ landis_run_local <- function(scenario_dir, scenario_file = "scenario.txt", conso
 #' The image's immutable `sha256` digest is captured into
 #' `<scenario_dir>/log/docker_image.log` so downstream provenance tools can
 #' pin runs to a specific image regardless of subsequent tag movement.
+#'
+#' **Single container per replicate.** The container name is derived
+#' deterministically from the (real) scenario directory, so docker's own name
+#' uniqueness acts as a cross-worker mutex: if the same replicate is dispatched
+#' to two workers at once (for example when `targets` re-runs a branch after a
+#' false-positive worker crash while the original container is still running),
+#' the second call cannot start a parallel container and instead *adopts* the
+#' running one: it waits for that container to finish (applying the same
+#' post-completion watchdog) and returns its result. A duplicate dispatch thus
+#' becomes a harmless wait rather than two `dotnet` processes truncating each
+#' other's outputs.
 #'
 #' @param scenario_dir Character. Path to the scenario directory (resolved to
 #'   absolute before mounting).
@@ -530,15 +616,17 @@ landis_run_docker <- function(
     character(0)
   }
 
-  ## Unique name so docker stats can identify this specific container during the run.
-  ## Include PID and a random suffix to prevent collisions when multiple reps run simultaneously.
+  ## Container name is derived deterministically from the (already real-path'd)
+  ## scenario directory, so every worker handed this same replicate maps to the
+  ## SAME name. Docker enforces name uniqueness, which makes the name the
+  ## cross-worker mutex: a duplicate dispatch cannot start a second container
+  ## against this rep dir and O_TRUNC its outputs. Different reps hash to
+  ## different names and still run fully in parallel. A duplicate instead adopts
+  ## the already-running container (see the run loop below). docker stats and the
+  ## watchdog identify this rep's container by the same name.
   container_name <- paste0(
     "landis-run-",
-    format(Sys.time(), "%Y%m%d%H%M%S"),
-    "-",
-    Sys.getpid(),
-    "-",
-    sample.int(.Machine$integer.max, 1L)
+    substr(digest::digest(as.character(scenario_dir)), 1L, 16L)
   )
 
   ## Resolve resource caps (auto-raises memory based on prior peak; drops
@@ -596,108 +684,184 @@ landis_run_docker <- function(
   stdout_log <- fs::path(log_dir, "docker_stdout.log")
   stderr_log <- fs::path(log_dir, "docker_stderr.log")
 
-  docker_proc <- processx::process$new(
-    command = "docker",
-    args = docker_args,
-    stdout = stdout_log,
-    stderr = stderr_log,
-    cleanup = TRUE
-  )
-
-  ## Poll docker stats every 2 s, tracking peak memory across samples.
+  ## Run loop with cross-worker mutual exclusion (see container_name above).
   ##
-  ## Post-completion watchdog: some LANDIS-II runs (particularly long ForCS +
-  ## Dynamic Fire scenarios with many output extensions) print
-  ## "Model run is complete." but the dotnet process then hangs spinning at
-  ## 100% CPU in the .NET runtime shutdown phase. Outputs are already on disk
-  ## at that point, so we watch the stdout log for the completion marker and
-  ## SIGTERM the container `post_completion_timeout_sec` later if the process
-  ## hasn't exited on its own. The post-completion stop is treated as success
-  ## (the sim itself finished cleanly).
-  peak_mem_bytes <- 0
+  ## Normal (owner) path: start the container, poll it, break with its exit code.
+  ##
+  ## Contended path: `docker run --name` fails with a name conflict because
+  ## another worker -- or a container orphaned by a worker that was declared
+  ## crashed -- already owns this rep. We then *adopt* that run: wait for it to
+  ## finish (with the post-completion watchdog so an orphan whose owning worker
+  ## is no longer polling cannot hang forever), and once it is gone accept its
+  ## result if the rep completed, otherwise clear any leftover container and
+  ## retry as the owner. `adopt_max` bounds pathological ping-pong.
   completion_marker <- "Model run is complete."
-  completion_seen <- FALSE
-  completion_seen_at <- NA_real_
-  stopped_for_timeout <- FALSE
-  while (docker_proc$is_alive()) {
-    stats_raw <- tryCatch(
-      system2(
-        "docker",
-        c("stats", "--no-stream", "--format", "{{.MemUsage}}", container_name),
-        stdout = TRUE,
-        stderr = FALSE
-      ),
-      error = function(e) character(0)
+  rc <- NA_integer_
+  peak_mem_bytes <- 0
+  adopted <- FALSE
+  adopt_attempts <- 0L
+  adopt_max <- 10L
+  repeat {
+    peak_mem_bytes <- 0
+    docker_proc <- processx::process$new(
+      command = "docker",
+      args = docker_args,
+      stdout = stdout_log,
+      stderr = stderr_log,
+      cleanup = TRUE
     )
-    if (length(stats_raw) && nzchar(trimws(stats_raw[1L]))) {
-      peak_mem_bytes <- max(peak_mem_bytes, .parse_docker_mem_bytes(stats_raw[1L]))
-    }
-    if (!completion_seen && fs::file_exists(stdout_log)) {
-      ## Cheap tail-grep: read the file as raw lines and look for the marker.
-      ## `readLines()` with `warn = FALSE` to suppress the no-newline-at-eof
-      ## complaint that LANDIS-II's stdout occasionally triggers.
-      tail_lines <- tryCatch(
-        utils::tail(readLines(stdout_log, warn = FALSE), n = 50L),
+
+    ## Poll docker stats every 2 s, tracking peak memory across samples.
+    ##
+    ## Post-completion watchdog: some LANDIS-II runs (particularly long ForCS +
+    ## Dynamic Fire scenarios with many output extensions) print
+    ## "Model run is complete." but the dotnet process then hangs spinning at
+    ## 100% CPU in the .NET runtime shutdown phase. Outputs are already on disk
+    ## at that point, so we watch the stdout log for the completion marker and
+    ## SIGTERM the container `post_completion_timeout_sec` later if the process
+    ## hasn't exited on its own. The post-completion stop is treated as success
+    ## (the sim itself finished cleanly).
+    completion_seen <- FALSE
+    completion_seen_at <- NA_real_
+    stopped_for_timeout <- FALSE
+    while (docker_proc$is_alive()) {
+      stats_raw <- tryCatch(
+        system2(
+          "docker",
+          c("stats", "--no-stream", "--format", "{{.MemUsage}}", container_name),
+          stdout = TRUE,
+          stderr = FALSE
+        ),
         error = function(e) character(0)
       )
-      if (any(grepl(completion_marker, tail_lines, fixed = TRUE))) {
-        completion_seen <- TRUE
-        completion_seen_at <- proc.time()[["elapsed"]]
-        message(glue::glue(
-          "  [{Sys.time()}] '{completion_marker}' detected; ",
-          "post-completion watchdog armed ({post_completion_timeout_sec} s grace period)."
-        ))
+      if (length(stats_raw) && nzchar(trimws(stats_raw[1L]))) {
+        peak_mem_bytes <- max(peak_mem_bytes, .parse_docker_mem_bytes(stats_raw[1L]))
       }
-    }
-    if (
-      !stopped_for_timeout &&
-        .watchdog_should_stop(
-          completion_seen,
-          completion_seen_at,
-          proc.time()[["elapsed"]],
-          post_completion_timeout_sec
+      if (!completion_seen && fs::file_exists(stdout_log)) {
+        ## Cheap tail-grep: read the file as raw lines and look for the marker.
+        ## `readLines()` with `warn = FALSE` to suppress the no-newline-at-eof
+        ## complaint that LANDIS-II's stdout occasionally triggers.
+        tail_lines <- tryCatch(
+          utils::tail(readLines(stdout_log, warn = FALSE), n = 50L),
+          error = function(e) character(0)
         )
-    ) {
-      message(glue::glue(
-        "  [{Sys.time()}] post-completion timeout exceeded; sending docker stop to {container_name}."
-      ))
-      stopped_for_timeout <- TRUE
-      tryCatch(
-        system2("docker", c("stop", "-t", "30", container_name), stdout = FALSE, stderr = FALSE),
-        error = function(e) NULL
+        if (any(grepl(completion_marker, tail_lines, fixed = TRUE))) {
+          completion_seen <- TRUE
+          completion_seen_at <- proc.time()[["elapsed"]]
+          message(glue::glue(
+            "  [{Sys.time()}] '{completion_marker}' detected; ",
+            "post-completion watchdog armed ({post_completion_timeout_sec} s grace period)."
+          ))
+        }
+      }
+      if (
+        !stopped_for_timeout &&
+          .watchdog_should_stop(
+            completion_seen,
+            completion_seen_at,
+            proc.time()[["elapsed"]],
+            post_completion_timeout_sec
+          )
+      ) {
+        message(glue::glue(
+          "  [{Sys.time()}] post-completion timeout exceeded; sending docker stop to {container_name}."
+        ))
+        stopped_for_timeout <- TRUE
+        tryCatch(
+          system2("docker", c("stop", "-t", "30", container_name), stdout = FALSE, stderr = FALSE),
+          error = function(e) NULL
+        )
+      }
+      Sys.sleep(2)
+    }
+
+    docker_proc$wait()
+    rc <- docker_proc$get_exit_status()
+
+    ## A name conflict means another worker, or a crash-orphaned container,
+    ## already owns this rep. Docker (and podman) exit 125 and print
+    ## "is already in use" to stderr. Match on that string rather than the bare
+    ## exit code, so a genuine 125 from another cause (image not found, bad flag)
+    ## still surfaces as a real failure instead of looping to the adopt cap.
+    stderr_txt <- tryCatch(
+      paste(readLines(stderr_log, warn = FALSE), collapse = "\n"),
+      error = function(e) ""
+    )
+    name_conflict <- grepl("is already in use", stderr_txt, fixed = TRUE)
+
+    if (!name_conflict) {
+      ## We owned this run. If we forced a stop after completion, treat as
+      ## success (the sim itself finished cleanly; exit 143 from SIGTERM or 137
+      ## from SIGKILL is the watchdog firing, not a real failure).
+      if (stopped_for_timeout && rc %in% c(137L, 143L)) {
+        message(glue::glue(
+          "  [{Sys.time()}] docker exit {rc} treated as success ",
+          "(post-completion watchdog; '{completion_marker}' was logged)."
+        ))
+        rc <- 0L
+      }
+      break
+    }
+
+    adopt_attempts <- adopt_attempts + 1L
+    if (adopt_attempts > adopt_max) {
+      stop(
+        sprintf(
+          paste0(
+            "LANDIS-II Docker run for '%s' could not acquire its replicate after %d attempts ",
+            "(container name in use but the run never completes). Check logs:\n  %s"
+          ),
+          container_name,
+          adopt_max,
+          log_dir
+        ),
+        call. = FALSE
       )
     }
-    Sys.sleep(2)
+    message(glue::glue(
+      "  [{Sys.time()}] container '{container_name}' already running for this replicate; ",
+      "adopting the in-progress run (no parallel container started)."
+    ))
+    if (.docker_container_running(container_name)) {
+      .adopt_and_wait(container_name, stdout_log, post_completion_timeout_sec)
+    }
+    if (.landis_run_complete(scenario_dir)) {
+      adopted <- TRUE
+      rc <- 0L
+      break
+    }
+    ## The adopted run vanished without completing (its owner died mid-run), or a
+    ## stopped container is squatting on the name. Clear it and retry as owner.
+    tryCatch(
+      system2("docker", c("rm", "-f", container_name), stdout = FALSE, stderr = FALSE),
+      error = function(e) NULL
+    )
+    message(glue::glue(
+      "  [{Sys.time()}] adopted run for '{container_name}' did not complete; retrying as owner."
+    ))
   }
 
-  docker_proc$wait()
-  rc <- docker_proc$get_exit_status()
-  ## If we forced a stop after completion, treat as success (the sim itself
-  ## finished cleanly; exit code 143 from SIGTERM or 137 from SIGKILL is the
-  ## watchdog firing, not a real failure).
-  if (stopped_for_timeout && rc %in% c(137L, 143L)) {
-    message(glue::glue(
-      "  [{Sys.time()}] docker exit {rc} treated as success ",
-      "(post-completion watchdog; '{completion_marker}' was logged)."
-    ))
-    rc <- 0L
-  }
   elapsed_sec <- (proc.time() - t_start)[["elapsed"]]
 
-  host <- host_cpu_info()
-  writeLines(
-    c(
-      sprintf("elapsed_sec: %.1f", elapsed_sec),
-      sprintf("peak_mem_bytes: %.0f", peak_mem_bytes),
-      sprintf("host_cpu_model: %s", host$model %||% "NA"),
-      sprintf("host_cpu_cores: %s", host$n_logical %||% "NA"),
-      sprintf(
-        "host_ram_bytes: %s",
-        if (is.na(host$ram_bytes)) "NA" else sprintf("%.0f", host$ram_bytes)
-      )
-    ),
-    fs::path(log_dir, "docker_resources.log")
-  )
+  ## Only the worker that actually ran the container writes the resource log; an
+  ## adopting worker must not clobber the owner's measurements with its own
+  ## (zero) peak memory and wait-only elapsed time.
+  if (!adopted) {
+    host <- host_cpu_info()
+    writeLines(
+      c(
+        sprintf("elapsed_sec: %.1f", elapsed_sec),
+        sprintf("peak_mem_bytes: %.0f", peak_mem_bytes),
+        sprintf("host_cpu_model: %s", host$model %||% "NA"),
+        sprintf("host_cpu_cores: %s", host$n_logical %||% "NA"),
+        sprintf(
+          "host_ram_bytes: %s",
+          if (is.na(host$ram_bytes)) "NA" else sprintf("%.0f", host$ram_bytes)
+        )
+      ),
+      fs::path(log_dir, "docker_resources.log")
+    )
+  }
 
   if (rc != 0L) {
     stop(
@@ -706,14 +870,21 @@ landis_run_docker <- function(
     )
   }
 
-  mem_str <- if (peak_mem_bytes > 0) {
-    .fmt_bytes(peak_mem_bytes)
+  if (adopted) {
+    message(glue::glue("LANDIS-II Docker run adopted from a concurrent worker ({Sys.time()})"))
+    message(glue::glue(
+      "  Waited:      {.fmt_duration(elapsed_sec)} for the in-progress run to finish"
+    ))
   } else {
-    "(not sampled -- run too short)"
+    mem_str <- if (peak_mem_bytes > 0) {
+      .fmt_bytes(peak_mem_bytes)
+    } else {
+      "(not sampled -- run too short)"
+    }
+    message(glue::glue("LANDIS-II Docker run completed ({Sys.time()})"))
+    message(glue::glue("  Elapsed:     {.fmt_duration(elapsed_sec)}"))
+    message(glue::glue("  Peak memory: {mem_str}"))
   }
-  message(glue::glue("LANDIS-II Docker run completed ({Sys.time()})"))
-  message(glue::glue("  Elapsed:     {.fmt_duration(elapsed_sec)}"))
-  message(glue::glue("  Peak memory: {mem_str}"))
 
   invisible(list(exit_code = rc, elapsed_sec = elapsed_sec, peak_mem_bytes = peak_mem_bytes))
 }

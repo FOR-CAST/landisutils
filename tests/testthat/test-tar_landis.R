@@ -118,3 +118,28 @@ testthat::test_that(".watchdog_should_stop() fires only after the grace period (
     timeout = Inf
   ))
 })
+
+testthat::test_that(".landis_run_complete() detects the completion marker in Landis-log.txt", {
+  is_complete <- landisutils:::.landis_run_complete
+  d <- withr::local_tempdir()
+
+  ## No Landis-log.txt yet.
+  testthat::expect_identical(is_complete(d), FALSE)
+
+  ## Log present but no completion marker.
+  writeLines(c("Starting LANDIS-II", "timestep 1"), file.path(d, "Landis-log.txt"))
+  testthat::expect_identical(is_complete(d), FALSE)
+
+  ## Completion marker present.
+  writeLines(
+    c("timestep 50", "Model run is complete.", "Shutting down"),
+    file.path(d, "Landis-log.txt")
+  )
+  testthat::expect_identical(is_complete(d), TRUE)
+})
+
+testthat::test_that(".docker_container_running() is FALSE (not an error) for an unknown container", {
+  testthat::skip_if(unname(Sys.which("docker")) == "", "docker not available")
+  running <- landisutils:::.docker_container_running
+  testthat::expect_identical(running("landis-run-pkgtest-does-not-exist-0000"), FALSE)
+})
