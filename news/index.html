@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.39</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.40</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -40,6 +40,13 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.40" id="landisutils-0040">landisutils 0.0.40<a class="anchor" aria-label="anchor" href="#landisutils-0040"></a></h2>
+<ul><li>
+<code><a href="../reference/landis_archive_rep.html">landis_archive_rep()</a></code> is a new exported helper that moves a completed replicate directory from scratch to its final location: a fault-tolerant <code>rsync -a --partial</code> (retry + linear backoff) copies into a sibling <code>.partial</code> staging dir on the destination filesystem, an atomic rename then publishes it so the final dir only ever appears complete, and the scratch source is deleted only afterwards (a no-op when source and destination resolve to the same path).</li>
+<li>
+<code><a href="../reference/tar_landis.html">tar_landis()</a></code> gains a <code>work_root</code> argument: when set (or when the <code>LANDIS_SCRATCH</code> environment variable is non-empty at run time) each replicate is staged and run under fast, local, Docker-bind-mountable scratch and the finished rep is then moved to its final <code>scenario_dir/repNN</code> via <code><a href="../reference/landis_archive_rep.html">landis_archive_rep()</a></code>, so the value the target returns – and everything <a href="https://docs.ropensci.org/targets/" class="external-link">targets</a> tracks – is the final location while scratch holds only transient run files; this makes runs work when <code>scenario_dir</code> lives on storage the Docker daemon cannot bind-mount (e.g. a root-squashed NFS share).</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.39" id="landisutils-0039">landisutils 0.0.39<a class="anchor" aria-label="anchor" href="#landisutils-0039"></a></h2>
 <div class="section level3">

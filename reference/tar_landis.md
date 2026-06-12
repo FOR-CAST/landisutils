@@ -24,6 +24,7 @@ tar_landis(
   mem_limit = "8g",
   mem_margin = 1.5,
   post_completion_timeout_sec = 300,
+  work_root = NULL,
   pattern = NULL,
   packages = targets::tar_option_get("packages"),
   library = targets::tar_option_get("library"),
@@ -146,6 +147,25 @@ tar_landis(
   Default `300` (5 min); pass `Inf` to disable the watchdog. No effect
   for `method = "local"`.
 
+- work_root:
+
+  Character or `NULL`. Optional fast, local, Docker-bind- mountable
+  scratch root used to RUN each replicate, separate from the final
+  (tracked) `scenario_dir`. Needed when `scenario_dir` lives on storage
+  the Docker daemon cannot bind-mount (e.g. a root-squashed NFS share):
+  the rep is staged + run under
+  `work_root/<scenario>/<studyArea>/repNN`, then its completed outputs
+  are moved to `scenario_dir/repNN` via
+  [`landis_archive_rep()`](https://for-cast.github.io/landisutils/reference/landis_archive_rep.md)
+  (fault-tolerant `rsync` + retry) so the value the target returns – and
+  everything `{targets}` tracks – is the FINAL location, with scratch
+  holding only transient run files. The skip-check and output collection
+  both read the final `scenario_dir/repNN`. When `NULL` (default), the
+  per-run env var `LANDIS_SCRATCH` is consulted at run time (so `{crew}`
+  workers can set it via `.Rprofile`); when that is also empty the rep
+  runs in place under `scenario_dir` (original behaviour). No effect for
+  `method = "local"`.
+
 - pattern:
 
   Expression (unquoted). Dynamic-branching pattern covering both the
@@ -210,6 +230,7 @@ method per machine.
 
 Other LANDIS-II execution helpers:
 [`host_cpu_info()`](https://for-cast.github.io/landisutils/reference/host_cpu_info.md),
+[`landis_archive_rep()`](https://for-cast.github.io/landisutils/reference/landis_archive_rep.md),
 [`landis_find()`](https://for-cast.github.io/landisutils/reference/landis_find.md),
 [`landis_find_docker()`](https://for-cast.github.io/landisutils/reference/landis_find_docker.md),
 [`landis_pool_exec()`](https://for-cast.github.io/landisutils/reference/landis_pool_exec.md),

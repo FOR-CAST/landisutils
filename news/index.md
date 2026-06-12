@@ -1,5 +1,27 @@
 # Changelog
 
+## landisutils 0.0.40
+
+- [`landis_archive_rep()`](https://for-cast.github.io/landisutils/reference/landis_archive_rep.md)
+  is a new exported helper that moves a completed replicate directory
+  from scratch to its final location: a fault-tolerant
+  `rsync -a --partial` (retry + linear backoff) copies into a sibling
+  `.partial` staging dir on the destination filesystem, an atomic rename
+  then publishes it so the final dir only ever appears complete, and the
+  scratch source is deleted only afterwards (a no-op when source and
+  destination resolve to the same path).
+- [`tar_landis()`](https://for-cast.github.io/landisutils/reference/tar_landis.md)
+  gains a `work_root` argument: when set (or when the `LANDIS_SCRATCH`
+  environment variable is non-empty at run time) each replicate is
+  staged and run under fast, local, Docker-bind-mountable scratch and
+  the finished rep is then moved to its final `scenario_dir/repNN` via
+  [`landis_archive_rep()`](https://for-cast.github.io/landisutils/reference/landis_archive_rep.md),
+  so the value the target returns – and everything
+  [targets](https://docs.ropensci.org/targets/) tracks – is the final
+  location while scratch holds only transient run files; this makes runs
+  work when `scenario_dir` lives on storage the Docker daemon cannot
+  bind-mount (e.g. a root-squashed NFS share).
+
 ## landisutils 0.0.39
 
 ### Fix: duplicate-dispatch corruption in LANDIS-II run helpers

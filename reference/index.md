@@ -455,6 +455,10 @@
 - [`landUseType()`](https://for-cast.github.io/landisutils/reference/landUseType.md)
   : Construct a Land Use type
 
+- [`landis_archive_rep()`](https://for-cast.github.io/landisutils/reference/landis_archive_rep.md)
+  : Move a completed LANDIS-II replicate from scratch to its final
+  location
+
 - [`landis_find()`](https://for-cast.github.io/landisutils/reference/landis_find.md)
   : Find the LANDIS-II console for a local installation
 

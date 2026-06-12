@@ -93,6 +93,7 @@ logic.
 
 Other LANDIS-II execution helpers:
 [`host_cpu_info()`](https://for-cast.github.io/landisutils/reference/host_cpu_info.md),
+[`landis_archive_rep()`](https://for-cast.github.io/landisutils/reference/landis_archive_rep.md),
 [`landis_find()`](https://for-cast.github.io/landisutils/reference/landis_find.md),
 [`landis_find_docker()`](https://for-cast.github.io/landisutils/reference/landis_find_docker.md),
 [`landis_pool_restart_one()`](https://for-cast.github.io/landisutils/reference/landis_pool_restart_one.md),

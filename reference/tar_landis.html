@@ -11,7 +11,7 @@ replicate's output files."><meta property="og:image" content="https://for-cast.g
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.39</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.40</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -70,6 +70,7 @@ replicate's output files.</p>
 <span>  mem_limit <span class="op">=</span> <span class="st">"8g"</span>,</span>
 <span>  mem_margin <span class="op">=</span> <span class="fl">1.5</span>,</span>
 <span>  post_completion_timeout_sec <span class="op">=</span> <span class="fl">300</span>,</span>
+<span>  work_root <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  pattern <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  packages <span class="op">=</span> <span class="fu">targets</span><span class="fu">::</span><span class="fu"><a href="https://docs.ropensci.org/targets/reference/tar_option_get.html" class="external-link">tar_option_get</a></span><span class="op">(</span><span class="st">"packages"</span><span class="op">)</span>,</span>
 <span>  library <span class="op">=</span> <span class="fu">targets</span><span class="fu">::</span><span class="fu"><a href="https://docs.ropensci.org/targets/reference/tar_option_get.html" class="external-link">tar_option_get</a></span><span class="op">(</span><span class="st">"library"</span><span class="op">)</span>,</span>
@@ -187,6 +188,23 @@ the .NET shutdown path after outputs are already on disk). Default <code>300</co
 <code>method = "local"</code>.</p></dd>
 
 
+<dt id="arg-work-root">work_root<a class="anchor" aria-label="anchor" href="#arg-work-root"></a></dt>
+<dd><p>Character or <code>NULL</code>. Optional fast, local, Docker-bind-
+mountable scratch root used to RUN each replicate, separate from the final
+(tracked) <code>scenario_dir</code>. Needed when <code>scenario_dir</code> lives on storage the
+Docker daemon cannot bind-mount (e.g. a root-squashed NFS share): the rep
+is staged + run under <code>work_root/&lt;scenario&gt;/&lt;studyArea&gt;/repNN</code>, then its
+completed outputs are moved to <code>scenario_dir/repNN</code> via
+<code><a href="landis_archive_rep.html">landis_archive_rep()</a></code> (fault-tolerant <code>rsync</code> + retry) so the value the
+target returns – and everything <code>{targets}</code> tracks – is the FINAL
+location, with scratch holding only transient run files. The skip-check
+and output collection both read the final <code>scenario_dir/repNN</code>. When <code>NULL</code>
+(default), the per-run env var <code>LANDIS_SCRATCH</code> is consulted at run time
+(so <code>{crew}</code> workers can set it via <code>.Rprofile</code>); when that is also empty
+the rep runs in place under <code>scenario_dir</code> (original behaviour). No effect
+for <code>method = "local"</code>.</p></dd>
+
+
 <dt id="arg-pattern">pattern<a class="anchor" aria-label="anchor" href="#arg-pattern"></a></dt>
 <dd><p>Expression (unquoted). Dynamic-branching pattern covering
 both the scenario and replicate dimensions, e.g.
@@ -240,6 +258,7 @@ per machine.</p>
     <div class="dont-index"><p><code><a href="landis_replicate.html">landis_replicate()</a></code>, <code><a href="landis_run_local.html">landis_run_local()</a></code>, <code><a href="landis_run_docker.html">landis_run_docker()</a></code></p>
 <p>Other LANDIS-II execution helpers:
 <code><a href="host_cpu_info.html">host_cpu_info()</a></code>,
+<code><a href="landis_archive_rep.html">landis_archive_rep()</a></code>,
 <code><a href="landis_find.html">landis_find()</a></code>,
 <code><a href="landis_find_docker.html">landis_find_docker()</a></code>,
 <code><a href="landis_pool_exec.html">landis_pool_exec()</a></code>,

@@ -43,6 +43,7 @@ outputs.
 ## See also
 
 Other LANDIS-II execution helpers:
+[`landis_archive_rep()`](https://for-cast.github.io/landisutils/reference/landis_archive_rep.md),
 [`landis_find()`](https://for-cast.github.io/landisutils/reference/landis_find.md),
 [`landis_find_docker()`](https://for-cast.github.io/landisutils/reference/landis_find_docker.md),
 [`landis_pool_exec()`](https://for-cast.github.io/landisutils/reference/landis_pool_exec.md),
