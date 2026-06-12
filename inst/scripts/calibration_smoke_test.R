@@ -139,7 +139,7 @@ cfg <- list(
   method = "docker",
   n_cores = 2L,
   parallel = TRUE,
-  cpu_limit = 4,
+  cpu_limit = 2,
   mem_limit = "8g",
   base_seed = 12345L,
   trace = TRUE

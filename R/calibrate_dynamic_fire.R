@@ -1855,7 +1855,7 @@ calibrate_dynamic_fire <- function(observed_targets_path, scenario_template, cfg
       n = n_cores,
       image = cfg$image,
       scratch_root = scratch_root,
-      cpu_limit = cfg$cpu_limit %||% 4,
+      cpu_limit = cfg$cpu_limit %||% 2,
       mem_limit = cfg$mem_limit %||% "8g",
       pull = isTRUE(cfg$pull %||% FALSE),
       name_prefix = paste0("landis-cal-", Sys.getpid())
@@ -2012,10 +2012,7 @@ calibrate_dynamic_fire <- function(observed_targets_path, scenario_template, cfg
   weighted <- as.numeric(components) * weight_vals
   ## Row schema: wall_clock_iso, pid, par_<name>..., total, comp_<name>..., w_<name>..., weighted_<name>...
   row <- c(
-    list(
-      wall_clock_iso = format(Sys.time(), "%Y-%m-%dT%H:%M:%OS3%z"),
-      pid = pid
-    ),
+    list(wall_clock_iso = format(Sys.time(), "%Y-%m-%dT%H:%M:%OS3%z"), pid = pid),
     stats::setNames(as.list(as.numeric(par_vec[par_names])), paste0("par_", par_names)),
     list(total = total),
     stats::setNames(as.list(as.numeric(components)), paste0("comp_", comp_names)),

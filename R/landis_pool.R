@@ -31,7 +31,7 @@
 #' @param scratch_root Character. Host directory bind-mounted to `/scratch`
 #'   inside every container. Must be a stable absolute path. All per-trial
 #'   directories used by [landis_pool_exec()] must be SUBDIRECTORIES of this.
-#' @param cpu_limit Numeric or NULL. Per-container `--cpus` cap. Default 4.
+#' @param cpu_limit Numeric or NULL. Per-container `--cpus` cap. Default 2.
 #' @param mem_limit Character or NULL. Per-container `--memory` cap. Default `"8g"`.
 #' @param pull Logical. When TRUE, `docker pull` the image before starting.
 #' @param name_prefix Character or NULL. Optional prefix for the container name;
@@ -48,7 +48,7 @@ landis_pool_start <- function(
   n,
   image = NULL,
   scratch_root,
-  cpu_limit = 4,
+  cpu_limit = 2,
   mem_limit = "8g",
   pull = FALSE,
   name_prefix = NULL

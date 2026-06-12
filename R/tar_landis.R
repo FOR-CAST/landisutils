@@ -506,9 +506,16 @@ landis_run_local <- function(scenario_dir, scenario_file = "scenario.txt", conso
 #'   than a stale local copy. Defaults to `FALSE` to keep runs reproducible
 #'   across iterations of an already-cached image.
 #' @param cpu_limit Numeric or `NULL`. Hard CPU cap for the container
-#'   (`docker run --cpus`). Default `4`: LANDIS-II compute is single-threaded
-#'   but the .NET runtime spins up 9-11 OS threads, so 4 is a comfortable
-#'   headroom default. Pass `NULL` for no CPU limit.
+#'   (`docker run --cpus`). Default `2`: LANDIS-II compute is effectively
+#'   single-threaded -- empirical measurement across 90 concurrent ForCS +
+#'   Dynamic Fire + Dynamic Fuels containers shows a median of 1.00 cores
+#'   used per container, p99 = 1.11 cores, max = 1.11 cores. The .NET
+#'   runtime hosts 9-11 OS threads but only the simulator thread is
+#'   compute-bound; the GC / threadpool helpers occasionally peek above
+#'   1.0 cores in brief bursts. `2` covers that 99th-percentile burst with
+#'   ~80% headroom; `1` is tight enough that the .NET GC helper would
+#'   contend with the simulator thread for cycles. Pass `NULL` for no
+#'   CPU limit.
 #' @param mem_limit Numeric byte count, character (e.g. `"8g"`, `"512m"`),
 #'   `NULL`, or `Inf`. Baseline RAM cap (`docker run --memory`). Default
 #'   `"8g"`. When a prior `<rep_dir>/log/*_resources.log` exists with a
@@ -541,7 +548,7 @@ landis_run_docker <- function(
   image = NULL,
   console = NULL,
   pull = FALSE,
-  cpu_limit = 4,
+  cpu_limit = 2,
   mem_limit = "8g",
   mem_margin = 1.5,
   post_completion_timeout_sec = 300
@@ -1078,7 +1085,7 @@ landis_archive_rep <- function(run_dir, final_dir, max_tries = 5L, backoff_sec =
 #'   and LANDIS-II is invoked unconditionally.
 #' @param cpu_limit,mem_limit,mem_margin Passed to [landis_run_docker()] when
 #'   `method = "docker"`. See that function's documentation for semantics;
-#'   defaults are `4`, `"8g"`, and `1.5` respectively. No effect for
+#'   defaults are `2`, `"8g"`, and `1.5` respectively. No effect for
 #'   `method = "local"`.
 #' @param post_completion_timeout_sec Numeric. Passed to [landis_run_docker()]
 #'   when `method = "docker"`: grace period (seconds) after the LANDIS-II
@@ -1123,7 +1130,7 @@ tar_landis <- function(
   base_seed = NULL,
   pull = FALSE,
   force = FALSE,
-  cpu_limit = 4,
+  cpu_limit = 2,
   mem_limit = "8g",
   mem_margin = 1.5,
   post_completion_timeout_sec = 300,
