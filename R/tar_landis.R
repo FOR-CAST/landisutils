@@ -889,6 +889,102 @@ landis_run_docker <- function(
   invisible(list(exit_code = rc, elapsed_sec = elapsed_sec, peak_mem_bytes = peak_mem_bytes))
 }
 
+#' Move a completed LANDIS-II replicate from scratch to its final location
+#'
+#' Moves a finished replicate directory `run_dir` (typically on fast, local,
+#' Docker-bind-mountable scratch) to `final_dir` (typically a slower, networked
+#' final/archive location such as an NFS project share) in a way that is
+#' fault-tolerant *and* all-or-nothing at the destination:
+#'
+#' 1. `rsync -a --partial` copies `run_dir` into a sibling staging directory
+#'    `paste0(final_dir, ".partial")` on the *destination* filesystem, with
+#'    retry + linear backoff so a transient network blip does not abort the run
+#'    (`--partial` keeps partially transferred files so a retry resumes rather
+#'    than restarts). Crucially this is a COPY -- the scratch source stays the
+#'    complete, authoritative replicate until the destination is verified, so a
+#'    total transfer failure loses nothing.
+#' 2. After a verified `rsync` exit status of `0`, the staging directory is
+#'    published with an atomic `rename` into `final_dir`. Because the rename is
+#'    atomic, `final_dir` only ever appears *complete* -- a partial transfer is
+#'    never visible to a downstream skip-check that reads `final_dir`. (This is
+#'    why `--remove-source-files` is deliberately NOT used: it would delete
+#'    scratch incrementally and could leave a half-emptied source on total
+#'    failure, and a partial destination could be mistaken for a complete run.)
+#' 3. Only once `final_dir` is in place is the scratch source deleted.
+#'
+#' If `run_dir` and `final_dir` already resolve to the same path (no scratch in
+#' use), this is a no-op that returns `final_dir` without copying or deleting.
+#'
+#' Requires the `rsync` executable on `PATH` (standard on Linux/macOS). A
+#' missing `rsync`, or repeated failures, raises an error after `max_tries`
+#' attempts so the run target fails loudly and the scratch copy is retained for
+#' inspection rather than silently lost.
+#'
+#' @param run_dir Character. The completed replicate directory to move (source).
+#' @param final_dir Character. The destination directory (created if needed).
+#' @param max_tries Integer. Maximum `rsync` attempts before giving up
+#'   (default `5`).
+#' @param backoff_sec Numeric. Base seconds for linear backoff between attempts
+#'   (attempt `i` waits `backoff_sec * i`; default `5`).
+#'
+#' @returns Character. `final_dir`, on success.
+#'
+#' @family LANDIS-II execution helpers
+#' @seealso [tar_landis()], [landis_run_docker()], [landis_replicate()]
+#' @export
+landis_archive_rep <- function(run_dir, final_dir, max_tries = 5L, backoff_sec = 5) {
+  run_real <- fs::path_real(run_dir)
+  final_real <- tryCatch(fs::path_real(final_dir), error = function(e) NA_character_)
+  ## same location (no scratch in use): nothing to move, never delete
+  if (!is.na(final_real) && identical(as.character(run_real), as.character(final_real))) {
+    return(final_dir)
+  }
+  fs::dir_create(fs::path_dir(final_dir))
+  ## Stage into a sibling ".partial" directory on the SAME (destination)
+  ## filesystem so the publish step below is an atomic rename. Trailing "/" on
+  ## the source copies its CONTENTS into the staging dir.
+  staging <- paste0(final_dir, ".partial")
+  fs::dir_create(staging)
+  args <- c("-a", "--partial", paste0(run_real, "/"), paste0(staging, "/"))
+  status <- NA_integer_
+  last_err <- ""
+  for (i in seq_len(max_tries)) {
+    res <- tryCatch(
+      processx::run("rsync", args, error_on_status = FALSE, echo = FALSE),
+      error = function(e) list(status = 127L, stderr = conditionMessage(e))
+    )
+    status <- as.integer(res$status)
+    last_err <- res$stderr %||% ""
+    if (identical(status, 0L)) {
+      break
+    }
+    if (i < max_tries) {
+      Sys.sleep(backoff_sec * i)
+    }
+  }
+  if (!identical(status, 0L)) {
+    stop(
+      sprintf(
+        "rsync of completed replicate failed after %d attempt(s) (exit %s): %s -> %s\n%s",
+        max_tries,
+        status,
+        run_real,
+        staging,
+        last_err
+      ),
+      call. = FALSE
+    )
+  }
+  ## atomic publish: a verified, complete copy replaces any existing final_dir
+  if (fs::dir_exists(final_dir)) {
+    fs::dir_delete(final_dir)
+  }
+  fs::file_move(staging, final_dir)
+  ## move semantics: drop the scratch copy only after final_dir is in place
+  fs::dir_delete(run_real)
+  final_dir
+}
+
 #' Create a `targets` target that runs one LANDIS-II replicate
 #'
 #' A `{targets}` factory that creates **one** `format = "file"` target.
@@ -992,6 +1088,20 @@ landis_run_docker <- function(
 #'   the .NET shutdown path after outputs are already on disk). Default `300`
 #'   (5 min); pass `Inf` to disable the watchdog. No effect for
 #'   `method = "local"`.
+#' @param work_root Character or `NULL`. Optional fast, local, Docker-bind-
+#'   mountable scratch root used to RUN each replicate, separate from the final
+#'   (tracked) `scenario_dir`. Needed when `scenario_dir` lives on storage the
+#'   Docker daemon cannot bind-mount (e.g. a root-squashed NFS share): the rep
+#'   is staged + run under `work_root/<scenario>/<studyArea>/repNN`, then its
+#'   completed outputs are moved to `scenario_dir/repNN` via
+#'   [landis_archive_rep()] (fault-tolerant `rsync` + retry) so the value the
+#'   target returns -- and everything `{targets}` tracks -- is the FINAL
+#'   location, with scratch holding only transient run files. The skip-check
+#'   and output collection both read the final `scenario_dir/repNN`. When `NULL`
+#'   (default), the per-run env var `LANDIS_SCRATCH` is consulted at run time
+#'   (so `{crew}` workers can set it via `.Rprofile`); when that is also empty
+#'   the rep runs in place under `scenario_dir` (original behaviour). No effect
+#'   for `method = "local"`.
 #' @param packages,library,error,memory,resources,storage,retrieval,cue,description
 #'   Standard `{targets}` options; all default to [targets::tar_option_get()].
 #'
@@ -1017,6 +1127,7 @@ tar_landis <- function(
   mem_limit = "8g",
   mem_margin = 1.5,
   post_completion_timeout_sec = 300,
+  work_root = NULL,
   pattern = NULL,
   packages = targets::tar_option_get("packages"),
   library = targets::tar_option_get("library"),
@@ -1052,6 +1163,7 @@ tar_landis <- function(
   mem_limit_val <- mem_limit
   mem_margin_val <- as.numeric(mem_margin)
   post_completion_timeout_sec_val <- post_completion_timeout_sec
+  work_root_val <- if (is.null(work_root)) NULL else as.character(work_root)
 
   ## Resolve method and image at factory-call time.
   method <- method %||%
@@ -1087,23 +1199,38 @@ tar_landis <- function(
     )
     .dep_files <- .dep_files[!duplicated(basename(.dep_files))]
 
-    ## Create/verify exactly this replicate's directory (idempotent).
-    .rep_dir <- landisutils::landis_replicate(
-      .sd,
-      rep_index = .rep_idx,
-      files = .dep_files,
-      base_seed = .(base_seed_val)
-    )[[1L]]
+    ## Final (tracked) replicate location: the value this target returns -- and
+    ## everything {targets} tracks -- always points HERE, under scenario_dir.
+    .final_rep_dir <- fs::path(.sd, sprintf("rep%02d", .rep_idx))
+    ## Scratch run-root (transient): explicit work_root arg, else the per-run
+    ## env var (so {crew} workers can set it via .Rprofile). When set, the rep
+    ## is staged + run under <work_root>/<scenario>/<studyArea> and the finished
+    ## rep is moved to .final_rep_dir; when empty it runs in place under .sd.
+    .work_root <- if (!is.null(.(work_root_val))) {
+      .(work_root_val)
+    } else {
+      Sys.getenv("LANDIS_SCRATCH", unset = "")
+    }
+    .stage_sd <- if (nzchar(.work_root)) {
+      fs::path(.work_root, fs::path_file(fs::path_dir(.sd)), fs::path_file(.sd))
+    } else {
+      .sd
+    }
   })
 
   ## ---- output-collection expression ------------------------------------------------------------
+  ## Always collect from the FINAL (tracked) location, never scratch.
   collect_expr <- bquote({
     .manifest <- file.path(.sd, "output_manifest.txt")
     .manifest_entries <- if (file.exists(.manifest)) readLines(.manifest) else character(0)
     c(
-      list.files(file.path(.rep_dir, "log"), full.names = TRUE),
-      list.files(file.path(.rep_dir, .(output_dirs_val)), full.names = TRUE, recursive = TRUE),
-      file.path(.rep_dir, .manifest_entries)
+      list.files(file.path(.final_rep_dir, "log"), full.names = TRUE),
+      list.files(
+        file.path(.final_rep_dir, .(output_dirs_val)),
+        full.names = TRUE,
+        recursive = TRUE
+      ),
+      file.path(.final_rep_dir, .manifest_entries)
     )
   })
 
@@ -1118,7 +1245,7 @@ tar_landis <- function(
   ## an output-existence-only skip check let stale outputs through after
   ## upstream invalidation.
   hash_expr <- bquote({
-    .hash_file <- file.path(.rep_dir, "log", "input_hash.json")
+    .hash_file <- file.path(.final_rep_dir, "log", "input_hash.json")
     .input_hash <- digest::digest(
       list(
         files = vapply(sort(.dep_files), tools::md5sum, character(1L)),
@@ -1130,7 +1257,7 @@ tar_landis <- function(
     )
   })
   skip_check_expr <- bquote({
-    .landis_log <- file.path(.rep_dir, "Landis-log.txt")
+    .landis_log <- file.path(.final_rep_dir, "Landis-log.txt")
     .saved_hash <- if (file.exists(.hash_file)) {
       tryCatch(jsonlite::fromJSON(.hash_file)$input_hash, error = function(e) NA_character_)
     } else {
@@ -1141,17 +1268,50 @@ tar_landis <- function(
       any(grepl("Model run is complete", readLines(.landis_log, warn = FALSE))) &&
       identical(.saved_hash, .input_hash)
   })
-  ## After a successful run, persist the hash so the next tar_make can detect
-  ## "no-op" reruns (deps unchanged) and skip cleanly.
-  write_hash_expr <- bquote({
-    dir.create(dirname(.hash_file), recursive = TRUE, showWarnings = FALSE)
-    jsonlite::write_json(
-      list(input_hash = .input_hash, written = format(Sys.time(), "%Y-%m-%dT%H:%M:%S%z")),
-      .hash_file,
-      auto_unbox = TRUE,
-      pretty = TRUE
-    )
-  })
+  ## Stage + run one replicate, then persist its input hash and move the
+  ## completed rep from scratch to its final (tracked) home. Shared by the
+  ## docker and local command branches; `.run_call` is the run expression.
+  run_and_archive_expr <- function(run_call) {
+    bquote({
+      ## stage this replicate under .stage_sd (scratch when work_root is set)
+      fs::dir_create(.stage_sd)
+      .run_rep_dir <- landisutils::landis_replicate(
+        .stage_sd,
+        rep_index = .rep_idx,
+        files = .dep_files,
+        base_seed = .(base_seed_val)
+      )[[1L]]
+      .(run_call)
+      ## persist the input hash next to the run, then move the completed rep to
+      ## its final home (a no-op when .run_rep_dir resolves to .final_rep_dir).
+      .run_hash_file <- file.path(.run_rep_dir, "log", "input_hash.json")
+      dir.create(dirname(.run_hash_file), recursive = TRUE, showWarnings = FALSE)
+      jsonlite::write_json(
+        list(input_hash = .input_hash, written = format(Sys.time(), "%Y-%m-%dT%H:%M:%S%z")),
+        .run_hash_file,
+        auto_unbox = TRUE,
+        pretty = TRUE
+      )
+      landisutils::landis_archive_rep(.run_rep_dir, .final_rep_dir)
+    })
+  }
+
+  run_docker_call <- bquote(landisutils::landis_run_docker(
+    scenario_dir = .run_rep_dir,
+    scenario_file = .(scenario_file),
+    image = .(image),
+    console = .(console),
+    pull = .(pull_val),
+    cpu_limit = .(cpu_limit_val),
+    mem_limit = .(mem_limit_val),
+    mem_margin = .(mem_margin_val),
+    post_completion_timeout_sec = .(post_completion_timeout_sec_val)
+  ))
+  run_local_call <- bquote(landisutils::landis_run_local(
+    scenario_dir = .run_rep_dir,
+    scenario_file = .(scenario_file),
+    console = .(console)
+  ))
 
   cmd <- if (identical(method, "docker")) {
     bquote({
@@ -1159,18 +1319,7 @@ tar_landis <- function(
       .(hash_expr)
       .(skip_check_expr)
       if (!.already_done) {
-        landisutils::landis_run_docker(
-          scenario_dir = .rep_dir,
-          scenario_file = .(scenario_file),
-          image = .(image),
-          console = .(console),
-          pull = .(pull_val),
-          cpu_limit = .(cpu_limit_val),
-          mem_limit = .(mem_limit_val),
-          mem_margin = .(mem_margin_val),
-          post_completion_timeout_sec = .(post_completion_timeout_sec_val)
-        )
-        .(write_hash_expr)
+        .(run_and_archive_expr(run_docker_call))
       }
       .(collect_expr)
     })
@@ -1180,12 +1329,7 @@ tar_landis <- function(
       .(hash_expr)
       .(skip_check_expr)
       if (!.already_done) {
-        landisutils::landis_run_local(
-          scenario_dir = .rep_dir,
-          scenario_file = .(scenario_file),
-          console = .(console)
-        )
-        .(write_hash_expr)
+        .(run_and_archive_expr(run_local_call))
       }
       .(collect_expr)
     })

@@ -143,3 +143,49 @@ testthat::test_that(".docker_container_running() is FALSE (not an error) for an 
   running <- landisutils:::.docker_container_running
   testthat::expect_identical(running("landis-run-pkgtest-does-not-exist-0000"), FALSE)
 })
+
+testthat::test_that("landis_archive_rep() moves a completed rep and deletes the scratch source", {
+  testthat::skip_if(unname(Sys.which("rsync")) == "", "rsync not available")
+  root <- withr::local_tempdir()
+  src <- fs::dir_create(fs::path(root, "scratch", "rep01"))
+  fs::dir_create(fs::path(src, "log"))
+  writeLines("complete", fs::path(src, "Landis-log.txt"))
+  writeLines("x", fs::path(src, "log", "input_hash.json"))
+  dest <- fs::path(root, "final", "rep01")
+
+  ret <- landisutils::landis_archive_rep(src, dest)
+
+  testthat::expect_identical(as.character(ret), as.character(dest))
+  testthat::expect_true(fs::file_exists(fs::path(dest, "Landis-log.txt")))
+  testthat::expect_true(fs::file_exists(fs::path(dest, "log", "input_hash.json")))
+  ## move semantics: scratch source is gone after a verified copy
+  testthat::expect_false(fs::dir_exists(src))
+})
+
+testthat::test_that("landis_archive_rep() is a no-op when source and destination are the same path", {
+  d <- withr::local_tempdir()
+  writeLines("keep", fs::path(d, "marker.txt"))
+  ret <- landisutils::landis_archive_rep(d, d)
+  testthat::expect_identical(as.character(ret), as.character(d))
+  ## same path: nothing is deleted
+  testthat::expect_true(fs::file_exists(fs::path(d, "marker.txt")))
+})
+
+testthat::test_that("tar_landis(work_root=) runs under scratch but tracks the final location", {
+  testthat::skip_if_not_installed("targets")
+  tgt <- landisutils::tar_landis(
+    name = test_run,
+    scenario_dir = "fake/scenario",
+    rep_index = 1L,
+    deps = list("fake/scenario/scenario.txt"),
+    method = "docker",
+    work_root = "/scratch/work"
+  )
+  cmd_chr <- deparse(tgt$command$expr, width.cutoff = 500L) |> paste(collapse = "\n")
+  ## skip-check + collection reference the final (tracked) rep dir, not scratch
+  testthat::expect_match(cmd_chr, "final_rep_dir")
+  ## the completed rep is moved off scratch via landis_archive_rep()
+  testthat::expect_match(cmd_chr, "landis_archive_rep")
+  ## the explicit work_root literal is baked into the staged run dir
+  testthat::expect_match(cmd_chr, "/scratch/work", fixed = TRUE)
+})

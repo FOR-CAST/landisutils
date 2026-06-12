@@ -20,6 +20,7 @@ Override the option in \verb{_local.R} when using a non-standard image layout.
 
 Other LANDIS-II execution helpers:
 \code{\link[=host_cpu_info]{host_cpu_info()}},
+\code{\link[=landis_archive_rep]{landis_archive_rep()}},
 \code{\link[=landis_find]{landis_find()}},
 \code{\link[=landis_pool_exec]{landis_pool_exec()}},
 \code{\link[=landis_pool_restart_one]{landis_pool_restart_one()}},

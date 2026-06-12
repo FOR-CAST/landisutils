@@ -65,6 +65,7 @@ wraps this with the trial-directory copy + dynamic-fire.txt patch logic.
 
 Other LANDIS-II execution helpers:
 \code{\link[=host_cpu_info]{host_cpu_info()}},
+\code{\link[=landis_archive_rep]{landis_archive_rep()}},
 \code{\link[=landis_find]{landis_find()}},
 \code{\link[=landis_find_docker]{landis_find_docker()}},
 \code{\link[=landis_pool_restart_one]{landis_pool_restart_one()}},

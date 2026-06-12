@@ -19,6 +19,7 @@ under \verb{/opt} for a \verb{build/Release/} path.
 
 Other LANDIS-II execution helpers:
 \code{\link[=host_cpu_info]{host_cpu_info()}},
+\code{\link[=landis_archive_rep]{landis_archive_rep()}},
 \code{\link[=landis_find_docker]{landis_find_docker()}},
 \code{\link[=landis_pool_exec]{landis_pool_exec()}},
 \code{\link[=landis_pool_restart_one]{landis_pool_restart_one()}},

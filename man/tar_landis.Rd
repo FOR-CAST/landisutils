@@ -21,6 +21,7 @@ tar_landis(
   mem_limit = "8g",
   mem_margin = 1.5,
   post_completion_timeout_sec = 300,
+  work_root = NULL,
   pattern = NULL,
   packages = targets::tar_option_get("packages"),
   library = targets::tar_option_get("library"),
@@ -108,6 +109,21 @@ the .NET shutdown path after outputs are already on disk). Default \code{300}
 (5 min); pass \code{Inf} to disable the watchdog. No effect for
 \code{method = "local"}.}
 
+\item{work_root}{Character or \code{NULL}. Optional fast, local, Docker-bind-
+mountable scratch root used to RUN each replicate, separate from the final
+(tracked) \code{scenario_dir}. Needed when \code{scenario_dir} lives on storage the
+Docker daemon cannot bind-mount (e.g. a root-squashed NFS share): the rep
+is staged + run under \verb{work_root/<scenario>/<studyArea>/repNN}, then its
+completed outputs are moved to \code{scenario_dir/repNN} via
+\code{\link[=landis_archive_rep]{landis_archive_rep()}} (fault-tolerant \code{rsync} + retry) so the value the
+target returns -- and everything \code{{targets}} tracks -- is the FINAL
+location, with scratch holding only transient run files. The skip-check
+and output collection both read the final \code{scenario_dir/repNN}. When \code{NULL}
+(default), the per-run env var \code{LANDIS_SCRATCH} is consulted at run time
+(so \code{{crew}} workers can set it via \code{.Rprofile}); when that is also empty
+the rep runs in place under \code{scenario_dir} (original behaviour). No effect
+for \code{method = "local"}.}
+
 \item{pattern}{Expression (unquoted). Dynamic-branching pattern covering
 both the scenario and replicate dimensions, e.g.
 \code{cross(landis_run_name, landis_run_output_rep_index)}.
@@ -163,6 +179,7 @@ per machine.
 
 Other LANDIS-II execution helpers:
 \code{\link[=host_cpu_info]{host_cpu_info()}},
+\code{\link[=landis_archive_rep]{landis_archive_rep()}},
 \code{\link[=landis_find]{landis_find()}},
 \code{\link[=landis_find_docker]{landis_find_docker()}},
 \code{\link[=landis_pool_exec]{landis_pool_exec()}},
