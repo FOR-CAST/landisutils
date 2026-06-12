@@ -8,7 +8,7 @@ landis_pool_start(
   n,
   image = NULL,
   scratch_root,
-  cpu_limit = 4,
+  cpu_limit = 2,
   mem_limit = "8g",
   pull = FALSE,
   name_prefix = NULL
@@ -25,7 +25,7 @@ of parallel DEoptim workers.}
 inside every container. Must be a stable absolute path. All per-trial
 directories used by \code{\link[=landis_pool_exec]{landis_pool_exec()}} must be SUBDIRECTORIES of this.}
 
-\item{cpu_limit}{Numeric or NULL. Per-container \code{--cpus} cap. Default 4.}
+\item{cpu_limit}{Numeric or NULL. Per-container \code{--cpus} cap. Default 2.}
 
 \item{mem_limit}{Character or NULL. Per-container \code{--memory} cap. Default \code{"8g"}.}
 

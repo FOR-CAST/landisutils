@@ -17,7 +17,7 @@ tar_landis(
   base_seed = NULL,
   pull = FALSE,
   force = FALSE,
-  cpu_limit = 4,
+  cpu_limit = 2,
   mem_limit = "8g",
   mem_margin = 1.5,
   post_completion_timeout_sec = 300,
@@ -97,7 +97,7 @@ and LANDIS-II is invoked unconditionally.
 
 \item{cpu_limit, mem_limit, mem_margin}{Passed to \code{\link[=landis_run_docker]{landis_run_docker()}} when
 \code{method = "docker"}. See that function's documentation for semantics;
-defaults are \code{4}, \code{"8g"}, and \code{1.5} respectively. No effect for
+defaults are \code{2}, \code{"8g"}, and \code{1.5} respectively. No effect for
 \code{method = "local"}.}
 
 \item{post_completion_timeout_sec}{Numeric. Passed to \code{\link[=landis_run_docker]{landis_run_docker()}}

@@ -10,7 +10,7 @@ landis_run_docker(
   image = NULL,
   console = NULL,
   pull = FALSE,
-  cpu_limit = 4,
+  cpu_limit = 2,
   mem_limit = "8g",
   mem_margin = 1.5,
   post_completion_timeout_sec = 300
@@ -36,9 +36,16 @@ than a stale local copy. Defaults to \code{FALSE} to keep runs reproducible
 across iterations of an already-cached image.}
 
 \item{cpu_limit}{Numeric or \code{NULL}. Hard CPU cap for the container
-(\verb{docker run --cpus}). Default \code{4}: LANDIS-II compute is single-threaded
-but the .NET runtime spins up 9-11 OS threads, so 4 is a comfortable
-headroom default. Pass \code{NULL} for no CPU limit.}
+(\verb{docker run --cpus}). Default \code{2}: LANDIS-II compute is effectively
+single-threaded -- empirical measurement across 90 concurrent ForCS +
+Dynamic Fire + Dynamic Fuels containers shows a median of 1.00 cores
+used per container, p99 = 1.11 cores, max = 1.11 cores. The .NET
+runtime hosts 9-11 OS threads but only the simulator thread is
+compute-bound; the GC / threadpool helpers occasionally peek above
+1.0 cores in brief bursts. \code{2} covers that 99th-percentile burst with
+~80\% headroom; \code{1} is tight enough that the .NET GC helper would
+contend with the simulator thread for cycles. Pass \code{NULL} for no
+CPU limit.}
 
 \item{mem_limit}{Numeric byte count, character (e.g. \code{"8g"}, \code{"512m"}),
 \code{NULL}, or \code{Inf}. Baseline RAM cap (\verb{docker run --memory}). Default
