@@ -1,5 +1,22 @@
 # Changelog
 
+## landisutils 0.0.42
+
+- [`landis_run_docker()`](https://for-cast.github.io/landisutils/reference/landis_run_docker.md),
+  [`tar_landis()`](https://for-cast.github.io/landisutils/reference/tar_landis.md),
+  [`landis_pool_start()`](https://for-cast.github.io/landisutils/reference/landis_pool_start.md),
+  and the
+  [`calibrate_dynamic_fire()`](https://for-cast.github.io/landisutils/reference/calibrate_dynamic_fire.md)
+  config default for `cpu_limit` change from `4` to `2`. Empirical
+  measurement across 90 concurrent ForCS + Dynamic Fire + Dynamic Fuels
+  containers under live calibration shows the LANDIS-II console process
+  is effectively single-threaded (median 1.00 cores, p99 1.11 cores, max
+  1.11 cores) – the prior default of `4` overprovisioned by ~4x. The new
+  default of `2` covers the 99th-percentile .NET-GC / threadpool burst
+  with comfortable headroom while letting users pack more containers
+  into the same nominal CPU budget; `1` would be tight enough to risk
+  contention between the simulator thread and the .NET GC helper.
+
 ## landisutils 0.0.41
 
 - Generated LANDIS-II input files no longer embed a timestamp in their
