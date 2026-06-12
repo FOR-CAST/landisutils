@@ -18,7 +18,7 @@ landis_pool_start(
   n,
   image = NULL,
   scratch_root,
-  cpu_limit = 4,
+  cpu_limit = 2,
   mem_limit = "8g",
   pull = FALSE,
   name_prefix = NULL
@@ -47,7 +47,7 @@ landis_pool_start(
 
 - cpu_limit:
 
-  Numeric or NULL. Per-container `--cpus` cap. Default 4.
+  Numeric or NULL. Per-container `--cpus` cap. Default 2.
 
 - mem_limit:
 

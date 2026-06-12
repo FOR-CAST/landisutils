@@ -80,7 +80,7 @@ pin runs to a specific image regardless of subsequent tag movement.</p>
 <span>  image <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  console <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  pull <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  cpu_limit <span class="op">=</span> <span class="fl">4</span>,</span>
+<span>  cpu_limit <span class="op">=</span> <span class="fl">2</span>,</span>
 <span>  mem_limit <span class="op">=</span> <span class="st">"8g"</span>,</span>
 <span>  mem_margin <span class="op">=</span> <span class="fl">1.5</span>,</span>
 <span>  post_completion_timeout_sec <span class="op">=</span> <span class="fl">300</span></span>
@@ -121,9 +121,16 @@ across iterations of an already-cached image.</p></dd>
 
 <dt id="arg-cpu-limit">cpu_limit<a class="anchor" aria-label="anchor" href="#arg-cpu-limit"></a></dt>
 <dd><p>Numeric or <code>NULL</code>. Hard CPU cap for the container
-(<code>docker run --cpus</code>). Default <code>4</code>: LANDIS-II compute is single-threaded
-but the .NET runtime spins up 9-11 OS threads, so 4 is a comfortable
-headroom default. Pass <code>NULL</code> for no CPU limit.</p></dd>
+(<code>docker run --cpus</code>). Default <code>2</code>: LANDIS-II compute is effectively
+single-threaded – empirical measurement across 90 concurrent ForCS +
+Dynamic Fire + Dynamic Fuels containers shows a median of 1.00 cores
+used per container, p99 = 1.11 cores, max = 1.11 cores. The .NET
+runtime hosts 9-11 OS threads but only the simulator thread is
+compute-bound; the GC / threadpool helpers occasionally peek above
+1.0 cores in brief bursts. <code>2</code> covers that 99th-percentile burst with
+~80% headroom; <code>1</code> is tight enough that the .NET GC helper would
+contend with the simulator thread for cycles. Pass <code>NULL</code> for no
+CPU limit.</p></dd>
 
 
 <dt id="arg-mem-limit">mem_limit<a class="anchor" aria-label="anchor" href="#arg-mem-limit"></a></dt>

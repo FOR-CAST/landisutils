@@ -20,7 +20,7 @@ landis_run_docker(
   image = NULL,
   console = NULL,
   pull = FALSE,
-  cpu_limit = 4,
+  cpu_limit = 2,
   mem_limit = "8g",
   mem_margin = 1.5,
   post_completion_timeout_sec = 300
@@ -61,9 +61,15 @@ landis_run_docker(
 - cpu_limit:
 
   Numeric or `NULL`. Hard CPU cap for the container
-  (`docker run --cpus`). Default `4`: LANDIS-II compute is
-  single-threaded but the .NET runtime spins up 9-11 OS threads, so 4 is
-  a comfortable headroom default. Pass `NULL` for no CPU limit.
+  (`docker run --cpus`). Default `2`: LANDIS-II compute is effectively
+  single-threaded – empirical measurement across 90 concurrent ForCS +
+  Dynamic Fire + Dynamic Fuels containers shows a median of 1.00 cores
+  used per container, p99 = 1.11 cores, max = 1.11 cores. The .NET
+  runtime hosts 9-11 OS threads but only the simulator thread is
+  compute-bound; the GC / threadpool helpers occasionally peek above 1.0
+  cores in brief bursts. `2` covers that 99th-percentile burst with ~80%
+  headroom; `1` is tight enough that the .NET GC helper would contend
+  with the simulator thread for cycles. Pass `NULL` for no CPU limit.
 
 - mem_limit:
 

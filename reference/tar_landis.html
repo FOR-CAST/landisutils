@@ -66,7 +66,7 @@ replicate's output files.</p>
 <span>  base_seed <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  pull <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  force <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  cpu_limit <span class="op">=</span> <span class="fl">4</span>,</span>
+<span>  cpu_limit <span class="op">=</span> <span class="fl">2</span>,</span>
 <span>  mem_limit <span class="op">=</span> <span class="st">"8g"</span>,</span>
 <span>  mem_margin <span class="op">=</span> <span class="fl">1.5</span>,</span>
 <span>  post_completion_timeout_sec <span class="op">=</span> <span class="fl">300</span>,</span>
@@ -173,7 +173,7 @@ and LANDIS-II is invoked unconditionally.</p></li>
 <dt id="arg-cpu-limit-mem-limit-mem-margin">cpu_limit, mem_limit, mem_margin<a class="anchor" aria-label="anchor" href="#arg-cpu-limit-mem-limit-mem-margin"></a></dt>
 <dd><p>Passed to <code><a href="landis_run_docker.html">landis_run_docker()</a></code> when
 <code>method = "docker"</code>. See that function's documentation for semantics;
-defaults are <code>4</code>, <code>"8g"</code>, and <code>1.5</code> respectively. No effect for
+defaults are <code>2</code>, <code>"8g"</code>, and <code>1.5</code> respectively. No effect for
 <code>method = "local"</code>.</p></dd>
 
 

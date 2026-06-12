@@ -20,7 +20,7 @@ tar_landis(
   base_seed = NULL,
   pull = FALSE,
   force = FALSE,
-  cpu_limit = 4,
+  cpu_limit = 2,
   mem_limit = "8g",
   mem_margin = 1.5,
   post_completion_timeout_sec = 300,
@@ -132,7 +132,7 @@ tar_landis(
   Passed to
   [`landis_run_docker()`](https://for-cast.github.io/landisutils/reference/landis_run_docker.md)
   when `method = "docker"`. See that function's documentation for
-  semantics; defaults are `4`, `"8g"`, and `1.5` respectively. No effect
+  semantics; defaults are `2`, `"8g"`, and `1.5` respectively. No effect
   for `method = "local"`.
 
 - post_completion_timeout_sec:
