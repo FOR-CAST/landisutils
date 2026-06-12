@@ -5,7 +5,7 @@ Land Use Plus Extension
 ## References
 
 LANDIS-II Land Use Plus v4 Extension User Guide
-<https://github.com/LANDIS-II-Foundation/Extension-Land-Use-Plus/blob/master/docs/LANDIS-II%20Land%20Use%20Plus%20v4%20User%20Guide.pdf>
+<https://github.com/LANDIS-II-Foundation/Extension-Land-Use-Plus/blob/master/docs/Land%20Use%20Plus%20v4.0%20User%20Guide.pdf>
 
 ## See also
 

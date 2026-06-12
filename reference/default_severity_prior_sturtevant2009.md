@@ -22,7 +22,8 @@ Named numeric vector of length 5, summing to 1.
 Sturtevant, B.R., Scheller, R.M., Miranda, B.R., Shinneman, D., and
 Syphard, A. 2009. Simulating dynamic and mixed-severity fire regimes: A
 process-based fire extension for LANDIS-II. Ecological Modelling
-220(23): 3380-3393. <https://doi.org/10.1016/j.ecolmodel.2009.07.030>
+220(23): 3380-3393.
+[doi:10.1016/j.ecolmodel.2009.07.030](https://doi.org/10.1016/j.ecolmodel.2009.07.030)
 
 ## See also
 

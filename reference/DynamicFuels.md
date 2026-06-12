@@ -5,7 +5,7 @@ Dynamic Fuel System Extension
 ## References
 
 LANDIS-II Dynamic Fuel System Extension v4.0 User Guide
-<https://github.com/LANDIS-II-Foundation/Extension-Dynamic-Biomass-Fuels/blob/master/docs/LANDIS-II%20Dynamic%20Fuel%20System%20v4.0%20User%20Guide.pdf>
+<https://github.com/LANDIS-II-Foundation/Extension-Dynamic-Biomass-Fuels/blob/master/docs/LANDIS-II%20Dynamic%20Fuel%20System%20v4%20User%20Guide.pdf>
 
 ## See also
 

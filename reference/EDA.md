@@ -5,7 +5,7 @@ Epidemiological Disturbance Agents (EDA) Extension
 ## References
 
 LANDIS-II Base EDA v3 Extension User Guide
-<https://github.com/LANDIS-II-Foundation/Extension-Base-EDA/blob/master/docs/LANDIS-II%20Base%20EDA%20v3%20User%20Guide.pdf>
+<https://github.com/LANDIS-II-Foundation/Extension-Base-EDA/blob/master/docs/LANDIS-II%20Epidemiological%20Disturbance%20Agent%20v3%20User%20Guide.pdf>
 
 ## See also
 
