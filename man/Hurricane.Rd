@@ -8,7 +8,7 @@ Biomass Hurricane Extension
 }
 \references{
 LANDIS-II Biomass Hurricane v3 Extension User Guide
-\url{https://github.com/LANDIS-II-Foundation/Extension-Biomass-Hurricane/blob/master/docs/LANDIS-II\%20Biomass\%20Hurricane\%20v3\%20User\%20Guide.pdf}
+\url{https://github.com/LANDIS-II-Foundation/Extension-Biomass-Hurricane/blob/master/docs/LANDIS-II\%20Base\%20Hurricane\%20v3\%20User\%20Guide.pdf}
 }
 \seealso{
 Other Hurricane helpers:

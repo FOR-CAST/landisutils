@@ -3,7 +3,7 @@
 #' @include ext_utils.R
 #'
 #' @references LANDIS-II Output Wildlife Habitat v3 Extension User Guide
-#'   <https://github.com/LANDIS-II-Foundation/Extension-Output-Wildlife-Habitat/blob/master/docs/LANDIS-II%20Wildlife%20Habitat%20Output%20v3%20User%20Guide.pdf>
+#'   <https://github.com/LANDIS-II-Foundation/Extension-Output-Wildlife-Habitat/blob/master/docs/LANDIS-II%20Wildlife%20Habitat%20Suitability%20Output%20v3%20User%20Guide.pdf>
 #'
 #' @seealso [suitabilityFile()] (also used by [OutputLocalHabitat]).
 #'

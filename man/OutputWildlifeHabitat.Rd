@@ -8,7 +8,7 @@ Wildlife Habitat Output Extension
 }
 \references{
 LANDIS-II Output Wildlife Habitat v3 Extension User Guide
-\url{https://github.com/LANDIS-II-Foundation/Extension-Output-Wildlife-Habitat/blob/master/docs/LANDIS-II\%20Wildlife\%20Habitat\%20Output\%20v3\%20User\%20Guide.pdf}
+\url{https://github.com/LANDIS-II-Foundation/Extension-Output-Wildlife-Habitat/blob/master/docs/LANDIS-II\%20Wildlife\%20Habitat\%20Suitability\%20Output\%20v3\%20User\%20Guide.pdf}
 }
 \seealso{
 \code{\link[=suitabilityFile]{suitabilityFile()}} (also used by \link{OutputLocalHabitat}).

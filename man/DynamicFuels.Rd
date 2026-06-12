@@ -8,7 +8,7 @@ Dynamic Fuel System Extension
 }
 \references{
 LANDIS-II Dynamic Fuel System Extension v4.0 User Guide
-\url{https://github.com/LANDIS-II-Foundation/Extension-Dynamic-Biomass-Fuels/blob/master/docs/LANDIS-II\%20Dynamic\%20Fuel\%20System\%20v4.0\%20User\%20Guide.pdf}
+\url{https://github.com/LANDIS-II-Foundation/Extension-Dynamic-Biomass-Fuels/blob/master/docs/LANDIS-II\%20Dynamic\%20Fuel\%20System\%20v4\%20User\%20Guide.pdf}
 }
 \seealso{
 Helpers that prepare inputs for this extension:

@@ -8,7 +8,7 @@ Original Fire Extension
 }
 \references{
 LANDIS-II Original Fire v5.0 Extension User Guide
-\url{https://github.com/LANDIS-II-Foundation/Extension-Base-Fire/blob/master/docs/LANDIS-II\%20Original\%20Fire\%20v5.0\%20User\%20Guide.pdf}
+\url{https://github.com/LANDIS-II-Foundation/Extension-Base-Fire/blob/master/docs/LANDIS-II\%20Original\%20Fire\%20v5\%20User\%20Guide.pdf}
 }
 \seealso{
 Helpers that prepare inputs for this extension:

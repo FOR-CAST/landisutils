@@ -8,7 +8,7 @@ Epidemiological Disturbance Agents (EDA) Extension
 }
 \references{
 LANDIS-II Base EDA v3 Extension User Guide
-\url{https://github.com/LANDIS-II-Foundation/Extension-Base-EDA/blob/master/docs/LANDIS-II\%20Base\%20EDA\%20v3\%20User\%20Guide.pdf}
+\url{https://github.com/LANDIS-II-Foundation/Extension-Base-EDA/blob/master/docs/LANDIS-II\%20Epidemiological\%20Disturbance\%20Agent\%20v3\%20User\%20Guide.pdf}
 }
 \seealso{
 Other EDA helpers:

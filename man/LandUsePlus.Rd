@@ -8,7 +8,7 @@ Land Use Plus Extension
 }
 \references{
 LANDIS-II Land Use Plus v4 Extension User Guide
-\url{https://github.com/LANDIS-II-Foundation/Extension-Land-Use-Plus/blob/master/docs/LANDIS-II\%20Land\%20Use\%20Plus\%20v4\%20User\%20Guide.pdf}
+\url{https://github.com/LANDIS-II-Foundation/Extension-Land-Use-Plus/blob/master/docs/Land\%20Use\%20Plus\%20v4.0\%20User\%20Guide.pdf}
 }
 \seealso{
 Other Land Use Plus helpers:

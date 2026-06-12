@@ -21,7 +21,7 @@ available for their specific fire regime.
 Sturtevant, B.R., Scheller, R.M., Miranda, B.R., Shinneman, D.,
 and Syphard, A. 2009. Simulating dynamic and mixed-severity fire regimes:
 A process-based fire extension for LANDIS-II. Ecological Modelling
-220(23): 3380-3393. \url{https://doi.org/10.1016/j.ecolmodel.2009.07.030}
+220(23): 3380-3393. \doi{10.1016/j.ecolmodel.2009.07.030}
 }
 \seealso{
 Other Dynamic Fire calibration helpers:

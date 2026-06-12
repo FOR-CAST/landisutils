@@ -13,7 +13,7 @@ bio_community$write()
 }
 \references{
 LANDIS-II Output Biomass Community v3 Extension User Guide
-\url{https://github.com/LANDIS-II-Foundation/Extension-Output-Biomass-Community/blob/master/docs/LANDIS-II\%20Output\%20Biomass\%20Community\%20v3\%20User\%20Guide.pdf}
+\url{https://github.com/LANDIS-II-Foundation/Extension-Output-Biomass-Community/blob/master/docs/LANDIS-II\%20Biomass\%20Community\%20Output\%20v3.0\%20User\%20Guide.pdf}
 }
 \concept{Biomass Community Output helpers}
 \section{Super class}{
