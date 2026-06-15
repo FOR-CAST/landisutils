@@ -13,7 +13,8 @@ landis_run_docker(
   cpu_limit = 2,
   mem_limit = "8g",
   mem_margin = 1.5,
-  post_completion_timeout_sec = 300
+  post_completion_timeout_sec = 300,
+  startup_jitter = NULL
 )
 }
 \arguments{
@@ -68,6 +69,19 @@ marker but then spin in the .NET runtime shutdown path indefinitely
 (outputs are already on disk, so the sim itself completed cleanly). On
 timeout the container is stopped and exit codes 137/143 are remapped to
 \code{0}. Set to \code{Inf} to disable the watchdog. Default \code{300} (5 min).}
+
+\item{startup_jitter}{Numeric seconds or \code{NULL}. Upper bound on a random
+start delay applied \strong{before} the function touches Docker, to stagger
+container launches and avoid a thundering-herd surge on the Docker daemon
+(and on the disk backing the image layers / renv library) when many
+replicates start at once under \code{crew}. Each call sleeps
+\code{runif(1, 0, startup_jitter)} seconds. The delay cannot affect simulation
+results (identical seed and inputs), so when run from \code{tar_landis()} it is
+deliberately \strong{not} baked into the \code{{targets}} command -- changing it
+never invalidates completed replicates. \code{NULL} (the default) reads the
+\code{LANDIS_STARTUP_JITTER} environment variable (so it can be set once in a
+project \code{.Rprofile} that \code{crew} workers inherit); an unset/invalid value
+means \code{0} (no stagger).}
 }
 \value{
 Named list with \code{exit_code} (integer), \code{elapsed_sec} (numeric), and

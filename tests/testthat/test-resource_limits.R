@@ -99,3 +99,33 @@ testthat::test_that(".resolve_mem_limit() with mem_limit = Inf stays Inf", {
   ## max(Inf, 6 GiB) == Inf
   testthat::expect_true(is.infinite(res))
 })
+
+## ---- .resolve_startup_jitter (v0.0.43) ---------------------------------------------------------
+
+testthat::test_that(".resolve_startup_jitter() honours an explicit numeric", {
+  testthat::expect_equal(landisutils:::.resolve_startup_jitter(30), 30)
+  testthat::expect_equal(landisutils:::.resolve_startup_jitter(0), 0)
+  testthat::expect_equal(landisutils:::.resolve_startup_jitter(2.5), 2.5)
+})
+
+testthat::test_that(".resolve_startup_jitter() clamps invalid input to 0", {
+  testthat::expect_equal(landisutils:::.resolve_startup_jitter(-5), 0)
+  testthat::expect_equal(landisutils:::.resolve_startup_jitter(NA_real_), 0)
+})
+
+testthat::test_that(".resolve_startup_jitter() reads LANDIS_STARTUP_JITTER when NULL", {
+  withr::local_envvar(LANDIS_STARTUP_JITTER = "45")
+  testthat::expect_equal(landisutils:::.resolve_startup_jitter(NULL), 45)
+})
+
+testthat::test_that(".resolve_startup_jitter() is 0 when env unset or non-numeric", {
+  withr::local_envvar(LANDIS_STARTUP_JITTER = "")
+  testthat::expect_equal(landisutils:::.resolve_startup_jitter(NULL), 0)
+  withr::local_envvar(LANDIS_STARTUP_JITTER = "abc")
+  testthat::expect_equal(landisutils:::.resolve_startup_jitter(NULL), 0)
+})
+
+testthat::test_that(".resolve_startup_jitter() explicit arg overrides the env var", {
+  withr::local_envvar(LANDIS_STARTUP_JITTER = "60")
+  testthat::expect_equal(landisutils:::.resolve_startup_jitter(10), 10)
+})

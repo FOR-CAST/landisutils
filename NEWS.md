@@ -1,3 +1,7 @@
+# landisutils 0.0.43
+
+* `landis_run_docker()` gains a `startup_jitter` argument (and reads the `LANDIS_STARTUP_JITTER` environment variable when it is `NULL`): when set, each call sleeps a random `runif(0, startup_jitter)` seconds before it first touches Docker, staggering container launches so a large `crew` fleet does not overwhelm the Docker daemon (which stops answering `docker stats` and returns exit 1 under the surge) or hammer the disk backing the image layers and renv library when dozens of replicates start at once. Because the delay cannot change results, `tar_landis()` does not bake it into the `{targets}` command, so tuning it never invalidates completed replicates.
+
 # landisutils 0.0.42
 
 * `landis_run_docker()`, `tar_landis()`, `landis_pool_start()`, and the `calibrate_dynamic_fire()` config default for `cpu_limit` change from `4` to `2`. Empirical measurement across 90 concurrent ForCS + Dynamic Fire + Dynamic Fuels containers under live calibration shows the LANDIS-II console process is effectively single-threaded (median 1.00 cores, p99 1.11 cores, max 1.11 cores) -- the prior default of `4` overprovisioned by ~4x. The new default of `2` covers the 99th-percentile .NET-GC / threadpool burst with comfortable headroom while letting users pack more containers into the same nominal CPU budget; `1` would be tight enough to risk contention between the simulator thread and the .NET GC helper.

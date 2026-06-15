@@ -232,6 +232,23 @@ read_landis_resource_logs <- function(run_dir) {
   max(baseline, prior_peak * mem_margin)
 }
 
+## Resolve the startup-jitter upper bound (seconds) for staggering container
+## launches. `startup_jitter` NULL falls back to the LANDIS_STARTUP_JITTER env
+## var so it can be set once in a project .Rprofile that crew workers inherit;
+## an unset/blank/non-numeric/negative value (or NA) means 0 (no stagger).
+## Returns a single non-negative numeric.
+.resolve_startup_jitter <- function(startup_jitter = NULL) {
+  if (is.null(startup_jitter)) {
+    startup_jitter <- suppressWarnings(as.numeric(Sys.getenv("LANDIS_STARTUP_JITTER", "0")))
+  } else {
+    startup_jitter <- suppressWarnings(as.numeric(startup_jitter)[1L])
+  }
+  if (length(startup_jitter) != 1L || is.na(startup_jitter) || startup_jitter < 0) {
+    return(0)
+  }
+  startup_jitter
+}
+
 ## Format an integer number of seconds as "Xh Ym Zs" / "Ym Zs" / "Zs".
 .fmt_duration <- function(seconds) {
   s <- as.integer(round(seconds))
@@ -535,6 +552,18 @@ landis_run_local <- function(scenario_dir, scenario_file = "scenario.txt", conso
 #'   (outputs are already on disk, so the sim itself completed cleanly). On
 #'   timeout the container is stopped and exit codes 137/143 are remapped to
 #'   `0`. Set to `Inf` to disable the watchdog. Default `300` (5 min).
+#' @param startup_jitter Numeric seconds or `NULL`. Upper bound on a random
+#'   start delay applied **before** the function touches Docker, to stagger
+#'   container launches and avoid a thundering-herd surge on the Docker daemon
+#'   (and on the disk backing the image layers / renv library) when many
+#'   replicates start at once under `crew`. Each call sleeps
+#'   `runif(1, 0, startup_jitter)` seconds. The delay cannot affect simulation
+#'   results (identical seed and inputs), so when run from `tar_landis()` it is
+#'   deliberately **not** baked into the `{targets}` command -- changing it
+#'   never invalidates completed replicates. `NULL` (the default) reads the
+#'   `LANDIS_STARTUP_JITTER` environment variable (so it can be set once in a
+#'   project `.Rprofile` that `crew` workers inherit); an unset/invalid value
+#'   means `0` (no stagger).
 #'
 #' @returns Named list with `exit_code` (integer), `elapsed_sec` (numeric), and
 #'   `peak_mem_bytes` (numeric), returned invisibly.
@@ -551,7 +580,8 @@ landis_run_docker <- function(
   cpu_limit = 2,
   mem_limit = "8g",
   mem_margin = 1.5,
-  post_completion_timeout_sec = 300
+  post_completion_timeout_sec = 300,
+  startup_jitter = NULL
 ) {
   image <- image %||% getOption("landisutils.docker.image")
   console <- console %||% landis_find_docker()
@@ -566,6 +596,24 @@ landis_run_docker <- function(
   }
 
   log_dir <- fs::dir_create(fs::path(scenario_dir, "log"))
+
+  ## Stagger container startup: when many replicates launch at once under crew,
+  ## the simultaneous `docker run` storm overwhelms the daemon (it stops
+  ## answering `docker stats`, returning exit 1) and the simultaneous reads of
+  ## the image layers / renv library hammer the backing disk -- both observed to
+  ## churn crew workers at >=50-way concurrency. A small random pre-Docker delay
+  ## spreads the herd. It cannot change results (same seed and inputs), so it is
+  ## read from an env var at run time rather than baked into the {targets}
+  ## command (changing it never invalidates a completed rep). Default 0 (off).
+  startup_jitter <- .resolve_startup_jitter(startup_jitter)
+  if (startup_jitter > 0) {
+    jitter_sec <- stats::runif(1L, 0, startup_jitter)
+    message(glue::glue(
+      "  staggering start by {format(round(jitter_sec, 1L), nsmall = 1L)}s ",
+      "(jitter <= {startup_jitter}s) to ease the Docker/disk startup surge"
+    ))
+    Sys.sleep(jitter_sec)
+  }
 
   ## Optionally pull the image so the captured digest reflects the current
   ## registry rather than a possibly-stale local copy.
