@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.42</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.43</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -40,6 +40,11 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.43" id="landisutils-0043">landisutils 0.0.43<a class="anchor" aria-label="anchor" href="#landisutils-0043"></a></h2>
+<ul><li>
+<code><a href="../reference/landis_run_docker.html">landis_run_docker()</a></code> gains a <code>startup_jitter</code> argument (and reads the <code>LANDIS_STARTUP_JITTER</code> environment variable when it is <code>NULL</code>): when set, each call sleeps a random <code>runif(0, startup_jitter)</code> seconds before it first touches Docker, staggering container launches so a large <code>crew</code> fleet does not overwhelm the Docker daemon (which stops answering <code>docker stats</code> and returns exit 1 under the surge) or hammer the disk backing the image layers and renv library when dozens of replicates start at once. Because the delay cannot change results, <code><a href="../reference/tar_landis.html">tar_landis()</a></code> does not bake it into the <a href="https://docs.ropensci.org/targets/" class="external-link">targets</a> command, so tuning it never invalidates completed replicates.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.42" id="landisutils-0042">landisutils 0.0.42<a class="anchor" aria-label="anchor" href="#landisutils-0042"></a></h2>
 <ul><li>

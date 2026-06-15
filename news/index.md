@@ -1,5 +1,21 @@
 # Changelog
 
+## landisutils 0.0.43
+
+- [`landis_run_docker()`](https://for-cast.github.io/landisutils/reference/landis_run_docker.md)
+  gains a `startup_jitter` argument (and reads the
+  `LANDIS_STARTUP_JITTER` environment variable when it is `NULL`): when
+  set, each call sleeps a random `runif(0, startup_jitter)` seconds
+  before it first touches Docker, staggering container launches so a
+  large `crew` fleet does not overwhelm the Docker daemon (which stops
+  answering `docker stats` and returns exit 1 under the surge) or hammer
+  the disk backing the image layers and renv library when dozens of
+  replicates start at once. Because the delay cannot change results,
+  [`tar_landis()`](https://for-cast.github.io/landisutils/reference/tar_landis.md)
+  does not bake it into the
+  [targets](https://docs.ropensci.org/targets/) command, so tuning it
+  never invalidates completed replicates.
+
 ## landisutils 0.0.42
 
 - [`landis_run_docker()`](https://for-cast.github.io/landisutils/reference/landis_run_docker.md),

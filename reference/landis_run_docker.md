@@ -23,7 +23,8 @@ landis_run_docker(
   cpu_limit = 2,
   mem_limit = "8g",
   mem_margin = 1.5,
-  post_completion_timeout_sec = 300
+  post_completion_timeout_sec = 300,
+  startup_jitter = NULL
 )
 ```
 
@@ -97,6 +98,22 @@ landis_run_docker(
   are already on disk, so the sim itself completed cleanly). On timeout
   the container is stopped and exit codes 137/143 are remapped to `0`.
   Set to `Inf` to disable the watchdog. Default `300` (5 min).
+
+- startup_jitter:
+
+  Numeric seconds or `NULL`. Upper bound on a random start delay applied
+  **before** the function touches Docker, to stagger container launches
+  and avoid a thundering-herd surge on the Docker daemon (and on the
+  disk backing the image layers / renv library) when many replicates
+  start at once under `crew`. Each call sleeps
+  `runif(1, 0, startup_jitter)` seconds. The delay cannot affect
+  simulation results (identical seed and inputs), so when run from
+  [`tar_landis()`](https://for-cast.github.io/landisutils/reference/tar_landis.md)
+  it is deliberately **not** baked into the `{targets}` command –
+  changing it never invalidates completed replicates. `NULL` (the
+  default) reads the `LANDIS_STARTUP_JITTER` environment variable (so it
+  can be set once in a project `.Rprofile` that `crew` workers inherit);
+  an unset/invalid value means `0` (no stagger).
 
 ## Value
 

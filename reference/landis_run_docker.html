@@ -25,7 +25,7 @@ pin runs to a specific image regardless of subsequent tag movement."><meta prope
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.42</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.43</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -83,7 +83,8 @@ pin runs to a specific image regardless of subsequent tag movement.</p>
 <span>  cpu_limit <span class="op">=</span> <span class="fl">2</span>,</span>
 <span>  mem_limit <span class="op">=</span> <span class="st">"8g"</span>,</span>
 <span>  mem_margin <span class="op">=</span> <span class="fl">1.5</span>,</span>
-<span>  post_completion_timeout_sec <span class="op">=</span> <span class="fl">300</span></span>
+<span>  post_completion_timeout_sec <span class="op">=</span> <span class="fl">300</span>,</span>
+<span>  startup_jitter <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -159,6 +160,21 @@ marker but then spin in the .NET runtime shutdown path indefinitely
 (outputs are already on disk, so the sim itself completed cleanly). On
 timeout the container is stopped and exit codes 137/143 are remapped to
 <code>0</code>. Set to <code>Inf</code> to disable the watchdog. Default <code>300</code> (5 min).</p></dd>
+
+
+<dt id="arg-startup-jitter">startup_jitter<a class="anchor" aria-label="anchor" href="#arg-startup-jitter"></a></dt>
+<dd><p>Numeric seconds or <code>NULL</code>. Upper bound on a random
+start delay applied <strong>before</strong> the function touches Docker, to stagger
+container launches and avoid a thundering-herd surge on the Docker daemon
+(and on the disk backing the image layers / renv library) when many
+replicates start at once under <code>crew</code>. Each call sleeps
+<code>runif(1, 0, startup_jitter)</code> seconds. The delay cannot affect simulation
+results (identical seed and inputs), so when run from <code><a href="tar_landis.html">tar_landis()</a></code> it is
+deliberately <strong>not</strong> baked into the <code>{targets}</code> command – changing it
+never invalidates completed replicates. <code>NULL</code> (the default) reads the
+<code>LANDIS_STARTUP_JITTER</code> environment variable (so it can be set once in a
+project <code>.Rprofile</code> that <code>crew</code> workers inherit); an unset/invalid value
+means <code>0</code> (no stagger).</p></dd>
 
 </dl></div>
     <div class="section level2">
