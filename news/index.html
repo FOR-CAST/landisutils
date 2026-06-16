@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.44</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.45</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -40,6 +40,11 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.45" id="landisutils-0045">landisutils 0.0.45<a class="anchor" aria-label="anchor" href="#landisutils-0045"></a></h2>
+<ul><li>
+<code><a href="../reference/build_calibration_spinup_scenario.html">build_calibration_spinup_scenario()</a></code> and <code><a href="../reference/build_calibration_scenario_template.html">build_calibration_scenario_template()</a></code> now resolve the species-definitions file from the template scenario’s <code>Species</code> directive (new internal <code>.calibration_species_file()</code>) instead of assuming the name <code>species.txt</code>. BC_HRV’s Biomass Succession scenarios name it <code>species-core.txt</code>, so the calibration spinup previously aborted with <code>fs::file_exists(species_file) is not TRUE</code>; scenarios that use <code>species.txt</code> are unaffected (it remains the fallback).</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.44" id="landisutils-0044">landisutils 0.0.44<a class="anchor" aria-label="anchor" href="#landisutils-0044"></a></h2>
 <ul><li>

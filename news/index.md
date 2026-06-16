@@ -1,5 +1,18 @@
 # Changelog
 
+## landisutils 0.0.45
+
+- [`build_calibration_spinup_scenario()`](https://for-cast.github.io/landisutils/reference/build_calibration_spinup_scenario.md)
+  and
+  [`build_calibration_scenario_template()`](https://for-cast.github.io/landisutils/reference/build_calibration_scenario_template.md)
+  now resolve the species-definitions file from the template scenario’s
+  `Species` directive (new internal `.calibration_species_file()`)
+  instead of assuming the name `species.txt`. BC_HRV’s Biomass
+  Succession scenarios name it `species-core.txt`, so the calibration
+  spinup previously aborted with
+  `fs::file_exists(species_file) is not TRUE`; scenarios that use
+  `species.txt` are unaffected (it remains the fallback).
+
 ## landisutils 0.0.44
 
 - [`save_observed_fire_targets()`](https://for-cast.github.io/landisutils/reference/save_observed_fire_targets.md)
