@@ -505,8 +505,8 @@ apply_calibrated_hi_prop <- function(fire_size_table, calibrated_fire_params) {
 
 #' Default fuel-code -> base-fuel-type mapping (BC FUEL_TYPE_CD factor levels)
 #'
-#' Returns the mapping used by gitanyow-partial-harvest and other projects that
-#' use the BC `FUEL_TYPE_CD` factor encoding for `fuel_types_rast`. Levels
+#' Returns the mapping used by downstream projects that use the BC
+#' `FUEL_TYPE_CD` factor encoding for `fuel_types_rast`. Levels
 #' correspond to: 1=B71_S-2, 2=C-2, 3=C-3, 4=C-4, 5=C-5, 6=C-6, 7=C-7, 8=D-1/2,
 #' 9=M-1/2, 10=N (non-fuel), 11=O-1a/b, 12=S-1, 13=S-3. Mapped to the five base
 #' types accepted by [defaultFuelTypeTable()] / [calibration_par_names()].
@@ -712,7 +712,7 @@ save_observed_fire_targets <- function(
   payload <- list(
     primary = primary,
     secondary = secondary,
-    fru59 = primary, ## back-compat alias for the gitanyow project's loss_from_stats() refs
+    fru59 = primary, ## back-compat alias kept for downstream loss_from_stats() refs
     frt12 = secondary, ## back-compat alias
     fuel_code_to_base = fuel_code_to_base,
     fire_years_range = c(min = min(fire_years), max = max(fire_years)),
@@ -884,19 +884,36 @@ save_observed_fire_targets <- function(
   }
 }
 
-## Resolve the species-definitions file the template scenario actually references, rather than assuming
-## the name "species.txt": the Biomass Succession scenario names it "species-core.txt". Reads the
-## "Species <file>" directive from dir/scenario.txt; falls back to "species.txt" if it is absent.
-.calibration_species_file <- function(dir) {
-  nm <- "species.txt"
-  sc <- fs::path(dir, "scenario.txt")
-  if (fs::file_exists(sc)) {
-    hit <- grep("^[[:space:]]*Species[[:space:]]", readLines(sc, warn = FALSE), value = TRUE)
+## Resolve an input file the template scenario actually references, rather than assuming a fixed name:
+## reads the `<directive> <file>` line from `dir/config` (stripping any trailing `>>` comment) and
+## returns `dir/<file>`; falls back to `dir/default` when the config or directive is absent. This lets
+## the calibration builders work across scenarios that name the same input differently -- e.g. the
+## Dynamic Fire weather DB is `initial_weather_database.csv` in some scenarios and
+## `initial-weather-database.csv` in others -- without hard-coding either convention.
+.calibration_directive_file <- function(dir, config, directive, default) {
+  nm <- default
+  cf <- fs::path(dir, config)
+  if (fs::file_exists(cf)) {
+    hit <- grep(
+      paste0("^[[:space:]]*", directive, "[[:space:]]"),
+      readLines(cf, warn = FALSE),
+      value = TRUE
+    )
     if (length(hit) > 0L) {
-      nm <- trimws(sub(">>.*$", "", sub("^[[:space:]]*Species[[:space:]]+", "", hit[[1L]])))
+      nm <- trimws(sub(
+        ">>.*$",
+        "",
+        sub(paste0("^[[:space:]]*", directive, "[[:space:]]+"), "", hit[[1L]])
+      ))
     }
   }
   fs::path(dir, nm)
+}
+
+## The species-definitions file the template scenario references (the scenario.txt `Species` directive);
+## falls back to "species.txt" (some scenarios name it "species-core.txt").
+.calibration_species_file <- function(dir) {
+  .calibration_directive_file(dir, "scenario.txt", "Species", "species.txt")
 }
 
 #' Build a calibration spinup scenario directory
@@ -1169,17 +1186,42 @@ build_calibration_scenario_template <- function(
       BuildUpIndex = "yes",
       WeatherRandomizer = 0L,
       FireSizesTable = baseline_fire_size_table,
-      InitialFireEcoregionsMap = fs::path(out_dir, "fire-ecoregions.tif"),
+      InitialFireEcoregionsMap = .calibration_directive_file(
+        out_dir,
+        "dynamic-fire.txt",
+        "InitialFireEcoregionsMap",
+        "fire-ecoregions.tif"
+      ),
       DynamicEcoregionTable = prepDynamicEcoregionTable(),
-      GroundSlopeFile = fs::path(out_dir, "ground_slope.tif"),
-      UphillSlopeAzimuthMap = fs::path(out_dir, "uphill_slope_azimuth.tif"),
+      GroundSlopeFile = .calibration_directive_file(
+        out_dir,
+        "dynamic-fire.txt",
+        "GroundSlopeFile",
+        "ground_slope.tif"
+      ),
+      UphillSlopeAzimuthMap = .calibration_directive_file(
+        out_dir,
+        "dynamic-fire.txt",
+        "UphillSlopeAzimuthMap",
+        "uphill_slope_azimuth.tif"
+      ),
       SeasonTable = baseline_seasons_sim_table,
-      InitialWeatherDatabase = fs::path(out_dir, "initial_weather_database.csv"),
+      InitialWeatherDatabase = .calibration_directive_file(
+        out_dir,
+        "dynamic-fire.txt",
+        "InitialWeatherDatabase",
+        "initial_weather_database.csv"
+      ),
       DynamicWeatherTable = NULL,
       FuelTypeTable = baseline_fuel_type_table,
       SeverityCalibrationFactor = 1.0, ## baseline; calibrated factor is applied production-side
       FireDamageTable = baseline_fire_damage_table,
-      Species_CSV_File = fs::path(out_dir, "DynamicFire_Spp_Table.csv"),
+      Species_CSV_File = .calibration_directive_file(
+        out_dir,
+        "dynamic-fire.txt",
+        "Species_CSV_File",
+        "DynamicFire_Spp_Table.csv"
+      ),
       MapNames = NULL,
       LogFile = file.path(out_dir, "fire/dynamic-fire-event-log.csv"),
       SummaryLogFile = file.path(out_dir, "fire/dynamic-fire-summary-log.csv")
@@ -1468,8 +1510,7 @@ sim_landis <- function(
 #' contract.
 #'
 #' Currently raises; see the comparison-of-approaches discussion in the
-#' gitanyow-partial-harvest project's `_tmp_dynamic_fire_calibration.md` for
-#' design notes.
+#' Dynamic Fire calibration design notes for the rationale.
 #'
 #' @param ... Same shape as [sim_landis()].
 #'

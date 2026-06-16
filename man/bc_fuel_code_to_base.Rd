@@ -12,8 +12,8 @@ Character vector of length 13, names "1".."13", values
 \code{"Open"} / \code{NA_character_}.
 }
 \description{
-Returns the mapping used by gitanyow-partial-harvest and other projects that
-use the BC \code{FUEL_TYPE_CD} factor encoding for \code{fuel_types_rast}. Levels
+Returns the mapping used by downstream projects that use the BC
+\code{FUEL_TYPE_CD} factor encoding for \code{fuel_types_rast}. Levels
 correspond to: 1=B71_S-2, 2=C-2, 3=C-3, 4=C-4, 5=C-5, 6=C-6, 7=C-7, 8=D-1/2,
 9=M-1/2, 10=N (non-fuel), 11=O-1a/b, 12=S-1, 13=S-3. Mapped to the five base
 types accepted by \code{\link[=defaultFuelTypeTable]{defaultFuelTypeTable()}} / \code{\link[=calibration_par_names]{calibration_par_names()}}.

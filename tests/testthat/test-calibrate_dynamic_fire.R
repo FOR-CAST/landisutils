@@ -1183,3 +1183,57 @@ test_that(".calibration_species_file() falls back to species.txt when the direct
   dir2 <- withr::local_tempdir() ## no scenario.txt at all
   expect_equal(.calibration_species_file(dir2), fs::path(dir2, "species.txt"))
 })
+
+test_that(".calibration_directive_file() reads a directive from any config + strips comments", {
+  dir <- withr::local_tempdir()
+  writeLines(
+    c(
+      "LandisData \"Dynamic Fire System\"",
+      "InitialWeatherDatabase    initial-weather-database.csv  >> hyphenated names",
+      "Species_CSV_File    dynamic-fire-species.csv"
+    ),
+    fs::path(dir, "dynamic-fire.txt")
+  )
+  expect_equal(
+    .calibration_directive_file(
+      dir,
+      "dynamic-fire.txt",
+      "InitialWeatherDatabase",
+      "initial_weather_database.csv"
+    ),
+    fs::path(dir, "initial-weather-database.csv")
+  )
+  expect_equal(
+    .calibration_directive_file(
+      dir,
+      "dynamic-fire.txt",
+      "Species_CSV_File",
+      "DynamicFire_Spp_Table.csv"
+    ),
+    fs::path(dir, "dynamic-fire-species.csv")
+  )
+})
+
+test_that(".calibration_directive_file() falls back to the default when directive/config absent", {
+  dir <- withr::local_tempdir()
+  writeLines("LandisData \"Dynamic Fire System\"", fs::path(dir, "dynamic-fire.txt"))
+  expect_equal(
+    .calibration_directive_file(
+      dir,
+      "dynamic-fire.txt",
+      "InitialWeatherDatabase",
+      "initial_weather_database.csv"
+    ),
+    fs::path(dir, "initial_weather_database.csv")
+  )
+  dir2 <- withr::local_tempdir() ## no config file at all
+  expect_equal(
+    .calibration_directive_file(
+      dir2,
+      "dynamic-fire.txt",
+      "InitialWeatherDatabase",
+      "initial_weather_database.csv"
+    ),
+    fs::path(dir2, "initial_weather_database.csv")
+  )
+})

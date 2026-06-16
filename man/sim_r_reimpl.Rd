@@ -18,8 +18,7 @@ contract.
 }
 \details{
 Currently raises; see the comparison-of-approaches discussion in the
-gitanyow-partial-harvest project's \verb{_tmp_dynamic_fire_calibration.md} for
-design notes.
+Dynamic Fire calibration design notes for the rationale.
 }
 \seealso{
 Other Dynamic Fire calibration helpers:

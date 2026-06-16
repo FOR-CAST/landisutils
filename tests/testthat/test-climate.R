@@ -409,8 +409,10 @@ testthat::test_that("Climate inputs are properly created", {
   clim_vars_daily <- c("prcp", "tmax", "tmin")
 
   # -----------------------------------------------------
-  Renviron_file <- "~/GitHub/BC_HRV/BC_HRV.Renviron"
-  skip_if_not(file.exists(Renviron_file))
+  ## point LANDISUTILS_TEST_RENVIRON / LANDISUTILS_TEST_LANDIS_ROOT at a local .Renviron
+  ## and a LANDIS-II scenario root to exercise this legacy AppEEARS scaffold interactively.
+  Renviron_file <- Sys.getenv("LANDISUTILS_TEST_RENVIRON", "")
+  skip_if_not(nzchar(Renviron_file) && file.exists(Renviron_file))
 
   readRenviron(Renviron_file)
 
@@ -421,7 +423,8 @@ testthat::test_that("Climate inputs are properly created", {
   keyring::keyring_unlock("appeears", "")
 
   studyAreaName <- "NRR_Cariboo"
-  tmp_pth <- glue::glue("~/GitHub/BC_HRV/LANDIS-II/{studyAreaName}_landis_LH_hrv_NDTBEC_FRT_res125")
+  landis_root <- Sys.getenv("LANDISUTILS_TEST_LANDIS_ROOT", "")
+  tmp_pth <- file.path(landis_root, glue::glue("{studyAreaName}_landis_LH_hrv_NDTBEC_FRT_res125"))
   studyArea <- file.path(tmp_pth, "ecoregions.shp") |> sf::st_read(quiet = TRUE)
 
   tmp_data_path <- file.path(tmp_pth, "climate", studyAreaName) |> fs::dir_create()
@@ -484,7 +487,7 @@ testthat::test_that("Climate inputs are properly created", {
     reqs,
     purrr::insistently(
       function(req) {
-        readRenviron("~/GitHub/BC_HRV/BC_HRV.Renviron")
+        readRenviron(Sys.getenv("LANDISUTILS_TEST_RENVIRON"))
 
         options(keyring_backend = "file")
 
@@ -567,7 +570,7 @@ testthat::test_that("Climate inputs are properly created", {
   future.apply::future_lapply(
     task_ids,
     purrr::insistently(function(id) {
-      readRenviron("~/GitHub/BC_HRV/BC_HRV.Renviron")
+      readRenviron(Sys.getenv("LANDISUTILS_TEST_RENVIRON"))
 
       options(keyring_backend = "file")
 
