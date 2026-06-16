@@ -1,3 +1,8 @@
+# landisutils 0.0.44
+
+* `save_observed_fire_targets()` now derives `fire_sizes_ha` from the polygons' `SIZE_HA` attribute when polygons are supplied and non-empty, falling back to the points' `SIZE_HA` otherwise. The previous behaviour always read sizes from points (NFDB agency-reported sizes), which meant that callers passing higher-quality perimeter polygons (e.g. NBAC's ADJ_HA) for `primary_polys`/`secondary_polys` only got the better data into `area_by_fuel_ha`; the size distribution still came from NFDB. Now NBAC perimeters drive the size CDF too. Callers that pass NFDB polygons see no behaviour change because NFDB polys carry the same `SIZE_HA` field. Callers without polys keep the old points-driven behaviour.
+* `save_observed_fire_targets()` `primary_polys` argument is now optional (was required). When `NULL`, the function falls back to points-driven sizes and skips the `area_by_fuel_ha` computation. Matches the existing optional treatment of `secondary_polys`. Existing callers passing a `SpatVector` are unaffected.
+
 # landisutils 0.0.43
 
 * `landis_run_docker()` gains a `startup_jitter` argument (and reads the `LANDIS_STARTUP_JITTER` environment variable when it is `NULL`): when set, each call sleeps a random `runif(0, startup_jitter)` seconds before it first touches Docker, staggering container launches so a large `crew` fleet does not overwhelm the Docker daemon (which stops answering `docker stats` and returns exit 1 under the surge) or hammer the disk backing the image layers and renv library when dozens of replicates start at once. Because the delay cannot change results, `tar_landis()` does not bake it into the `{targets}` command, so tuning it never invalidates completed replicates.

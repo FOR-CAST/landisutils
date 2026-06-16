@@ -333,8 +333,11 @@ test_that("save_observed_fire_targets() writes a payload with expected shape", {
   expect_equal(p$n_ignitions, 3L)
   expect_equal(p$n_polys, 1L)
   expect_equal(p$lambda_obs, 3 / 11) ## 3 fires over 11 years
-  ## Sizes: SIZE_HA = 0.5 dropped (would be zero-ish + need positive); 5 and 100 kept
-  expect_equal(p$fire_sizes_ha, sort(c(5.0, 100.0, 0.5)))
+  ## Sizes come from the polygons' SIZE_HA when polys are supplied (NBAC's
+  ## ADJ_HA is more accurate than NFDB's agency-reported point sizes); the
+  ## points' SIZE_HA (5, 100, 0.5) is only used in the no-polys fallback
+  ## case -- covered by the dedicated test below.
+  expect_equal(p$fire_sizes_ha, sort(c(100.0)))
   ## area_by_fuel_ha: polygon overlaps deciduous cells only (codes 8)
   expect_s3_class(p$area_by_fuel_ha, "tbl_df")
   expect_true("Deciduous" %in% p$area_by_fuel_ha$base)
@@ -344,6 +347,38 @@ test_that("save_observed_fire_targets() writes a payload with expected shape", {
   expect_null(payload$frt12)
   ## Aliases populated
   expect_identical(payload$fru59, payload$primary)
+})
+
+test_that("save_observed_fire_targets() falls back to points' SIZE_HA when polys are not supplied", {
+  ## Same synthetic landscape as the main payload-shape test, but with NO
+  ## polygon input -- exercises the fallback branch in `.summarise()`.
+  r <- terra::rast(nrows = 10, ncols = 10, xmin = 0, xmax = 1000, ymin = 0, ymax = 1000)
+  terra::values(r) <- rep(c(rep(2L, 5), rep(8L, 5)), 10)
+  pts <- terra::vect(
+    data.frame(
+      lon = c(250, 750, 300),
+      lat = c(500, 500, 200),
+      YEAR = c(2010L, 2015L, 2020L),
+      SIZE_HA = c(5.0, 100.0, 0.5)
+    ),
+    geom = c("lon", "lat"),
+    crs = terra::crs(r)
+  )
+
+  out_path <- withr::local_tempfile(fileext = ".rds")
+  result_path <- save_observed_fire_targets(
+    primary_points = pts,
+    primary_polys = NULL,
+    fire_years = 2010L:2020L,
+    fuel_types_rast = r,
+    path = out_path,
+    primary_label = "TEST_REGION"
+  )
+  payload <- readRDS(result_path)
+  p <- payload$primary
+  expect_equal(p$n_polys, 0L)
+  expect_equal(p$fire_sizes_ha, sort(c(0.5, 5.0, 100.0)))
+  expect_null(p$area_by_fuel_ha) ## skipped when no polys are supplied
 })
 
 test_that("save_observed_fire_targets() accepts a custom fuel_code_to_base mapping", {

@@ -570,8 +570,14 @@ bc_fuel_code_to_base <- function() {
 #'         misleading (it would just be the primary value over again).
 #' }
 #'
-#' @param primary_points,primary_polys SpatVector. NFDB ignition points and
-#'   fire polygons for the primary ecoregion (the LANDIS simulation extent).
+#' @param primary_points SpatVector. NFDB ignition points for the primary
+#'   ecoregion (the LANDIS simulation extent). Required.
+#' @param primary_polys SpatVector or NULL. Fire perimeter polygons for the
+#'   primary ecoregion. When supplied, `fire_sizes_ha` is drawn from the
+#'   polys' `SIZE_HA` (e.g. NBAC's `ADJ_HA`) and `area_by_fuel_ha` is computed
+#'   by rasterising the polys against `fuel_types_rast`. When NULL,
+#'   `fire_sizes_ha` falls back to the points' `SIZE_HA` (NFDB agency-reported
+#'   sizes) and `area_by_fuel_ha` is NULL on the primary summary.
 #' @param secondary_points,secondary_polys SpatVector or NULL. Same, for an
 #'   optional regional-context ecoregion. `area_by_fuel_ha` is NOT computed
 #'   for the secondary (see Details).
@@ -613,7 +619,11 @@ save_observed_fire_targets <- function(
 ) {
   stopifnot(
     inherits(primary_points, "SpatVector"),
-    inherits(primary_polys, "SpatVector"),
+    ## primary_polys is optional: when NULL, fire_sizes_ha falls back to the
+    ## points' SIZE_HA and area_by_fuel_ha is skipped. Callers that pass NBAC
+    ## perimeters get sizes from the polys; callers with only NFDB-style
+    ## ignition points still work, just without the area-by-fuel target.
+    is.null(primary_polys) || inherits(primary_polys, "SpatVector"),
     is.null(secondary_points) || inherits(secondary_points, "SpatVector"),
     is.null(secondary_polys) || inherits(secondary_polys, "SpatVector"),
     is.numeric(fire_years),
@@ -639,7 +649,18 @@ save_observed_fire_targets <- function(
       n = vapply(as.integer(fire_years), function(y) sum(pts_year == y, na.rm = TRUE), integer(1))
     )
 
-    sizes_raw <- pts[["SIZE_HA"]]
+    ## fire_sizes_ha source preference:
+    ## 1. polygons' SIZE_HA when polys are supplied and non-empty (NBAC's
+    ##    ADJ_HA is the mapped burn perimeter minus unburned islands -- the
+    ##    most accurate per-fire area). Only polygons with SIZE_HA set are
+    ##    used; polys without an area attribute are skipped.
+    ## 2. points' SIZE_HA otherwise (NFDB's agency-reported size; available
+    ##    even for very small fires that NBAC does not map).
+    sizes_raw <- if (nrow(plys) > 0L && "SIZE_HA" %in% colnames(plys)) {
+      plys[["SIZE_HA"]]
+    } else {
+      pts[["SIZE_HA"]]
+    }
     fire_sizes_ha <- sort(sizes_raw[!is.na(sizes_raw) & sizes_raw > 0])
 
     if (isTRUE(compute_area_by_fuel) && !is.null(polys_sv) && nrow(plys) > 0L) {

@@ -19,8 +19,15 @@ save_observed_fire_targets(
 )
 }
 \arguments{
-\item{primary_points, primary_polys}{SpatVector. NFDB ignition points and
-fire polygons for the primary ecoregion (the LANDIS simulation extent).}
+\item{primary_points}{SpatVector. NFDB ignition points for the primary
+ecoregion (the LANDIS simulation extent). Required.}
+
+\item{primary_polys}{SpatVector or NULL. Fire perimeter polygons for the
+primary ecoregion. When supplied, \code{fire_sizes_ha} is drawn from the
+polys' \code{SIZE_HA} (e.g. NBAC's \code{ADJ_HA}) and \code{area_by_fuel_ha} is computed
+by rasterising the polys against \code{fuel_types_rast}. When NULL,
+\code{fire_sizes_ha} falls back to the points' \code{SIZE_HA} (NFDB agency-reported
+sizes) and \code{area_by_fuel_ha} is NULL on the primary summary.}
 
 \item{fire_years}{Integer vector. Years over which counts are normalised
 (denominator for \code{lambda_obs}).}
