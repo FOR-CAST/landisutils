@@ -27,10 +27,20 @@ save_observed_fire_targets(
 
 ## Arguments
 
-- primary_points, primary_polys:
+- primary_points:
 
-  SpatVector. NFDB ignition points and fire polygons for the primary
-  ecoregion (the LANDIS simulation extent).
+  SpatVector. NFDB ignition points for the primary ecoregion (the LANDIS
+  simulation extent). Required.
+
+- primary_polys:
+
+  SpatVector or NULL. Fire perimeter polygons for the primary ecoregion.
+  When supplied, `fire_sizes_ha` is drawn from the polys' `SIZE_HA`
+  (e.g. NBAC's `ADJ_HA`) and `area_by_fuel_ha` is computed by
+  rasterising the polys against `fuel_types_rast`. When NULL,
+  `fire_sizes_ha` falls back to the points' `SIZE_HA` (NFDB
+  agency-reported sizes) and `area_by_fuel_ha` is NULL on the primary
+  summary.
 
 - fire_years:
 

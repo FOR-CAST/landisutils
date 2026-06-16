@@ -1,5 +1,26 @@
 # Changelog
 
+## landisutils 0.0.44
+
+- [`save_observed_fire_targets()`](https://for-cast.github.io/landisutils/reference/save_observed_fire_targets.md)
+  now derives `fire_sizes_ha` from the polygons’ `SIZE_HA` attribute
+  when polygons are supplied and non-empty, falling back to the points’
+  `SIZE_HA` otherwise. The previous behaviour always read sizes from
+  points (NFDB agency-reported sizes), which meant that callers passing
+  higher-quality perimeter polygons (e.g. NBAC’s ADJ_HA) for
+  `primary_polys`/`secondary_polys` only got the better data into
+  `area_by_fuel_ha`; the size distribution still came from NFDB. Now
+  NBAC perimeters drive the size CDF too. Callers that pass NFDB
+  polygons see no behaviour change because NFDB polys carry the same
+  `SIZE_HA` field. Callers without polys keep the old points-driven
+  behaviour.
+- [`save_observed_fire_targets()`](https://for-cast.github.io/landisutils/reference/save_observed_fire_targets.md)
+  `primary_polys` argument is now optional (was required). When `NULL`,
+  the function falls back to points-driven sizes and skips the
+  `area_by_fuel_ha` computation. Matches the existing optional treatment
+  of `secondary_polys`. Existing callers passing a `SpatVector` are
+  unaffected.
+
 ## landisutils 0.0.43
 
 - [`landis_run_docker()`](https://for-cast.github.io/landisutils/reference/landis_run_docker.md)

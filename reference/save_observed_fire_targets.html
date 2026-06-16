@@ -13,7 +13,7 @@ can read it from disk without terra/sf in their environments."><meta property="o
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.43</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.44</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -75,9 +75,18 @@ can read it from disk without terra/sf in their environments.</p>
     <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
 
 
-<dl><dt id="arg-primary-points-primary-polys">primary_points, primary_polys<a class="anchor" aria-label="anchor" href="#arg-primary-points-primary-polys"></a></dt>
-<dd><p>SpatVector. NFDB ignition points and
-fire polygons for the primary ecoregion (the LANDIS simulation extent).</p></dd>
+<dl><dt id="arg-primary-points">primary_points<a class="anchor" aria-label="anchor" href="#arg-primary-points"></a></dt>
+<dd><p>SpatVector. NFDB ignition points for the primary
+ecoregion (the LANDIS simulation extent). Required.</p></dd>
+
+
+<dt id="arg-primary-polys">primary_polys<a class="anchor" aria-label="anchor" href="#arg-primary-polys"></a></dt>
+<dd><p>SpatVector or NULL. Fire perimeter polygons for the
+primary ecoregion. When supplied, <code>fire_sizes_ha</code> is drawn from the
+polys' <code>SIZE_HA</code> (e.g. NBAC's <code>ADJ_HA</code>) and <code>area_by_fuel_ha</code> is computed
+by rasterising the polys against <code>fuel_types_rast</code>. When NULL,
+<code>fire_sizes_ha</code> falls back to the points' <code>SIZE_HA</code> (NFDB agency-reported
+sizes) and <code>area_by_fuel_ha</code> is NULL on the primary summary.</p></dd>
 
 
 <dt id="arg-fire-years">fire_years<a class="anchor" aria-label="anchor" href="#arg-fire-years"></a></dt>

@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.43</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.44</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -40,6 +40,13 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.44" id="landisutils-0044">landisutils 0.0.44<a class="anchor" aria-label="anchor" href="#landisutils-0044"></a></h2>
+<ul><li>
+<code><a href="../reference/save_observed_fire_targets.html">save_observed_fire_targets()</a></code> now derives <code>fire_sizes_ha</code> from the polygons’ <code>SIZE_HA</code> attribute when polygons are supplied and non-empty, falling back to the points’ <code>SIZE_HA</code> otherwise. The previous behaviour always read sizes from points (NFDB agency-reported sizes), which meant that callers passing higher-quality perimeter polygons (e.g. NBAC’s ADJ_HA) for <code>primary_polys</code>/<code>secondary_polys</code> only got the better data into <code>area_by_fuel_ha</code>; the size distribution still came from NFDB. Now NBAC perimeters drive the size CDF too. Callers that pass NFDB polygons see no behaviour change because NFDB polys carry the same <code>SIZE_HA</code> field. Callers without polys keep the old points-driven behaviour.</li>
+<li>
+<code><a href="../reference/save_observed_fire_targets.html">save_observed_fire_targets()</a></code> <code>primary_polys</code> argument is now optional (was required). When <code>NULL</code>, the function falls back to points-driven sizes and skips the <code>area_by_fuel_ha</code> computation. Matches the existing optional treatment of <code>secondary_polys</code>. Existing callers passing a <code>SpatVector</code> are unaffected.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.43" id="landisutils-0043">landisutils 0.0.43<a class="anchor" aria-label="anchor" href="#landisutils-0043"></a></h2>
 <ul><li>
