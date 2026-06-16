@@ -1,3 +1,7 @@
+# landisutils 0.0.45
+
+* `build_calibration_spinup_scenario()` and `build_calibration_scenario_template()` now resolve the species-definitions file from the template scenario's `Species` directive (new internal `.calibration_species_file()`) instead of assuming the name `species.txt`. BC_HRV's Biomass Succession scenarios name it `species-core.txt`, so the calibration spinup previously aborted with `fs::file_exists(species_file) is not TRUE`; scenarios that use `species.txt` are unaffected (it remains the fallback).
+
 # landisutils 0.0.44
 
 * `save_observed_fire_targets()` now derives `fire_sizes_ha` from the polygons' `SIZE_HA` attribute when polygons are supplied and non-empty, falling back to the points' `SIZE_HA` otherwise. The previous behaviour always read sizes from points (NFDB agency-reported sizes), which meant that callers passing higher-quality perimeter polygons (e.g. NBAC's ADJ_HA) for `primary_polys`/`secondary_polys` only got the better data into `area_by_fuel_ha`; the size distribution still came from NFDB. Now NBAC perimeters drive the size CDF too. Callers that pass NFDB polygons see no behaviour change because NFDB polys carry the same `SIZE_HA` field. Callers without polys keep the old points-driven behaviour.

@@ -884,6 +884,21 @@ save_observed_fire_targets <- function(
   }
 }
 
+## Resolve the species-definitions file the template scenario actually references, rather than assuming
+## the name "species.txt": the Biomass Succession scenario names it "species-core.txt". Reads the
+## "Species <file>" directive from dir/scenario.txt; falls back to "species.txt" if it is absent.
+.calibration_species_file <- function(dir) {
+  nm <- "species.txt"
+  sc <- fs::path(dir, "scenario.txt")
+  if (fs::file_exists(sc)) {
+    hit <- grep("^[[:space:]]*Species[[:space:]]", readLines(sc, warn = FALSE), value = TRUE)
+    if (length(hit) > 0L) {
+      nm <- trimws(sub(">>.*$", "", sub("^[[:space:]]*Species[[:space:]]+", "", hit[[1L]])))
+    }
+  }
+  fs::path(dir, nm)
+}
+
 #' Build a calibration spinup scenario directory
 #'
 #' Materialises a self-contained LANDIS-II scenario whose only purpose is to run
@@ -958,7 +973,7 @@ build_calibration_spinup_scenario <- function(
 
   backend <- .calibration_succession_backend(out_dir) ## ForCS or Biomass Succession
   succession_file <- fs::path(out_dir, backend$file)
-  species_file <- fs::path(out_dir, "species.txt")
+  species_file <- .calibration_species_file(out_dir)
   eco_files <- c(fs::path(out_dir, "ecoregions.txt"), fs::path(out_dir, "ecoregions.tif"))
   obc_file <- fs::path(out_dir, "output-biomass-community.txt")
   stopifnot(
@@ -1175,7 +1190,7 @@ build_calibration_scenario_template <- function(
   succession_file <- fs::path(out_dir, backend$file)
   fuels_file <- fs::path(out_dir, "dynamic-fuels.txt")
   fire_file <- fs::path(out_dir, "dynamic-fire.txt")
-  species_file <- fs::path(out_dir, "species.txt")
+  species_file <- .calibration_species_file(out_dir)
   eco_files <- c(fs::path(out_dir, "ecoregions.txt"), fs::path(out_dir, "ecoregions.tif"))
   stopifnot(
     fs::file_exists(succession_file),

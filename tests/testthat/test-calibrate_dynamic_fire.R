@@ -1162,3 +1162,24 @@ test_that(".patch_biomass_for_calibration freezes the succession Timestep past s
   ts <- grep("^Timestep", readLines(f), value = TRUE)
   expect_equal(ts, "Timestep    11") ## sim_years + 1 -> succession never executes during calibration
 })
+
+test_that(".calibration_species_file() reads the scenario's Species directive", {
+  dir <- withr::local_tempdir()
+  writeLines(
+    c(
+      "LandisData Scenario",
+      "Species    species-core.txt  >> the core species file",
+      "Duration 10"
+    ),
+    fs::path(dir, "scenario.txt")
+  )
+  expect_equal(.calibration_species_file(dir), fs::path(dir, "species-core.txt"))
+})
+
+test_that(".calibration_species_file() falls back to species.txt when the directive/file is absent", {
+  dir <- withr::local_tempdir()
+  writeLines(c("LandisData Scenario", "Duration 10"), fs::path(dir, "scenario.txt"))
+  expect_equal(.calibration_species_file(dir), fs::path(dir, "species.txt"))
+  dir2 <- withr::local_tempdir() ## no scenario.txt at all
+  expect_equal(.calibration_species_file(dir2), fs::path(dir2, "species.txt"))
+})
