@@ -23,8 +23,7 @@ sim_r_reimpl(...)
 ## Details
 
 Currently raises; see the comparison-of-approaches discussion in the
-gitanyow-partial-harvest project's `_tmp_dynamic_fire_calibration.md`
-for design notes.
+Dynamic Fire calibration design notes for the rationale.
 
 ## See also
 

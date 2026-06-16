@@ -1,5 +1,23 @@
 # Changelog
 
+## landisutils 0.0.46
+
+- [`build_calibration_scenario_template()`](https://for-cast.github.io/landisutils/reference/build_calibration_scenario_template.md)
+  now resolves the Dynamic Fire input filenames
+  (`InitialWeatherDatabase`, `Species_CSV_File`,
+  `InitialFireEcoregionsMap`, `GroundSlopeFile`,
+  `UphillSlopeAzimuthMap`) from the template scenario’s
+  `dynamic-fire.txt` directives, via the new internal
+  `.calibration_directive_file()` (which also now backs
+  `.calibration_species_file()`), instead of assuming fixed names.
+  Scenarios that name the weather DB `initial-weather-database.csv` and
+  the Dynamic Fire species table `dynamic-fire-species.csv` (rather than
+  the assumed `initial_weather_database.csv` and
+  `DynamicFire_Spp_Table.csv`) previously aborted the calibration
+  scenario reconstruction with a `file.exists(...)` failure in
+  `add_file()`; scenarios using the previous names are unaffected (those
+  remain the fallback defaults).
+
 ## landisutils 0.0.45
 
 - [`build_calibration_spinup_scenario()`](https://for-cast.github.io/landisutils/reference/build_calibration_spinup_scenario.md)
@@ -7,11 +25,11 @@
   [`build_calibration_scenario_template()`](https://for-cast.github.io/landisutils/reference/build_calibration_scenario_template.md)
   now resolve the species-definitions file from the template scenario’s
   `Species` directive (new internal `.calibration_species_file()`)
-  instead of assuming the name `species.txt`. BC_HRV’s Biomass
-  Succession scenarios name it `species-core.txt`, so the calibration
-  spinup previously aborted with
-  `fs::file_exists(species_file) is not TRUE`; scenarios that use
-  `species.txt` are unaffected (it remains the fallback).
+  instead of assuming the name `species.txt`. Scenarios that name it
+  `species-core.txt` (rather than `species.txt`) previously aborted the
+  calibration spinup with `fs::file_exists(species_file) is not TRUE`;
+  scenarios that use `species.txt` are unaffected (it remains the
+  fallback).
 
 ## landisutils 0.0.44
 

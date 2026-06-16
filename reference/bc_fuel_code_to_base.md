@@ -1,10 +1,10 @@
 # Default fuel-code -\> base-fuel-type mapping (BC FUEL_TYPE_CD factor levels)
 
-Returns the mapping used by gitanyow-partial-harvest and other projects
-that use the BC `FUEL_TYPE_CD` factor encoding for `fuel_types_rast`.
-Levels correspond to: 1=B71_S-2, 2=C-2, 3=C-3, 4=C-4, 5=C-5, 6=C-6,
-7=C-7, 8=D-1/2, 9=M-1/2, 10=N (non-fuel), 11=O-1a/b, 12=S-1, 13=S-3.
-Mapped to the five base types accepted by
+Returns the mapping used by downstream projects that use the BC
+`FUEL_TYPE_CD` factor encoding for `fuel_types_rast`. Levels correspond
+to: 1=B71_S-2, 2=C-2, 3=C-3, 4=C-4, 5=C-5, 6=C-6, 7=C-7, 8=D-1/2,
+9=M-1/2, 10=N (non-fuel), 11=O-1a/b, 12=S-1, 13=S-3. Mapped to the five
+base types accepted by
 [`defaultFuelTypeTable()`](https://for-cast.github.io/landisutils/reference/defaultFuelTypeTable.md)
 /
 [`calibration_par_names()`](https://for-cast.github.io/landisutils/reference/calibration_par_names.md).
