@@ -884,6 +884,37 @@ save_observed_fire_targets <- function(
   }
 }
 
+## The LANDIS-II input files a calibration scenario template must contain, with the filenames that vary
+## by succession backend / scenario resolved from the template itself rather than assuming one project's
+## convention: the succession config (forc-succession.txt vs biomass-succession.txt), the species file
+## (scenario.txt `Species` directive), and the Dynamic Fire inputs (dynamic-fire.txt directives). These
+## are the same names build_calibration_scenario_template() writes, so its output always validates here.
+## simulator_name other than "landis" (mock / r_reimpl) only needs scenario.txt.
+.calibration_required_files <- function(template_dir, simulator_name) {
+  if (simulator_name != "landis") {
+    return("scenario.txt")
+  }
+  df_input <- function(directive, default) {
+    fs::path_file(.calibration_directive_file(template_dir, "dynamic-fire.txt", directive, default))
+  }
+  c(
+    "scenario.txt",
+    .calibration_succession_backend(template_dir)$file,
+    "dynamic-fire.txt",
+    "dynamic-fuels.txt",
+    fs::path_file(.calibration_species_file(template_dir)),
+    "ecoregions.txt",
+    "ecoregions.tif",
+    "initial-communities.csv",
+    "initial-communities.tif",
+    df_input("GroundSlopeFile", "ground_slope.tif"),
+    df_input("UphillSlopeAzimuthMap", "uphill_slope_azimuth.tif"),
+    df_input("InitialFireEcoregionsMap", "fire-ecoregions.tif"),
+    df_input("InitialWeatherDatabase", "initial_weather_database.csv"),
+    df_input("Species_CSV_File", "DynamicFire_Spp_Table.csv")
+  )
+}
+
 ## Resolve an input file the template scenario actually references, rather than assuming a fixed name:
 ## reads the `<directive> <file>` line from `dir/config` (stripping any trailing `>>` comment) and
 ## returns `dir/<file>`; falls back to `dir/default` when the config or directive is absent. This lets
@@ -1669,26 +1700,7 @@ sim_mock <- function(
   ## set of LANDIS-II input files isn't needed. Only sim_landis requires it.
   ## Even for mock / r_reimpl we still expect scenario.txt to exist (caller
   ## already passed its path to calibrate_dynamic_fire) -- skip the rest.
-  required_files <- if (simulator_name == "landis") {
-    c(
-      "scenario.txt",
-      "forc-succession.txt",
-      "dynamic-fire.txt",
-      "dynamic-fuels.txt",
-      "species.txt",
-      "ecoregions.txt",
-      "ecoregions.tif",
-      "initial-communities.csv",
-      "initial-communities.tif",
-      "ground_slope.tif",
-      "uphill_slope_azimuth.tif",
-      "fire-ecoregions.tif",
-      "initial_weather_database.csv",
-      "DynamicFire_Spp_Table.csv"
-    )
-  } else {
-    "scenario.txt"
-  }
+  required_files <- .calibration_required_files(template_dir, simulator_name)
   missing_files <- required_files[!fs::file_exists(fs::path(template_dir, required_files))]
   if (length(missing_files) > 0L) {
     stop(

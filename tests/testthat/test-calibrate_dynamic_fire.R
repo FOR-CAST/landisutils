@@ -1237,3 +1237,69 @@ test_that(".calibration_directive_file() falls back to the default when directiv
     fs::path(dir2, "initial_weather_database.csv")
   )
 })
+
+test_that(".calibration_required_files() resolves backend/scenario names (Biomass Succession)", {
+  dir <- withr::local_tempdir()
+  writeLines(
+    c("LandisData Scenario", "   Species   species-core.txt"),
+    fs::path(dir, "scenario.txt")
+  )
+  writeLines("LandisData \"Biomass Succession\"", fs::path(dir, "biomass-succession.txt"))
+  writeLines(
+    c(
+      "LandisData \"Dynamic Fire System\"",
+      "InitialWeatherDatabase   initial-weather-database.csv",
+      "Species_CSV_File   dynamic-fire-species.csv"
+    ),
+    fs::path(dir, "dynamic-fire.txt")
+  )
+  expect_setequal(
+    .calibration_required_files(dir, "landis"),
+    c(
+      "scenario.txt",
+      "biomass-succession.txt",
+      "dynamic-fire.txt",
+      "dynamic-fuels.txt",
+      "species-core.txt",
+      "ecoregions.txt",
+      "ecoregions.tif",
+      "initial-communities.csv",
+      "initial-communities.tif",
+      "ground_slope.tif",
+      "uphill_slope_azimuth.tif",
+      "fire-ecoregions.tif",
+      "initial-weather-database.csv",
+      "dynamic-fire-species.csv"
+    )
+  )
+})
+
+test_that(".calibration_required_files() keeps the legacy names (ForC Succession, defaults)", {
+  dir <- withr::local_tempdir()
+  writeLines(c("LandisData Scenario", "   Species   species.txt"), fs::path(dir, "scenario.txt"))
+  writeLines("LandisData \"ForC Succession\"", fs::path(dir, "forc-succession.txt"))
+  writeLines("LandisData \"Dynamic Fire System\"", fs::path(dir, "dynamic-fire.txt"))
+  expect_setequal(
+    .calibration_required_files(dir, "landis"),
+    c(
+      "scenario.txt",
+      "forc-succession.txt",
+      "dynamic-fire.txt",
+      "dynamic-fuels.txt",
+      "species.txt",
+      "ecoregions.txt",
+      "ecoregions.tif",
+      "initial-communities.csv",
+      "initial-communities.tif",
+      "ground_slope.tif",
+      "uphill_slope_azimuth.tif",
+      "fire-ecoregions.tif",
+      "initial_weather_database.csv",
+      "DynamicFire_Spp_Table.csv"
+    )
+  )
+})
+
+test_that(".calibration_required_files() needs only scenario.txt for non-landis simulators", {
+  expect_equal(.calibration_required_files(withr::local_tempdir(), "mock"), "scenario.txt")
+})
