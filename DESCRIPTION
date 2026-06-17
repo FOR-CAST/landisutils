@@ -6,7 +6,7 @@ Authors@R:
            comment = c(ORCID = "0000-0001-7146-8135"))
 Description: Tools and utilities for preparing data for and running
     'LANDIS-II' simulations, and post-processing their outputs.
-License: GPL (>= 3)
+License: Apache License (>= 2)
 URL: https://for-cast.github.io/landisutils/
 Depends: 
     R (>= 4.2)
