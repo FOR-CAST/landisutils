@@ -36,6 +36,7 @@ Other Dynamic Fire calibration helpers:
 \code{\link[=parse_dynamic_fire_logs]{parse_dynamic_fire_logs()}},
 \code{\link[=patch_fire_config]{patch_fire_config()}},
 \code{\link[=run_calibration_spinup]{run_calibration_spinup()}},
+\code{\link[=run_calibration_validation]{run_calibration_validation()}},
 \code{\link[=save_observed_fire_targets]{save_observed_fire_targets()}},
 \code{\link[=sim_landis]{sim_landis()}},
 \code{\link[=sim_mock]{sim_mock()}},

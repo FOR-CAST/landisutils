@@ -1,3 +1,14 @@
+# landisutils 0.0.49
+
+* New `georef_landis_raster()` attaches a template raster's CRS and extent to a spatially-reference-less LANDIS-II GeoTIFF; de-duplicated from the BC_HRV and gitanyow-partial-harvest Phase-6 output-reading templates.
+* New `landis_image_info()` reads the LANDIS-II Docker image reference (and `sha256` digest, when captured) used for a run; de-duplicated from the BC_HRV and gitanyow-partial-harvest report-pipeline templates.
+* New `parse_landis_log_versions()` parses a `Landis-log.txt` for the console version, seed, and extension version blocks; de-duplicated from the BC_HRV and gitanyow-partial-harvest report-pipeline templates.
+* New `prov_landis_container()` formats the LANDIS-II runtime image and digest as a provenance `data.frame`; de-duplicated from the gitanyow-partial-harvest report-pipeline template.
+* New `prov_landis_versions()` formats the parsed LANDIS-II console and extension versions as a provenance `data.frame`; de-duplicated from the gitanyow-partial-harvest report-pipeline template.
+* New `prov_run_resources()` summarises per-replicate elapsed time and peak memory (mean +/- SD) as a provenance `data.frame`; de-duplicated from the gitanyow-partial-harvest report-pipeline template.
+* New `prov_stochasticity()` formats the base seed and replicate count as a provenance `data.frame`; de-duplicated from the gitanyow-partial-harvest report-pipeline template.
+* New `run_calibration_validation()` re-simulates Dynamic Fire at the calibrated parameter vector to recover per-replicate goodness-of-fit statistics; de-duplicated from the BC_HRV and gitanyow-partial-harvest report-pipeline templates.
+
 # landisutils 0.0.47
 
 * `calibrate_dynamic_fire()` now resolves the LANDIS-II input files its pre-flight check requires the scenario template to contain -- the succession config, the species file, and the Dynamic Fire inputs -- from the template itself (new internal `.calibration_required_files()`, reusing `.calibration_succession_backend()` / `.calibration_species_file()` / `.calibration_directive_file()`) instead of asserting one project's fixed filenames. Templates that `build_calibration_scenario_template()` writes for a Biomass Succession scenario (e.g. `biomass-succession.txt`, `species-core.txt`, `initial-weather-database.csv`, `dynamic-fire-species.csv`) previously failed this check with "is missing required files: forc-succession.txt, species.txt, ..."; the legacy ForC Succession names remain the fallback defaults, so existing scenarios are unaffected.

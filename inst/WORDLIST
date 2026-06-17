@@ -162,6 +162,7 @@ findable
 flavoured
 formatter
 furrr
+georeferenced
 github
 gridded
 idempotency
@@ -216,6 +217,7 @@ severities
 spinup
 sshfs
 stderr
+stochasticity
 subclass's
 subprocess
 summarise

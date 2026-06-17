@@ -1,6 +1,6 @@
 Package: landisutils
 Title: Utilities for running LANDIS-II simulations
-Version: 0.0.48
+Version: 0.0.49
 Authors@R: 
     person(c("Alex", "M"), "Chubaty", , "achubaty@for-cast.ca", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0001-7146-8135"))
@@ -122,8 +122,10 @@ Collate:
     'ext_social_climate_fire.R'
     'initial_communities.R'
     'landis.R'
+    'landis_results.R'
     'landisutils-package.R'
     'plot_transitions.R'
+    'provenance.R'
     'scenarios.R'
     'species.R'
     'tar_landis.R'

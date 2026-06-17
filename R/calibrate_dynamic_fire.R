@@ -2142,3 +2142,102 @@ calibrate_dynamic_fire <- function(observed_targets_path, scenario_template, cfg
   utils::write.csv(merged, out_path, row.names = FALSE)
   invisible(out_path)
 }
+
+## ---- post-calibration validation ----------------------------------------------------------------
+##
+## Re-simulate at the calibrated parameter vector to recover the per-trial fire
+## statistics (sizes, severity, area-by-fuel) that DEoptim does not retain, for
+## the goodness-of-fit section of a model-calibration report. Reuses the same
+## scenario template, scratch root, and Docker pool plumbing as the main
+## calibration loop ([sim_landis()] / [landis_pool_start()]). De-duplicated
+## from the BC_HRV / gitanyow-partial-harvest report-pipeline templates;
+## succession-backend-agnostic.
+
+#' Re-simulate at the calibrated parameter vector for goodness-of-fit plots
+#'
+#' Runs `n_reps` replicate Dynamic Fire simulations at the calibrated
+#' parameter vector and returns their per-replicate fire statistics plus the
+#' loss against the observed targets, so a calibration report can plot the
+#' goodness-of-fit that [calibrate_dynamic_fire()] does not retain.
+#'
+#' @param scenario_template Character path to `scenario.txt` inside the
+#'   calibration scenario directory.
+#' @param best_params Named numeric vector of calibrated parameters (the
+#'   `calibrate_dynamic_fire()` result's `best_params`).
+#' @param observed_targets_path Character path to the saved observed-targets
+#'   `.rds` (the [save_observed_fire_targets()] output); reattached to the
+#'   return value so the report has a single self-contained input.
+#' @param cfg The `calibration_config` list (for `sim_years`, `weights`).
+#' @param n_reps Integer number of replicate simulations at `best_params`.
+#' @param scratch_root Docker-visible host directory for the warm pool
+#'   bind-mount (distinct from the main calibration scratch so concurrent runs
+#'   do not collide).
+#' @param base_seed Base seed for the validation reps (`base_seed + i` per
+#'   rep).
+#'
+#' @return A list with `reps`, `best_params`, `observed`, `pixel_area_ha`,
+#'   `sim_years`, `n_reps`, `loss`, `pool_image`, and `pool_digest`.
+#'
+#' @family Dynamic Fire calibration helpers
+#'
+#' @export
+run_calibration_validation <- function(
+  scenario_template,
+  best_params,
+  observed_targets_path,
+  cfg,
+  n_reps = 20L,
+  scratch_root,
+  base_seed = 99999L
+) {
+  stopifnot(
+    is.character(scenario_template),
+    is.numeric(best_params),
+    !is.null(names(best_params)),
+    is.character(observed_targets_path),
+    fs::file_exists(observed_targets_path),
+    is.list(cfg),
+    is.numeric(n_reps),
+    n_reps >= 1L
+  )
+  fs::dir_create(scratch_root)
+
+  pool <- landis_pool_start(
+    n = as.integer(n_reps),
+    scratch_root = scratch_root,
+    cpu_limit = 2, ## LANDIS-II is single-threaded (~1 core/container); 2 packs more reps per node
+    mem_limit = "8g",
+    name_prefix = "landis-validate"
+  )
+  on.exit(landis_pool_stop(pool), add = TRUE)
+
+  template_dir <- fs::path_real(dirname(scenario_template))
+  paths <- list(scenario_template = template_dir, scratch_root = pool$scratch_root)
+
+  reps <- lapply(seq_len(as.integer(n_reps)), function(i) {
+    sim_landis(
+      par_vec = best_params,
+      paths = paths,
+      sim_years = as.integer(cfg$sim_years %||% 10L),
+      base_seed = as.integer(base_seed) + i,
+      pool = pool,
+      pool_idx = i,
+      method = "docker"
+    )
+  })
+
+  observed <- readRDS(observed_targets_path)
+  loss <- loss_from_stats(reps = reps, observed = observed, weights = cfg$weights)
+
+  list(
+    reps = reps,
+    best_params = best_params,
+    observed = observed,
+    pixel_area_ha = observed$pixel_area_ha %||% NA_real_,
+    sim_years = as.integer(cfg$sim_years %||% 10L),
+    n_reps = as.integer(n_reps),
+    loss = loss,
+    pool_image = pool$image,
+    pool_digest = pool$digest
+  )
+}
