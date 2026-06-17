@@ -224,6 +224,9 @@
 - [`exitRoadType()`](https://for-cast.github.io/landisutils/reference/exitRoadType.md)
   : Construct an exit road type (where wood leaves the landscape)
 
+- [`georef_landis_raster()`](https://for-cast.github.io/landisutils/reference/georef_landis_raster.md)
+  : Attach CRS and extent from a template to a LANDIS-II raster
+
 - [`get_clim_daily()`](https://for-cast.github.io/landisutils/reference/get_clim_daily.md)
   : Fetch a single year of daily BioSIM weather for one location batch
 
@@ -465,6 +468,9 @@
 - [`landis_find_docker()`](https://for-cast.github.io/landisutils/reference/landis_find_docker.md)
   : Find the LANDIS-II console path inside a Docker container
 
+- [`landis_image_info()`](https://for-cast.github.io/landisutils/reference/landis_image_info.md)
+  : Read the LANDIS-II Docker image reference used for a run
+
 - [`landis_pool_exec()`](https://for-cast.github.io/landisutils/reference/landis_pool_exec.md)
   : Execute a command in one of the warm-pool containers
 
@@ -498,6 +504,11 @@
 
 - [`parse_dynamic_fire_logs()`](https://for-cast.github.io/landisutils/reference/parse_dynamic_fire_logs.md)
   : Parse a Dynamic Fire run's event and summary logs
+
+- [`parse_landis_log_versions()`](https://for-cast.github.io/landisutils/reference/parse_landis_log_versions.md)
+  :
+
+  Parse a LANDIS-II `Landis-log.txt` for version metadata
 
 - [`patch_fire_config()`](https://for-cast.github.io/landisutils/reference/patch_fire_config.md)
   :
@@ -659,6 +670,18 @@
 - [`proj_nrcan_lcc`](https://for-cast.github.io/landisutils/reference/proj_forest_data.md)
   : PROJ4 strings for forest data
 
+- [`prov_landis_container()`](https://for-cast.github.io/landisutils/reference/prov_landis_container.md)
+  : LANDIS-II container image and digest (provenance)
+
+- [`prov_landis_versions()`](https://for-cast.github.io/landisutils/reference/prov_landis_versions.md)
+  : LANDIS-II console and extension versions (provenance)
+
+- [`prov_run_resources()`](https://for-cast.github.io/landisutils/reference/prov_run_resources.md)
+  : LANDIS-II per-replicate resource use (provenance)
+
+- [`prov_stochasticity()`](https://for-cast.github.io/landisutils/reference/prov_stochasticity.md)
+  : LANDIS-II stochasticity summary (provenance)
+
 - [`read_biomass_c_snapshots()`](https://for-cast.github.io/landisutils/reference/read_biomass_c_snapshots.md)
   : Read ForCS log_BiomassC snapshots
 
@@ -678,6 +701,10 @@
 
 - [`run_calibration_spinup()`](https://for-cast.github.io/landisutils/reference/run_calibration_spinup.md)
   : Run the calibration spinup scenario (blocking)
+
+- [`run_calibration_validation()`](https://for-cast.github.io/landisutils/reference/run_calibration_validation.md)
+  : Re-simulate at the calibrated parameter vector for goodness-of-fit
+  plots
 
 - [`save_observed_fire_targets()`](https://for-cast.github.io/landisutils/reference/save_observed_fire_targets.md)
   : Save observed fire-regime targets (NFDB-derived) for calibration

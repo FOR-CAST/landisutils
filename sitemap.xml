@@ -128,6 +128,7 @@
 <url><loc>https://for-cast.github.io/landisutils/reference/edaAgent.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/elevationCostRange.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/exitRoadType.html</loc></url>
+<url><loc>https://for-cast.github.io/landisutils/reference/georef_landis_raster.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/get_clim_daily.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/get_clim_monthly.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/get_clim_monthly_climr.html</loc></url>
@@ -242,6 +243,7 @@
 <url><loc>https://for-cast.github.io/landisutils/reference/landis_archive_rep.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/landis_find.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/landis_find_docker.html</loc></url>
+<url><loc>https://for-cast.github.io/landisutils/reference/landis_image_info.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/landis_pool_exec.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/landis_pool_restart_one.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/landis_pool_start.html</loc></url>
@@ -254,6 +256,7 @@
 <url><loc>https://for-cast.github.io/landisutils/reference/leading_species.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/loss_from_stats.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/parse_dynamic_fire_logs.html</loc></url>
+<url><loc>https://for-cast.github.io/landisutils/reference/parse_landis_log_versions.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/patch_fire_config.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/plot_species_biomass.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/plot_transitions.html</loc></url>
@@ -291,11 +294,16 @@
 <url><loc>https://for-cast.github.io/landisutils/reference/prep_climate_data.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/proj_climate_data.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/proj_forest_data.html</loc></url>
+<url><loc>https://for-cast.github.io/landisutils/reference/prov_landis_container.html</loc></url>
+<url><loc>https://for-cast.github.io/landisutils/reference/prov_landis_versions.html</loc></url>
+<url><loc>https://for-cast.github.io/landisutils/reference/prov_run_resources.html</loc></url>
+<url><loc>https://for-cast.github.io/landisutils/reference/prov_stochasticity.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/read_biomass_c_snapshots.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/read_biomass_output_rasters.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/read_landis_resource_logs.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/roadType.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/run_calibration_spinup.html</loc></url>
+<url><loc>https://for-cast.github.io/landisutils/reference/run_calibration_validation.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/save_observed_fire_targets.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/scenario.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/sim_landis.html</loc></url>

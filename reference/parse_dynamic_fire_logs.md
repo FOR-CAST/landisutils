@@ -54,6 +54,7 @@ Other Dynamic Fire calibration helpers:
 [`loss_from_stats()`](https://for-cast.github.io/landisutils/reference/loss_from_stats.md),
 [`patch_fire_config()`](https://for-cast.github.io/landisutils/reference/patch_fire_config.md),
 [`run_calibration_spinup()`](https://for-cast.github.io/landisutils/reference/run_calibration_spinup.md),
+[`run_calibration_validation()`](https://for-cast.github.io/landisutils/reference/run_calibration_validation.md),
 [`save_observed_fire_targets()`](https://for-cast.github.io/landisutils/reference/save_observed_fire_targets.md),
 [`sim_landis()`](https://for-cast.github.io/landisutils/reference/sim_landis.md),
 [`sim_mock()`](https://for-cast.github.io/landisutils/reference/sim_mock.md),

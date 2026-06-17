@@ -116,6 +116,7 @@ Other Dynamic Fire calibration helpers:
 [`parse_dynamic_fire_logs()`](https://for-cast.github.io/landisutils/reference/parse_dynamic_fire_logs.md),
 [`patch_fire_config()`](https://for-cast.github.io/landisutils/reference/patch_fire_config.md),
 [`run_calibration_spinup()`](https://for-cast.github.io/landisutils/reference/run_calibration_spinup.md),
+[`run_calibration_validation()`](https://for-cast.github.io/landisutils/reference/run_calibration_validation.md),
 [`save_observed_fire_targets()`](https://for-cast.github.io/landisutils/reference/save_observed_fire_targets.md),
 [`sim_mock()`](https://for-cast.github.io/landisutils/reference/sim_mock.md),
 [`sim_r_reimpl()`](https://for-cast.github.io/landisutils/reference/sim_r_reimpl.md)

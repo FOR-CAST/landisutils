@@ -1,5 +1,48 @@
 # Changelog
 
+## landisutils 0.0.49
+
+- New
+  [`georef_landis_raster()`](https://for-cast.github.io/landisutils/reference/georef_landis_raster.md)
+  attaches a template raster’s CRS and extent to a
+  spatially-reference-less LANDIS-II GeoTIFF; de-duplicated from the
+  BC_HRV and gitanyow-partial-harvest Phase-6 output-reading templates.
+- New
+  [`landis_image_info()`](https://for-cast.github.io/landisutils/reference/landis_image_info.md)
+  reads the LANDIS-II Docker image reference (and `sha256` digest, when
+  captured) used for a run; de-duplicated from the BC_HRV and
+  gitanyow-partial-harvest report-pipeline templates.
+- New
+  [`parse_landis_log_versions()`](https://for-cast.github.io/landisutils/reference/parse_landis_log_versions.md)
+  parses a `Landis-log.txt` for the console version, seed, and extension
+  version blocks; de-duplicated from the BC_HRV and
+  gitanyow-partial-harvest report-pipeline templates.
+- New
+  [`prov_landis_container()`](https://for-cast.github.io/landisutils/reference/prov_landis_container.md)
+  formats the LANDIS-II runtime image and digest as a provenance
+  `data.frame`; de-duplicated from the gitanyow-partial-harvest
+  report-pipeline template.
+- New
+  [`prov_landis_versions()`](https://for-cast.github.io/landisutils/reference/prov_landis_versions.md)
+  formats the parsed LANDIS-II console and extension versions as a
+  provenance `data.frame`; de-duplicated from the
+  gitanyow-partial-harvest report-pipeline template.
+- New
+  [`prov_run_resources()`](https://for-cast.github.io/landisutils/reference/prov_run_resources.md)
+  summarises per-replicate elapsed time and peak memory (mean +/- SD) as
+  a provenance `data.frame`; de-duplicated from the
+  gitanyow-partial-harvest report-pipeline template.
+- New
+  [`prov_stochasticity()`](https://for-cast.github.io/landisutils/reference/prov_stochasticity.md)
+  formats the base seed and replicate count as a provenance
+  `data.frame`; de-duplicated from the gitanyow-partial-harvest
+  report-pipeline template.
+- New
+  [`run_calibration_validation()`](https://for-cast.github.io/landisutils/reference/run_calibration_validation.md)
+  re-simulates Dynamic Fire at the calibrated parameter vector to
+  recover per-replicate goodness-of-fit statistics; de-duplicated from
+  the BC_HRV and gitanyow-partial-harvest report-pipeline templates.
+
 ## landisutils 0.0.47
 
 - [`calibrate_dynamic_fire()`](https://for-cast.github.io/landisutils/reference/calibrate_dynamic_fire.md)
