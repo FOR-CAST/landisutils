@@ -114,9 +114,17 @@ ForCS <- R6Class(
 
     #' @description Write extension inputs to disk
     write = function() {
+      ## Note on ForCSClimateFile: !is.null() is not enough -- when the caller
+      ## passes character(0) (e.g. from a {targets} target that returned an
+      ## empty path in the wrong upstream mode), the active binding stores
+      ## character(0), the !is.null() check passes, but the rendered
+      ## forc-succession.txt silently omits the ForCSClimateFile line and
+      ## then fails to parse at sim time. Require non-empty character(s).
       stopifnot(
         !is.null(self$SeedingAlgorithm),
-        !is.null(self$ForCSClimateFile),
+        is.character(self$ForCSClimateFile),
+        length(self$ForCSClimateFile) >= 1L,
+        all(nzchar(self$ForCSClimateFile)),
         !is.null(self$InitialCommunitiesFiles),
         !is.null(self$DisturbanceMatrixFile),
         !is.null(self$OutputTables),
