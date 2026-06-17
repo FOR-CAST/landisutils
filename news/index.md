@@ -1,5 +1,23 @@
 # Changelog
 
+## landisutils 0.0.47
+
+- [`calibrate_dynamic_fire()`](https://for-cast.github.io/landisutils/reference/calibrate_dynamic_fire.md)
+  now resolves the LANDIS-II input files its pre-flight check requires
+  the scenario template to contain – the succession config, the species
+  file, and the Dynamic Fire inputs – from the template itself (new
+  internal `.calibration_required_files()`, reusing
+  [`.calibration_succession_backend()`](https://for-cast.github.io/landisutils/reference/dot-calibration_succession_backend.md)
+  / `.calibration_species_file()` / `.calibration_directive_file()`)
+  instead of asserting one project’s fixed filenames. Templates that
+  [`build_calibration_scenario_template()`](https://for-cast.github.io/landisutils/reference/build_calibration_scenario_template.md)
+  writes for a Biomass Succession scenario
+  (e.g. `biomass-succession.txt`, `species-core.txt`,
+  `initial-weather-database.csv`, `dynamic-fire-species.csv`) previously
+  failed this check with “is missing required files:
+  forc-succession.txt, species.txt, …”; the legacy ForC Succession names
+  remain the fallback defaults, so existing scenarios are unaffected.
+
 ## landisutils 0.0.46
 
 - [`build_calibration_scenario_template()`](https://for-cast.github.io/landisutils/reference/build_calibration_scenario_template.md)
