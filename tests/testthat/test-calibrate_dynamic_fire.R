@@ -1303,3 +1303,26 @@ test_that(".calibration_required_files() keeps the legacy names (ForC Succession
 test_that(".calibration_required_files() needs only scenario.txt for non-landis simulators", {
   expect_equal(.calibration_required_files(withr::local_tempdir(), "mock"), "scenario.txt")
 })
+
+test_that(".mem_limit_to_gb() parses docker --memory strings", {
+  expect_equal(.mem_limit_to_gb("8g"), 8)
+  expect_equal(.mem_limit_to_gb("16gib"), 16)
+  expect_equal(.mem_limit_to_gb("512m"), 0.5)
+  expect_identical(.mem_limit_to_gb(NULL), NA_real_)
+  expect_identical(.mem_limit_to_gb(""), NA_real_)
+})
+
+test_that(".ram_pool_cap() caps the pool by the RAM budget", {
+  ## district-scale worker (22 GiB) on a 1007 GiB host: floor(1007 * 0.85 / 22) = 38
+  expect_equal(.ram_pool_cap(90, mem_per_worker_gb = 22, mem_fraction = 0.85, avail_gb = 1007), 38L)
+  ## small worker (8 GiB) leaves headroom -> requested count unchanged
+  expect_equal(.ram_pool_cap(90, mem_per_worker_gb = 8, mem_fraction = 0.85, avail_gb = 1007), 90L)
+  ## the floor never drops below one container
+  expect_equal(.ram_pool_cap(90, mem_per_worker_gb = 2000, mem_fraction = 0.85, avail_gb = 100), 1L)
+})
+
+test_that(".ram_pool_cap() is a no-op when RAM or the per-worker estimate is unknown", {
+  expect_equal(.ram_pool_cap(90, mem_per_worker_gb = NA_real_, avail_gb = 1007), 90L)
+  expect_equal(.ram_pool_cap(90, mem_per_worker_gb = 22, avail_gb = NA_real_), 90L)
+  expect_equal(.ram_pool_cap(90, mem_per_worker_gb = 0, avail_gb = 1007), 90L)
+})

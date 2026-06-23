@@ -1,3 +1,7 @@
+# landisutils 0.0.50
+
+* `calibrate_dynamic_fire()` now caps the Docker warm-pool size at the host RAM budget so a district-scale calibration landscape no longer OOMs the node by starting more containers than fit in memory: each container holds a full LANDIS landscape in memory, so per-container RAM scales with the cell count. The new `mem_per_worker_gb` config field is the per-container estimate (the per-container `--memory` limit is derived from it, +25% headroom, when not set explicitly), and `mem_fraction` (default 0.85) is the fraction of available RAM the pool may use; configs that set neither field behave exactly as before (the cap falls back to the `mem_limit` value, so small-area calibrations are unaffected).
+
 # landisutils 0.0.49
 
 * New `georef_landis_raster()` attaches a template raster's CRS and extent to a spatially-reference-less LANDIS-II GeoTIFF; de-duplicated from the BC_HRV and gitanyow-partial-harvest Phase-6 output-reading templates.

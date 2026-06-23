@@ -1807,6 +1807,46 @@ sim_mock <- function(
   invisible(TRUE)
 }
 
+## Internal: available host RAM in GiB. Reads /proc/meminfo MemAvailable (falling back to MemTotal) on
+## Linux; returns NA elsewhere so the caller skips RAM-capping rather than guessing.
+.available_ram_gb <- function() {
+  mi <- tryCatch(readLines("/proc/meminfo", n = 50L), error = function(e) character(0))
+  for (key in c("^MemAvailable:", "^MemTotal:")) {
+    ln <- grep(key, mi, value = TRUE)
+    if (length(ln) > 0L) {
+      return(as.numeric(sub("\\D*(\\d+).*", "\\1", ln[1])) / 1024^2) ## kB -> GiB
+    }
+  }
+  NA_real_
+}
+
+## Internal: parse a docker `--memory` string ("8g", "512m", "16gib") to GiB. NULL/empty -> NA.
+.mem_limit_to_gb <- function(x) {
+  if (is.null(x) || !nzchar(x)) {
+    return(NA_real_)
+  }
+  num <- as.numeric(sub("([0-9.]+).*", "\\1", x))
+  unit <- tolower(sub("[0-9.]+\\s*", "", x))
+  switch(unit, g = , gb = , gib = num, m = , mb = , mib = num / 1024, num)
+}
+
+## Internal: cap a requested warm-pool size `n` by the RAM budget. Each container holds a full LANDIS
+## landscape in memory, so `n` containers can exceed host RAM and OOM. Returns
+## min(n, floor(avail_gb * mem_fraction / mem_per_worker_gb)), or `n` unchanged when RAM or the
+## per-worker estimate is unknown (so capping is opt-in via cfg$mem_per_worker_gb).
+.ram_pool_cap <- function(
+  n,
+  mem_per_worker_gb,
+  mem_fraction = 0.85,
+  avail_gb = .available_ram_gb()
+) {
+  if (!isTRUE(is.finite(avail_gb) && is.finite(mem_per_worker_gb) && mem_per_worker_gb > 0)) {
+    return(as.integer(n))
+  }
+  cap <- max(1L, as.integer(floor(avail_gb * mem_fraction / mem_per_worker_gb)))
+  min(as.integer(n), cap)
+}
+
 #' DEoptim driver for Dynamic Fire calibration
 #'
 #' Sets up a warm Docker pool (for the `landis` simulator on Docker) and a FORK
@@ -1934,6 +1974,24 @@ calibrate_dynamic_fire <- function(observed_targets_path, scenario_template, cfg
     max(1L, parallel::detectCores() - 2L)
   }
   n_cores <- as.integer(cfg$n_cores %||% default_cores)
+
+  ## RAM-aware pool cap: each warm container holds a full LANDIS landscape in memory, so per-container
+  ## RAM scales with the study-area cell count (~3 GiB for a ~300k-active-cell LU; ~8x for a district).
+  ## A core-based count can exceed host RAM and OOM (90 x 22 GiB ~ 2 TB on a 1 TB host). Cap the pool at
+  ## the RAM budget; opt-in via cfg$mem_per_worker_gb (else falls back to the mem_limit cap, so existing
+  ## small-area configs are unchanged). cfg$mem_fraction (default 0.85) reserves RAM for the OS + the
+  ## FORK workers + the main R process.
+  mem_per_worker <- as.numeric(cfg$mem_per_worker_gb %||% .mem_limit_to_gb(cfg$mem_limit %||% "8g"))
+  avail_gb <- .available_ram_gb()
+  capped_cores <- .ram_pool_cap(n_cores, mem_per_worker, cfg$mem_fraction %||% 0.85, avail_gb)
+  if (capped_cores < n_cores) {
+    message(glue::glue(
+      "calibrate_dynamic_fire: RAM-capping warm pool {n_cores} -> {capped_cores} container(s) ",
+      "({round(avail_gb)} GiB avail x {cfg$mem_fraction %||% 0.85} / {round(mem_per_worker, 1)} ",
+      "GiB/worker). Set cfg$mem_per_worker_gb to tune."
+    ))
+    n_cores <- capped_cores
+  }
   use_parallel <- isTRUE(cfg$parallel %||% TRUE) && n_cores > 1L
 
   ## Pool lifecycle: only LANDIS-II Docker + parallel needs a pool. Mock /
@@ -1945,7 +2003,9 @@ calibrate_dynamic_fire <- function(observed_targets_path, scenario_template, cfg
       image = cfg$image,
       scratch_root = scratch_root,
       cpu_limit = cfg$cpu_limit %||% 2,
-      mem_limit = cfg$mem_limit %||% "8g",
+      ## --memory must be >= expected per-container usage or docker OOM-kills the container; derive from
+      ## the RAM estimate (+25% headroom) when not set explicitly. Default 8g preserves small-area configs.
+      mem_limit = cfg$mem_limit %||% sprintf("%dg", max(8L, ceiling(mem_per_worker * 1.25))),
       pull = isTRUE(cfg$pull %||% FALSE),
       name_prefix = paste0("landis-cal-", Sys.getpid())
     )
