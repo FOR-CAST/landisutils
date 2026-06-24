@@ -73,8 +73,9 @@ calibration_par_names <- function() {
 #'
 #' @details
 #' The `area_by_fuel_ha` summary is computed by intersecting the per-timestep
-#' Dynamic Fire severity rasters (cells with severity > 0 = burned) with the
-#' matching per-timestep Dynamic Fuels `FuelType` rasters from the same
+#' Dynamic Fire severity rasters (cells with severity > 1 = burned; values 0
+#' and 1 are inactive and active-but-unburned respectively) with the matching
+#' per-timestep Dynamic Fuels `FuelType` rasters from the same
 #' `<rep_dir>/fire/` subdirectory. Cell-fuel-timestep is the unit of
 #' accounting: a cell that burns in two distinct timesteps contributes twice
 #' (consistent with NBAC's per-fire-perimeter accounting on the observed side).
@@ -136,10 +137,12 @@ parse_dynamic_fire_logs <- function(rep_dir, pixel_area_ha = 1.0) {
 #'
 #' Walks `<rep_dir>/fire/severity-{t}.tif` and the matching
 #' `<rep_dir>/fire/FuelType-{t}.tif` files, masks the fuel raster to cells
-#' with severity > 0, and accumulates cell counts per fuel code across
-#' timesteps. Each cell-timestep is counted once, so a cell that burns in
-#' two distinct timesteps contributes twice -- matching NBAC's
-#' per-fire-perimeter accounting on the observed side.
+#' with severity > 1 (the Dynamic Fire encoding is 0 = inactive,
+#' 1 = active-but-unburned, >= 2 = burned with the value as severity class),
+#' and accumulates cell counts per fuel code across timesteps. Each
+#' cell-timestep is counted once, so a cell that burns in two distinct
+#' timesteps contributes twice -- matching NBAC's per-fire-perimeter
+#' accounting on the observed side.
 #'
 #' Returns NULL when:
 #'   * `<rep_dir>/fire/` does not exist (caller didn't run LANDIS),
@@ -171,7 +174,17 @@ parse_dynamic_fire_logs <- function(rep_dir, pixel_area_ha = 1.0) {
     }
     sev <- terra::rast(as.character(sev_files[i]))
     fuel <- terra::rast(as.character(fuel_path))
-    burned_fuel <- terra::ifel(sev > 0, fuel, NA)
+    ## Dynamic Fire severity encoding:
+    ##   0  = inactive (non-flammable / off-landscape)
+    ##   1  = active but UNBURNED this timestep (still in scope; just didn't burn)
+    ##   >= 2 = burned, with the value as the fire severity class
+    ## So burned cells are `sev > 1`, NOT `sev > 0`. Counting `> 0` would
+    ## select the whole active landscape and accumulate the landscape's fuel
+    ## composition instead of the burned area -- silently mis-training
+    ## `L_area_fuel` and mis-rendering the report's area-by-fuel panel.
+    ## See R/landis_results_fire.R / R/targets_landis_results.R in the
+    ## consuming projects, which apply the same `> 1` convention.
+    burned_fuel <- terra::ifel(sev > 1, fuel, NA)
     freq_df <- terra::freq(burned_fuel)
     if (nrow(freq_df) == 0L) {
       next

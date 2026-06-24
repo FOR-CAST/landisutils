@@ -107,6 +107,52 @@ test_that("parse_dynamic_fire_logs() populates area_by_fuel_ha from severity x F
   expect_equal(sum(parsed$area_by_fuel_ha$area_ha), 9L * 0.01)
 })
 
+test_that("parse_dynamic_fire_logs() excludes severity == 1 cells (active-but-unburned)", {
+  ## Regression for the "whole-landscape mis-attribution" bug: Dynamic Fire
+  ## severity encodes 0 = inactive, 1 = active-but-unburned this timestep,
+  ## >= 2 = burned with the value as severity class. The helper must use
+  ## `severity > 1` (NOT `> 0`); otherwise it counts every active cell as
+  ## burned and trains `L_area_fuel` against landscape-fuel composition
+  ## rather than burned area. Same `> 1` convention as the consuming
+  ## projects (gitanyow R/landis_results_fire.R:50,85; BC_HRV
+  ## R/landis_outputs.R:82,115).
+  rep_dir <- withr::local_tempdir()
+  fs::dir_create(fs::path(rep_dir, "fire"))
+  fs::file_copy(
+    system.file("testdata", "dynamic-fire-event-log-sample.csv", package = "landisutils"),
+    fs::path(rep_dir, "fire", "dynamic-fire-event-log.csv")
+  )
+  fs::file_copy(
+    system.file("testdata", "dynamic-fire-summary-log-sample.csv", package = "landisutils"),
+    fs::path(rep_dir, "fire", "dynamic-fire-summary-log.csv")
+  )
+
+  ## 4x4 fuel grid: all Conifer (code 1).
+  fuel_r <- terra::rast(matrix(rep(1L, 16L), nrow = 4L), extent = terra::ext(0, 40, 0, 40))
+
+  ## Severity layout (4 rows x 4 cols):
+  ##   Row 1: [1 1 1 1]   <- 4 active-but-unburned
+  ##   Row 2: [1 1 1 1]   <- 4 active-but-unburned
+  ##   Row 3: [1 1 1 3]   <- 3 active-but-unburned, 1 BURNED (class 3)
+  ##   Row 4: [2 4 0 0]   <- 2 BURNED (class 2, 4), 2 inactive
+  ## With the bug (`> 0`): 14 cells counted (all active = 11 + 3 burned).
+  ## With the fix (`> 1`):  3 cells counted (only true burns).
+  sev_mat <- matrix(0L, 4L, 4L)
+  sev_mat[1L, ] <- 1L
+  sev_mat[2L, ] <- 1L
+  sev_mat[3L, 1L:3L] <- 1L
+  sev_mat[3L, 4L] <- 3L
+  sev_mat[4L, 1L] <- 2L
+  sev_mat[4L, 2L] <- 4L
+  sev_r <- terra::rast(sev_mat, extent = terra::ext(0, 40, 0, 40))
+  terra::writeRaster(sev_r, fs::path(rep_dir, "fire", "severity-1.tif"), overwrite = TRUE)
+  terra::writeRaster(fuel_r, fs::path(rep_dir, "fire", "FuelType-1.tif"), overwrite = TRUE)
+
+  parsed <- parse_dynamic_fire_logs(rep_dir, pixel_area_ha = 1.0)
+  expect_equal(sum(parsed$area_by_fuel_ha$cells), 3L)
+  expect_equal(parsed$area_by_fuel_ha$cells[parsed$area_by_fuel_ha$fuel_code == 1L], 3L)
+})
+
 test_that("parse_dynamic_fire_logs() area_by_fuel_ha is NULL when FuelType companion is absent", {
   rep_dir <- withr::local_tempdir()
   fs::dir_create(fs::path(rep_dir, "fire"))

@@ -37,8 +37,9 @@ Columns parsed (Dynamic Fire System v4):
 Cells -> hectares uses \code{pixel_area_ha} (1 ha for a 100 m x 100 m grid).
 
 The \code{area_by_fuel_ha} summary is computed by intersecting the per-timestep
-Dynamic Fire severity rasters (cells with severity > 0 = burned) with the
-matching per-timestep Dynamic Fuels \code{FuelType} rasters from the same
+Dynamic Fire severity rasters (cells with severity > 1 = burned; values 0
+and 1 are inactive and active-but-unburned respectively) with the matching
+per-timestep Dynamic Fuels \code{FuelType} rasters from the same
 \verb{<rep_dir>/fire/} subdirectory. Cell-fuel-timestep is the unit of
 accounting: a cell that burns in two distinct timesteps contributes twice
 (consistent with NBAC's per-fire-perimeter accounting on the observed side).

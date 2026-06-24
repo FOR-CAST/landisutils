@@ -1,3 +1,7 @@
+# landisutils 0.0.53
+
+* Bug fix: `.read_burned_area_by_fuel()` (consumed by `parse_dynamic_fire_logs()` and `.chi_sq_area_by_fuel()`) used `severity > 0` to identify burned cells, but the Dynamic Fire severity raster encodes `0` = inactive, `1` = active-but-unburned, `>= 2` = burned (value is the severity class). `> 0` therefore selected every active cell in the landscape, attributing the whole-landscape fuel composition (not the burn) to `sim$area_by_fuel_ha`. The bug silently mis-trained the `L_area_fuel` calibration component for the entire v0.0.52 lifespan and mis-rendered any `fig-area-by-fuel` panels that consumed the per-rep field. Switched to `severity > 1` (matches the consuming projects' own readers); docstrings and the regression test (with `severity == 1` cells in the fixture) make the distinction explicit.
+
 # landisutils 0.0.52
 
 * `parse_dynamic_fire_logs()` now also returns `area_by_fuel_ha` -- a per-rep tibble of `fuel_code`, `cells`, `area_ha` -- computed by intersecting the per-timestep Dynamic Fire `severity-{t}.tif` rasters (cells with severity > 0 = burned) with the matching Dynamic Fuels `FuelType-{t}.tif` rasters in `<rep_dir>/fire/`. Cell-fuel-timestep is the unit of accounting, so a cell that burns in two timesteps contributes twice (matches NBAC's per-perimeter accounting). Returns NULL when the severity/FuelType pairs aren't on disk (mock simulators, missing Dynamic Fuels, etc.) and `.chi_sq_area_by_fuel()` then falls back to the legacy event-based attribution.
