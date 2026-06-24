@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.50</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.51</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -40,6 +40,14 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.51" id="landisutils-0051">landisutils 0.0.51<a class="anchor" aria-label="anchor" href="#landisutils-0051"></a></h2>
+<ul><li><p><code><a href="../reference/save_observed_fire_targets.html">save_observed_fire_targets()</a></code> gains a <code>min_size_ha</code> argument (default <code>1.0</code>) that truncates <code>fire_sizes_ha</code> at a lower bound and persists the value in the output payload. NFDB / NBAC are effectively left-censored at ~1 ha (small fires under-reported); without a floor, the KS comparison in <code><a href="../reference/loss_from_stats.html">loss_from_stats()</a></code> compared the sim’s full size distribution against a truncated observed sample. Set <code>min_size_ha = 0</code> to restore prior behaviour.</p></li>
+<li><p><code><a href="../reference/loss_from_stats.html">loss_from_stats()</a></code> reads <code>observed$min_size_ha</code> and applies the same lower truncation to pooled <code>sim_sizes</code> so the KS statistic compares like-with-like.</p></li>
+<li><p><code><a href="../reference/loss_from_stats.html">loss_from_stats()</a></code> now subsamples <code>sim_sizes</code> down to <code>length(obs_sizes)</code> (deterministic seed; override via <code>getOption("landisutils.calibration.subsample_seed", 12345L)</code>) before the KS test whenever <code>length(sim_sizes) &gt;= 2 * length(obs_sizes)</code>. Removes the “more samples -&gt; better-resolved tail -&gt; bigger KS gap” artifact that was driving DEoptim toward body-matching at the expense of tail fidelity.</p></li>
+<li><p><code><a href="../reference/loss_from_stats.html">loss_from_stats()</a></code> adds a new loss component, <code>size_tail = |log10(sim_q95) - log10(obs_q95)|</code> (default weight <code>1</code>), explicitly checking the upper-tail magnitude. KS distance routinely under-weights the tail on log-scaled data; <code>size_tail</code> gives DEoptim a separate gradient to close the q95 gap. Components vector is now <code>c(count, size, size_tail, area_fuel, severity)</code> (a new entry; downstream code that introspects <code>components</code> names needs updating).</p></li>
+<li><p><code>.chi_sq_severity()</code> switched from <code>pmax(obs_p, 1e-6)</code> to Laplace-smoothed denominators (<code>alpha = 0.01</code> per bin by default; override via <code>getOption("landisutils.calibration.severity_smoothing_alpha", 0.01)</code>). The previous regulariser gave any empty observed severity class a ~1e6 multiplier on its chi-sq contribution, so even 1% of simulated mass in an empty observed bin dominated every other component of the loss; smoothing caps the worst-case contribution at a meaningful magnitude without otherwise distorting the comparison.</p></li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.50" id="landisutils-0050">landisutils 0.0.50<a class="anchor" aria-label="anchor" href="#landisutils-0050"></a></h2>
 <ul><li>

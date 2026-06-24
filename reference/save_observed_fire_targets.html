@@ -13,7 +13,7 @@ can read it from disk without terra/sf in their environments."><meta property="o
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.50</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.51</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -67,7 +67,8 @@ can read it from disk without terra/sf in their environments.</p>
 <span>  primary_label <span class="op">=</span> <span class="st">"primary"</span>,</span>
 <span>  secondary_label <span class="op">=</span> <span class="st">"secondary"</span>,</span>
 <span>  fuel_code_to_base <span class="op">=</span> <span class="fu"><a href="bc_fuel_code_to_base.html">bc_fuel_code_to_base</a></span><span class="op">(</span><span class="op">)</span>,</span>
-<span>  severity_dist <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  severity_dist <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  min_size_ha <span class="op">=</span> <span class="fl">1</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -128,6 +129,17 @@ on the primary-ecoregion summary; consumed by <code><a href="loss_from_stats.htm
 <code>L_severity</code> component. NULL = skip severity calibration (the loss
 contributes 0). For a literature-prior default, see
 <code><a href="default_severity_prior_sturtevant2009.html">default_severity_prior_sturtevant2009()</a></code>.</p></dd>
+
+
+<dt id="arg-min-size-ha">min_size_ha<a class="anchor" aria-label="anchor" href="#arg-min-size-ha"></a></dt>
+<dd><p>Numeric scalar. Minimum fire size (ha) retained in
+<code>fire_sizes_ha</code>. Defaults to <code>1.0</code>: NFDB systematically under-reports
+sub-1-ha fires (agencies don't document every spot fire) and NBAC's
+mapped polygons are also typically truncated below ~1 ha, so the
+observed distribution is effectively left-censored at this threshold.
+<code><a href="loss_from_stats.html">loss_from_stats()</a></code> reads <code>observed$min_size_ha</code> and applies the same
+truncation symmetrically to <code>sim_sizes</code> so the KS distance compares
+like with like. Set to <code>0</code> to disable the floor.</p></dd>
 
 </dl></div>
     <div class="section level2">

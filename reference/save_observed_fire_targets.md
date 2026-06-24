@@ -21,7 +21,8 @@ save_observed_fire_targets(
   primary_label = "primary",
   secondary_label = "secondary",
   fuel_code_to_base = bc_fuel_code_to_base(),
-  severity_dist = NULL
+  severity_dist = NULL,
+  min_size_ha = 1
 )
 ```
 
@@ -83,6 +84,18 @@ save_observed_fire_targets(
   `L_severity` component. NULL = skip severity calibration (the loss
   contributes 0). For a literature-prior default, see
   [`default_severity_prior_sturtevant2009()`](https://for-cast.github.io/landisutils/reference/default_severity_prior_sturtevant2009.md).
+
+- min_size_ha:
+
+  Numeric scalar. Minimum fire size (ha) retained in `fire_sizes_ha`.
+  Defaults to `1.0`: NFDB systematically under-reports sub-1-ha fires
+  (agencies don't document every spot fire) and NBAC's mapped polygons
+  are also typically truncated below ~1 ha, so the observed distribution
+  is effectively left-censored at this threshold.
+  [`loss_from_stats()`](https://for-cast.github.io/landisutils/reference/loss_from_stats.md)
+  reads `observed$min_size_ha` and applies the same truncation
+  symmetrically to `sim_sizes` so the KS distance compares like with
+  like. Set to `0` to disable the floor.
 
 ## Value
 
