@@ -37,7 +37,14 @@ test_that("parse_dynamic_fire_logs() reads sample event + summary logs", {
 
   expect_named(
     parsed,
-    c("n_fires_by_year", "fire_sizes_ha", "events", "total_sites_burned", "n_events")
+    c(
+      "n_fires_by_year",
+      "fire_sizes_ha",
+      "events",
+      "total_sites_burned",
+      "n_events",
+      "area_by_fuel_ha"
+    )
   )
   expect_s3_class(parsed$n_fires_by_year, "tbl_df")
   expect_named(parsed$n_fires_by_year, c("year", "n_fires"))
@@ -48,11 +55,116 @@ test_that("parse_dynamic_fire_logs() reads sample event + summary logs", {
   expect_true(is.numeric(parsed$fire_sizes_ha))
   ## eco column trimmed of leading/trailing whitespace
   expect_equal(unique(parsed$events$eco), "FRU59")
+  ## no severity-*.tif / FuelType-*.tif in the test fixture -> area_by_fuel_ha NULL
+  expect_null(parsed$area_by_fuel_ha)
 })
 
 test_that("parse_dynamic_fire_logs() errors clearly when logs are missing", {
   rep_dir <- withr::local_tempdir()
   expect_error(parse_dynamic_fire_logs(rep_dir), "Dynamic Fire logs not found")
+})
+
+test_that("parse_dynamic_fire_logs() populates area_by_fuel_ha from severity x FuelType rasters", {
+  ## Set up a synthetic rep_dir with paired severity + FuelType maps so the
+  ## internal .read_burned_area_by_fuel() helper has something to read.
+  rep_dir <- withr::local_tempdir()
+  fs::dir_create(fs::path(rep_dir, "fire"))
+  fs::file_copy(
+    system.file("testdata", "dynamic-fire-event-log-sample.csv", package = "landisutils"),
+    fs::path(rep_dir, "fire", "dynamic-fire-event-log.csv")
+  )
+  fs::file_copy(
+    system.file("testdata", "dynamic-fire-summary-log-sample.csv", package = "landisutils"),
+    fs::path(rep_dir, "fire", "dynamic-fire-summary-log.csv")
+  )
+
+  ## 10x10 fuel grid: half Conifer (code 1), half Open (code 13).
+  fuel_mat <- matrix(rep(c(rep(1L, 5L), rep(13L, 5L)), 10L), nrow = 10L, byrow = TRUE)
+  fuel_r <- terra::rast(fuel_mat, extent = terra::ext(0, 100, 0, 100))
+
+  ## Timestep 1: 6 cells burn -- 4 Conifer, 2 Open.
+  sev1_mat <- matrix(0L, 10L, 10L)
+  sev1_mat[1L, 1L:4L] <- 3L ## 4 Conifer cells (cols 1-4 in row 1)
+  sev1_mat[1L, 6L:7L] <- 2L ## 2 Open cells (cols 6-7 in row 1)
+  sev1 <- terra::rast(sev1_mat, extent = terra::ext(0, 100, 0, 100))
+  terra::writeRaster(sev1, fs::path(rep_dir, "fire", "severity-1.tif"), overwrite = TRUE)
+  terra::writeRaster(fuel_r, fs::path(rep_dir, "fire", "FuelType-1.tif"), overwrite = TRUE)
+
+  ## Timestep 2: 3 more cells burn, all Open.
+  sev2_mat <- matrix(0L, 10L, 10L)
+  sev2_mat[2L, 8L:10L] <- 4L ## 3 Open cells in row 2 (cols 8-10)
+  sev2 <- terra::rast(sev2_mat, extent = terra::ext(0, 100, 0, 100))
+  terra::writeRaster(sev2, fs::path(rep_dir, "fire", "severity-2.tif"), overwrite = TRUE)
+  terra::writeRaster(fuel_r, fs::path(rep_dir, "fire", "FuelType-2.tif"), overwrite = TRUE)
+
+  parsed <- parse_dynamic_fire_logs(rep_dir, pixel_area_ha = 0.01)
+  expect_false(is.null(parsed$area_by_fuel_ha))
+  expect_named(parsed$area_by_fuel_ha, c("fuel_code", "cells", "area_ha"))
+  expect_equal(parsed$area_by_fuel_ha$cells[parsed$area_by_fuel_ha$fuel_code == 1L], 4L)
+  expect_equal(parsed$area_by_fuel_ha$cells[parsed$area_by_fuel_ha$fuel_code == 13L], 5L) ## 2 + 3
+  ## Cell-timestep accounting (not unique cells): each cell-burn counts once
+  expect_equal(sum(parsed$area_by_fuel_ha$cells), 9L)
+  expect_equal(sum(parsed$area_by_fuel_ha$area_ha), 9L * 0.01)
+})
+
+test_that("parse_dynamic_fire_logs() area_by_fuel_ha is NULL when FuelType companion is absent", {
+  rep_dir <- withr::local_tempdir()
+  fs::dir_create(fs::path(rep_dir, "fire"))
+  fs::file_copy(
+    system.file("testdata", "dynamic-fire-event-log-sample.csv", package = "landisutils"),
+    fs::path(rep_dir, "fire", "dynamic-fire-event-log.csv")
+  )
+  fs::file_copy(
+    system.file("testdata", "dynamic-fire-summary-log-sample.csv", package = "landisutils"),
+    fs::path(rep_dir, "fire", "dynamic-fire-summary-log.csv")
+  )
+  ## Severity tif present but no companion FuelType tif -> attribution falls
+  ## back to NULL (legacy event-based attribution kicks in downstream).
+  sev_r <- terra::rast(matrix(0L, 5L, 5L), extent = terra::ext(0, 50, 0, 50))
+  terra::values(sev_r)[1L] <- 3L
+  terra::writeRaster(sev_r, fs::path(rep_dir, "fire", "severity-1.tif"), overwrite = TRUE)
+
+  parsed <- parse_dynamic_fire_logs(rep_dir)
+  expect_null(parsed$area_by_fuel_ha)
+})
+
+test_that(".chi_sq_area_by_fuel prefers cell-based attribution when available, falls back when not", {
+  ## Two minimal reps: rep1 has area_by_fuel_ha (cell-based), rep2 does not.
+  ## When ANY rep is missing the field, fallback to legacy event-based.
+  rep_cells <- list(
+    n_fires_by_year = tibble::tibble(year = 1:5, n_fires = rep(1L, 5L)),
+    fire_sizes_ha = c(10, 20, 30, 40, 50),
+    events = tibble::tibble(
+      year = 1:5,
+      eco = "MOCK",
+      init_fuel = c(1L, 1L, 1L, 1L, 1L), ## all conifer ignition
+      sites = c(10L, 20L, 30L, 40L, 50L),
+      mean_severity = c(2, 3, 2, 3, 2)
+    ),
+    area_by_fuel_ha = tibble::tibble(
+      fuel_code = c(1L, 13L), ## 1=Conifer, 13=Open
+      cells = c(80L, 70L),
+      area_ha = c(80, 70) ## cell-based: events spread into Open (not just ignition fuel)
+    )
+  )
+  rep_no_cells <- rep_cells
+  rep_no_cells$area_by_fuel_ha <- NULL
+
+  observed <- list(
+    primary = list(
+      area_by_fuel_ha = tibble::tibble(base = c("Conifer", "Open"), area_ha = c(60, 90))
+    ),
+    fuel_code_to_base = c("1" = "Conifer", "13" = "Open"),
+    pixel_area_ha = 1
+  )
+
+  loss_cell <- .chi_sq_area_by_fuel(list(rep_cells), observed$primary, observed)
+  loss_legacy <- .chi_sq_area_by_fuel(list(rep_no_cells), observed$primary, observed)
+  ## With cell-based attribution, both Conifer and Open get nonzero sim mass
+  ## (80/150 and 70/150), reasonably close to obs (60/150 and 90/150).
+  ## With legacy event-based, ALL sim mass is Conifer (1/1 and 0/1), maximally
+  ## mismatched against obs Conifer/Open split -> larger chi-sq.
+  expect_lt(loss_cell, loss_legacy)
 })
 
 test_that("patch_fire_config() rewrites SeverityCalibrationFactor / HiProp / IgnProb", {
@@ -506,8 +618,17 @@ test_that("sim_mock() returns parse_dynamic_fire_logs()-shaped output", {
   out <- sim_mock(par_vec = cand, sim_years = 5L, base_seed = 42L)
   expect_named(
     out,
-    c("n_fires_by_year", "fire_sizes_ha", "events", "total_sites_burned", "n_events")
+    c(
+      "n_fires_by_year",
+      "fire_sizes_ha",
+      "events",
+      "total_sites_burned",
+      "n_events",
+      "area_by_fuel_ha"
+    )
   )
+  ## sim_mock doesn't run LANDIS -> no severity/FuelType rasters -> NULL
+  expect_null(out$area_by_fuel_ha)
   expect_s3_class(out$n_fires_by_year, "tbl_df")
   expect_equal(nrow(out$n_fires_by_year), 5L)
   expect_true(is.numeric(out$fire_sizes_ha))

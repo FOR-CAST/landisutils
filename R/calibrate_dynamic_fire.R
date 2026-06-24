@@ -66,7 +66,22 @@ calibration_par_names <- function() {
 #'
 #' @returns Named list with `n_fires_by_year` (tibble: `year`, `n_fires`),
 #'   `fire_sizes_ha` (sorted numeric vector), `events` (per-event tibble),
-#'   `total_sites_burned` (integer), `n_events` (integer).
+#'   `total_sites_burned` (integer), `n_events` (integer), and
+#'   `area_by_fuel_ha` (tibble with `fuel_code`, `cells`, `area_ha` columns,
+#'   or NULL when the per-timestep severity x fuel-type rasters aren't on
+#'   disk -- e.g. mock-simulator trials).
+#'
+#' @details
+#' The `area_by_fuel_ha` summary is computed by intersecting the per-timestep
+#' Dynamic Fire severity rasters (cells with severity > 0 = burned) with the
+#' matching per-timestep Dynamic Fuels `FuelType` rasters from the same
+#' `<rep_dir>/fire/` subdirectory. Cell-fuel-timestep is the unit of
+#' accounting: a cell that burns in two distinct timesteps contributes twice
+#' (consistent with NBAC's per-fire-perimeter accounting on the observed side).
+#' This replaces the earlier convention of attributing each event's
+#' entire `DamagedSites` count to its `InitFuel`, which biased simulated
+#' burn area toward the dominant-cover fuel since fires ignite where there's
+#' igniteable fuel and then spread anywhere.
 #'
 #' @family Dynamic Fire calibration helpers
 #'
@@ -112,7 +127,72 @@ parse_dynamic_fire_logs <- function(rep_dir, pixel_area_ha = 1.0) {
     fire_sizes_ha = fire_sizes_ha,
     events = events_tbl,
     total_sites_burned = sum(events_tbl$sites),
-    n_events = nrow(events_tbl)
+    n_events = nrow(events_tbl),
+    area_by_fuel_ha = .read_burned_area_by_fuel(rep_dir, pixel_area_ha)
+  )
+}
+
+#' Per-rep cell-based burn area by fuel code (internal)
+#'
+#' Walks `<rep_dir>/fire/severity-{t}.tif` and the matching
+#' `<rep_dir>/fire/FuelType-{t}.tif` files, masks the fuel raster to cells
+#' with severity > 0, and accumulates cell counts per fuel code across
+#' timesteps. Each cell-timestep is counted once, so a cell that burns in
+#' two distinct timesteps contributes twice -- matching NBAC's
+#' per-fire-perimeter accounting on the observed side.
+#'
+#' Returns NULL when:
+#'   * `<rep_dir>/fire/` does not exist (caller didn't run LANDIS),
+#'   * no `severity-*.tif` files were emitted (no fires in this rep), or
+#'   * no matching `FuelType-*.tif` companion is on disk (Dynamic Fuels
+#'     either not enabled or wrote to a different output dir than expected).
+#'
+#' Downstream `loss_from_stats()` ->`.chi_sq_area_by_fuel()` prefers this
+#' tibble when present and falls back to the legacy `events$init_fuel`
+#' attribution when it's NULL (e.g. from mock-simulator trials or
+#' payloads written by older landisutils versions).
+#'
+#' @keywords internal
+.read_burned_area_by_fuel <- function(rep_dir, pixel_area_ha) {
+  fire_dir <- fs::path(rep_dir, "fire")
+  if (!fs::dir_exists(fire_dir)) {
+    return(NULL)
+  }
+  sev_files <- fs::dir_ls(fire_dir, regexp = "severity-\\d+\\.tif$", type = "file")
+  if (length(sev_files) == 0L) {
+    return(NULL)
+  }
+  steps <- as.integer(sub(".*severity-(\\d+)\\.tif$", "\\1", as.character(sev_files)))
+  per_step <- list()
+  for (i in seq_along(sev_files)) {
+    fuel_path <- fs::path(fire_dir, sprintf("FuelType-%d.tif", steps[i]))
+    if (!fs::file_exists(fuel_path)) {
+      next
+    }
+    sev <- terra::rast(as.character(sev_files[i]))
+    fuel <- terra::rast(as.character(fuel_path))
+    burned_fuel <- terra::ifel(sev > 0, fuel, NA)
+    freq_df <- terra::freq(burned_fuel)
+    if (nrow(freq_df) == 0L) {
+      next
+    }
+    per_step[[length(per_step) + 1L]] <- as.data.frame(freq_df)
+  }
+  if (length(per_step) == 0L) {
+    return(NULL)
+  }
+  all_counts <- do.call(rbind, per_step)
+  val_col <- if ("value" %in% colnames(all_counts)) "value" else "label"
+  agg <- stats::aggregate(
+    all_counts$count,
+    by = list(fuel_code = as.integer(all_counts[[val_col]])),
+    FUN = sum
+  )
+  names(agg)[2L] <- "cells"
+  tibble::tibble(
+    fuel_code = as.integer(agg$fuel_code),
+    cells = as.integer(agg$cells),
+    area_ha = as.numeric(agg$cells) * pixel_area_ha
   )
 }
 
@@ -419,24 +499,44 @@ loss_from_stats <- function(
   fuel_to_base <- observed$fuel_code_to_base
   pixel_area_ha <- observed$pixel_area_ha %||% 1.0
 
-  sim_events <- do.call(
-    rbind,
-    lapply(reps, function(r) {
-      if (nrow(r$events) == 0L) {
-        return(NULL)
-      }
-      r$events[, c("init_fuel", "sites"), drop = FALSE]
-    })
-  )
-  if (is.null(sim_events) || nrow(sim_events) == 0L) {
-    return(1.0) ## penalty for no simulated fires
+  ## Cell-based attribution: prefer the per-rep `area_by_fuel_ha` summary
+  ## emitted by parse_dynamic_fire_logs() from the severity x FuelType
+  ## raster intersection. This matches the observed side (NBAC perimeters
+  ## rasterised against `fuel_types_rast` -- each burned cell attributed
+  ## to its actual fuel). Reps without an `area_by_fuel_ha` field (mock
+  ## simulators, payloads from landisutils < 0.0.52) fall back to the
+  ## legacy event-based attribution (each event's full `DamagedSites`
+  ## counted toward its `InitFuel` only), which biases simulated burn area
+  ## toward the dominant-cover fuel.
+  has_cell_attr <- vapply(reps, function(r) !is.null(r$area_by_fuel_ha), logical(1))
+  if (all(has_cell_attr)) {
+    sim_area_df <- do.call(rbind, lapply(reps, function(r) r$area_by_fuel_ha))
+    sim_area_df$base <- unname(fuel_to_base[as.character(sim_area_df$fuel_code)])
+    sim_area_df <- sim_area_df[!is.na(sim_area_df$base), , drop = FALSE]
+    if (nrow(sim_area_df) == 0L) {
+      return(1.0)
+    }
+    sim_area_by_base <- tapply(sim_area_df$area_ha, sim_area_df$base, sum)
+  } else {
+    sim_events <- do.call(
+      rbind,
+      lapply(reps, function(r) {
+        if (nrow(r$events) == 0L) {
+          return(NULL)
+        }
+        r$events[, c("init_fuel", "sites"), drop = FALSE]
+      })
+    )
+    if (is.null(sim_events) || nrow(sim_events) == 0L) {
+      return(1.0) ## penalty for no simulated fires
+    }
+    sim_events$base <- unname(fuel_to_base[as.character(sim_events$init_fuel)])
+    sim_events <- sim_events[!is.na(sim_events$base), , drop = FALSE]
+    if (nrow(sim_events) == 0L) {
+      return(1.0)
+    }
+    sim_area_by_base <- tapply(sim_events$sites, sim_events$base, sum) * pixel_area_ha
   }
-  sim_events$base <- unname(fuel_to_base[as.character(sim_events$init_fuel)])
-  sim_events <- sim_events[!is.na(sim_events$base), , drop = FALSE]
-  if (nrow(sim_events) == 0L) {
-    return(1.0)
-  }
-  sim_area_by_base <- tapply(sim_events$sites, sim_events$base, sum) * pixel_area_ha
 
   obs_area_by_base <- stats::setNames(primary$area_by_fuel_ha$area_ha, primary$area_by_fuel_ha$base)
 
@@ -450,9 +550,13 @@ loss_from_stats <- function(
   sim_p <- if (sum(sim_v) > 0) sim_v / sum(sim_v) else sim_v
   obs_p <- if (sum(obs_v) > 0) obs_v / sum(obs_v) else obs_v
 
-  ## Chi-squared with epsilon in the denominator for empty observed bins.
-  eps <- 1e-6
-  sum((sim_p - obs_p)^2 / pmax(obs_p, eps))
+  ## Laplace-smooth obs_p to keep the chi-sq finite when sim puts mass in
+  ## an empty observed bin (same `alpha = 0.01` default + option override
+  ## as `.chi_sq_severity()` for consistency).
+  alpha <- getOption("landisutils.calibration.area_fuel_smoothing_alpha", 0.01)
+  nbins <- length(obs_p)
+  obs_p_smoothed <- (obs_p + alpha) / (1 + nbins * alpha)
+  sum((sim_p - obs_p_smoothed)^2 / obs_p_smoothed)
 }
 
 ## Chi-squared on severity-class proportions (internal).
@@ -1724,7 +1828,11 @@ sim_mock <- function(
       }
     ),
     total_sites_burned = sum(as.integer(fire_sizes_ha)),
-    n_events = length(fire_sizes_ha)
+    n_events = length(fire_sizes_ha),
+    ## sim_mock is not running LANDIS, so there are no severity x FuelType
+    ## rasters to intersect. Loss function falls back to event-based
+    ## attribution for any rep without `area_by_fuel_ha`.
+    area_by_fuel_ha = NULL
   )
 }
 

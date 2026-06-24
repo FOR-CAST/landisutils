@@ -16,7 +16,10 @@ and \code{fire/dynamic-fire-summary-log.csv}.}
 \value{
 Named list with \code{n_fires_by_year} (tibble: \code{year}, \code{n_fires}),
 \code{fire_sizes_ha} (sorted numeric vector), \code{events} (per-event tibble),
-\code{total_sites_burned} (integer), \code{n_events} (integer).
+\code{total_sites_burned} (integer), \code{n_events} (integer), and
+\code{area_by_fuel_ha} (tibble with \code{fuel_code}, \code{cells}, \code{area_ha} columns,
+or NULL when the per-timestep severity x fuel-type rasters aren't on
+disk -- e.g. mock-simulator trials).
 }
 \description{
 Reads \verb{<rep_dir>/fire/dynamic-fire-event-log.csv} (one row per fire event)
@@ -32,6 +35,17 @@ Columns parsed (Dynamic Fire System v4):
 }
 
 Cells -> hectares uses \code{pixel_area_ha} (1 ha for a 100 m x 100 m grid).
+
+The \code{area_by_fuel_ha} summary is computed by intersecting the per-timestep
+Dynamic Fire severity rasters (cells with severity > 0 = burned) with the
+matching per-timestep Dynamic Fuels \code{FuelType} rasters from the same
+\verb{<rep_dir>/fire/} subdirectory. Cell-fuel-timestep is the unit of
+accounting: a cell that burns in two distinct timesteps contributes twice
+(consistent with NBAC's per-fire-perimeter accounting on the observed side).
+This replaces the earlier convention of attributing each event's
+entire \code{DamagedSites} count to its \code{InitFuel}, which biased simulated
+burn area toward the dominant-cover fuel since fires ignite where there's
+igniteable fuel and then spread anywhere.
 }
 \seealso{
 Other Dynamic Fire calibration helpers:
