@@ -7,7 +7,7 @@
 loss_from_stats(
   reps,
   observed,
-  weights = c(count = 1, size = 1, area_fuel = 0, severity = 0)
+  weights = c(count = 1, size = 1, size_tail = 1, area_fuel = 0, severity = 0)
 )
 }
 \arguments{

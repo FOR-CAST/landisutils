@@ -252,10 +252,11 @@ test_that("loss_from_stats() Tier 1 returns finite count + size components", {
   )
   loss <- loss_from_stats(list(rep1), observed)
   expect_named(loss, c("total", "components", "weights"))
-  expect_named(loss$components, c("count", "size", "area_fuel", "severity"))
+  expect_named(loss$components, c("count", "size", "size_tail", "area_fuel", "severity"))
   expect_true(is.finite(loss$total))
   expect_true(loss$components[["count"]] >= 0)
   expect_true(loss$components[["size"]] >= 0 && loss$components[["size"]] <= 1)
+  expect_true(loss$components[["size_tail"]] >= 0) ## |log10 sim_q95 - log10 obs_q95|, or 0 if n < 20
   expect_equal(loss$components[["area_fuel"]], 0)
   expect_equal(loss$components[["severity"]], 0)
 })
@@ -323,6 +324,7 @@ test_that("save_observed_fire_targets() writes a payload with expected shape", {
       "fire_years_range",
       "fire_years",
       "pixel_area_ha",
+      "min_size_ha",
       "computed_at",
       "notes"
     )
@@ -372,13 +374,18 @@ test_that("save_observed_fire_targets() falls back to points' SIZE_HA when polys
     fire_years = 2010L:2020L,
     fuel_types_rast = r,
     path = out_path,
-    primary_label = "TEST_REGION"
+    primary_label = "TEST_REGION",
+    ## Disable the 1-ha floor for this test so the 0.5-ha fixture survives
+    ## (the default `min_size_ha = 1.0` would otherwise drop it).
+    min_size_ha = 0
   )
   payload <- readRDS(result_path)
   p <- payload$primary
   expect_equal(p$n_polys, 0L)
   expect_equal(p$fire_sizes_ha, sort(c(0.5, 5.0, 100.0)))
   expect_null(p$area_by_fuel_ha) ## skipped when no polys are supplied
+  ## min_size_ha is round-tripped in the payload for symmetric loss truncation
+  expect_equal(payload$min_size_ha, 0)
 })
 
 test_that("save_observed_fire_targets() accepts a custom fuel_code_to_base mapping", {
@@ -727,6 +734,99 @@ test_that("loss_from_stats() handles empty-fires reps with a finite penalty", {
   loss <- loss_from_stats(list(rep_empty), observed)
   expect_true(is.finite(loss$total))
   expect_equal(loss$components[["size"]], 1.0)
+  expect_equal(loss$components[["size_tail"]], 0.0) ## degenerate -> 0
+})
+
+test_that("loss_from_stats() symmetrically truncates sim_sizes at observed$min_size_ha", {
+  ## Sim has many sub-1-ha events; obs is left-censored at 1.0 ha. Without the
+  ## symmetric truncation, sim's CDF starts at 0 (tiny fires) while obs's
+  ## starts at 1.0, producing an artificial KS gap from sampling truncation
+  ## rather than from a real distributional difference.
+  set.seed(1L)
+  big_obs <- sort(stats::rlnorm(200, meanlog = 3, sdlog = 1.5))
+  big_obs <- big_obs[big_obs >= 1]
+  rep_truncated_sim <- list(
+    n_fires_by_year = tibble::tibble(year = 1:30, n_fires = rep(7L, 30L)),
+    fire_sizes_ha = sort(c(stats::rlnorm(200, 3, 1.5), runif(50, 0.05, 0.99)))
+  )
+  observed_with_floor <- list(
+    fru59 = list(
+      lambda_obs = 7,
+      n_fires_by_year = tibble::tibble(year = 1:74, n = sample.int(20, 74, replace = TRUE)),
+      fire_sizes_ha = big_obs
+    ),
+    min_size_ha = 1.0
+  )
+  observed_no_floor <- observed_with_floor
+  observed_no_floor$min_size_ha <- 0
+  loss_floored <- loss_from_stats(list(rep_truncated_sim), observed_with_floor)
+  loss_unfloored <- loss_from_stats(list(rep_truncated_sim), observed_no_floor)
+  ## With the symmetric floor active, the artificial sampling-truncation gap
+  ## (sim has sub-1-ha tail; obs does not) is removed -> KS should be smaller.
+  expect_lt(loss_floored$components[["size"]], loss_unfloored$components[["size"]])
+})
+
+test_that("loss_from_stats() L_size_tail is 0 when sim_q95 ~ obs_q95 and grows with log-scale gap", {
+  ## sim and obs from the SAME distribution -> tail term should be ~0.
+  set.seed(2L)
+  sim_sizes <- sort(stats::rlnorm(300, 3, 1.2))
+  obs_sizes <- sort(stats::rlnorm(120, 3, 1.2))
+  rep_same <- list(
+    n_fires_by_year = tibble::tibble(year = 1:30, n_fires = rep(10L, 30L)),
+    fire_sizes_ha = sim_sizes
+  )
+  observed_same <- list(
+    fru59 = list(
+      lambda_obs = 10,
+      n_fires_by_year = tibble::tibble(year = 1:74, n = rep(10L, 74L)),
+      fire_sizes_ha = obs_sizes
+    )
+  )
+  loss_same <- loss_from_stats(list(rep_same), observed_same)
+  expect_lt(loss_same$components[["size_tail"]], 0.3) ## within ~2x at q95
+
+  ## sim has 10x larger upper tail -> tail term ~ log10(10) = 1.
+  sim_sizes_big <- sort(stats::rlnorm(300, 3 + log(10), 1.2))
+  rep_big <- list(
+    n_fires_by_year = tibble::tibble(year = 1:30, n_fires = rep(10L, 30L)),
+    fire_sizes_ha = sim_sizes_big
+  )
+  loss_big <- loss_from_stats(list(rep_big), observed_same)
+  expect_gt(loss_big$components[["size_tail"]], 0.7)
+})
+
+test_that(".chi_sq_severity Laplace smoothing prevents empty-obs-bin blowup", {
+  ## Observed concentrated in classes 2-3; sim puts mass in EMPTY class 5.
+  ## Under the old `pmax(obs_p, 1e-6)`, even 5% sim mass in class 5 produced
+  ## ~ 0.05^2 / 1e-6 = ~2500 chi-sq, dominating everything else. Smoothing
+  ## with alpha=0.01 caps that at ~ 0.05^2 / 0.01 = 0.25.
+  ## Use loss_from_stats() to exercise the smoothed path end-to-end.
+  rep1 <- list(
+    n_fires_by_year = tibble::tibble(year = 1:10, n_fires = rep(5L, 10L)),
+    fire_sizes_ha = c(10, 50, 200),
+    events = data.frame(
+      init_fuel = 1L,
+      sites = 5L,
+      mean_severity = c(1.8, 2.2, 4.8) ## 4.8 -> bin "5"; bin 5 is EMPTY in obs
+    )
+  )
+  observed <- list(
+    fru59 = list(
+      lambda_obs = 0.5,
+      n_fires_by_year = tibble::tibble(year = 1:74, n = sample.int(5, 74, replace = TRUE)),
+      fire_sizes_ha = c(1, 5, 20, 80, 300),
+      severity_dist = c("1" = 0, "2" = 0.4, "3" = 0.5, "4" = 0.1, "5" = 0)
+    )
+  )
+  loss <- loss_from_stats(
+    list(rep1),
+    observed,
+    weights = c(count = 0, size = 0, size_tail = 0, area_fuel = 0, severity = 1)
+  )
+  ## Even though sim puts mass in obs's empty class 5, the chi-sq stays
+  ## bounded (< 100; in practice ~few-to-tens).
+  expect_true(is.finite(loss$components[["severity"]]))
+  expect_lt(loss$components[["severity"]], 100)
 })
 
 ## ---- Tier 2 ----------------------------------------------------------------

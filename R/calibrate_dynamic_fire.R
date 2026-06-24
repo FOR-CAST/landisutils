@@ -300,7 +300,7 @@ default_severity_prior_sturtevant2009 <- function() {
 loss_from_stats <- function(
   reps,
   observed,
-  weights = c(count = 1, size = 1, area_fuel = 0, severity = 0)
+  weights = c(count = 1, size = 1, size_tail = 1, area_fuel = 0, severity = 0)
 ) {
   stopifnot(is.list(reps), length(reps) >= 1L, is.list(observed))
   primary <- observed$primary %||% observed$fru59
@@ -319,13 +319,66 @@ loss_from_stats <- function(
   }
   L_count <- abs(mean(n_fires_per_year_per_rep) - primary$lambda_obs) / obs_sd
 
-  ## L_size: pool simulated sizes across reps, compute KS distance to observed
+  ## L_size: pool simulated sizes across reps, compute KS distance to observed.
+  ##
+  ## Two corrections vs. the naive KS:
+  ##
+  ##   1. SYMMETRIC LEFT-TRUNCATION at `observed$min_size_ha` (default 1.0).
+  ##      The observed `fire_sizes_ha` was already left-truncated in
+  ##      `save_observed_fire_targets()` (NFDB / NBAC under-report sub-1-ha
+  ##      fires); apply the same floor to sim_sizes so we don't compare an
+  ##      effectively complete simulator distribution against a truncated
+  ##      observed sample. Set `observed$min_size_ha = 0` to disable.
+  ##
+  ##   2. SAMPLE-SIZE CAP: sim is typically n_reps * sim_years = O(thousands
+  ##      to tens of thousands) of events while obs is O(tens to a few
+  ##      hundred). Even when the underlying distributions are identical,
+  ##      the much-better-sampled sim CDF extends further into the tails,
+  ##      so KS picks up sampling-frequency mismatch as a "shape" gap.
+  ##      Subsample sim down to obs length before the KS test. Done with a
+  ##      deterministic seed so the loss is reproducible across DEoptim
+  ##      trials at the same parameter vector. Override the seed via
+  ##      `getOption("landisutils.calibration.subsample_seed", 12345L)`.
+  ##
+  ## Also computes `L_size_tail = |log10(sim_q95) - log10(obs_q95)|` -- a
+  ## direct upper-tail check that KS systematically under-weights. Weighted
+  ## separately via `weights["size_tail"]`.
   sim_sizes <- unlist(lapply(reps, function(r) r$fire_sizes_ha), use.names = FALSE)
   obs_sizes <- primary$fire_sizes_ha
+  min_size_ha <- observed$min_size_ha %||% 0
+  if (min_size_ha > 0) {
+    sim_sizes <- sim_sizes[sim_sizes >= min_size_ha]
+    ## obs_sizes was already filtered upstream; do it again as a safety net for
+    ## payloads written by older save_observed_fire_targets() (no min_size_ha).
+    obs_sizes <- obs_sizes[obs_sizes >= min_size_ha]
+  }
+  L_size_tail <- 0.0
   if (length(sim_sizes) == 0L || length(obs_sizes) == 0L) {
     L_size <- 1.0
   } else {
-    L_size <- suppressWarnings(stats::ks.test(sim_sizes, obs_sizes)$statistic |> as.numeric())
+    ## Subsample sim if it has materially more events than obs (>= 2x). The
+    ## 2x guard avoids unnecessary subsampling when sim and obs are already
+    ## comparable -- subsampling small samples just adds variance.
+    sim_for_ks <- if (length(sim_sizes) >= 2L * length(obs_sizes)) {
+      .seed <- getOption("landisutils.calibration.subsample_seed", 12345L)
+      withr::with_seed(.seed, sample(sim_sizes, size = length(obs_sizes), replace = FALSE))
+    } else {
+      sim_sizes
+    }
+    L_size <- suppressWarnings(
+      stats::ks.test(sim_for_ks, obs_sizes, exact = FALSE)$statistic |> as.numeric()
+    )
+    ## Tail-aware companion to L_size: log-q95 absolute difference. log10 so
+    ## a 10x scale gap reads as ~1 -- comparable in magnitude to the KS [0,1]
+    ## statistic. Use length thresholds to avoid taking quantiles of tiny
+    ## samples (degenerate).
+    if (length(sim_sizes) >= 20L && length(obs_sizes) >= 20L) {
+      sim_q95 <- stats::quantile(sim_sizes, 0.95, names = FALSE)
+      obs_q95 <- stats::quantile(obs_sizes, 0.95, names = FALSE)
+      if (is.finite(sim_q95) && is.finite(obs_q95) && sim_q95 > 0 && obs_q95 > 0) {
+        L_size_tail <- abs(log10(sim_q95) - log10(obs_q95))
+      }
+    }
   }
 
   ## L_area_fuel: chi-squared on burn-area-by-base-fuel-type proportions.
@@ -344,7 +397,13 @@ loss_from_stats <- function(
     0.0
   }
 
-  components <- c(count = L_count, size = L_size, area_fuel = L_area_fuel, severity = L_severity)
+  components <- c(
+    count = L_count,
+    size = L_size,
+    size_tail = L_size_tail,
+    area_fuel = L_area_fuel,
+    severity = L_severity
+  )
   w <- stats::setNames(rep(0, length(components)), names(components))
   w[names(weights)] <- weights
   total <- sum(w * components)
@@ -423,8 +482,23 @@ loss_from_stats <- function(
   obs_p <- as.numeric(severity_dist[names(sim_counts)])
   obs_p[is.na(obs_p)] <- 0
 
-  eps <- 1e-6
-  sum((sim_p - obs_p)^2 / pmax(obs_p, eps))
+  ## Laplace smoothing (additive smoothing) on obs_p. The previous
+  ## `pmax(obs_p, 1e-6)` in the denominator gave any empty observed class a
+  ## ~1e6 multiplier on its (sim_p)^2 chi-sq contribution -- a single percent
+  ## of simulated mass in an empty observed bin produced a ~10 chi-sq value,
+  ## dominating every other component. Replace with proper smoothing:
+  ##
+  ##   obs_smoothed = (obs + alpha) / (1 + nbins * alpha)
+  ##
+  ## with `alpha = 0.01` (1% per bin). This bounds an empty-obs bin's
+  ## contribution at ~ (sim_p^2 / 0.01) <= 100 for sim_p in [0, 1] -- still
+  ## significant if sim puts all mass in an empty bin, but no longer
+  ## drowns the rest of the loss. Override via
+  ## `getOption("landisutils.calibration.severity_smoothing_alpha", 0.01)`.
+  alpha <- getOption("landisutils.calibration.severity_smoothing_alpha", 0.01)
+  nbins <- length(sim_p)
+  obs_p_smoothed <- (obs_p + alpha) / (1 + nbins * alpha)
+  sum((sim_p - obs_p_smoothed)^2 / obs_p_smoothed)
 }
 
 #' Apply per-base-fuel-type IgnProb multipliers to a FuelTypeTable
@@ -597,6 +671,14 @@ bc_fuel_code_to_base <- function() {
 #'   `L_severity` component. NULL = skip severity calibration (the loss
 #'   contributes 0). For a literature-prior default, see
 #'   [default_severity_prior_sturtevant2009()].
+#' @param min_size_ha Numeric scalar. Minimum fire size (ha) retained in
+#'   `fire_sizes_ha`. Defaults to `1.0`: NFDB systematically under-reports
+#'   sub-1-ha fires (agencies don't document every spot fire) and NBAC's
+#'   mapped polygons are also typically truncated below ~1 ha, so the
+#'   observed distribution is effectively left-censored at this threshold.
+#'   `loss_from_stats()` reads `observed$min_size_ha` and applies the same
+#'   truncation symmetrically to `sim_sizes` so the KS distance compares
+#'   like with like. Set to `0` to disable the floor.
 #' @param path Character. Output `.rds` path. Parent dir created if missing.
 #'
 #' @returns Character. Absolute path to the written file.
@@ -615,10 +697,14 @@ save_observed_fire_targets <- function(
   primary_label = "primary",
   secondary_label = "secondary",
   fuel_code_to_base = bc_fuel_code_to_base(),
-  severity_dist = NULL
+  severity_dist = NULL,
+  min_size_ha = 1.0
 ) {
   stopifnot(
     inherits(primary_points, "SpatVector"),
+    is.numeric(min_size_ha),
+    length(min_size_ha) == 1L,
+    min_size_ha >= 0,
     ## primary_polys is optional: when NULL, fire_sizes_ha falls back to the
     ## points' SIZE_HA and area_by_fuel_ha is skipped. Callers that pass NBAC
     ## perimeters get sizes from the polys; callers with only NFDB-style
@@ -661,7 +747,12 @@ save_observed_fire_targets <- function(
     } else {
       pts[["SIZE_HA"]]
     }
-    fire_sizes_ha <- sort(sizes_raw[!is.na(sizes_raw) & sizes_raw > 0])
+    ## Drop sub-`min_size_ha` fires: NFDB/NBAC are effectively left-censored
+    ## at ~1 ha (small fires systematically under-reported); without this
+    ## floor the KS comparison compares the sim's full distribution against
+    ## a truncated observed distribution. `loss_from_stats()` applies the
+    ## same truncation to `sim_sizes` symmetrically via `observed$min_size_ha`.
+    fire_sizes_ha <- sort(sizes_raw[!is.na(sizes_raw) & sizes_raw >= min_size_ha])
 
     if (isTRUE(compute_area_by_fuel) && !is.null(polys_sv) && nrow(plys) > 0L) {
       poly_mask <- terra::rasterize(polys_sv, fuel_types_rast, background = NA, field = 1)
@@ -718,6 +809,11 @@ save_observed_fire_targets <- function(
     fire_years_range = c(min = min(fire_years), max = max(fire_years)),
     fire_years = as.integer(fire_years),
     pixel_area_ha = pixel_area_ha,
+    ## Min size threshold used to truncate `fire_sizes_ha`. Loss function
+    ## reads this back to apply the same truncation symmetrically to
+    ## `sim_sizes` (so KS compares like-with-like, not sim-with-floor vs
+    ## obs-without-floor).
+    min_size_ha = min_size_ha,
     computed_at = Sys.time(),
     notes = c(
       "Fire counts come from NFDB ignition points (one row = one ignition).",

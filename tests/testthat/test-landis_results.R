@@ -28,8 +28,5 @@ testthat::test_that("georef_landis_raster() copies extent and CRS from the templ
 testthat::test_that("georef_landis_raster() errors on a dimension mismatch", {
   template <- terra::rast(nrows = 4, ncols = 5, crs = "EPSG:3005")
   r <- terra::rast(nrows = 3, ncols = 5)
-  testthat::expect_snapshot(
-    landisutils::georef_landis_raster(r, template),
-    error = TRUE
-  )
+  testthat::expect_snapshot(landisutils::georef_landis_raster(r, template), error = TRUE)
 })

@@ -1,3 +1,15 @@
+# landisutils 0.0.51
+
+* `save_observed_fire_targets()` gains a `min_size_ha` argument (default `1.0`) that truncates `fire_sizes_ha` at a lower bound and persists the value in the output payload. NFDB / NBAC are effectively left-censored at ~1 ha (small fires under-reported); without a floor, the KS comparison in `loss_from_stats()` compared the sim's full size distribution against a truncated observed sample. Set `min_size_ha = 0` to restore prior behaviour.
+
+* `loss_from_stats()` reads `observed$min_size_ha` and applies the same lower truncation to pooled `sim_sizes` so the KS statistic compares like-with-like.
+
+* `loss_from_stats()` now subsamples `sim_sizes` down to `length(obs_sizes)` (deterministic seed; override via `getOption("landisutils.calibration.subsample_seed", 12345L)`) before the KS test whenever `length(sim_sizes) >= 2 * length(obs_sizes)`. Removes the "more samples -> better-resolved tail -> bigger KS gap" artifact that was driving DEoptim toward body-matching at the expense of tail fidelity.
+
+* `loss_from_stats()` adds a new loss component, `size_tail = |log10(sim_q95) - log10(obs_q95)|` (default weight `1`), explicitly checking the upper-tail magnitude. KS distance routinely under-weights the tail on log-scaled data; `size_tail` gives DEoptim a separate gradient to close the q95 gap. Components vector is now `c(count, size, size_tail, area_fuel, severity)` (a new entry; downstream code that introspects `components` names needs updating).
+
+* `.chi_sq_severity()` switched from `pmax(obs_p, 1e-6)` to Laplace-smoothed denominators (`alpha = 0.01` per bin by default; override via `getOption("landisutils.calibration.severity_smoothing_alpha", 0.01)`). The previous regulariser gave any empty observed severity class a ~1e6 multiplier on its chi-sq contribution, so even 1% of simulated mass in an empty observed bin dominated every other component of the loss; smoothing caps the worst-case contribution at a meaningful magnitude without otherwise distorting the comparison.
+
 # landisutils 0.0.50
 
 * `calibrate_dynamic_fire()` now caps the Docker warm-pool size at the host RAM budget so a district-scale calibration landscape no longer OOMs the node by starting more containers than fit in memory: each container holds a full LANDIS landscape in memory, so per-container RAM scales with the cell count. The new `mem_per_worker_gb` config field is the per-container estimate (the per-container `--memory` limit is derived from it, +25% headroom, when not set explicitly), and `mem_fraction` (default 0.85) is the fraction of available RAM the pool may use; configs that set neither field behave exactly as before (the cap falls back to the `mem_limit` value, so small-area calibrations are unaffected).
