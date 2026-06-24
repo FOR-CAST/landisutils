@@ -27,7 +27,10 @@ parse_dynamic_fire_logs(rep_dir, pixel_area_ha = 1)
 
 Named list with `n_fires_by_year` (tibble: `year`, `n_fires`),
 `fire_sizes_ha` (sorted numeric vector), `events` (per-event tibble),
-`total_sites_burned` (integer), `n_events` (integer).
+`total_sites_burned` (integer), `n_events` (integer), and
+`area_by_fuel_ha` (tibble with `fuel_code`, `cells`, `area_ha` columns,
+or NULL when the per-timestep severity x fuel-type rasters aren't on
+disk – e.g. mock-simulator trials).
 
 ## Details
 
@@ -39,6 +42,17 @@ Columns parsed (Dynamic Fire System v4):
 - summary-log: `Time`, `NumberFires`, `TotalSitesBurned`.
 
 Cells -\> hectares uses `pixel_area_ha` (1 ha for a 100 m x 100 m grid).
+
+The `area_by_fuel_ha` summary is computed by intersecting the
+per-timestep Dynamic Fire severity rasters (cells with severity \> 0 =
+burned) with the matching per-timestep Dynamic Fuels `FuelType` rasters
+from the same `<rep_dir>/fire/` subdirectory. Cell-fuel-timestep is the
+unit of accounting: a cell that burns in two distinct timesteps
+contributes twice (consistent with NBAC's per-fire-perimeter accounting
+on the observed side). This replaces the earlier convention of
+attributing each event's entire `DamagedSites` count to its `InitFuel`,
+which biased simulated burn area toward the dominant-cover fuel since
+fires ignite where there's igniteable fuel and then spread anywhere.
 
 ## See also
 

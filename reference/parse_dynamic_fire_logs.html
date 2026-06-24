@@ -13,7 +13,7 @@ suitable for loss-function comparison."><meta property="og:image" content="https
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.51</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.52</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -77,13 +77,26 @@ and <code>fire/dynamic-fire-summary-log.csv</code>.</p></dd>
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>Named list with <code>n_fires_by_year</code> (tibble: <code>year</code>, <code>n_fires</code>),
 <code>fire_sizes_ha</code> (sorted numeric vector), <code>events</code> (per-event tibble),
-<code>total_sites_burned</code> (integer), <code>n_events</code> (integer).</p>
+<code>total_sites_burned</code> (integer), <code>n_events</code> (integer), and
+<code>area_by_fuel_ha</code> (tibble with <code>fuel_code</code>, <code>cells</code>, <code>area_ha</code> columns,
+or NULL when the per-timestep severity x fuel-type rasters aren't on
+disk – e.g. mock-simulator trials).</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>Columns parsed (Dynamic Fire System v4):</p><ul><li><p>event-log: <code>Time</code>, <code>InitFireRegion</code>, <code>InitFuel</code>, <code>DamagedSites</code>, <code>MeanSeverity</code>.</p></li>
 <li><p>summary-log: <code>Time</code>, <code>NumberFires</code>, <code>TotalSitesBurned</code>.</p></li>
 </ul><p>Cells -&gt; hectares uses <code>pixel_area_ha</code> (1 ha for a 100 m x 100 m grid).</p>
+<p>The <code>area_by_fuel_ha</code> summary is computed by intersecting the per-timestep
+Dynamic Fire severity rasters (cells with severity &gt; 0 = burned) with the
+matching per-timestep Dynamic Fuels <code>FuelType</code> rasters from the same
+<code>&lt;rep_dir&gt;/fire/</code> subdirectory. Cell-fuel-timestep is the unit of
+accounting: a cell that burns in two distinct timesteps contributes twice
+(consistent with NBAC's per-fire-perimeter accounting on the observed side).
+This replaces the earlier convention of attributing each event's
+entire <code>DamagedSites</code> count to its <code>InitFuel</code>, which biased simulated
+burn area toward the dominant-cover fuel since fires ignite where there's
+igniteable fuel and then spread anywhere.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
