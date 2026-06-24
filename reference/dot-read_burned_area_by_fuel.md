@@ -2,10 +2,12 @@
 
 Walks `<rep_dir>/fire/severity-{t}.tif` and the matching
 `<rep_dir>/fire/FuelType-{t}.tif` files, masks the fuel raster to cells
-with severity \> 0, and accumulates cell counts per fuel code across
-timesteps. Each cell-timestep is counted once, so a cell that burns in
-two distinct timesteps contributes twice – matching NBAC's
-per-fire-perimeter accounting on the observed side.
+with severity \> 1 (the Dynamic Fire encoding is 0 = inactive, 1 =
+active-but-unburned, \>= 2 = burned with the value as severity class),
+and accumulates cell counts per fuel code across timesteps. Each
+cell-timestep is counted once, so a cell that burns in two distinct
+timesteps contributes twice – matching NBAC's per-fire-perimeter
+accounting on the observed side.
 
 ## Usage
 

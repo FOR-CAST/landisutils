@@ -1,5 +1,23 @@
 # Changelog
 
+## landisutils 0.0.53
+
+- Bug fix:
+  [`.read_burned_area_by_fuel()`](https://for-cast.github.io/landisutils/reference/dot-read_burned_area_by_fuel.md)
+  (consumed by
+  [`parse_dynamic_fire_logs()`](https://for-cast.github.io/landisutils/reference/parse_dynamic_fire_logs.md)
+  and `.chi_sq_area_by_fuel()`) used `severity > 0` to identify burned
+  cells, but the Dynamic Fire severity raster encodes `0` = inactive,
+  `1` = active-but-unburned, `>= 2` = burned (value is the severity
+  class). `> 0` therefore selected every active cell in the landscape,
+  attributing the whole-landscape fuel composition (not the burn) to
+  `sim$area_by_fuel_ha`. The bug silently mis-trained the `L_area_fuel`
+  calibration component for the entire v0.0.52 lifespan and mis-rendered
+  any `fig-area-by-fuel` panels that consumed the per-rep field.
+  Switched to `severity > 1` (matches the consuming projects’ own
+  readers); docstrings and the regression test (with `severity == 1`
+  cells in the fixture) make the distinction explicit.
+
 ## landisutils 0.0.52
 
 - [`parse_dynamic_fire_logs()`](https://for-cast.github.io/landisutils/reference/parse_dynamic_fire_logs.md)
