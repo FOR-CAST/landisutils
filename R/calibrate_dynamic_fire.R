@@ -516,14 +516,36 @@ loss_from_stats <- function(
   ## emitted by parse_dynamic_fire_logs() from the severity x FuelType
   ## raster intersection. This matches the observed side (NBAC perimeters
   ## rasterised against `fuel_types_rast` -- each burned cell attributed
-  ## to its actual fuel). Reps without an `area_by_fuel_ha` field (mock
-  ## simulators, payloads from landisutils < 0.0.52) fall back to the
-  ## legacy event-based attribution (each event's full `DamagedSites`
-  ## counted toward its `InitFuel` only), which biases simulated burn area
-  ## toward the dominant-cover fuel.
-  has_cell_attr <- vapply(reps, function(r) !is.null(r$area_by_fuel_ha), logical(1))
+  ## to its actual fuel).
+  ##
+  ## Gate logic: a rep is "cell-attribution capable" if it either has a
+  ## populated `area_by_fuel_ha` tibble OR has no events at all (in which
+  ## case there's nothing to attribute and `parse_dynamic_fire_logs()`
+  ## correctly returns NULL -- no severity/FuelType tifs are written for
+  ## a no-fire rep). We only fall back to legacy event-`InitFuel`
+  ## attribution if some rep HAS events but is MISSING `area_by_fuel_ha`
+  ## (mock simulator, Dynamic Fuels disabled, or payloads from landisutils
+  ## < 0.0.52). Treating "no fires" reps as cell-capable lets the cell
+  ## path engage during low-fire-rate calibrations where a fraction of
+  ## reps land on zero events -- the regime in which the old gate
+  ## (`all(has_cell_attr)`) silently fell back to legacy and produced a
+  ## non-smooth optimization surface (chi-sq jumped depending on whether
+  ## EVERY rep happened to fire in the current trial).
+  has_cell_attr <- vapply(
+    reps,
+    function(r) {
+      !is.null(r$area_by_fuel_ha) || nrow(r$events) == 0L
+    },
+    logical(1)
+  )
   if (all(has_cell_attr)) {
-    sim_area_df <- do.call(rbind, lapply(reps, function(r) r$area_by_fuel_ha))
+    ## Drop NULL elements (zero-fire reps) before binding; they contribute
+    ## nothing to sim_area_by_base, which is what we want.
+    rep_dfs <- Filter(Negate(is.null), lapply(reps, function(r) r$area_by_fuel_ha))
+    if (length(rep_dfs) == 0L) {
+      return(1.0) ## no fires in ANY rep across the trial -- penalty
+    }
+    sim_area_df <- do.call(rbind, rep_dfs)
     sim_area_df$base <- unname(fuel_to_base[as.character(sim_area_df$fuel_code)])
     sim_area_df <- sim_area_df[!is.na(sim_area_df$base), , drop = FALSE]
     if (nrow(sim_area_df) == 0L) {

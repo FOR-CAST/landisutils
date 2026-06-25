@@ -213,6 +213,97 @@ test_that(".chi_sq_area_by_fuel prefers cell-based attribution when available, f
   expect_lt(loss_cell, loss_legacy)
 })
 
+test_that(".chi_sq_area_by_fuel uses cell-based path when some reps have 0 events (area_by_fuel_ha = NULL)", {
+  ## Regression for the v0.0.52/0.0.53 gate bug: the old gate
+  ## `all(has_cell_attr)` was strict-NULL, so any zero-event rep (which
+  ## correctly returns area_by_fuel_ha = NULL because no severity/FuelType
+  ## tifs are written) flipped the whole trial into the legacy event-based
+  ## fallback. In low-fire-rate calibrations (e.g. FRU59 here -- gitanyow,
+  ## ~1 event per rep-year), most trials had at least one zero-event rep,
+  ## so cell-based attribution NEVER engaged in practice. Worse, the gate
+  ## was stochastic: a trial where all reps fired returned a tiny chi-sq
+  ## via the cell path; a trial where any rep didn't fire jumped to the
+  ## legacy path with a 100x larger chi-sq. DEoptim's loss surface
+  ## ratcheted on this stochastic gate flip rather than on parameter
+  ## response.
+  ##
+  ## Fix: a zero-event rep with NULL area_by_fuel_ha is still
+  ## "cell-attribution-capable" -- it just has nothing to contribute.
+  ## Drop those reps before binding; only fall back when a rep HAS events
+  ## but is missing area_by_fuel_ha (mock simulator, Dynamic Fuels
+  ## disabled).
+  rep_with_fires <- list(
+    n_fires_by_year = tibble::tibble(year = 1:3, n_fires = c(0L, 1L, 0L)),
+    fire_sizes_ha = 30,
+    events = tibble::tibble(
+      year = 2L,
+      eco = "MOCK",
+      init_fuel = 1L,
+      sites = 30L,
+      mean_severity = 2
+    ),
+    area_by_fuel_ha = tibble::tibble(fuel_code = 1L, cells = 30L, area_ha = 30)
+  )
+  rep_zero_fires <- list(
+    n_fires_by_year = tibble::tibble(year = 1:3, n_fires = c(0L, 0L, 0L)),
+    fire_sizes_ha = numeric(0),
+    events = tibble::tibble(
+      year = integer(0),
+      eco = character(0),
+      init_fuel = integer(0),
+      sites = integer(0),
+      mean_severity = numeric(0)
+    ),
+    area_by_fuel_ha = NULL ## correctly NULL: no fires -> no severity tifs
+  )
+  observed <- list(
+    primary = list(area_by_fuel_ha = tibble::tibble(base = "Conifer", area_ha = 25)),
+    fuel_code_to_base = c("1" = "Conifer"),
+    pixel_area_ha = 1
+  )
+
+  ## Mixed reps: one with fires (area_by_fuel_ha populated), one with zero
+  ## fires (area_by_fuel_ha NULL). New gate accepts both as cell-capable;
+  ## old gate would have fallen back to legacy.
+  mixed <- .chi_sq_area_by_fuel(list(rep_with_fires, rep_zero_fires), observed$primary, observed)
+
+  ## Reference: pure cell-based call with only the firing rep. Should
+  ## match exactly -- the zero-fire rep contributes nothing.
+  ref <- .chi_sq_area_by_fuel(list(rep_with_fires), observed$primary, observed)
+  expect_equal(mixed, ref, tolerance = 1e-12)
+
+  ## Sanity: both should be small (sim and obs are both 100% Conifer over
+  ## the union of bases -- Laplace smoothing keeps it nonzero but tiny).
+  expect_lt(mixed, 0.05)
+})
+
+test_that(".chi_sq_area_by_fuel falls back to legacy when reps have events but no area_by_fuel_ha", {
+  ## Complement of the previous test: a rep that ran but didn't emit
+  ## area_by_fuel_ha (e.g. payload from landisutils < 0.0.52, mock
+  ## simulator, or Dynamic Fuels disabled) should still trigger the
+  ## legacy fallback -- not be silently dropped.
+  rep_events_no_cells <- list(
+    events = tibble::tibble(
+      year = 1L,
+      eco = "MOCK",
+      init_fuel = 1L,
+      sites = 10L,
+      mean_severity = 2
+    ),
+    area_by_fuel_ha = NULL ## has events but missing cell-based summary
+  )
+  observed <- list(
+    primary = list(area_by_fuel_ha = tibble::tibble(base = "Conifer", area_ha = 5)),
+    fuel_code_to_base = c("1" = "Conifer"),
+    pixel_area_ha = 1
+  )
+  ## Should compute via legacy event-based path, not return the
+  ## "no fires" penalty 1.0.
+  result <- .chi_sq_area_by_fuel(list(rep_events_no_cells), observed$primary, observed)
+  expect_true(is.finite(result))
+  expect_lt(result, 1.0) ## not the no-fires penalty
+})
+
 test_that("patch_fire_config() rewrites SeverityCalibrationFactor / HiProp / IgnProb", {
   scenario_dir <- withr::local_tempdir()
   fs::file_copy(
