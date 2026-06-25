@@ -1,5 +1,32 @@
 # Changelog
 
+## landisutils 0.0.54
+
+- Bug fix: `.chi_sq_area_by_fuel()`’s gate for the cell-based
+  attribution path (`all(has_cell_attr)`, added in v0.0.52) was
+  strict-NULL – it treated a zero-event rep (correctly returning
+  `area_by_fuel_ha = NULL` because
+  [`parse_dynamic_fire_logs()`](https://for-cast.github.io/landisutils/reference/parse_dynamic_fire_logs.md)
+  finds no severity tifs to integrate) as “this rep lacks cell-based
+  output” and fell back to the legacy event-`InitFuel` attribution for
+  the whole trial. In low-fire-rate calibrations (the gitanyow FRU59
+  case: ~1 event per rep-year, so most trials had at least one
+  zero-event rep) the cell-based path NEVER engaged in practice – the
+  loss surface was dominated by the legacy-attribution chi-sq the
+  cell-based path was added to replace. Worse, the gate was stochastic
+  across DEoptim trials: trials where every rep happened to fire
+  returned a tiny chi-sq via cell-based; trials with any zero-event rep
+  jumped 100x to the legacy path – so DEoptim ratcheted on a gate flip,
+  not on real parameter response. A real run on gitanyow (8h 29m
+  DEoptim, 2026-06-24) ended with `area_fuel = 29.74` dominating a total
+  loss of 34.5, with the cell-based recompute giving only `0.0095`. New
+  gate: a rep is cell-capable if `area_by_fuel_ha` is populated OR
+  `nrow(events) == 0L`; zero-event reps are dropped before binding (they
+  contribute nothing to `sim_area_by_base`), and the legacy fallback is
+  reserved for reps that HAVE events but are missing the cell-based
+  summary (mock simulator, Dynamic Fuels disabled, payloads from \<
+  0.0.52). Two new regression tests lock the distinction in.
+
 ## landisutils 0.0.53
 
 - Bug fix:

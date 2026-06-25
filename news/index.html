@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.53</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.54</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -40,6 +40,10 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.54" id="landisutils-0054">landisutils 0.0.54<a class="anchor" aria-label="anchor" href="#landisutils-0054"></a></h2>
+<ul><li>Bug fix: <code>.chi_sq_area_by_fuel()</code>’s gate for the cell-based attribution path (<code>all(has_cell_attr)</code>, added in v0.0.52) was strict-NULL – it treated a zero-event rep (correctly returning <code>area_by_fuel_ha = NULL</code> because <code><a href="../reference/parse_dynamic_fire_logs.html">parse_dynamic_fire_logs()</a></code> finds no severity tifs to integrate) as “this rep lacks cell-based output” and fell back to the legacy event-<code>InitFuel</code> attribution for the whole trial. In low-fire-rate calibrations (the gitanyow FRU59 case: ~1 event per rep-year, so most trials had at least one zero-event rep) the cell-based path NEVER engaged in practice – the loss surface was dominated by the legacy-attribution chi-sq the cell-based path was added to replace. Worse, the gate was stochastic across DEoptim trials: trials where every rep happened to fire returned a tiny chi-sq via cell-based; trials with any zero-event rep jumped 100x to the legacy path – so DEoptim ratcheted on a gate flip, not on real parameter response. A real run on gitanyow (8h 29m DEoptim, 2026-06-24) ended with <code>area_fuel = 29.74</code> dominating a total loss of 34.5, with the cell-based recompute giving only <code>0.0095</code>. New gate: a rep is cell-capable if <code>area_by_fuel_ha</code> is populated OR <code>nrow(events) == 0L</code>; zero-event reps are dropped before binding (they contribute nothing to <code>sim_area_by_base</code>), and the legacy fallback is reserved for reps that HAVE events but are missing the cell-based summary (mock simulator, Dynamic Fuels disabled, payloads from &lt; 0.0.52). Two new regression tests lock the distinction in.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.53" id="landisutils-0053">landisutils 0.0.53<a class="anchor" aria-label="anchor" href="#landisutils-0053"></a></h2>
 <ul><li>Bug fix: <code><a href="../reference/dot-read_burned_area_by_fuel.html">.read_burned_area_by_fuel()</a></code> (consumed by <code><a href="../reference/parse_dynamic_fire_logs.html">parse_dynamic_fire_logs()</a></code> and <code>.chi_sq_area_by_fuel()</code>) used <code>severity &gt; 0</code> to identify burned cells, but the Dynamic Fire severity raster encodes <code>0</code> = inactive, <code>1</code> = active-but-unburned, <code>&gt;= 2</code> = burned (value is the severity class). <code>&gt; 0</code> therefore selected every active cell in the landscape, attributing the whole-landscape fuel composition (not the burn) to <code>sim$area_by_fuel_ha</code>. The bug silently mis-trained the <code>L_area_fuel</code> calibration component for the entire v0.0.52 lifespan and mis-rendered any <code>fig-area-by-fuel</code> panels that consumed the per-rep field. Switched to <code>severity &gt; 1</code> (matches the consuming projects’ own readers); docstrings and the regression test (with <code>severity == 1</code> cells in the fixture) make the distinction explicit.</li>
