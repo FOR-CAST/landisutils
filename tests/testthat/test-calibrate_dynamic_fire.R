@@ -1350,6 +1350,40 @@ test_that("pre-flight: passes cleanly with a fully-populated minimal config", {
   ))
 })
 
+test_that("pre-flight: accepts size_tail as a known weight component (regression v0.0.51-v0.0.54)", {
+  ## v0.0.51 added size_tail to loss_from_stats() but the preflight
+  ## whitelist was not updated until v0.0.55. Until then, every
+  ## calibration ran with size_tail silently stripped from cfg$weights
+  ## (effective weight = 0), so DEoptim was optimising against a
+  ## different loss surface than the project intended. The 2026-06-25
+  ## gitanyow re-calibration burned 9h on this -- after the cell-gate
+  ## fix landed but with size_tail still stripped.
+  cfg <- .make_default_cfg()
+  cfg$weights <- c(count = 1, size = 1, size_tail = 1, area_fuel = 0, severity = 0)
+  expect_silent(landisutils:::.preflight_calibrate(
+    cfg = cfg,
+    par_names = calibration_par_names(),
+    template_dir = .make_min_template_dir(),
+    observed = .make_min_observed(),
+    scratch_root = withr::local_tempdir()
+  ))
+})
+
+test_that("pre-flight: genuinely-unknown weight names still trigger the unrecognised-components warning", {
+  cfg <- .make_default_cfg()
+  cfg$weights <- c(count = 1, size = 1, area_fuel = 0, severity = 0, made_up_term = 1)
+  expect_warning(
+    landisutils:::.preflight_calibrate(
+      cfg = cfg,
+      par_names = calibration_par_names(),
+      template_dir = .make_min_template_dir(),
+      observed = .make_min_observed(),
+      scratch_root = withr::local_tempdir()
+    ),
+    "unrecognised components.*made_up_term"
+  )
+})
+
 ## ---- 9e: override slots on build_calibration_scenario_template -------------
 
 test_that("build_calibration_scenario_template() overrides replace specific template files", {

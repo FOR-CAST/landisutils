@@ -1910,16 +1910,23 @@ sim_mock <- function(
   }
 
   ## weights: at least one component must be non-zero, otherwise DEoptim has
-  ## nothing to optimise
-  w <- cfg$weights %||% c(count = 1, size = 1, area_fuel = 0, severity = 0)
+  ## nothing to optimise. The recognised set must stay in sync with the
+  ## components emitted by `loss_from_stats()` -- size_tail was added in
+  ## v0.0.51 but missing from this whitelist until v0.0.55, which silently
+  ## stripped it from every cfg$weights and ran calibrations with the tail
+  ## term effectively disabled.
+  .known_weights <- c("count", "size", "size_tail", "area_fuel", "severity")
+  w <- cfg$weights %||% c(count = 1, size = 1, size_tail = 1, area_fuel = 0, severity = 0)
   if (all(w == 0)) {
     stop(
       "cfg$weights are all zero; DEoptim has nothing to optimise. ",
-      "Set at least one of count / size / area_fuel / severity to > 0.",
+      "Set at least one of ",
+      paste(.known_weights, collapse = " / "),
+      " to > 0.",
       call. = FALSE
     )
   }
-  unknown_w <- setdiff(names(w), c("count", "size", "area_fuel", "severity"))
+  unknown_w <- setdiff(names(w), .known_weights)
   if (length(unknown_w) > 0L) {
     warning(
       "cfg$weights has unrecognised components (ignored): ",
@@ -2184,7 +2191,7 @@ calibrate_dynamic_fire <- function(observed_targets_path, scenario_template, cfg
 
   paths <- list(scenario_template = template_dir, scratch_root = scratch_root)
   n_reps <- as.integer(cfg$n_reps %||% 5L)
-  weights <- cfg$weights %||% c(count = 1, size = 1, area_fuel = 0, severity = 0)
+  weights <- cfg$weights %||% c(count = 1, size = 1, size_tail = 1, area_fuel = 0, severity = 0)
   base_seed <- as.integer(cfg$base_seed %||% 12345L)
   sim_years <- as.integer(cfg$sim_years %||% 10L)
   simulator_name <- cfg$simulator %||% "landis"
