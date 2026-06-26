@@ -1,5 +1,21 @@
 # Changelog
 
+## landisutils 0.0.55
+
+- Bug fix: `.preflight_calibrate()`’s `cfg$weights` whitelist (added in
+  v0.0.45) was never updated when v0.0.51 added the `size_tail` loss
+  component, so any `cfg$weights` entry named `size_tail` was silently
+  stripped with the warning
+  `cfg$weights has unrecognised components (ignored): size_tail` and
+  DEoptim ran with the tail term effectively disabled. The gitanyow
+  re-calibration (9h 13m, 2026-06-25, after the v0.0.54 cell-gate fix)
+  hit this and reported the warning but landed a calibrated parameter
+  set with no upper-tail signal. Whitelist now includes `size_tail`, and
+  the two stale `cfg$weights %||%` defaults elsewhere in
+  `calibrate_dynamic_fire.R` also include `size_tail`. Two new
+  regression tests: (1) `size_tail` in weights passes preflight without
+  warning; (2) genuinely-unknown weight names still warn.
+
 ## landisutils 0.0.54
 
 - Bug fix: `.chi_sq_area_by_fuel()`’s gate for the cell-based
