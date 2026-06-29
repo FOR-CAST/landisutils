@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.56</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.57</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -40,6 +40,10 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.57" id="landisutils-0057">landisutils 0.0.57<a class="anchor" aria-label="anchor" href="#landisutils-0057"></a></h2>
+<ul><li>Bug fix: <code><a href="../reference/save_observed_fire_targets.html">save_observed_fire_targets()</a></code> previously used “polygons IF supplied, else points” to pick <code>fire_sizes_ha</code> – the moment any NBAC polygons were passed in, ALL NFDB sizes were silently dropped. That excluded pre-1972 fires (NBAC’s coverage starts in 1972) and small fires that NFDB recorded but NBAC’s MAFM pipeline does not map (Landsat 30 m detection floor), biasing the observed size distribution toward larger fires and making the <code>L_size</code> KS comparison apples-to-oranges. The function now starts from NFDB’s <code>SIZE_HA</code> and swaps in NBAC’s <code>SIZE_HA</code> only where an NBAC polygon in the SAME calendar year contains the NFDB ignition point (point-in-polygon via <code><a href="https://rspatial.github.io/terra/reference/extract.html" class="external-link">terra::extract()</a></code>). Year-mismatched polygons are explicitly skipped. One new regression test covers the four cases: (1) point inside same-year polygon -&gt; NBAC swap; (2) point with no polygon -&gt; NFDB kept; (3) point inside a polygon’s bbox but year-mismatched -&gt; NFDB kept; (4) pre-NBAC point -&gt; NFDB kept. Existing payload-shape test updated to match the new semantics.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.56" id="landisutils-0056">landisutils 0.0.56<a class="anchor" aria-label="anchor" href="#landisutils-0056"></a></h2>
 <ul><li><p>Bug fix: <code><a href="../reference/landis_replicate.html">landis_replicate()</a></code> (and <code>LandisScenario$replicate()</code>) guarded the input-file copy block with <code>if (!fs::dir_exists(rep_dir))</code>, so a rep dir left behind by a failed run would silently keep its stale input files on the next call – no re-stage, no re-seed. LANDIS-II then ran against an old <code>dynamic-fire.txt</code> / <code>scenario.txt</code> even though <code>tar_make</code> had rebuilt those files in the scenario template, surfacing as fast LANDIS-II parse errors that pointed to “fixed” config bugs. The guard is removed; the rep dir is always re-created and input files are always overwritten with <code>overwrite = TRUE</code>. LANDIS-II output artefacts (<code>Landis-log.txt</code>, <code>log_*.csv</code>, etc.) survive across re-stages because they’re not in <code>src_files</code>. Two regression tests: (1) re-staging an existing rep dir picks up updated input content; (2) output artefacts in the rep dir are preserved across a re-stage.</p></li>

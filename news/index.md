@@ -1,5 +1,27 @@
 # Changelog
 
+## landisutils 0.0.57
+
+- Bug fix:
+  [`save_observed_fire_targets()`](https://for-cast.github.io/landisutils/reference/save_observed_fire_targets.md)
+  previously used “polygons IF supplied, else points” to pick
+  `fire_sizes_ha` – the moment any NBAC polygons were passed in, ALL
+  NFDB sizes were silently dropped. That excluded pre-1972 fires (NBAC’s
+  coverage starts in 1972) and small fires that NFDB recorded but NBAC’s
+  MAFM pipeline does not map (Landsat 30 m detection floor), biasing the
+  observed size distribution toward larger fires and making the `L_size`
+  KS comparison apples-to-oranges. The function now starts from NFDB’s
+  `SIZE_HA` and swaps in NBAC’s `SIZE_HA` only where an NBAC polygon in
+  the SAME calendar year contains the NFDB ignition point
+  (point-in-polygon via
+  [`terra::extract()`](https://rspatial.github.io/terra/reference/extract.html)).
+  Year-mismatched polygons are explicitly skipped. One new regression
+  test covers the four cases: (1) point inside same-year polygon -\>
+  NBAC swap; (2) point with no polygon -\> NFDB kept; (3) point inside a
+  polygon’s bbox but year-mismatched -\> NFDB kept; (4) pre-NBAC point
+  -\> NFDB kept. Existing payload-shape test updated to match the new
+  semantics.
+
 ## landisutils 0.0.56
 
 - Bug fix:
