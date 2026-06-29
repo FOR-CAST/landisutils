@@ -1,5 +1,50 @@
 # Changelog
 
+## landisutils 0.0.56
+
+- Bug fix:
+  [`landis_replicate()`](https://for-cast.github.io/landisutils/reference/landis_replicate.md)
+  (and `LandisScenario$replicate()`) guarded the input-file copy block
+  with `if (!fs::dir_exists(rep_dir))`, so a rep dir left behind by a
+  failed run would silently keep its stale input files on the next call
+  – no re-stage, no re-seed. LANDIS-II then ran against an old
+  `dynamic-fire.txt` / `scenario.txt` even though `tar_make` had rebuilt
+  those files in the scenario template, surfacing as fast LANDIS-II
+  parse errors that pointed to “fixed” config bugs. The guard is
+  removed; the rep dir is always re-created and input files are always
+  overwritten with `overwrite = TRUE`. LANDIS-II output artefacts
+  (`Landis-log.txt`, `log_*.csv`, etc.) survive across re-stages because
+  they’re not in `src_files`. Two regression tests: (1) re-staging an
+  existing rep dir picks up updated input content; (2) output artefacts
+  in the rep dir are preserved across a re-stage.
+
+- Failure-side scratch cleanup: the
+  [`tar_landis()`](https://for-cast.github.io/landisutils/reference/tar_landis.md)
+  run-and-archive wrapper now also calls
+  [`landis_archive_rep()`](https://for-cast.github.io/landisutils/reference/landis_archive_rep.md)
+  from the `tryCatch` error handler around the LANDIS run, so a failed
+  rep’s partial outputs (`Landis-log.txt`, `docker_stdout.log`,
+  `docker_stderr.log`, per-extension log subdirs) are rsync’d to NFS for
+  inspection and the scratch rep dir is then deleted. Previously failed
+  reps lingered on scratch indefinitely – a real problem on shared
+  workers where four projects’ calibrations + sims share `/mnt/scratch`.
+  The original LANDIS error is re-thrown so `tar_make` still marks the
+  target as errored; if the failure-archive itself errors (rsync missing
+  / NFS unmounted), the scratch dir is left intact and a warning is
+  emitted. The success path is unchanged:
+  [`landis_archive_rep()`](https://for-cast.github.io/landisutils/reference/landis_archive_rep.md)
+  rsyncs scratch -\> NFS then deletes the scratch source (the existing
+  test “landis_archive_rep() moves a completed rep and deletes the
+  scratch source” covers both paths since the helper doesn’t care
+  whether the rep completed).
+
+  Hard-kill caveat: SIGKILL of the R worker (or `screen quit` leaving an
+  orphan that gets `kill -9`’d) skips R-side cleanup entirely; the
+  docker container is still removed by `processx`’s child-process
+  cleanup + `--rm`, but the scratch rep dir survives. That path is rare
+  and is the price of robust failure handling – a manual `rm -rf` on the
+  affected scratch path is the recovery.
+
 ## landisutils 0.0.55
 
 - Bug fix: `.preflight_calibrate()`’s `cfg$weights` whitelist (added in

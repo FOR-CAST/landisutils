@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.55</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.56</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -40,6 +40,14 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.56" id="landisutils-0056">landisutils 0.0.56<a class="anchor" aria-label="anchor" href="#landisutils-0056"></a></h2>
+<ul><li><p>Bug fix: <code><a href="../reference/landis_replicate.html">landis_replicate()</a></code> (and <code>LandisScenario$replicate()</code>) guarded the input-file copy block with <code>if (!fs::dir_exists(rep_dir))</code>, so a rep dir left behind by a failed run would silently keep its stale input files on the next call – no re-stage, no re-seed. LANDIS-II then ran against an old <code>dynamic-fire.txt</code> / <code>scenario.txt</code> even though <code>tar_make</code> had rebuilt those files in the scenario template, surfacing as fast LANDIS-II parse errors that pointed to “fixed” config bugs. The guard is removed; the rep dir is always re-created and input files are always overwritten with <code>overwrite = TRUE</code>. LANDIS-II output artefacts (<code>Landis-log.txt</code>, <code>log_*.csv</code>, etc.) survive across re-stages because they’re not in <code>src_files</code>. Two regression tests: (1) re-staging an existing rep dir picks up updated input content; (2) output artefacts in the rep dir are preserved across a re-stage.</p></li>
+<li>
+<p>Failure-side scratch cleanup: the <code><a href="../reference/tar_landis.html">tar_landis()</a></code> run-and-archive wrapper now also calls <code><a href="../reference/landis_archive_rep.html">landis_archive_rep()</a></code> from the <code>tryCatch</code> error handler around the LANDIS run, so a failed rep’s partial outputs (<code>Landis-log.txt</code>, <code>docker_stdout.log</code>, <code>docker_stderr.log</code>, per-extension log subdirs) are rsync’d to NFS for inspection and the scratch rep dir is then deleted. Previously failed reps lingered on scratch indefinitely – a real problem on shared workers where four projects’ calibrations + sims share <code>/mnt/scratch</code>. The original LANDIS error is re-thrown so <code>tar_make</code> still marks the target as errored; if the failure-archive itself errors (rsync missing / NFS unmounted), the scratch dir is left intact and a warning is emitted. The success path is unchanged: <code><a href="../reference/landis_archive_rep.html">landis_archive_rep()</a></code> rsyncs scratch -&gt; NFS then deletes the scratch source (the existing test “landis_archive_rep() moves a completed rep and deletes the scratch source” covers both paths since the helper doesn’t care whether the rep completed).</p>
+<p>Hard-kill caveat: SIGKILL of the R worker (or <code>screen quit</code> leaving an orphan that gets <code>kill -9</code>’d) skips R-side cleanup entirely; the docker container is still removed by <code>processx</code>’s child-process cleanup + <code>--rm</code>, but the scratch rep dir survives. That path is rare and is the price of robust failure handling – a manual <code>rm -rf</code> on the affected scratch path is the recovery.</p>
+</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.55" id="landisutils-0055">landisutils 0.0.55<a class="anchor" aria-label="anchor" href="#landisutils-0055"></a></h2>
 <ul><li>Bug fix: <code>.preflight_calibrate()</code>’s <code>cfg$weights</code> whitelist (added in v0.0.45) was never updated when v0.0.51 added the <code>size_tail</code> loss component, so any <code>cfg$weights</code> entry named <code>size_tail</code> was silently stripped with the warning <code>cfg$weights has unrecognised components (ignored): size_tail</code> and DEoptim ran with the tail term effectively disabled. The gitanyow re-calibration (9h 13m, 2026-06-25, after the v0.0.54 cell-gate fix) hit this and reported the warning but landed a calibrated parameter set with no upper-tail signal. Whitelist now includes <code>size_tail</code>, and the two stale <code>cfg$weights %||%</code> defaults elsewhere in <code>calibrate_dynamic_fire.R</code> also include <code>size_tail</code>. Two new regression tests: (1) <code>size_tail</code> in weights passes preflight without warning; (2) genuinely-unknown weight names still warn.</li>
