@@ -584,11 +584,15 @@ test_that("save_observed_fire_targets() writes a payload with expected shape", {
   expect_equal(p$n_ignitions, 3L)
   expect_equal(p$n_polys, 1L)
   expect_equal(p$lambda_obs, 3 / 11) ## 3 fires over 11 years
-  ## Sizes come from the polygons' SIZE_HA when polys are supplied (NBAC's
-  ## ADJ_HA is more accurate than NFDB's agency-reported point sizes); the
-  ## points' SIZE_HA (5, 100, 0.5) is only used in the no-polys fallback
-  ## case -- covered by the dedicated test below.
-  expect_equal(p$fire_sizes_ha, sort(c(100.0)))
+  ## fire_sizes_ha: NBAC-backfilled-with-NFDB. Per-point treatment:
+  ##   * (250,500, 2010, 5.0) -- no polygon at this location -> keep NFDB 5.0
+  ##   * (750,500, 2015, 100.0) -- inside the 2015 polygon (year matches);
+  ##     NBAC's SIZE_HA = 100.0 swaps in (same value here; the point of the
+  ##     swap is the more accurate measurement, not necessarily a different
+  ##     number)
+  ##   * (300,200, 2020, 0.5) -- no polygon at this location, kept at NFDB
+  ##     0.5 but dropped by the default `min_size_ha = 1.0` floor
+  expect_equal(p$fire_sizes_ha, sort(c(5.0, 100.0)))
   ## area_by_fuel_ha: polygon overlaps deciduous cells only (codes 8)
   expect_s3_class(p$area_by_fuel_ha, "tbl_df")
   expect_true("Deciduous" %in% p$area_by_fuel_ha$base)
@@ -598,6 +602,63 @@ test_that("save_observed_fire_targets() writes a payload with expected shape", {
   expect_null(payload$frt12)
   ## Aliases populated
   expect_identical(payload$fru59, payload$primary)
+})
+
+test_that("save_observed_fire_targets() backfills NBAC with NFDB (year-aligned point-in-polygon)", {
+  ## Regression for the silent NFDB-vs-NBAC switch bug: before this fix the
+  ## function used "polygons IF supplied, else points" -- so the moment any
+  ## NBAC polygons were passed, ALL NFDB sizes were dropped (including for
+  ## pre-NBAC years and small fires NBAC does not map). New behaviour:
+  ## start from NFDB sizes and swap in NBAC sizes only where a polygon in
+  ## the SAME calendar year contains the NFDB ignition point.
+  r <- terra::rast(nrows = 10, ncols = 10, xmin = 0, xmax = 1000, ymin = 0, ymax = 1000)
+  terra::values(r) <- 1L
+  ## Four NFDB ignition points:
+  ##   pt1: 2010, inside the 2010 polygon         -> SWAP to NBAC SIZE_HA
+  ##   pt2: 2015, NOT inside any polygon          -> KEEP NFDB SIZE_HA
+  ##   pt3: 2010, inside the 2020 polygons bbox   -> KEEP NFDB SIZE_HA (year mismatch)
+  ##   pt4: 1965, before NBAC coverage entirely   -> KEEP NFDB SIZE_HA
+  pts <- terra::vect(
+    data.frame(
+      lon = c(250, 750, 750, 100),
+      lat = c(250, 750, 250, 100),
+      YEAR = c(2010L, 2015L, 2010L, 1965L),
+      SIZE_HA = c(5.0, 50.0, 7.0, 12.0)
+    ),
+    geom = c("lon", "lat"),
+    crs = terra::crs(r)
+  )
+  ## Two NBAC polygons in distinct years:
+  ##   * 2010: covers (200,200)-(400,400) -- contains pt1, sizes upgraded to 25
+  ##   * 2020: covers (700,200)-(800,300) -- bbox contains pt3 but year mismatches
+  poly_2010 <- terra::vect(
+    "POLYGON ((200 200, 400 200, 400 400, 200 400, 200 200))",
+    crs = terra::crs(r)
+  )
+  poly_2010$YEAR <- 2010L
+  poly_2010$SIZE_HA <- 25.0
+  poly_2020 <- terra::vect(
+    "POLYGON ((700 200, 800 200, 800 300, 700 300, 700 200))",
+    crs = terra::crs(r)
+  )
+  poly_2020$YEAR <- 2020L
+  poly_2020$SIZE_HA <- 999.0
+  polys <- rbind(poly_2010, poly_2020)
+
+  out_path <- withr::local_tempfile(fileext = ".rds")
+  save_observed_fire_targets(
+    primary_points = pts,
+    primary_polys = polys,
+    fire_years = 1965L:2020L,
+    fuel_types_rast = r,
+    path = out_path,
+    primary_label = "BACKFILL_TEST",
+    min_size_ha = 0
+  )
+  p <- readRDS(out_path)$primary
+  ## Expected: pt1 SIZE_HA upgraded 5 -> 25 (NBAC swap); pt2 keeps 50;
+  ## pt3 keeps 7 (year mismatch); pt4 keeps 12 (pre-NBAC).
+  expect_equal(p$fire_sizes_ha, sort(c(25.0, 50.0, 7.0, 12.0)))
 })
 
 test_that("save_observed_fire_targets() falls back to points' SIZE_HA when polys are not supplied", {

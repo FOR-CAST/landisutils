@@ -874,17 +874,72 @@ save_observed_fire_targets <- function(
       n = vapply(as.integer(fire_years), function(y) sum(pts_year == y, na.rm = TRUE), integer(1))
     )
 
-    ## fire_sizes_ha source preference:
-    ## 1. polygons' SIZE_HA when polys are supplied and non-empty (NBAC's
-    ##    ADJ_HA is the mapped burn perimeter minus unburned islands -- the
-    ##    most accurate per-fire area). Only polygons with SIZE_HA set are
-    ##    used; polys without an area attribute are skipped.
-    ## 2. points' SIZE_HA otherwise (NFDB's agency-reported size; available
-    ##    even for very small fires that NBAC does not map).
-    sizes_raw <- if (nrow(plys) > 0L && "SIZE_HA" %in% colnames(plys)) {
-      plys[["SIZE_HA"]]
-    } else {
-      pts[["SIZE_HA"]]
+    ## fire_sizes_ha source preference (NBAC-backfilled-with-NFDB):
+    ##   1. Start from NFDB points' `SIZE_HA` (full coverage -- 1950+, every
+    ##      detected fire including small ones NBAC does not map).
+    ##   2. Where an NBAC polygon (in the SAME calendar year) contains the
+    ##      NFDB ignition point, swap in NBAC's `SIZE_HA` -- NBAC's
+    ##      satellite-derived ADJ_HA is the more accurate per-fire area.
+    ## This preserves NFDB's full sample size while upgrading any matched
+    ## fire to NBAC's better measurement. Earlier implementations used
+    ## "polys IF supplied, else points" which silently dropped:
+    ##   * pre-1972 NFDB fires (NBAC's coverage starts 1972);
+    ##   * small fires that NFDB recorded but NBAC did not map
+    ##     (NBAC's MAFM pipeline has a threshold around its
+    ##     30-m Landsat detection floor);
+    ## both of which biased the obs size distribution toward larger fires.
+    sizes_raw <- pts[["SIZE_HA"]]
+    if (
+      nrow(plys) > 0L &&
+        "SIZE_HA" %in% colnames(plys) &&
+        "YEAR" %in% colnames(plys) &&
+        "YEAR" %in% colnames(pts) &&
+        !is.null(points_sv) &&
+        !is.null(polys_sv)
+    ) {
+      ## terra::extract(<polys>, <points>) returns one row per point with the
+      ## intersecting polygon's attributes; ID = point index, NA where no
+      ## polygon contains the point. When a point intersects multiple
+      ## polygons (rare), extract returns multiple rows -- we accept the
+      ## last-write-wins assignment because all matches are valid year-aligned
+      ## NBAC polygons for that point.
+      poly_attrs <- tryCatch(terra::extract(polys_sv, points_sv), error = function(e) NULL)
+      if (
+        !is.null(poly_attrs) &&
+          nrow(poly_attrs) > 0L &&
+          "SIZE_HA" %in% colnames(poly_attrs) &&
+          "YEAR" %in% colnames(poly_attrs) &&
+          "id.y" %in% colnames(poly_attrs)
+      ) {
+        ## terra >= 1.7-29 uses `id.y` for the point row index; older versions
+        ## used `ID`. Support both.
+        pt_idx_col <- "id.y"
+      } else if (
+        !is.null(poly_attrs) &&
+          nrow(poly_attrs) > 0L &&
+          "SIZE_HA" %in% colnames(poly_attrs) &&
+          "YEAR" %in% colnames(poly_attrs) &&
+          "ID" %in% colnames(poly_attrs)
+      ) {
+        pt_idx_col <- "ID"
+      } else {
+        pt_idx_col <- NA_character_
+      }
+      if (!is.na(pt_idx_col)) {
+        pt_idx <- as.integer(poly_attrs[[pt_idx_col]])
+        poly_yr <- poly_attrs[["YEAR"]]
+        poly_size <- poly_attrs[["SIZE_HA"]]
+        valid <- !is.na(pt_idx) &
+          pt_idx >= 1L &
+          pt_idx <= nrow(pts) &
+          !is.na(poly_yr) &
+          !is.na(poly_size) &
+          !is.na(pts_year[pt_idx]) &
+          poly_yr == pts_year[pt_idx]
+        if (any(valid)) {
+          sizes_raw[pt_idx[valid]] <- poly_size[valid]
+        }
+      }
     }
     ## Drop sub-`min_size_ha` fires: NFDB/NBAC are effectively left-censored
     ## at ~1 ha (small fires systematically under-reported); without this
