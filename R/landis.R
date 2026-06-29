@@ -79,26 +79,34 @@ landis_replicate <- function(
 
   for (i in seq_along(indices)) {
     rep_dir <- rep_dirs[[i]]
-    if (!fs::dir_exists(rep_dir)) {
-      fs::dir_create(rep_dir)
-      fs::file_copy(src_files, rep_dir)
+    ## Always re-stage: create the rep dir if missing AND overwrite any
+    ## existing input files copied from a prior run. Previously the entire
+    ## block was guarded by `if (!fs::dir_exists(rep_dir))`, which meant a
+    ## rep dir left behind by a failed run would silently keep its stale
+    ## input files on the next `landis_replicate()` call -- LANDIS-II would
+    ## then run against an old `dynamic-fire.txt` / `scenario.txt` even
+    ## though `tar_make` had rebuilt those files in the scenario template.
+    ## Only LANDIS-II output files (`Landis-log.txt`, `log_*.csv`, the
+    ## `log/`, `fire/`, etc. subdirs) survive across re-stages; LANDIS-II
+    ## overwrites those itself during the run.
+    fs::dir_create(rep_dir)
+    fs::file_copy(src_files, rep_dir, overwrite = TRUE)
 
-      ## per-replicate RandomNumberSeed: deterministic by rep index so that
-      ## adding more reps later never shifts seeds for existing replicates
-      if (!is.null(base_seed)) {
-        scenario_txt <- fs::path(rep_dir, "scenario.txt")
-        if (fs::file_exists(scenario_txt)) {
-          seed_i <- as.integer(base_seed) + (indices[[i]] - 1L)
-          lines <- readLines(scenario_txt)
-          ## matches both the commented form (>> RandomNumberSeed ...) written
-          ## by insertRandomNumberSeed(NULL) and any active seed line
-          lines <- sub(
-            "^(>>\\s+)?RandomNumberSeed\\s.*",
-            sprintf("RandomNumberSeed    %d  << optional parameter", seed_i),
-            lines
-          )
-          writeLines(lines, scenario_txt)
-        }
+    ## per-replicate RandomNumberSeed: deterministic by rep index so that
+    ## adding more reps later never shifts seeds for existing replicates
+    if (!is.null(base_seed)) {
+      scenario_txt <- fs::path(rep_dir, "scenario.txt")
+      if (fs::file_exists(scenario_txt)) {
+        seed_i <- as.integer(base_seed) + (indices[[i]] - 1L)
+        lines <- readLines(scenario_txt)
+        ## matches both the commented form (>> RandomNumberSeed ...) written
+        ## by insertRandomNumberSeed(NULL) and any active seed line
+        lines <- sub(
+          "^(>>\\s+)?RandomNumberSeed\\s.*",
+          sprintf("RandomNumberSeed    %d  << optional parameter", seed_i),
+          lines
+        )
+        writeLines(lines, scenario_txt)
       }
     }
   }

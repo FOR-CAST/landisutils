@@ -70,7 +70,13 @@ LandisScenario <- R6Class(
       all_files <- unique(c(all_files, sidecars[fs::file_exists(sidecars)]))
       for (i in new_reps) {
         rep_path <- fs::dir_create(fs::path(self$path, sprintf("rep%02d", i)))
-        fs::file_copy(all_files, rep_path, overwrite = FALSE)
+        ## overwrite = TRUE so a re-run picks up any input-file changes since
+        ## the previous replicate() call (e.g. a regenerated dynamic-fire.txt
+        ## after a config patch). LANDIS-II's output files (Landis-log.txt,
+        ## log_*.csv, log/, fire/, etc.) live alongside but aren't in
+        ## `all_files`, so they're untouched. Mirrors the same fix applied to
+        ## the free function `landis_replicate()` in R/landis.R.
+        fs::file_copy(all_files, rep_path, overwrite = TRUE)
       }
       private$.reps <- self$reps + n
     }

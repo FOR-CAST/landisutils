@@ -29,6 +29,57 @@ testthat::test_that("landis_replicate is idempotent", {
   testthat::expect_true(fs::dir_exists(fs::path(tmp, "rep03")))
 })
 
+testthat::test_that("landis_replicate re-stages updated input files into existing rep dirs", {
+  ## Regression for v0.0.55 staging-skip bug: when a rep dir already exists
+  ## from a prior (e.g. failed) run, the guard `if (!fs::dir_exists(rep_dir))`
+  ## skipped the `fs::file_copy()` block entirely -- so stale input files
+  ## from the prior staging persisted forever. A subsequent LANDIS-II run
+  ## would then run against a stale `dynamic-fire.txt` / `scenario.txt`
+  ## even though the project pipeline had rebuilt those files in the
+  ## scenario template. v0.0.56 removed the guard; new behaviour is:
+  ## always re-create the rep dir + always overwrite its input files.
+  tmp <- withr::local_tempdir("test_landis_restage_")
+  scen_txt <- file.path(tmp, "scenario.txt")
+  cfg_txt <- file.path(tmp, "dynamic-fire.txt")
+  writeLines("v1-scenario", scen_txt)
+  writeLines("v1-fire", cfg_txt)
+
+  ## First staging: rep01 gets v1 content
+  landis_replicate(tmp, rep_index = 1L)
+  testthat::expect_equal(readLines(fs::path(tmp, "rep01", "dynamic-fire.txt")), "v1-fire")
+
+  ## Update the source files (simulating tar_make rebuild)
+  writeLines("v2-scenario", scen_txt)
+  writeLines("v2-fire", cfg_txt)
+
+  ## Second staging: rep01 already exists; must pick up the v2 content
+  landis_replicate(tmp, rep_index = 1L)
+  testthat::expect_equal(readLines(fs::path(tmp, "rep01", "dynamic-fire.txt")), "v2-fire")
+  testthat::expect_equal(readLines(fs::path(tmp, "rep01", "scenario.txt")), "v2-scenario")
+})
+
+testthat::test_that("landis_replicate re-stage preserves LANDIS-II output files in the rep dir", {
+  ## Companion to the re-stage regression: user-added (or LANDIS-II
+  ## output) files that aren't in `src_files` must survive a re-stage.
+  ## landis_replicate() only copies the listed input files, so output
+  ## artefacts like Landis-log.txt + log_*.csv stay in place.
+  tmp <- withr::local_tempdir("test_landis_restage_outputs_")
+  scen_txt <- file.path(tmp, "scenario.txt")
+  writeLines("v1", scen_txt)
+  landis_replicate(tmp, rep_index = 1L)
+  ## simulate a partial LANDIS-II output left in the rep dir
+  writeLines("partial-output", fs::path(tmp, "rep01", "Landis-log.txt"))
+
+  writeLines("v2", scen_txt)
+  landis_replicate(tmp, rep_index = 1L)
+
+  ## Updated input
+  testthat::expect_equal(readLines(fs::path(tmp, "rep01", "scenario.txt")), "v2")
+  ## Output artefact preserved
+  testthat::expect_true(fs::file_exists(fs::path(tmp, "rep01", "Landis-log.txt")))
+  testthat::expect_equal(readLines(fs::path(tmp, "rep01", "Landis-log.txt")), "partial-output")
+})
+
 testthat::test_that("landis_replicate sets per-rep seeds from base_seed", {
   tmp <- withr::local_tempdir("test_landis_seeds_")
   writeLines(

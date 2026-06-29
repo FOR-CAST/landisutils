@@ -1326,6 +1326,18 @@ tar_landis <- function(
   ## Stage + run one replicate, then persist its input hash and move the
   ## completed rep from scratch to its final (tracked) home. Shared by the
   ## docker and local command branches; `.run_call` is the run expression.
+  ##
+  ## Cleanup contract:
+  ##   - Success: `landis_archive_rep()` rsyncs scratch -> NFS, then deletes
+  ##     the scratch rep dir (the standard path).
+  ##   - Failure: the `tryCatch()` around `.(run_call)` ALSO archives scratch
+  ##     -> NFS so the partial run (configs, `Landis-log.txt`, `docker_*.log`,
+  ##     any partial outputs) is preserved on NFS for inspection, then deletes
+  ##     the scratch rep dir. The original LANDIS-II error is re-thrown so
+  ##     `tar_make` still marks the target as errored. If the failure-side
+  ##     archive itself errors (e.g. rsync unavailable, NFS unmounted), the
+  ##     scratch dir is left untouched and a warning is emitted -- never
+  ##     swallow the run error or trap the scratch contents silently.
   run_and_archive_expr <- function(run_call) {
     bquote({
       ## stage this replicate under .stage_sd (scratch when work_root is set)
@@ -1336,7 +1348,21 @@ tar_landis <- function(
         files = .dep_files,
         base_seed = .(base_seed_val)
       )[[1L]]
-      .(run_call)
+      tryCatch(.(run_call), error = function(e) {
+        tryCatch(
+          landisutils::landis_archive_rep(.run_rep_dir, .final_rep_dir),
+          error = function(e2) {
+            warning(
+              "failed-run archive to NFS failed; scratch rep dir retained at ",
+              .run_rep_dir,
+              "\n  archive error: ",
+              conditionMessage(e2),
+              call. = FALSE
+            )
+          }
+        )
+        stop(e)
+      })
       ## persist the input hash next to the run, then move the completed rep to
       ## its final home (a no-op when .run_rep_dir resolves to .final_rep_dir).
       .run_hash_file <- file.path(.run_rep_dir, "log", "input_hash.json")
