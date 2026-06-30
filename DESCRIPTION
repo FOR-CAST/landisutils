@@ -1,6 +1,6 @@
 Package: landisutils
 Title: Utilities for running LANDIS-II simulations
-Version: 0.0.57
+Version: 0.0.58
 Authors@R: 
     person(c("Alex", "M"), "Chubaty", , "achubaty@for-cast.ca", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0001-7146-8135"))
@@ -124,6 +124,7 @@ Collate:
     'landis.R'
     'landis_results.R'
     'landisutils-package.R'
+    'plot_growth_curves.R'
     'plot_transitions.R'
     'provenance.R'
     'scenarios.R'
