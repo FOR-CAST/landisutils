@@ -1,5 +1,14 @@
 # Changelog
 
+## landisutils 0.0.58
+
+- [`plot_species_growth_curves()`](https://for-cast.github.io/landisutils/reference/plot_species_growth_curves.md)
+  is a new Biomass Succession calibration diagnostic: it overlays the
+  fitted LANDIS-version growth curve (`BscaledNonLinear`) on the PSP
+  biomass observations behind it, faceted by species and coloured by
+  ecoregion (the `speciesGrowthCurvesLandis` / `speciesGrowthCurvesPSP`
+  outputs of `Biomass_speciesParameters` run in LANDIS mode).
+
 ## landisutils 0.0.57
 
 - Bug fix:

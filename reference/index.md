@@ -519,6 +519,9 @@
 - [`plot_species_biomass()`](https://for-cast.github.io/landisutils/reference/plot_species_biomass.md)
   : Plot species biomass over time (stacked area)
 
+- [`plot_species_growth_curves()`](https://for-cast.github.io/landisutils/reference/plot_species_growth_curves.md)
+  : Plot fitted LANDIS-II growth curves against PSP observations
+
 - [`plot_transitions()`](https://for-cast.github.io/landisutils/reference/plot_transitions.md)
   : Plot vegetation transitions (Sankey / alluvial diagram)
 
