@@ -70,6 +70,21 @@ calibrate_dynamic_fire(observed_targets_path, scenario_template, cfg, out_dir)
 
   :   Pool settings (Docker only).
 
+  checkpoint_every
+
+  :   Optional integer \>= 1. When set, run the search in blocks of this
+      many generations and persist a resumable checkpoint to `out_dir`
+      between blocks (see Details). `NULL` (default) = single monolithic
+      `DEoptim()` call.
+
+  resume
+
+  :   `"auto"` (default), `"never"`, or `"force"`. Only used when
+      `checkpoint_every` is set. `"auto"` resumes from
+      `out_dir/checkpoint.rds` iff its config fingerprint (par names +
+      bounds + NP) matches; `"force"` resumes regardless; `"never"`
+      ignores any checkpoint and starts fresh.
+
 - out_dir:
 
   Character. Where to write the DEoptim trace + scratch sub-directory.
@@ -100,6 +115,26 @@ reads this when running inside the worker.
 DEoptim is gated on
 [`requireNamespace("DEoptim")`](https://github.com/ArdiaD/DEoptim);
 install via `renv::install("DEoptim")` before calling.
+
+### Checkpoint / resume (opt-in)
+
+Set `cfg$checkpoint_every = K` to make the search resumable. The DEoptim
+run is then executed in blocks of `K` generations; after each block the
+full population, best-so-far parameters, and best-value history are
+written atomically to `out_dir` (`checkpoint.rds` and
+`best_params_so_far.rds`) and the next block reseeds
+`DEoptim.control(initialpop=)` from the saved population. If the run is
+interrupted (crash, node reboot, kill), the next call resumes from the
+last checkpoint instead of restarting from generation 1. Resume is a
+warm restart: it restores the population and best-so-far, not DEoptim's
+internal RNG stream or generation counter, so it is not bit-for-bit
+identical to an uninterrupted run (acceptable for calibration).
+Previously evaluated parameter vectors are memoized via the trial-trace
+CSVs, so resumed points and per-block re-evaluations skip their
+(expensive) simulator runs. Point `out_dir` at storage that survives a
+reboot (the pipeline passes the NFS `outputs/calibration/`). When
+`checkpoint_every` is `NULL` (the default), behaviour is unchanged: a
+single monolithic `DEoptim()` call, no checkpoint files.
 
 ## See also
 

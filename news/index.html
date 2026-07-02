@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.58</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.59</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -40,6 +40,11 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.59" id="landisutils-0059">landisutils 0.0.59<a class="anchor" aria-label="anchor" href="#landisutils-0059"></a></h2>
+<ul><li>
+<code><a href="../reference/calibrate_dynamic_fire.html">calibrate_dynamic_fire()</a></code> gains opt-in checkpoint/resume: set <code>cfg$checkpoint_every = K</code> to run the DEoptim search in blocks of K generations, persisting the population and best-so-far to <code>out_dir</code> (<code>checkpoint.rds</code>, <code>best_params_so_far.rds</code>) between blocks so an interrupted run (crash, node reboot, kill) resumes instead of restarting from generation 1. Previously evaluated points are memoized via the trial-trace CSVs so resumes and per-block initial-population re-evaluations skip their (expensive) simulator runs. Resume is fingerprint-guarded (parameter names + bounds + NP) and controlled by <code>cfg$resume</code> (<code>"auto"</code> default, <code>"never"</code>, <code>"force"</code>); when <code>cfg$checkpoint_every</code> is unset the behaviour is unchanged (a single monolithic <code>DEoptim()</code> call). The trial-trace CSVs now record the <code>par_*</code> and <code>total</code> columns at full round-trippable precision.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.58" id="landisutils-0058">landisutils 0.0.58<a class="anchor" aria-label="anchor" href="#landisutils-0058"></a></h2>
 <ul><li>

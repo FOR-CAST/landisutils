@@ -13,7 +13,7 @@ on.exit() regardless of success / error / interrupt."><meta property="og:image" 
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.58</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.59</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -104,6 +104,18 @@ Pass <code>cfg$steptol = NULL</code> to fall back to the upstream DEoptim defaul
 <dt>image, cpu_limit, mem_limit, pull</dt>
 <dd><p>Pool settings (Docker only).</p></dd>
 
+<dt>checkpoint_every</dt>
+<dd><p>Optional integer &gt;= 1. When set, run the search in
+blocks of this many generations and persist a resumable checkpoint to
+<code>out_dir</code> between blocks (see Details). <code>NULL</code> (default) = single
+monolithic <code>DEoptim()</code> call.</p></dd>
+
+<dt>resume</dt>
+<dd><p><code>"auto"</code> (default), <code>"never"</code>, or <code>"force"</code>. Only used when
+<code>checkpoint_every</code> is set. <code>"auto"</code> resumes from <code>out_dir/checkpoint.rds</code>
+iff its config fingerprint (par names + bounds + NP) matches; <code>"force"</code>
+resumes regardless; <code>"never"</code> ignores any checkpoint and starts fresh.</p></dd>
+
 
 </dl></dd>
 
@@ -133,7 +145,28 @@ it manages its own internal cluster.</p>
 <code>LANDIS_POOL_CONTAINER_IDX</code> env var to its 1-based pool index.
 <code><a href="sim_landis.html">sim_landis()</a></code> reads this when running inside the worker.</p>
 <p>DEoptim is gated on <code><a href="https://github.com/ArdiaD/DEoptim" class="external-link">requireNamespace("DEoptim")</a></code>; install via
-<code>renv::install("DEoptim")</code> before calling.</p>
+<code>renv::install("DEoptim")</code> before calling.</p><div class="section">
+<h3 id="checkpoint-resume-opt-in-">Checkpoint / resume (opt-in)<a class="anchor" aria-label="anchor" href="#checkpoint-resume-opt-in-"></a></h3>
+
+
+<p>Set <code>cfg$checkpoint_every = K</code> to make the search resumable. The DEoptim run
+is then executed in blocks of <code>K</code> generations; after each block the full
+population, best-so-far parameters, and best-value history are written
+atomically to <code>out_dir</code> (<code>checkpoint.rds</code> and <code>best_params_so_far.rds</code>) and
+the next block reseeds <code>DEoptim.control(initialpop=)</code> from the saved
+population. If the run is interrupted (crash, node reboot, kill), the next
+call resumes from the last checkpoint instead of restarting from generation 1.
+Resume is a warm restart: it restores the population and best-so-far, not
+DEoptim's internal RNG stream or generation counter, so it is not bit-for-bit
+identical to an uninterrupted run (acceptable for calibration). Previously
+evaluated parameter vectors are memoized via the trial-trace CSVs, so resumed
+points and per-block re-evaluations skip their (expensive) simulator runs.
+Point <code>out_dir</code> at storage that survives a reboot (the pipeline passes the NFS
+<code>outputs/calibration/</code>). When <code>checkpoint_every</code> is <code>NULL</code> (the default),
+behaviour is unchanged: a single monolithic <code>DEoptim()</code> call, no checkpoint
+files.</p>
+</div>
+
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
