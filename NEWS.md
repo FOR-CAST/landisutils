@@ -1,3 +1,7 @@
+# landisutils 0.0.59
+
+* `calibrate_dynamic_fire()` gains opt-in checkpoint/resume: set `cfg$checkpoint_every = K` to run the DEoptim search in blocks of K generations, persisting the population and best-so-far to `out_dir` (`checkpoint.rds`, `best_params_so_far.rds`) between blocks so an interrupted run (crash, node reboot, kill) resumes instead of restarting from generation 1. Previously evaluated points are memoized via the trial-trace CSVs so resumes and per-block initial-population re-evaluations skip their (expensive) simulator runs. Resume is fingerprint-guarded (parameter names + bounds + NP) and controlled by `cfg$resume` (`"auto"` default, `"never"`, `"force"`); when `cfg$checkpoint_every` is unset the behaviour is unchanged (a single monolithic `DEoptim()` call). The trial-trace CSVs now record the `par_*` and `total` columns at full round-trippable precision.
+
 # landisutils 0.0.58
 
 * `plot_species_growth_curves()` is a new Biomass Succession calibration diagnostic: it overlays the fitted LANDIS-version growth curve (`BscaledNonLinear`) on the PSP biomass observations behind it, faceted by species and coloured by ecoregion (the `speciesGrowthCurvesLandis` / `speciesGrowthCurvesPSP` outputs of `Biomass_speciesParameters` run in LANDIS mode).

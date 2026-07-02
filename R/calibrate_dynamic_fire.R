@@ -2166,6 +2166,26 @@ sim_mock <- function(
 #' DEoptim is gated on `requireNamespace("DEoptim")`; install via
 #' `renv::install("DEoptim")` before calling.
 #'
+#' @details
+#' ## Checkpoint / resume (opt-in)
+#'
+#' Set `cfg$checkpoint_every = K` to make the search resumable. The DEoptim run
+#' is then executed in blocks of `K` generations; after each block the full
+#' population, best-so-far parameters, and best-value history are written
+#' atomically to `out_dir` (`checkpoint.rds` and `best_params_so_far.rds`) and
+#' the next block reseeds `DEoptim.control(initialpop=)` from the saved
+#' population. If the run is interrupted (crash, node reboot, kill), the next
+#' call resumes from the last checkpoint instead of restarting from generation 1.
+#' Resume is a warm restart: it restores the population and best-so-far, not
+#' DEoptim's internal RNG stream or generation counter, so it is not bit-for-bit
+#' identical to an uninterrupted run (acceptable for calibration). Previously
+#' evaluated parameter vectors are memoized via the trial-trace CSVs, so resumed
+#' points and per-block re-evaluations skip their (expensive) simulator runs.
+#' Point `out_dir` at storage that survives a reboot (the pipeline passes the NFS
+#' `outputs/calibration/`). When `checkpoint_every` is `NULL` (the default),
+#' behaviour is unchanged: a single monolithic `DEoptim()` call, no checkpoint
+#' files.
+#'
 #' @param observed_targets_path Character. Path to the `.rds` from
 #'   [save_observed_fire_targets()].
 #' @param scenario_template Character. Path to the calibration scenario's
@@ -2187,6 +2207,14 @@ sim_mock <- function(
 #'     \item{simulator}{`"landis"` (default), `"r_reimpl"`, or `"mock"`.}
 #'     \item{method}{`"docker"` (default) or `"local"`.}
 #'     \item{image, cpu_limit, mem_limit, pull}{Pool settings (Docker only).}
+#'     \item{checkpoint_every}{Optional integer >= 1. When set, run the search in
+#'       blocks of this many generations and persist a resumable checkpoint to
+#'       `out_dir` between blocks (see Details). `NULL` (default) = single
+#'       monolithic `DEoptim()` call.}
+#'     \item{resume}{`"auto"` (default), `"never"`, or `"force"`. Only used when
+#'       `checkpoint_every` is set. `"auto"` resumes from `out_dir/checkpoint.rds`
+#'       iff its config fingerprint (par names + bounds + NP) matches; `"force"`
+#'       resumes regardless; `"never"` ignores any checkpoint and starts fresh.}
 #'   }
 #' @param out_dir Character. Where to write the DEoptim trace + scratch
 #'   sub-directory. Created if missing.
@@ -2249,6 +2277,23 @@ calibrate_dynamic_fire <- function(observed_targets_path, scenario_template, cfg
   weights <- cfg$weights %||% c(count = 1, size = 1, size_tail = 1, area_fuel = 0, severity = 0)
   base_seed <- as.integer(cfg$base_seed %||% 12345L)
   sim_years <- as.integer(cfg$sim_years %||% 10L)
+
+  ## Optional checkpoint/resume (opt-in via cfg$checkpoint_every). When set, the
+  ## DEoptim search runs in blocks of `checkpoint_every` generations, persisting
+  ## the population + best-so-far to `out_dir` between blocks so an interrupted
+  ## run (crash / node reboot / kill) resumes instead of restarting from
+  ## generation 1 (see .run_deoptim_checkpointed()). Validate early so a bad
+  ## value fails before the expensive warm pool / FORK cluster is set up.
+  use_checkpoint <- !is.null(cfg$checkpoint_every)
+  if (use_checkpoint) {
+    stopifnot(
+      is.numeric(cfg$checkpoint_every),
+      length(cfg$checkpoint_every) == 1L,
+      cfg$checkpoint_every >= 1L
+    )
+    cfg$resume <- match.arg(cfg$resume %||% "auto", c("auto", "never", "force"))
+  }
+
   simulator_name <- cfg$simulator %||% "landis"
   simulator <- switch(
     simulator_name,
@@ -2338,8 +2383,25 @@ calibrate_dynamic_fire <- function(observed_targets_path, scenario_template, cfg
     sprintf("trial_trace_%s", format(Sys.time(), "%Y%m%d_%H%M%S"))
   ))
 
+  ## Memoization cache (strategy #2; only when checkpointing). Keyed by a stable
+  ## hash of the parameter vector -> loss total, seeded from any trial-trace CSVs
+  ## already under out_dir (a prior interrupted run). This makes resumed points
+  ## and each block's initialpop re-evaluations cache hits instead of fresh (and
+  ## expensive) LANDIS runs. FORK children receive a copy of this env via objfn's
+  ## serialized closure; their in-memory writes stay local, but the durable
+  ## channel back to the parent is the per-worker trial-trace CSV, re-read via
+  ## .augment_eval_cache() between blocks.
+  eval_cache <- if (use_checkpoint) .load_eval_cache(out_dir, par_names) else NULL
+
   objfn <- function(par_vec) {
     names(par_vec) <- par_names
+    cache_key <- if (!is.null(eval_cache)) .par_key(par_vec) else NULL
+    if (!is.null(cache_key)) {
+      cached <- eval_cache[[cache_key]]
+      if (!is.null(cached)) {
+        return(cached)
+      }
+    }
     pool_idx <- if (!is.null(pool)) {
       as.integer(Sys.getenv("LANDIS_POOL_CONTAINER_IDX", "1"))
     } else {
@@ -2368,6 +2430,9 @@ calibrate_dynamic_fire <- function(observed_targets_path, scenario_template, cfg
       components = .loss$components,
       weights = .loss$weights
     )
+    if (!is.null(cache_key)) {
+      eval_cache[[cache_key]] <- .loss$total
+    }
     .loss$total
   }
 
@@ -2397,21 +2462,34 @@ calibrate_dynamic_fire <- function(observed_targets_path, scenario_template, cfg
     ## handler stops the FORK cluster.
     control_args$cluster <- cl
   }
-  control <- do.call(DEoptim::DEoptim.control, control_args)
-
   message(glue::glue(
     "calibrate_dynamic_fire: simulator={simulator_name}, NP={control_args$NP}, ",
     "itermax={control_args$itermax}, reltol={control_args$reltol}, ",
     "steptol={control_args$steptol}, n_reps={n_reps}, sim_years={sim_years}, ",
-    "n_cores={if (is.null(cl)) 1L else n_cores}, pool={!is.null(pool)}"
+    "n_cores={if (is.null(cl)) 1L else n_cores}, pool={!is.null(pool)}, ",
+    "checkpoint_every={cfg$checkpoint_every %||% NA}"
   ))
 
-  res <- DEoptim::DEoptim(
-    fn = objfn,
-    lower = unname(cfg$lower),
-    upper = unname(cfg$upper),
-    control = control
-  )
+  if (use_checkpoint) {
+    ## Block-restart with population checkpointing + memoization + anytime write.
+    res <- .run_deoptim_checkpointed(
+      objfn = objfn,
+      cfg = cfg,
+      par_names = par_names,
+      control_args = control_args,
+      eval_cache = eval_cache,
+      out_dir = out_dir
+    )
+  } else {
+    ## Unchanged monolithic path: a single DEoptim call over the whole schedule.
+    control <- do.call(DEoptim::DEoptim.control, control_args)
+    res <- DEoptim::DEoptim(
+      fn = objfn,
+      lower = unname(cfg$lower),
+      upper = unname(cfg$upper),
+      control = control
+    )
+  }
 
   best_params <- stats::setNames(as.numeric(res$optim$bestmem), par_names)
   trace_path <- fs::path(
@@ -2461,10 +2539,14 @@ calibrate_dynamic_fire <- function(observed_targets_path, scenario_template, cfg
   weight_vals <- as.numeric(weights[comp_names])
   weighted <- as.numeric(components) * weight_vals
   ## Row schema: wall_clock_iso, pid, par_<name>..., total, comp_<name>..., w_<name>..., weighted_<name>...
+  ## `par_*` and `total` are written at full (round-trippable) precision via
+  ## .fmt_par() so the memoization cache (.load_eval_cache() / .par_key()) keys a
+  ## value identically whether it comes straight from DEoptim or is re-read from
+  ## this CSV. The diagnostic component columns keep default formatting.
   row <- c(
     list(wall_clock_iso = format(Sys.time(), "%Y-%m-%dT%H:%M:%OS3%z"), pid = pid),
-    stats::setNames(as.list(as.numeric(par_vec[par_names])), paste0("par_", par_names)),
-    list(total = total),
+    stats::setNames(as.list(.fmt_par(par_vec[par_names])), paste0("par_", par_names)),
+    list(total = .fmt_par(total)),
     stats::setNames(as.list(as.numeric(components)), paste0("comp_", comp_names)),
     stats::setNames(as.list(weight_vals), paste0("w_", comp_names)),
     stats::setNames(as.list(weighted), paste0("weighted_", comp_names))
@@ -2502,6 +2584,244 @@ calibrate_dynamic_fire <- function(observed_targets_path, scenario_template, cfg
   }
   utils::write.csv(merged, out_path, row.names = FALSE)
   invisible(out_path)
+}
+
+## ---- checkpoint / resume / memoization helpers (opt-in via cfg$checkpoint_every) -----------------
+##
+## Together these turn the monolithic DEoptim call into a resumable, block-restart
+## search: the population is persisted between blocks (strategy #1), previously
+## evaluated points are cached so resumes and per-block initialpop re-evaluations
+## skip their LANDIS runs (strategy #2), and the best-so-far is written every block
+## as a usable fallback (strategy #3). All state lives under `out_dir` (the caller
+## passes the NFS `outputs/calibration/`, which survives a node reboot).
+
+## Format a numeric vector at full, round-trippable precision. `%.17g` is enough
+## to serialise then parse an IEEE double without loss, so a value keys to the
+## same hash whether it comes straight from DEoptim or is re-read from a
+## trial-trace CSV. Used by both .par_key() and .write_trial_trace_row().
+.fmt_par <- function(v) {
+  sprintf("%.17g", as.numeric(v))
+}
+
+## Stable cache key for a parameter vector (house style: digest + xxhash64).
+.par_key <- function(par_vec) {
+  digest::digest(.fmt_par(par_vec), algo = "xxhash64")
+}
+
+## Write an .rds atomically: serialise to a per-process temp sibling then rename
+## (atomic within one filesystem), so an interrupted write never leaves a
+## half-written, unreadable checkpoint behind.
+.atomic_saveRDS <- function(obj, path) {
+  tmp <- fs::path(paste0(path, ".tmp-", Sys.getpid()))
+  saveRDS(obj, tmp)
+  fs::file_move(tmp, path)
+  invisible(path)
+}
+
+## Build a memoization environment (`.par_key(par) -> total`) from every
+## trial-trace CSV under `out_dir`: the per-worker sidecars
+## (`trial_trace_*/worker_*.csv`) and any merged `trial_trace_*.csv` left by a
+## prior (possibly interrupted) run. Reuses the schema written by
+## .write_trial_trace_row() (`par_<name>...`, `total`).
+.load_eval_cache <- function(out_dir, par_names) {
+  cache <- new.env(parent = emptyenv())
+  .augment_eval_cache(cache, out_dir, par_names)
+  cache
+}
+
+## Fold any trial-trace rows not yet in `cache` into it (idempotent; first value
+## for a key wins). Called between blocks so evaluations written by FORK children
+## during a block become cache hits for the next block's initialpop re-evaluation.
+.augment_eval_cache <- function(cache, out_dir, par_names) {
+  files <- c(
+    fs::dir_ls(
+      out_dir,
+      recurse = TRUE,
+      type = "file",
+      regexp = "worker_[0-9]+\\.csv$",
+      fail = FALSE
+    ),
+    fs::dir_ls(
+      out_dir,
+      recurse = FALSE,
+      type = "file",
+      regexp = "trial_trace_[0-9_]+\\.csv$",
+      fail = FALSE
+    )
+  )
+  par_cols <- paste0("par_", par_names)
+  for (f in files) {
+    df <- tryCatch(utils::read.csv(f, stringsAsFactors = FALSE), error = function(e) NULL)
+    if (is.null(df) || nrow(df) == 0L || !all(c(par_cols, "total") %in% colnames(df))) {
+      next
+    }
+    for (i in seq_len(nrow(df))) {
+      key <- .par_key(as.numeric(df[i, par_cols]))
+      if (is.null(cache[[key]])) {
+        cache[[key]] <- as.numeric(df[i, "total"])
+      }
+    }
+  }
+  invisible(cache)
+}
+
+## DEoptim's own early-stop rule, applied across blocks: converged when the best
+## value has failed to improve by more than `reltol` (relative) over the last
+## `steptol` generations. Mirrors DEoptim.control(reltol=, steptol=).
+.deoptim_converged <- function(bestval_history, reltol, steptol) {
+  n <- length(bestval_history)
+  if (n <= steptol) {
+    return(FALSE)
+  }
+  prev <- bestval_history[n - steptol]
+  cur <- bestval_history[n]
+  (prev - cur) <= reltol * abs(cur)
+}
+
+## Block-restart DEoptim with population checkpointing. Runs the search in blocks
+## of cfg$checkpoint_every generations; after each block it atomically persists
+## the population + best-so-far + full best-value history to `out_dir` and reseeds
+## control$initialpop from the population, so an interrupted run resumes from the
+## last checkpoint instead of restarting from generation 1. Resume is guarded by a
+## config fingerprint (par names + bounds + NP): a mismatch archives the stale
+## checkpoint and starts fresh (cfg$resume = "force" overrides; "never" ignores
+## any checkpoint). Early-stopping (reltol/steptol) is enforced here across blocks
+## -- each block runs its full K generations. Returns a DEoptim-shaped result
+## whose member$bestvalit / optim$bestmem / optim$bestval span the entire run.
+.run_deoptim_checkpointed <- function(objfn, cfg, par_names, control_args, eval_cache, out_dir) {
+  K <- as.integer(cfg$checkpoint_every)
+  itermax_total <- as.integer(cfg$itermax %||% 100L)
+  reltol <- as.numeric(cfg$reltol %||% 1e-3)
+  steptol <- as.integer(cfg$steptol %||% 25L)
+  resume_mode <- cfg$resume %||% "auto"
+  lower <- unname(cfg$lower)
+  upper <- unname(cfg$upper)
+
+  fingerprint <- digest::digest(
+    list(par_names, as.numeric(cfg$lower), as.numeric(cfg$upper), as.integer(cfg$NP %||% 60L)),
+    algo = "xxhash64"
+  )
+  ckpt_path <- fs::path(out_dir, "checkpoint.rds")
+
+  pop <- NULL
+  gens_done <- 0L
+  best_hist <- numeric(0)
+  best_mem <- NULL
+  best_val <- Inf
+
+  if (resume_mode != "never" && fs::file_exists(ckpt_path)) {
+    st <- tryCatch(readRDS(ckpt_path), error = function(e) NULL)
+    if (!is.null(st) && (identical(st$fingerprint, fingerprint) || resume_mode == "force")) {
+      pop <- st$pop
+      gens_done <- as.integer(st$gens_done)
+      best_hist <- as.numeric(st$bestval_history)
+      best_mem <- st$best_mem
+      best_val <- as.numeric(st$best_val)
+      message(glue::glue(
+        "calibrate_dynamic_fire: RESUMING from generation {gens_done} ",
+        "(population {nrow(pop)}x{ncol(pop)}, best_val={signif(best_val, 4)})"
+      ))
+    } else if (!is.null(st)) {
+      stale <- fs::path(
+        out_dir,
+        sprintf("checkpoint_stale_%s.rds", format(Sys.time(), "%Y%m%d_%H%M%S"))
+      )
+      fs::file_move(ckpt_path, stale)
+      message(glue::glue(
+        "calibrate_dynamic_fire: checkpoint config fingerprint mismatch; ",
+        "archived to {fs::path_file(stale)} and starting fresh"
+      ))
+    }
+  }
+
+  res <- NULL
+  repeat {
+    k <- min(K, itermax_total - gens_done)
+    if (k <= 0L) {
+      break
+    }
+    blk_args <- control_args
+    blk_args$itermax <- as.integer(k)
+    ## The outer loop owns global early-stopping, so disable the in-block check
+    ## (steptol >= itermax => a block always runs its full K generations).
+    blk_args$steptol <- as.integer(k)
+    ## Disable DEoptim's intermediate population storage per block: it is unused
+    ## here (the checkpoint uses res$member$pop) and its indexing errors when a
+    ## block's itermax is smaller than storepopfreq (e.g. checkpoint_every = 1).
+    blk_args$storepopfrom <- as.integer(k) + 1L
+    if (!is.null(pop)) {
+      blk_args$initialpop <- pop
+    }
+    res <- DEoptim::DEoptim(
+      fn = objfn,
+      lower = lower,
+      upper = upper,
+      control = do.call(DEoptim::DEoptim.control, blk_args)
+    )
+    pop <- res$member$pop
+    gens_done <- gens_done + k
+    best_hist <- c(best_hist, as.numeric(res$member$bestvalit))
+    if (as.numeric(res$optim$bestval) < best_val) {
+      best_val <- as.numeric(res$optim$bestval)
+      best_mem <- as.numeric(res$optim$bestmem)
+    }
+    ## strategy #3: anytime best-params (usable even if the run never completes)
+    .atomic_saveRDS(
+      list(
+        best_params = stats::setNames(best_mem, par_names),
+        objective = best_val,
+        gens_done = gens_done,
+        computed_at = Sys.time()
+      ),
+      fs::path(out_dir, "best_params_so_far.rds")
+    )
+    ## strategy #1: population checkpoint (fingerprint-guarded on resume)
+    .atomic_saveRDS(
+      list(
+        pop = pop,
+        fingerprint = fingerprint,
+        gens_done = gens_done,
+        bestval_history = best_hist,
+        best_mem = best_mem,
+        best_val = best_val,
+        par_names = par_names,
+        saved_at = Sys.time()
+      ),
+      ckpt_path
+    )
+    ## strategy #2: fold this block's evaluations (written to the trial-trace CSVs
+    ## by the FORK children) into the parent cache so next block's initialpop
+    ## re-evaluations are cache hits.
+    .augment_eval_cache(eval_cache, out_dir, par_names)
+    message(glue::glue(
+      "calibrate_dynamic_fire: checkpoint at generation {gens_done}/{itermax_total} ",
+      "(best_val={signif(best_val, 4)}, cache_size={length(ls(eval_cache))})"
+    ))
+    if (.deoptim_converged(best_hist, reltol, steptol)) {
+      message(glue::glue(
+        "calibrate_dynamic_fire: early stop at generation {gens_done} ",
+        "(no > {reltol} relative improvement over {steptol} generations)"
+      ))
+      break
+    }
+  }
+
+  ## Synthesize a result when zero blocks ran (resumed a checkpoint already at
+  ## itermax), then overwrite the run-spanning fields so the caller's trace/return
+  ## code sees the whole (possibly resumed) run rather than just the last block.
+  if (is.null(res)) {
+    res <- structure(list(optim = list(), member = list()), class = "DEoptim")
+  }
+  res$member$pop <- pop
+  res$member$bestvalit <- best_hist
+  res$optim$bestmem <- best_mem
+  res$optim$bestval <- best_val
+
+  ## Clean completion: drop the checkpoint so a later deliberate re-run (same
+  ## config fingerprint) starts fresh instead of silently resuming a finished run.
+  tryCatch(fs::file_delete(ckpt_path), error = function(e) invisible(NULL))
+
+  res
 }
 
 ## ---- post-calibration validation ----------------------------------------------------------------

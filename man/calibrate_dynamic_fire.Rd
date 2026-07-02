@@ -29,6 +29,14 @@ Pass \code{cfg$steptol = NULL} to fall back to the upstream DEoptim default
 \item{simulator}{\code{"landis"} (default), \code{"r_reimpl"}, or \code{"mock"}.}
 \item{method}{\code{"docker"} (default) or \code{"local"}.}
 \item{image, cpu_limit, mem_limit, pull}{Pool settings (Docker only).}
+\item{checkpoint_every}{Optional integer >= 1. When set, run the search in
+blocks of this many generations and persist a resumable checkpoint to
+\code{out_dir} between blocks (see Details). \code{NULL} (default) = single
+monolithic \code{DEoptim()} call.}
+\item{resume}{\code{"auto"} (default), \code{"never"}, or \code{"force"}. Only used when
+\code{checkpoint_every} is set. \code{"auto"} resumes from \code{out_dir/checkpoint.rds}
+iff its config fingerprint (par names + bounds + NP) matches; \code{"force"}
+resumes regardless; \code{"never"} ignores any checkpoint and starts fresh.}
 }}
 
 \item{out_dir}{Character. Where to write the DEoptim trace + scratch
@@ -61,6 +69,25 @@ Per-worker container assignment: each FORK worker sets its
 
 DEoptim is gated on \code{requireNamespace("DEoptim")}; install via
 \code{renv::install("DEoptim")} before calling.
+\subsection{Checkpoint / resume (opt-in)}{
+
+Set \code{cfg$checkpoint_every = K} to make the search resumable. The DEoptim run
+is then executed in blocks of \code{K} generations; after each block the full
+population, best-so-far parameters, and best-value history are written
+atomically to \code{out_dir} (\code{checkpoint.rds} and \code{best_params_so_far.rds}) and
+the next block reseeds \code{DEoptim.control(initialpop=)} from the saved
+population. If the run is interrupted (crash, node reboot, kill), the next
+call resumes from the last checkpoint instead of restarting from generation 1.
+Resume is a warm restart: it restores the population and best-so-far, not
+DEoptim's internal RNG stream or generation counter, so it is not bit-for-bit
+identical to an uninterrupted run (acceptable for calibration). Previously
+evaluated parameter vectors are memoized via the trial-trace CSVs, so resumed
+points and per-block re-evaluations skip their (expensive) simulator runs.
+Point \code{out_dir} at storage that survives a reboot (the pipeline passes the NFS
+\verb{outputs/calibration/}). When \code{checkpoint_every} is \code{NULL} (the default),
+behaviour is unchanged: a single monolithic \code{DEoptim()} call, no checkpoint
+files.
+}
 }
 \seealso{
 Other Dynamic Fire calibration helpers:

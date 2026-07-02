@@ -1779,3 +1779,141 @@ test_that(".ram_pool_cap() is a no-op when RAM or the per-worker estimate is unk
   expect_equal(.ram_pool_cap(90, mem_per_worker_gb = 22, avail_gb = NA_real_), 90L)
   expect_equal(.ram_pool_cap(90, mem_per_worker_gb = 0, avail_gb = 1007), 90L)
 })
+
+
+## ---- checkpoint / resume / memoization (opt-in via cfg$checkpoint_every) ------------------------
+
+.mk_ckpt_fixture <- function(envir = parent.frame()) {
+  observed <- .make_min_observed()
+  observed$fru59 <- observed$primary
+  dir <- withr::local_tempdir(.local_envir = envir)
+  obs_path <- fs::path(dir, "obs.rds")
+  saveRDS(observed, obs_path)
+  scen_txt <- fs::path(dir, "scenario.txt")
+  writeLines("LandisData  \"Scenario\"", scen_txt)
+  list(obs_path = obs_path, scen_txt = scen_txt)
+}
+
+.mk_ckpt_cfg <- function(...) {
+  utils::modifyList(.make_default_cfg(), utils::modifyList(list(NP = 6L, itermax = 2L), list(...)))
+}
+
+test_that("eval cache round-trips a trial-trace row at full precision", {
+  par_names <- calibration_par_names()
+  dir <- withr::local_tempdir()
+  tt <- fs::dir_create(fs::path(dir, "trial_trace_20260101_000000"))
+  pv <- stats::setNames(c(1.234567890123, 0.5, 0.25, 0.1, 1, 1, 1, 1, 1), par_names)
+  comps <- c(count = 1, size = 1, size_tail = 0, area_fuel = 0, severity = 0)
+  landisutils:::.write_trial_trace_row(tt, pv, par_names, total = 3.14159265358979, comps, comps)
+  cache <- landisutils:::.load_eval_cache(dir, par_names)
+  expect_equal(cache[[landisutils:::.par_key(pv)]], 3.14159265358979)
+})
+
+test_that("calibrate_dynamic_fire() writes checkpoint artefacts and a full trajectory when checkpointing", {
+  skip_if_not_installed("DEoptim")
+  fx <- .mk_ckpt_fixture()
+  out_dir <- withr::local_tempdir()
+  suppressWarnings(
+    res <- calibrate_dynamic_fire(
+      fx$obs_path,
+      fx$scen_txt,
+      .mk_ckpt_cfg(checkpoint_every = 1L, itermax = 3L),
+      out_dir
+    )
+  )
+  expect_named(
+    res,
+    c(
+      "best_params",
+      "objective",
+      "deoptim",
+      "trace_path",
+      "trial_trace_path",
+      "cfg",
+      "pool_image",
+      "pool_digest"
+    )
+  )
+  ## trajectory spans all generations; checkpoint removed on clean completion
+  expect_length(res$deoptim$member$bestvalit, 3L)
+  expect_false(fs::file_exists(fs::path(out_dir, "checkpoint.rds")))
+  ## anytime best-params written every block and left as an artefact
+  so_far <- readRDS(fs::path(out_dir, "best_params_so_far.rds"))
+  expect_equal(so_far$gens_done, 3L)
+  expect_setequal(names(so_far$best_params), calibration_par_names())
+})
+
+test_that("calibrate_dynamic_fire() checkpoints on interruption and resumes to completion", {
+  skip_if_not_installed("DEoptim")
+  fx <- .mk_ckpt_fixture()
+  out_dir <- withr::local_tempdir()
+  cfg <- .mk_ckpt_cfg(checkpoint_every = 1L, itermax = 10L)
+
+  ## phase 1: error the simulator partway so a checkpoint is left behind
+  real_mock <- sim_mock
+  n <- 0L
+  testthat::local_mocked_bindings(sim_mock = function(...) {
+    n <<- n + 1L
+    if (n > 20L) {
+      stop("simulated interruption")
+    }
+    real_mock(...)
+  })
+  suppressWarnings(try(
+    calibrate_dynamic_fire(fx$obs_path, fx$scen_txt, cfg, out_dir),
+    silent = TRUE
+  ))
+  expect_true(fs::file_exists(fs::path(out_dir, "checkpoint.rds")))
+  ck <- readRDS(fs::path(out_dir, "checkpoint.rds"))
+  expect_gte(ck$gens_done, 1L)
+  expect_equal(nrow(ck$pop), cfg$NP)
+
+  ## phase 2: resume with a healthy simulator; run continues to itermax
+  testthat::local_mocked_bindings(sim_mock = real_mock)
+  expect_message(
+    suppressWarnings(res <- calibrate_dynamic_fire(fx$obs_path, fx$scen_txt, cfg, out_dir)),
+    "RESUMING from generation"
+  )
+  expect_length(res$deoptim$member$bestvalit, 10L)
+  expect_false(fs::file_exists(fs::path(out_dir, "checkpoint.rds")))
+})
+
+test_that("calibrate_dynamic_fire() archives a fingerprint-mismatched checkpoint and starts fresh", {
+  skip_if_not_installed("DEoptim")
+  fx <- .mk_ckpt_fixture()
+  out_dir <- withr::local_tempdir()
+  saveRDS(
+    list(
+      pop = matrix(0.5, 6, 9),
+      fingerprint = "not-a-match",
+      gens_done = 1L,
+      bestval_history = 1,
+      best_mem = rep(0.5, 9),
+      best_val = 1,
+      par_names = calibration_par_names()
+    ),
+    fs::path(out_dir, "checkpoint.rds")
+  )
+  suppressWarnings(
+    res <- calibrate_dynamic_fire(
+      fx$obs_path,
+      fx$scen_txt,
+      .mk_ckpt_cfg(checkpoint_every = 1L, itermax = 2L),
+      out_dir
+    )
+  )
+  expect_length(fs::dir_ls(out_dir, regexp = "checkpoint_stale_.*\\.rds$"), 1L)
+  expect_length(res$deoptim$member$bestvalit, 2L)
+})
+
+test_that("calibrate_dynamic_fire() writes no checkpoint files when checkpoint_every is unset", {
+  skip_if_not_installed("DEoptim")
+  fx <- .mk_ckpt_fixture()
+  out_dir <- withr::local_tempdir()
+  suppressWarnings(
+    res <- calibrate_dynamic_fire(fx$obs_path, fx$scen_txt, .mk_ckpt_cfg(itermax = 2L), out_dir)
+  )
+  expect_false(fs::file_exists(fs::path(out_dir, "checkpoint.rds")))
+  expect_false(fs::file_exists(fs::path(out_dir, "best_params_so_far.rds")))
+  expect_length(res$deoptim$member$bestvalit, 2L)
+})
