@@ -141,7 +141,7 @@ read_biomass_c_snapshots <- function(paths, times, run_name = NULL, cell_mask = 
 #' commands rather than inlining the `arrow::open_dataset() |> collect()` chain.
 #'
 #' The default `subdir = "_aggregates/biomass_snapshots"` matches the layout
-#' produced by [`write_biomass_c_snapshots_parquet()`]-style writers in the
+#' produced by `write_biomass_c_snapshots_parquet()`-style writers in the
 #' FOR-CAST post-processing pipeline; override for other layouts.
 #'
 #' @param scenario_dir Path to a scenario's root directory (e.g. `"LANDIS-II/ForCS_only"`).
