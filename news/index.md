@@ -1,5 +1,32 @@
 # Changelog
 
+## landisutils 0.0.61
+
+- [`community_label()`](https://for-cast.github.io/landisutils/reference/community_label.md)
+  and
+  [`leading_species()`](https://for-cast.github.io/landisutils/reference/leading_species.md)
+  rewritten from per-group [`{}`](https://rdrr.io/r/base/Paren.html) R
+  evaluation to vectorised `data.table` pipelines:
+  `sum(biomass) by = ...` totals, `setorder()` + `rowid()` per-cell
+  rank, `dcast()` species pivot, and vectorised
+  [`paste()`](https://rdrr.io/r/base/paste.html) +
+  [`gsub()`](https://rdrr.io/r/base/grep.html) for the “-”-joined label.
+  Correctness is identical to the previous implementations on the
+  FOR-CAST validation fixtures; runtime drops from ~90 min to ~5 s on an
+  8M-row single-scenario input (~1000x speedup). The previous per-group
+  `.SD` idiom scaled O(n_cells) in R-level evaluations; the new pipeline
+  stays linear but at C-level cost, so multi-rep multi-scenario
+  post-processing aggregators no longer bottleneck the pipeline.
+- New
+  [`read_biomass_c_snapshots_for_scenario()`](https://for-cast.github.io/landisutils/reference/read_biomass_c_snapshots_for_scenario.md)
+  helper: opens `<scenario_dir>/_aggregates/biomass_snapshots` as an
+  Arrow dataset partitioned by `replicate`, collects the full contents,
+  and returns `NULL` on missing / empty datasets. Lives in the package
+  (rather than as a project-side helper) so
+  [targets](https://docs.ropensci.org/targets/) treats it as an
+  installed-package function and does not invalidate consuming targets
+  on future cosmetic refactors of the collect logic.
+
 ## landisutils 0.0.60
 
 - [`calibrate_dynamic_fire()`](https://for-cast.github.io/landisutils/reference/calibrate_dynamic_fire.md)

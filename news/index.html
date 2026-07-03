@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.60</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.61</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -40,6 +40,12 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.61" id="landisutils-0061">landisutils 0.0.61<a class="anchor" aria-label="anchor" href="#landisutils-0061"></a></h2>
+<ul><li>
+<code><a href="../reference/community_label.html">community_label()</a></code> and <code><a href="../reference/leading_species.html">leading_species()</a></code> rewritten from per-group <code><a href="https://rdrr.io/r/base/Paren.html" class="external-link">{}</a></code> R evaluation to vectorised <code>data.table</code> pipelines: <code>sum(biomass) by = ...</code> totals, <code>setorder()</code> + <code>rowid()</code> per-cell rank, <code>dcast()</code> species pivot, and vectorised <code><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste()</a></code> + <code><a href="https://rdrr.io/r/base/grep.html" class="external-link">gsub()</a></code> for the “-”-joined label. Correctness is identical to the previous implementations on the FOR-CAST validation fixtures; runtime drops from ~90 min to ~5 s on an 8M-row single-scenario input (~1000x speedup). The previous per-group <code>.SD</code> idiom scaled O(n_cells) in R-level evaluations; the new pipeline stays linear but at C-level cost, so multi-rep multi-scenario post-processing aggregators no longer bottleneck the pipeline.</li>
+<li>New <code><a href="../reference/read_biomass_c_snapshots_for_scenario.html">read_biomass_c_snapshots_for_scenario()</a></code> helper: opens <code>&lt;scenario_dir&gt;/_aggregates/biomass_snapshots</code> as an Arrow dataset partitioned by <code>replicate</code>, collects the full contents, and returns <code>NULL</code> on missing / empty datasets. Lives in the package (rather than as a project-side helper) so <a href="https://docs.ropensci.org/targets/" class="external-link">targets</a> treats it as an installed-package function and does not invalidate consuming targets on future cosmetic refactors of the collect logic.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.60" id="landisutils-0060">landisutils 0.0.60<a class="anchor" aria-label="anchor" href="#landisutils-0060"></a></h2>
 <ul><li>

@@ -47,5 +47,6 @@ Other Vegetation transition helpers:
 [`leading_species()`](https://for-cast.github.io/landisutils/reference/leading_species.md),
 [`plot_species_biomass()`](https://for-cast.github.io/landisutils/reference/plot_species_biomass.md),
 [`read_biomass_c_snapshots()`](https://for-cast.github.io/landisutils/reference/read_biomass_c_snapshots.md),
+[`read_biomass_c_snapshots_for_scenario()`](https://for-cast.github.io/landisutils/reference/read_biomass_c_snapshots_for_scenario.md),
 [`read_biomass_output_rasters()`](https://for-cast.github.io/landisutils/reference/read_biomass_output_rasters.md),
 [`transition_data()`](https://for-cast.github.io/landisutils/reference/transition_data.md)

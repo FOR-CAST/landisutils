@@ -688,6 +688,9 @@
 - [`read_biomass_c_snapshots()`](https://for-cast.github.io/landisutils/reference/read_biomass_c_snapshots.md)
   : Read ForCS log_BiomassC snapshots
 
+- [`read_biomass_c_snapshots_for_scenario()`](https://for-cast.github.io/landisutils/reference/read_biomass_c_snapshots_for_scenario.md)
+  : Open + collect a per-scenario biomass_snapshots Arrow dataset
+
 - [`read_biomass_output_rasters()`](https://for-cast.github.io/landisutils/reference/read_biomass_output_rasters.md)
   : Read Output.Biomass raster snapshots
 
