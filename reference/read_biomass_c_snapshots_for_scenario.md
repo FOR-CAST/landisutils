@@ -45,8 +45,10 @@ guarantee should call this function from their target commands rather
 than inlining the `arrow::open_dataset() |> collect()` chain.
 
 The default `subdir = "_aggregates/biomass_snapshots"` matches the
-layout produced by `write_biomass_c_snapshots_parquet()`-style writers
-in the FOR-CAST post-processing pipeline; override for other layouts.
+layout produced by
+[`write_biomass_c_snapshots_parquet()`](https://for-cast.github.io/landisutils/reference/write_biomass_c_snapshots_parquet.md)-style
+writers in the FOR-CAST post-processing pipeline; override for other
+layouts.
 
 ## See also
 
@@ -58,4 +60,5 @@ Other Vegetation transition helpers:
 [`plot_transitions()`](https://for-cast.github.io/landisutils/reference/plot_transitions.md),
 [`read_biomass_c_snapshots()`](https://for-cast.github.io/landisutils/reference/read_biomass_c_snapshots.md),
 [`read_biomass_output_rasters()`](https://for-cast.github.io/landisutils/reference/read_biomass_output_rasters.md),
-[`transition_data()`](https://for-cast.github.io/landisutils/reference/transition_data.md)
+[`transition_data()`](https://for-cast.github.io/landisutils/reference/transition_data.md),
+[`write_biomass_c_snapshots_parquet()`](https://for-cast.github.io/landisutils/reference/write_biomass_c_snapshots_parquet.md)

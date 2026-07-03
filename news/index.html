@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.61</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.63</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -40,6 +40,16 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.63" id="landisutils-0063">landisutils 0.0.63<a class="anchor" aria-label="anchor" href="#landisutils-0063"></a></h2>
+<ul><li>
+<code><a href="../reference/read_forcs_log_summary.html">read_forcs_log_summary()</a></code>, <code><a href="../reference/write_forcs_log_summary_parquet.html">write_forcs_log_summary_parquet()</a></code>, and <code><a href="../reference/open_forcs_log_summary_dataset.html">open_forcs_log_summary_dataset()</a></code> process ForCS <code>log_Summary.csv</code> ecosystem-carbon outputs: read one scenario’s replicates into a tibble (masking to core cells), write one replicate to a partitioned parquet at <code>&lt;scenario&gt;/_aggregates/forcs_log_summary/replicate=&lt;rep&gt;/part-0.parquet</code> (atomic publish via a temporary + <code><a href="https://fs.r-lib.org/reference/file_move.html" class="external-link">fs::file_move()</a></code>, optional <code>staging_dir</code> for per-host scratch), and open one or more per-scenario roots as one lazy Arrow dataset (single root, or a <code>UnionDataset</code> across scenarios). Consolidated from the FOR-CAST project-side post-processing pipelines.</li>
+</ul></div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.62" id="landisutils-0062">landisutils 0.0.62<a class="anchor" aria-label="anchor" href="#landisutils-0062"></a></h2>
+<ul><li>
+<code><a href="../reference/write_biomass_c_snapshots_parquet.html">write_biomass_c_snapshots_parquet()</a></code> writes one replicate’s <code>log_BiomassC.csv</code> (read via <code><a href="../reference/read_biomass_c_snapshots.html">read_biomass_c_snapshots()</a></code>) to a partitioned parquet at <code>&lt;scenario&gt;/_aggregates/biomass_snapshots/replicate=&lt;rep&gt;/part-0.parquet</code>, the layout <code><a href="../reference/read_biomass_c_snapshots_for_scenario.html">read_biomass_c_snapshots_for_scenario()</a></code> reads back. The publish is atomic (write to a temporary then <code><a href="https://fs.r-lib.org/reference/file_move.html" class="external-link">fs::file_move()</a></code> into place) so many replicate writers can run concurrently against an NFS output directory without a reader seeing a partial file; an optional <code>staging_dir</code> keeps the interim bytes on per-host scratch. Consolidated from the FOR-CAST project-side post-processing pipelines.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.61" id="landisutils-0061">landisutils 0.0.61<a class="anchor" aria-label="anchor" href="#landisutils-0061"></a></h2>
 <ul><li>

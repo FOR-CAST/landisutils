@@ -686,6 +686,11 @@ scenario(
 - [`loss_from_stats()`](https://for-cast.github.io/landisutils/reference/loss_from_stats.md)
   : Compute the calibration loss from N replicate trial outputs
 
+- [`open_forcs_log_summary_dataset()`](https://for-cast.github.io/landisutils/reference/open_forcs_log_summary_dataset.md)
+  :
+
+  Open the ForCS `log_Summary` Arrow dataset for one or more scenarios
+
 - [`parse_dynamic_fire_logs()`](https://for-cast.github.io/landisutils/reference/parse_dynamic_fire_logs.md)
   : Parse a Dynamic Fire run's event and summary logs
 
@@ -878,6 +883,11 @@ scenario(
 - [`read_biomass_output_rasters()`](https://for-cast.github.io/landisutils/reference/read_biomass_output_rasters.md)
   : Read Output.Biomass raster snapshots
 
+- [`read_forcs_log_summary()`](https://for-cast.github.io/landisutils/reference/read_forcs_log_summary.md)
+  :
+
+  Read ForCS `log_Summary.csv` files for one scenario (all replicates)
+
 - [`read_landis_resource_logs()`](https://for-cast.github.io/landisutils/reference/read_landis_resource_logs.md)
   :
 
@@ -935,6 +945,14 @@ scenario(
 
 - [`writeClimateData()`](https://for-cast.github.io/landisutils/reference/writeClimateData.md)
   : Write LANDIS-II Climate Input File to disk
+
+- [`write_biomass_c_snapshots_parquet()`](https://for-cast.github.io/landisutils/reference/write_biomass_c_snapshots_parquet.md)
+  : Write one replicate's biomass_snapshots to a partitioned parquet
+
+- [`write_forcs_log_summary_parquet()`](https://for-cast.github.io/landisutils/reference/write_forcs_log_summary_parquet.md)
+  :
+
+  Write one replicate's ForCS `log_Summary` to a partitioned parquet
 
 - [`write_landis_scenario_file()`](https://for-cast.github.io/landisutils/reference/write_landis_scenario_file.md)
   :

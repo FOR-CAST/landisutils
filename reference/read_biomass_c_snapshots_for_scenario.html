@@ -13,7 +13,7 @@ short-circuit gracefully."><meta property="og:image" content="https://for-cast.g
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.61</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.63</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -90,7 +90,7 @@ by cosmetic changes to how the collect happens under the hood.  Callers that
 want that invalidation guarantee should call this function from their target
 commands rather than inlining the <code>arrow::open_dataset() |&gt; collect()</code> chain.</p>
 <p>The default <code>subdir = "_aggregates/biomass_snapshots"</code> matches the layout
-produced by <code>write_biomass_c_snapshots_parquet()</code>-style writers in the
+produced by <code><a href="write_biomass_c_snapshots_parquet.html">write_biomass_c_snapshots_parquet()</a></code>-style writers in the
 FOR-CAST post-processing pipeline; override for other layouts.</p>
     </div>
     <div class="section level2">
@@ -103,7 +103,8 @@ FOR-CAST post-processing pipeline; override for other layouts.</p>
 <code><a href="plot_transitions.html">plot_transitions()</a></code>,
 <code><a href="read_biomass_c_snapshots.html">read_biomass_c_snapshots()</a></code>,
 <code><a href="read_biomass_output_rasters.html">read_biomass_output_rasters()</a></code>,
-<code><a href="transition_data.html">transition_data()</a></code></p></div>
+<code><a href="transition_data.html">transition_data()</a></code>,
+<code><a href="write_biomass_c_snapshots_parquet.html">write_biomass_c_snapshots_parquet()</a></code></p></div>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

@@ -1,5 +1,38 @@
 # Changelog
 
+## landisutils 0.0.63
+
+- [`read_forcs_log_summary()`](https://for-cast.github.io/landisutils/reference/read_forcs_log_summary.md),
+  [`write_forcs_log_summary_parquet()`](https://for-cast.github.io/landisutils/reference/write_forcs_log_summary_parquet.md),
+  and
+  [`open_forcs_log_summary_dataset()`](https://for-cast.github.io/landisutils/reference/open_forcs_log_summary_dataset.md)
+  process ForCS `log_Summary.csv` ecosystem-carbon outputs: read one
+  scenario’s replicates into a tibble (masking to core cells), write one
+  replicate to a partitioned parquet at
+  `<scenario>/_aggregates/forcs_log_summary/replicate=<rep>/part-0.parquet`
+  (atomic publish via a temporary +
+  [`fs::file_move()`](https://fs.r-lib.org/reference/file_move.html),
+  optional `staging_dir` for per-host scratch), and open one or more
+  per-scenario roots as one lazy Arrow dataset (single root, or a
+  `UnionDataset` across scenarios). Consolidated from the FOR-CAST
+  project-side post-processing pipelines.
+
+## landisutils 0.0.62
+
+- [`write_biomass_c_snapshots_parquet()`](https://for-cast.github.io/landisutils/reference/write_biomass_c_snapshots_parquet.md)
+  writes one replicate’s `log_BiomassC.csv` (read via
+  [`read_biomass_c_snapshots()`](https://for-cast.github.io/landisutils/reference/read_biomass_c_snapshots.md))
+  to a partitioned parquet at
+  `<scenario>/_aggregates/biomass_snapshots/replicate=<rep>/part-0.parquet`,
+  the layout
+  [`read_biomass_c_snapshots_for_scenario()`](https://for-cast.github.io/landisutils/reference/read_biomass_c_snapshots_for_scenario.md)
+  reads back. The publish is atomic (write to a temporary then
+  [`fs::file_move()`](https://fs.r-lib.org/reference/file_move.html)
+  into place) so many replicate writers can run concurrently against an
+  NFS output directory without a reader seeing a partial file; an
+  optional `staging_dir` keeps the interim bytes on per-host scratch.
+  Consolidated from the FOR-CAST project-side post-processing pipelines.
+
 ## landisutils 0.0.61
 
 - [`community_label()`](https://for-cast.github.io/landisutils/reference/community_label.md)

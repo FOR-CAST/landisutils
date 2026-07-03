@@ -59,4 +59,5 @@ Other Vegetation transition helpers:
 [`plot_transitions()`](https://for-cast.github.io/landisutils/reference/plot_transitions.md),
 [`read_biomass_c_snapshots()`](https://for-cast.github.io/landisutils/reference/read_biomass_c_snapshots.md),
 [`read_biomass_c_snapshots_for_scenario()`](https://for-cast.github.io/landisutils/reference/read_biomass_c_snapshots_for_scenario.md),
-[`read_biomass_output_rasters()`](https://for-cast.github.io/landisutils/reference/read_biomass_output_rasters.md)
+[`read_biomass_output_rasters()`](https://for-cast.github.io/landisutils/reference/read_biomass_output_rasters.md),
+[`write_biomass_c_snapshots_parquet()`](https://for-cast.github.io/landisutils/reference/write_biomass_c_snapshots_parquet.md)
