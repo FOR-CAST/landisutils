@@ -13,7 +13,7 @@ on.exit() regardless of success / error / interrupt."><meta property="og:image" 
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.59</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.60</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -113,8 +113,10 @@ monolithic <code>DEoptim()</code> call.</p></dd>
 <dt>resume</dt>
 <dd><p><code>"auto"</code> (default), <code>"never"</code>, or <code>"force"</code>. Only used when
 <code>checkpoint_every</code> is set. <code>"auto"</code> resumes from <code>out_dir/checkpoint.rds</code>
-iff its config fingerprint (par names + bounds + NP) matches; <code>"force"</code>
-resumes regardless; <code>"never"</code> ignores any checkpoint and starts fresh.</p></dd>
+iff BOTH its population fingerprint (par names + bounds + NP) AND its
+loss-config fingerprint (weights + sim settings + observed + image)
+match; <code>"force"</code> resumes regardless of either; <code>"never"</code> ignores any
+checkpoint and starts from an empty memoization cache (a clean slate).</p></dd>
 
 
 </dl></dd>
@@ -165,6 +167,17 @@ Point <code>out_dir</code> at storage that survives a reboot (the pipeline passe
 <code>outputs/calibration/</code>). When <code>checkpoint_every</code> is <code>NULL</code> (the default),
 behaviour is unchanged: a single monolithic <code>DEoptim()</code> call, no checkpoint
 files.</p>
+<p>Resume and the memoization cache are both scoped to a <em>loss-config
+fingerprint</em> – a hash of the weights, per-trial sim settings (<code>n_reps</code>,
+<code>sim_years</code>, <code>base_seed</code>, <code>simulator</code>, <code>method</code>, Docker <code>image</code>), and the
+observed targets – in addition to the population fingerprint (par names,
+bounds, <code>NP</code>). Change any loss-affecting input and a checkpoint/cache left in
+the same <code>out_dir</code> is silently ignored rather than resumed or folded in, so
+reusing a single <code>out_dir</code> (e.g. the persistent <code>outputs/calibration/</code>) across
+successive calibrations with different weights or observations does NOT poison
+the new run's objective. You therefore do not need to clear <code>out_dir</code> by hand
+after a config change; only the population geometry (par count / bounds / <code>NP</code>)
+and the loss config must be stable for a resume to take effect.</p>
 </div>
 
     </div>

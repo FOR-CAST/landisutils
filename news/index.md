@@ -1,5 +1,25 @@
 # Changelog
 
+## landisutils 0.0.60
+
+- [`calibrate_dynamic_fire()`](https://for-cast.github.io/landisutils/reference/calibrate_dynamic_fire.md)
+  checkpoint/resume (0.0.59) now scopes both the resume and the
+  memoization cache to a *loss-config fingerprint* – a hash of the
+  weights, per-trial sim settings (`n_reps`, `sim_years`, `base_seed`,
+  `simulator`, `method`, Docker `image`), and the observed targets – in
+  addition to the population fingerprint. Previously, reusing a single
+  `out_dir` (e.g. the persistent `outputs/calibration/`) across
+  calibrations that changed the weights or observations could silently
+  seed the cache with stale loss values and resume a checkpoint whose
+  carried best-so-far was computed under the old config, poisoning the
+  new run’s objective. Now a config change self-invalidates the
+  checkpoint + cache instead of resuming stale state, so `out_dir` need
+  not be cleared by hand. `cfg$resume = "never"` additionally starts
+  from an empty cache (a true clean slate; it previously still folded in
+  prior-run trial-trace rows). The trial-trace CSVs gain an `eval_fp`
+  column recording the fingerprint. No behaviour change when
+  `cfg$checkpoint_every` is unset.
+
 ## landisutils 0.0.59
 
 - [`calibrate_dynamic_fire()`](https://for-cast.github.io/landisutils/reference/calibrate_dynamic_fire.md)

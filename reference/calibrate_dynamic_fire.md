@@ -81,9 +81,11 @@ calibrate_dynamic_fire(observed_targets_path, scenario_template, cfg, out_dir)
 
   :   `"auto"` (default), `"never"`, or `"force"`. Only used when
       `checkpoint_every` is set. `"auto"` resumes from
-      `out_dir/checkpoint.rds` iff its config fingerprint (par names +
-      bounds + NP) matches; `"force"` resumes regardless; `"never"`
-      ignores any checkpoint and starts fresh.
+      `out_dir/checkpoint.rds` iff BOTH its population fingerprint (par
+      names + bounds + NP) AND its loss-config fingerprint (weights +
+      sim settings + observed + image) match; `"force"` resumes
+      regardless of either; `"never"` ignores any checkpoint and starts
+      from an empty memoization cache (a clean slate).
 
 - out_dir:
 
@@ -135,6 +137,19 @@ CSVs, so resumed points and per-block re-evaluations skip their
 reboot (the pipeline passes the NFS `outputs/calibration/`). When
 `checkpoint_every` is `NULL` (the default), behaviour is unchanged: a
 single monolithic `DEoptim()` call, no checkpoint files.
+
+Resume and the memoization cache are both scoped to a *loss-config
+fingerprint* – a hash of the weights, per-trial sim settings (`n_reps`,
+`sim_years`, `base_seed`, `simulator`, `method`, Docker `image`), and
+the observed targets – in addition to the population fingerprint (par
+names, bounds, `NP`). Change any loss-affecting input and a
+checkpoint/cache left in the same `out_dir` is silently ignored rather
+than resumed or folded in, so reusing a single `out_dir` (e.g. the
+persistent `outputs/calibration/`) across successive calibrations with
+different weights or observations does NOT poison the new run's
+objective. You therefore do not need to clear `out_dir` by hand after a
+config change; only the population geometry (par count / bounds / `NP`)
+and the loss config must be stable for a resume to take effect.
 
 ## See also
 

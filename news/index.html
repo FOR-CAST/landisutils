@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.59</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.60</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -40,6 +40,11 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.60" id="landisutils-0060">landisutils 0.0.60<a class="anchor" aria-label="anchor" href="#landisutils-0060"></a></h2>
+<ul><li>
+<code><a href="../reference/calibrate_dynamic_fire.html">calibrate_dynamic_fire()</a></code> checkpoint/resume (0.0.59) now scopes both the resume and the memoization cache to a <em>loss-config fingerprint</em> – a hash of the weights, per-trial sim settings (<code>n_reps</code>, <code>sim_years</code>, <code>base_seed</code>, <code>simulator</code>, <code>method</code>, Docker <code>image</code>), and the observed targets – in addition to the population fingerprint. Previously, reusing a single <code>out_dir</code> (e.g. the persistent <code>outputs/calibration/</code>) across calibrations that changed the weights or observations could silently seed the cache with stale loss values and resume a checkpoint whose carried best-so-far was computed under the old config, poisoning the new run’s objective. Now a config change self-invalidates the checkpoint + cache instead of resuming stale state, so <code>out_dir</code> need not be cleared by hand. <code>cfg$resume = "never"</code> additionally starts from an empty cache (a true clean slate; it previously still folded in prior-run trial-trace rows). The trial-trace CSVs gain an <code>eval_fp</code> column recording the fingerprint. No behaviour change when <code>cfg$checkpoint_every</code> is unset.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.59" id="landisutils-0059">landisutils 0.0.59<a class="anchor" aria-label="anchor" href="#landisutils-0059"></a></h2>
 <ul><li>
