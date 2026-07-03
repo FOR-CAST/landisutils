@@ -9,11 +9,11 @@ utils::globalVariables(c(
   "mANPPproportion", "MapCode", "maxANPP", "maxB", "MaxSize", "MeanSize", "MinSize",
   "Month", "MONTH", "MortalityCurve", "mortalityshape", "newAge", "newB",
   "newPixelGroup", "pIgnition", "pixelGroup", "PolyID", "postfireregen", "PostFireRegen",
-  "Prcp", "ProbMortality", "RelH", "resproutage_max", "resproutage_min", "resproutprob",
+  "Prcp", "ProbMortality", "rank", "RelH", "resproutage_max", "resproutage_min", "resproutprob",
   "RH", "SeedDispDistEff", "SeedDispDistMax", "seeddistance_eff", "seeddistance_max",
   "sexualmature", "SexualMaturity", "shadetolerance", "ShadeTolerance", "species",
   "speciesCode", "SpeciesCode", "SpeciesName", "SproutAgeMax", "SproutAgeMin", "SRad",
-  "starts_with", "Tmax", "Tmin", "Value", "Variable", "VegReprodProb", "WD", "WndD", "WndS",
+  "starts_with", "Tmax", "Tmin", "total_biomass", "Value", "Variable", "VegReprodProb", "WD", "WndD", "WndS",
   "wooddecayrate", "WoodDecayRate", "WS", "xBar", "year", "Year", "YEAR"
 ))
 
@@ -41,6 +41,7 @@ NULL
 #' @importFrom data.table fifelse
 #' @importFrom data.table fwrite
 #' @importFrom data.table rbindlist
+#' @importFrom data.table rowid
 #' @importFrom data.table set
 #' @importFrom data.table setcolorder
 #' @importFrom data.table setkeyv

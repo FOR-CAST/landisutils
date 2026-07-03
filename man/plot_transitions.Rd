@@ -35,6 +35,7 @@ Other Vegetation transition helpers:
 \code{\link[=leading_species]{leading_species()}},
 \code{\link[=plot_species_biomass]{plot_species_biomass()}},
 \code{\link[=read_biomass_c_snapshots]{read_biomass_c_snapshots()}},
+\code{\link[=read_biomass_c_snapshots_for_scenario]{read_biomass_c_snapshots_for_scenario()}},
 \code{\link[=read_biomass_output_rasters]{read_biomass_output_rasters()}},
 \code{\link[=transition_data]{transition_data()}}
 }

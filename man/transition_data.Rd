@@ -42,6 +42,7 @@ Other Vegetation transition helpers:
 \code{\link[=plot_species_biomass]{plot_species_biomass()}},
 \code{\link[=plot_transitions]{plot_transitions()}},
 \code{\link[=read_biomass_c_snapshots]{read_biomass_c_snapshots()}},
+\code{\link[=read_biomass_c_snapshots_for_scenario]{read_biomass_c_snapshots_for_scenario()}},
 \code{\link[=read_biomass_output_rasters]{read_biomass_output_rasters()}}
 }
 \concept{Vegetation transition helpers}

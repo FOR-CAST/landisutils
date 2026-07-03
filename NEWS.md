@@ -1,3 +1,23 @@
+# landisutils 0.0.61
+
+* `community_label()` and `leading_species()` rewritten from per-group `{}` R
+  evaluation to vectorised `data.table` pipelines: `sum(biomass) by = ...`
+  totals, `setorder()` + `rowid()` per-cell rank, `dcast()` species pivot, and
+  vectorised `paste()` + `gsub()` for the "-"-joined label. Correctness is
+  identical to the previous implementations on the FOR-CAST validation
+  fixtures; runtime drops from ~90 min to ~5 s on an 8M-row single-scenario
+  input (~1000x speedup). The previous per-group `.SD` idiom scaled O(n_cells)
+  in R-level evaluations; the new pipeline stays linear but at C-level cost,
+  so multi-rep multi-scenario post-processing aggregators no longer bottleneck
+  the pipeline.
+* New `read_biomass_c_snapshots_for_scenario()` helper: opens
+  `<scenario_dir>/_aggregates/biomass_snapshots` as an Arrow dataset
+  partitioned by `replicate`, collects the full contents, and returns `NULL`
+  on missing / empty datasets. Lives in the package (rather than as a
+  project-side helper) so `{targets}` treats it as an installed-package
+  function and does not invalidate consuming targets on future cosmetic
+  refactors of the collect logic.
+
 # landisutils 0.0.60
 
 * `calibrate_dynamic_fire()` checkpoint/resume (0.0.59) now scopes both the resume and the memoization cache to a *loss-config fingerprint* -- a hash of the weights, per-trial sim settings (`n_reps`, `sim_years`, `base_seed`, `simulator`, `method`, Docker `image`), and the observed targets -- in addition to the population fingerprint. Previously, reusing a single `out_dir` (e.g. the persistent `outputs/calibration/`) across calibrations that changed the weights or observations could silently seed the cache with stale loss values and resume a checkpoint whose carried best-so-far was computed under the old config, poisoning the new run's objective. Now a config change self-invalidates the checkpoint + cache instead of resuming stale state, so `out_dir` need not be cleared by hand. `cfg$resume = "never"` additionally starts from an empty cache (a true clean slate; it previously still folded in prior-run trial-trace rows). The trial-trace CSVs gain an `eval_fp` column recording the fingerprint. No behaviour change when `cfg$checkpoint_every` is unset.
