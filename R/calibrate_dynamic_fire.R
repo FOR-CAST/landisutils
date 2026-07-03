@@ -2186,6 +2186,18 @@ sim_mock <- function(
 #' behaviour is unchanged: a single monolithic `DEoptim()` call, no checkpoint
 #' files.
 #'
+#' Resume and the memoization cache are both scoped to a *loss-config
+#' fingerprint* -- a hash of the weights, per-trial sim settings (`n_reps`,
+#' `sim_years`, `base_seed`, `simulator`, `method`, Docker `image`), and the
+#' observed targets -- in addition to the population fingerprint (par names,
+#' bounds, `NP`). Change any loss-affecting input and a checkpoint/cache left in
+#' the same `out_dir` is silently ignored rather than resumed or folded in, so
+#' reusing a single `out_dir` (e.g. the persistent `outputs/calibration/`) across
+#' successive calibrations with different weights or observations does NOT poison
+#' the new run's objective. You therefore do not need to clear `out_dir` by hand
+#' after a config change; only the population geometry (par count / bounds / `NP`)
+#' and the loss config must be stable for a resume to take effect.
+#'
 #' @param observed_targets_path Character. Path to the `.rds` from
 #'   [save_observed_fire_targets()].
 #' @param scenario_template Character. Path to the calibration scenario's
@@ -2213,8 +2225,10 @@ sim_mock <- function(
 #'       monolithic `DEoptim()` call.}
 #'     \item{resume}{`"auto"` (default), `"never"`, or `"force"`. Only used when
 #'       `checkpoint_every` is set. `"auto"` resumes from `out_dir/checkpoint.rds`
-#'       iff its config fingerprint (par names + bounds + NP) matches; `"force"`
-#'       resumes regardless; `"never"` ignores any checkpoint and starts fresh.}
+#'       iff BOTH its population fingerprint (par names + bounds + NP) AND its
+#'       loss-config fingerprint (weights + sim settings + observed + image)
+#'       match; `"force"` resumes regardless of either; `"never"` ignores any
+#'       checkpoint and starts from an empty memoization cache (a clean slate).}
 #'   }
 #' @param out_dir Character. Where to write the DEoptim trace + scratch
 #'   sub-directory. Created if missing.
@@ -2383,15 +2397,41 @@ calibrate_dynamic_fire <- function(observed_targets_path, scenario_template, cfg
     sprintf("trial_trace_%s", format(Sys.time(), "%Y%m%d_%H%M%S"))
   ))
 
+  ## Loss-config fingerprint: hashes everything BESIDES the parameter vector that
+  ## determines objfn's return value (weights, per-trial sim settings, observed
+  ## targets, Docker image). Stamped into every trial-trace row and the checkpoint
+  ## so a reused out_dir seeds the memoization cache / resumes the population ONLY
+  ## from evaluations produced under the identical loss config -- change any of
+  ## these and the stale state self-invalidates instead of poisoning the new run's
+  ## objective. (The narrower population fingerprint in .run_deoptim_checkpointed()
+  ## additionally guards the population geometry: par names + bounds + NP.)
+  eval_fp <- .eval_fingerprint(
+    par_names = par_names,
+    weights = weights,
+    n_reps = n_reps,
+    sim_years = sim_years,
+    base_seed = base_seed,
+    simulator_name = simulator_name,
+    method = method,
+    image = cfg$image %||% getOption("landisutils.docker.image"),
+    observed = observed
+  )
+
   ## Memoization cache (strategy #2; only when checkpointing). Keyed by a stable
-  ## hash of the parameter vector -> loss total, seeded from any trial-trace CSVs
-  ## already under out_dir (a prior interrupted run). This makes resumed points
-  ## and each block's initialpop re-evaluations cache hits instead of fresh (and
-  ## expensive) LANDIS runs. FORK children receive a copy of this env via objfn's
-  ## serialized closure; their in-memory writes stay local, but the durable
-  ## channel back to the parent is the per-worker trial-trace CSV, re-read via
-  ## .augment_eval_cache() between blocks.
-  eval_cache <- if (use_checkpoint) .load_eval_cache(out_dir, par_names) else NULL
+  ## hash of the parameter vector -> loss total, seeded from the trial-trace CSVs
+  ## under out_dir whose eval fingerprint matches `eval_fp` (a prior interrupted
+  ## run of THIS config). This makes resumed points and each block's initialpop
+  ## re-evaluations cache hits instead of fresh (and expensive) LANDIS runs.
+  ## `resume = "never"` starts from an empty cache (a genuine clean slate). FORK
+  ## children receive a copy of this env via objfn's serialized closure; their
+  ## in-memory writes stay local, but the durable channel back to the parent is
+  ## the per-worker trial-trace CSV, re-read via .augment_eval_cache() between
+  ## blocks.
+  eval_cache <- if (use_checkpoint) {
+    .load_eval_cache(out_dir, par_names, eval_fp, resume = cfg$resume)
+  } else {
+    NULL
+  }
 
   objfn <- function(par_vec) {
     names(par_vec) <- par_names
@@ -2428,7 +2468,8 @@ calibrate_dynamic_fire <- function(observed_targets_path, scenario_template, cfg
       par_names = par_names,
       total = .loss$total,
       components = .loss$components,
-      weights = .loss$weights
+      weights = .loss$weights,
+      eval_fp = eval_fp
     )
     if (!is.null(cache_key)) {
       eval_cache[[cache_key]] <- .loss$total
@@ -2478,6 +2519,7 @@ calibrate_dynamic_fire <- function(observed_targets_path, scenario_template, cfg
       par_names = par_names,
       control_args = control_args,
       eval_cache = eval_cache,
+      eval_fp = eval_fp,
       out_dir = out_dir
     )
   } else {
@@ -2532,21 +2574,33 @@ calibrate_dynamic_fire <- function(observed_targets_path, scenario_template, cfg
 ## Append a single row of per-trial loss-decomposition data to this worker's
 ## sidecar CSV. Header is written lazily on first write per PID so concurrent
 ## FORK workers don't collide.
-.write_trial_trace_row <- function(dir, par_vec, par_names, total, components, weights) {
+.write_trial_trace_row <- function(
+  dir,
+  par_vec,
+  par_names,
+  total,
+  components,
+  weights,
+  eval_fp = NA_character_
+) {
   pid <- Sys.getpid()
   f <- fs::path(dir, sprintf("worker_%d.csv", pid))
   comp_names <- names(components)
   weight_vals <- as.numeric(weights[comp_names])
   weighted <- as.numeric(components) * weight_vals
-  ## Row schema: wall_clock_iso, pid, par_<name>..., total, comp_<name>..., w_<name>..., weighted_<name>...
+  ## Row schema: wall_clock_iso, pid, par_<name>..., total, eval_fp, comp_<name>..., w_<name>..., weighted_<name>...
   ## `par_*` and `total` are written at full (round-trippable) precision via
   ## .fmt_par() so the memoization cache (.load_eval_cache() / .par_key()) keys a
   ## value identically whether it comes straight from DEoptim or is re-read from
-  ## this CSV. The diagnostic component columns keep default formatting.
+  ## this CSV. `eval_fp` is the loss-config fingerprint (weights + sim settings +
+  ## observed targets + image); .augment_eval_cache() folds a row into the cache
+  ## only when it matches the current run's fingerprint, so a reused out_dir never
+  ## seeds a stale (wrong-config) loss. The diagnostic component columns keep
+  ## default formatting.
   row <- c(
     list(wall_clock_iso = format(Sys.time(), "%Y-%m-%dT%H:%M:%OS3%z"), pid = pid),
     stats::setNames(as.list(.fmt_par(par_vec[par_names])), paste0("par_", par_names)),
-    list(total = .fmt_par(total)),
+    list(total = .fmt_par(total), eval_fp = eval_fp),
     stats::setNames(as.list(as.numeric(components)), paste0("comp_", comp_names)),
     stats::setNames(as.list(weight_vals), paste0("w_", comp_names)),
     stats::setNames(as.list(weighted), paste0("weighted_", comp_names))
@@ -2608,6 +2662,46 @@ calibrate_dynamic_fire <- function(observed_targets_path, scenario_template, cfg
   digest::digest(.fmt_par(par_vec), algo = "xxhash64")
 }
 
+## Loss-config fingerprint: a stable hash of everything BESIDES the parameter
+## vector that determines objfn's return value for a given par_vec -- the loss
+## `weights`, the per-trial sim settings (`n_reps`, `sim_years`, `base_seed`,
+## `simulator`, `method`, Docker `image`), the `observed` targets, and the
+## parameter ordering. Written into each trial-trace row and the checkpoint so a
+## resumed run / seeded memoization cache reuses ONLY evaluations produced under
+## the identical loss config: change any input and the stale cache is silently
+## dropped instead of poisoning the new run's objective (so the caller need not
+## clear out_dir on a config change). Weights are name-sorted so input order does
+## not perturb the hash. DEoptim search knobs (NP, bounds, strategy, core count)
+## are deliberately excluded -- they steer the search but do not change the loss
+## VALUE at a given par_vec; population geometry is guarded separately by the
+## checkpoint's `fingerprint`.
+.eval_fingerprint <- function(
+  par_names,
+  weights,
+  n_reps,
+  sim_years,
+  base_seed,
+  simulator_name,
+  method,
+  image,
+  observed
+) {
+  digest::digest(
+    list(
+      par_names = par_names,
+      weights = weights[order(names(weights))],
+      n_reps = as.integer(n_reps),
+      sim_years = as.integer(sim_years),
+      base_seed = as.integer(base_seed),
+      simulator = simulator_name,
+      method = method,
+      image = image,
+      observed = observed
+    ),
+    algo = "xxhash64"
+  )
+}
+
 ## Write an .rds atomically: serialise to a per-process temp sibling then rename
 ## (atomic within one filesystem), so an interrupted write never leaves a
 ## half-written, unreadable checkpoint behind.
@@ -2618,21 +2712,29 @@ calibrate_dynamic_fire <- function(observed_targets_path, scenario_template, cfg
   invisible(path)
 }
 
-## Build a memoization environment (`.par_key(par) -> total`) from every
-## trial-trace CSV under `out_dir`: the per-worker sidecars
-## (`trial_trace_*/worker_*.csv`) and any merged `trial_trace_*.csv` left by a
-## prior (possibly interrupted) run. Reuses the schema written by
-## .write_trial_trace_row() (`par_<name>...`, `total`).
-.load_eval_cache <- function(out_dir, par_names) {
+## Build a memoization environment (`.par_key(par) -> total`) from the trial-trace
+## CSVs under `out_dir` whose eval fingerprint matches `eval_fp`: the per-worker
+## sidecars (`trial_trace_*/worker_*.csv`) and any merged `trial_trace_*.csv` left
+## by a prior (possibly interrupted) run of the SAME config. Reuses the schema
+## written by .write_trial_trace_row() (`par_<name>...`, `total`, `eval_fp`).
+## `resume = "never"` returns an empty cache (a genuine clean slate); within-run
+## evaluations still accrue into it during the run.
+.load_eval_cache <- function(out_dir, par_names, eval_fp, resume = "auto") {
   cache <- new.env(parent = emptyenv())
-  .augment_eval_cache(cache, out_dir, par_names)
+  if (!identical(resume, "never")) {
+    .augment_eval_cache(cache, out_dir, par_names, eval_fp)
+  }
   cache
 }
 
 ## Fold any trial-trace rows not yet in `cache` into it (idempotent; first value
-## for a key wins). Called between blocks so evaluations written by FORK children
-## during a block become cache hits for the next block's initialpop re-evaluation.
-.augment_eval_cache <- function(cache, out_dir, par_names) {
+## for a key wins). Only rows whose `eval_fp` column matches the current run's
+## fingerprint are folded, so a reused out_dir never seeds the cache with a stale
+## (different weights / observed / image) loss; rows from a pre-fingerprint CSV
+## format (no `eval_fp` column) are skipped for the same reason. Called between
+## blocks so evaluations written by FORK children during a block become cache hits
+## for the next block's initialpop re-evaluation.
+.augment_eval_cache <- function(cache, out_dir, par_names, eval_fp) {
   files <- c(
     fs::dir_ls(
       out_dir,
@@ -2652,9 +2754,11 @@ calibrate_dynamic_fire <- function(observed_targets_path, scenario_template, cfg
   par_cols <- paste0("par_", par_names)
   for (f in files) {
     df <- tryCatch(utils::read.csv(f, stringsAsFactors = FALSE), error = function(e) NULL)
-    if (is.null(df) || nrow(df) == 0L || !all(c(par_cols, "total") %in% colnames(df))) {
+    if (is.null(df) || nrow(df) == 0L || !all(c(par_cols, "total", "eval_fp") %in% colnames(df))) {
       next
     }
+    keep <- !is.na(df$eval_fp) & as.character(df$eval_fp) == eval_fp
+    df <- df[keep, , drop = FALSE]
     for (i in seq_len(nrow(df))) {
       key <- .par_key(as.numeric(df[i, par_cols]))
       if (is.null(cache[[key]])) {
@@ -2682,13 +2786,24 @@ calibrate_dynamic_fire <- function(observed_targets_path, scenario_template, cfg
 ## of cfg$checkpoint_every generations; after each block it atomically persists
 ## the population + best-so-far + full best-value history to `out_dir` and reseeds
 ## control$initialpop from the population, so an interrupted run resumes from the
-## last checkpoint instead of restarting from generation 1. Resume is guarded by a
-## config fingerprint (par names + bounds + NP): a mismatch archives the stale
-## checkpoint and starts fresh (cfg$resume = "force" overrides; "never" ignores
-## any checkpoint). Early-stopping (reltol/steptol) is enforced here across blocks
+## last checkpoint instead of restarting from generation 1. Resume (in "auto"
+## mode) requires BOTH the population fingerprint (par names + bounds + NP, which
+## keeps the saved population geometrically valid) AND the loss-config `eval_fp`
+## (weights + sim settings + observed + image, which keeps the carried best_val /
+## history meaningful) to match; any mismatch archives the stale checkpoint and
+## starts fresh (cfg$resume = "force" overrides both; "never" ignores any
+## checkpoint). Early-stopping (reltol/steptol) is enforced here across blocks
 ## -- each block runs its full K generations. Returns a DEoptim-shaped result
 ## whose member$bestvalit / optim$bestmem / optim$bestval span the entire run.
-.run_deoptim_checkpointed <- function(objfn, cfg, par_names, control_args, eval_cache, out_dir) {
+.run_deoptim_checkpointed <- function(
+  objfn,
+  cfg,
+  par_names,
+  control_args,
+  eval_cache,
+  eval_fp,
+  out_dir
+) {
   K <- as.integer(cfg$checkpoint_every)
   itermax_total <- as.integer(cfg$itermax %||% 100L)
   reltol <- as.numeric(cfg$reltol %||% 1e-3)
@@ -2711,7 +2826,10 @@ calibrate_dynamic_fire <- function(observed_targets_path, scenario_template, cfg
 
   if (resume_mode != "never" && fs::file_exists(ckpt_path)) {
     st <- tryCatch(readRDS(ckpt_path), error = function(e) NULL)
-    if (!is.null(st) && (identical(st$fingerprint, fingerprint) || resume_mode == "force")) {
+    resume_ok <- !is.null(st) &&
+      (resume_mode == "force" ||
+        (identical(st$fingerprint, fingerprint) && identical(st$eval_fingerprint, eval_fp)))
+    if (resume_ok) {
       pop <- st$pop
       gens_done <- as.integer(st$gens_done)
       best_hist <- as.numeric(st$bestval_history)
@@ -2775,11 +2893,14 @@ calibrate_dynamic_fire <- function(observed_targets_path, scenario_template, cfg
       ),
       fs::path(out_dir, "best_params_so_far.rds")
     )
-    ## strategy #1: population checkpoint (fingerprint-guarded on resume)
+    ## strategy #1: population checkpoint (fingerprint-guarded on resume). Both the
+    ## population `fingerprint` (geometry) and the loss-config `eval_fingerprint`
+    ## are stored so an "auto" resume can require both to match.
     .atomic_saveRDS(
       list(
         pop = pop,
         fingerprint = fingerprint,
+        eval_fingerprint = eval_fp,
         gens_done = gens_done,
         bestval_history = best_hist,
         best_mem = best_mem,
@@ -2792,7 +2913,7 @@ calibrate_dynamic_fire <- function(observed_targets_path, scenario_template, cfg
     ## strategy #2: fold this block's evaluations (written to the trial-trace CSVs
     ## by the FORK children) into the parent cache so next block's initialpop
     ## re-evaluations are cache hits.
-    .augment_eval_cache(eval_cache, out_dir, par_names)
+    .augment_eval_cache(eval_cache, out_dir, par_names, eval_fp)
     message(glue::glue(
       "calibrate_dynamic_fire: checkpoint at generation {gens_done}/{itermax_total} ",
       "(best_val={signif(best_val, 4)}, cache_size={length(ls(eval_cache))})"

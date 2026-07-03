@@ -35,8 +35,10 @@ blocks of this many generations and persist a resumable checkpoint to
 monolithic \code{DEoptim()} call.}
 \item{resume}{\code{"auto"} (default), \code{"never"}, or \code{"force"}. Only used when
 \code{checkpoint_every} is set. \code{"auto"} resumes from \code{out_dir/checkpoint.rds}
-iff its config fingerprint (par names + bounds + NP) matches; \code{"force"}
-resumes regardless; \code{"never"} ignores any checkpoint and starts fresh.}
+iff BOTH its population fingerprint (par names + bounds + NP) AND its
+loss-config fingerprint (weights + sim settings + observed + image)
+match; \code{"force"} resumes regardless of either; \code{"never"} ignores any
+checkpoint and starts from an empty memoization cache (a clean slate).}
 }}
 
 \item{out_dir}{Character. Where to write the DEoptim trace + scratch
@@ -87,6 +89,18 @@ Point \code{out_dir} at storage that survives a reboot (the pipeline passes the 
 \verb{outputs/calibration/}). When \code{checkpoint_every} is \code{NULL} (the default),
 behaviour is unchanged: a single monolithic \code{DEoptim()} call, no checkpoint
 files.
+
+Resume and the memoization cache are both scoped to a \emph{loss-config
+fingerprint} -- a hash of the weights, per-trial sim settings (\code{n_reps},
+\code{sim_years}, \code{base_seed}, \code{simulator}, \code{method}, Docker \code{image}), and the
+observed targets -- in addition to the population fingerprint (par names,
+bounds, \code{NP}). Change any loss-affecting input and a checkpoint/cache left in
+the same \code{out_dir} is silently ignored rather than resumed or folded in, so
+reusing a single \code{out_dir} (e.g. the persistent \verb{outputs/calibration/}) across
+successive calibrations with different weights or observations does NOT poison
+the new run's objective. You therefore do not need to clear \code{out_dir} by hand
+after a config change; only the population geometry (par count / bounds / \code{NP})
+and the loss config must be stable for a resume to take effect.
 }
 }
 \seealso{

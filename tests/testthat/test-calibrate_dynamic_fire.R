@@ -1798,15 +1798,66 @@ test_that(".ram_pool_cap() is a no-op when RAM or the per-worker estimate is unk
   utils::modifyList(.make_default_cfg(), utils::modifyList(list(NP = 6L, itermax = 2L), list(...)))
 }
 
-test_that("eval cache round-trips a trial-trace row at full precision", {
+test_that("eval cache round-trips a trial-trace row at full precision (fingerprint-scoped)", {
   par_names <- calibration_par_names()
   dir <- withr::local_tempdir()
   tt <- fs::dir_create(fs::path(dir, "trial_trace_20260101_000000"))
   pv <- stats::setNames(c(1.234567890123, 0.5, 0.25, 0.1, 1, 1, 1, 1, 1), par_names)
   comps <- c(count = 1, size = 1, size_tail = 0, area_fuel = 0, severity = 0)
-  landisutils:::.write_trial_trace_row(tt, pv, par_names, total = 3.14159265358979, comps, comps)
-  cache <- landisutils:::.load_eval_cache(dir, par_names)
+  landisutils:::.write_trial_trace_row(
+    tt,
+    pv,
+    par_names,
+    total = 3.14159265358979,
+    comps,
+    comps,
+    eval_fp = "eval-fp-A"
+  )
+  ## matching fingerprint -> cache hit at full precision
+  cache <- landisutils:::.load_eval_cache(dir, par_names, "eval-fp-A")
   expect_equal(cache[[landisutils:::.par_key(pv)]], 3.14159265358979)
+  ## different fingerprint (e.g. a prior run with different weights / observations)
+  ## -> the stale row is NOT folded in, so it cannot poison the new run's objective
+  other <- landisutils:::.load_eval_cache(dir, par_names, "eval-fp-B")
+  expect_null(other[[landisutils:::.par_key(pv)]])
+  expect_length(ls(other), 0L)
+  ## resume = "never" -> clean slate even when a matching-fingerprint row exists
+  fresh <- landisutils:::.load_eval_cache(dir, par_names, "eval-fp-A", resume = "never")
+  expect_length(ls(fresh), 0L)
+})
+
+test_that(".eval_fingerprint changes iff a loss-affecting input changes", {
+  par_names <- calibration_par_names()
+  obs <- list(primary = list(lambda_obs = 8.23, fire_sizes_ha = c(1, 2, 3)))
+  base <- list(
+    par_names = par_names,
+    weights = c(count = 2, size = 1, area_fuel = 0, severity = 0),
+    n_reps = 10L,
+    sim_years = 30L,
+    base_seed = 12345L,
+    simulator_name = "landis",
+    method = "docker",
+    image = "img:v1",
+    observed = obs
+  )
+  fp <- function(x) do.call(landisutils:::.eval_fingerprint, x)
+  fp0 <- fp(base)
+  ## stable under weight input ORDER (loss uses weights by name)
+  reordered <- base
+  reordered$weights <- c(size = 1, severity = 0, count = 2, area_fuel = 0)
+  expect_identical(fp(reordered), fp0)
+  ## changes when any loss-affecting input changes
+  for (mut in list(
+    within(base, weights[["count"]] <- 3),
+    within(base, n_reps <- 5L),
+    within(base, sim_years <- 10L),
+    within(base, base_seed <- 999L),
+    within(base, image <- "img:v2"),
+    within(base, method <- "local"),
+    within(base, observed$primary$lambda_obs <- 9.1)
+  )) {
+    expect_false(fp(mut) == fp0)
+  }
 })
 
 test_that("calibrate_dynamic_fire() writes checkpoint artefacts and a full trajectory when checkpointing", {
@@ -1902,6 +1953,36 @@ test_that("calibrate_dynamic_fire() archives a fingerprint-mismatched checkpoint
       out_dir
     )
   )
+  expect_length(fs::dir_ls(out_dir, regexp = "checkpoint_stale_.*\\.rds$"), 1L)
+  expect_length(res$deoptim$member$bestvalit, 2L)
+})
+
+test_that("calibrate_dynamic_fire() archives a checkpoint whose loss-config fingerprint differs", {
+  skip_if_not_installed("DEoptim")
+  fx <- .mk_ckpt_fixture()
+  out_dir <- withr::local_tempdir()
+  cfg <- .mk_ckpt_cfg(checkpoint_every = 1L, itermax = 2L)
+  ## Build a checkpoint whose POPULATION fingerprint matches cfg (so the geometry
+  ## gate alone would have resumed it) but whose loss-config fingerprint does not
+  ## -- the scenario the fix guards against: same bounds/NP, changed weights/obs.
+  pop_fp <- digest::digest(
+    list(calibration_par_names(), as.numeric(cfg$lower), as.numeric(cfg$upper), as.integer(cfg$NP)),
+    algo = "xxhash64"
+  )
+  saveRDS(
+    list(
+      pop = matrix(0.5, cfg$NP, 9),
+      fingerprint = pop_fp,
+      eval_fingerprint = "stale-loss-config",
+      gens_done = 1L,
+      bestval_history = 1,
+      best_mem = rep(0.5, 9),
+      best_val = 1,
+      par_names = calibration_par_names()
+    ),
+    fs::path(out_dir, "checkpoint.rds")
+  )
+  suppressWarnings(res <- calibrate_dynamic_fire(fx$obs_path, fx$scen_txt, cfg, out_dir))
   expect_length(fs::dir_ls(out_dir, regexp = "checkpoint_stale_.*\\.rds$"), 1L)
   expect_length(res$deoptim$member$bestvalit, 2L)
 })
