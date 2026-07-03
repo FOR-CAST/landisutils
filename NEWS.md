@@ -1,3 +1,7 @@
+# landisutils 0.0.62
+
+* `write_biomass_c_snapshots_parquet()` writes one replicate's `log_BiomassC.csv` (read via `read_biomass_c_snapshots()`) to a partitioned parquet at `<scenario>/_aggregates/biomass_snapshots/replicate=<rep>/part-0.parquet`, the layout `read_biomass_c_snapshots_for_scenario()` reads back. The publish is atomic (write to a temporary then `fs::file_move()` into place) so many replicate writers can run concurrently against an NFS output directory without a reader seeing a partial file; an optional `staging_dir` keeps the interim bytes on per-host scratch. Consolidated from the FOR-CAST project-side post-processing pipelines.
+
 # landisutils 0.0.61
 
 * `community_label()` and `leading_species()` rewritten from per-group `{}` R

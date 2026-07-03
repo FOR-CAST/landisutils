@@ -66,6 +66,7 @@ Other Vegetation transition helpers:
 \code{\link[=plot_transitions]{plot_transitions()}},
 \code{\link[=read_biomass_c_snapshots]{read_biomass_c_snapshots()}},
 \code{\link[=read_biomass_c_snapshots_for_scenario]{read_biomass_c_snapshots_for_scenario()}},
-\code{\link[=transition_data]{transition_data()}}
+\code{\link[=transition_data]{transition_data()}},
+\code{\link[=write_biomass_c_snapshots_parquet]{write_biomass_c_snapshots_parquet()}}
 }
 \concept{Vegetation transition helpers}

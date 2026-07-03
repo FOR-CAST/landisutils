@@ -376,3 +376,34 @@ testthat::test_that("community_label transitions also produce a valid ggplot", {
   p <- plot_transitions(lodes)
   testthat::expect_s3_class(p, "ggplot")
 })
+
+testthat::test_that("write_biomass_c_snapshots_parquet round-trips via read_*_for_scenario", {
+  scen <- withr::local_tempdir()
+  rep_dir <- file.path(scen, "rep01")
+  dir.create(rep_dir)
+  src <- file.path(rep_dir, "log_BiomassC.csv")
+  make_biomass_c_csv(src, times = c(0L, 100L))
+
+  dst <- write_biomass_c_snapshots_parquet(src, times = c(0L, 100L))
+  testthat::expect_match(dst, "_aggregates/biomass_snapshots/replicate=rep01/part-0\\.parquet$")
+  ## atomic publish leaves exactly the one final parquet (no temp)
+  testthat::expect_length(list.files(scen, pattern = "\\.parquet$", recursive = TRUE), 1L)
+
+  back <- read_biomass_c_snapshots_for_scenario(scen)
+  testthat::expect_setequal(
+    names(back),
+    c("scenario", "replicate", "Time", "row", "column", "ecoregion", "species", "biomass")
+  )
+  testthat::expect_equal(unique(back$replicate), "rep01")
+})
+
+testthat::test_that("write_biomass_c_snapshots_parquet errors on empty input", {
+  scen <- withr::local_tempdir()
+  withr::local_dir(scen) ## relative src_path -> stable snapshot (no tempdir in the message)
+  dir.create("rep01")
+  make_biomass_c_csv("rep01/log_BiomassC.csv", times = c(0L, 100L))
+  testthat::expect_snapshot(
+    write_biomass_c_snapshots_parquet("rep01/log_BiomassC.csv", times = 9999L),
+    error = TRUE
+  )
+})

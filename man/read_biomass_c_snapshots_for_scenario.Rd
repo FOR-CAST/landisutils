@@ -35,7 +35,7 @@ want that invalidation guarantee should call this function from their target
 commands rather than inlining the \code{arrow::open_dataset() |> collect()} chain.
 
 The default \code{subdir = "_aggregates/biomass_snapshots"} matches the layout
-produced by \code{write_biomass_c_snapshots_parquet()}-style writers in the
+produced by \code{\link[=write_biomass_c_snapshots_parquet]{write_biomass_c_snapshots_parquet()}}-style writers in the
 FOR-CAST post-processing pipeline; override for other layouts.
 }
 \seealso{
@@ -47,6 +47,7 @@ Other Vegetation transition helpers:
 \code{\link[=plot_transitions]{plot_transitions()}},
 \code{\link[=read_biomass_c_snapshots]{read_biomass_c_snapshots()}},
 \code{\link[=read_biomass_output_rasters]{read_biomass_output_rasters()}},
-\code{\link[=transition_data]{transition_data()}}
+\code{\link[=transition_data]{transition_data()}},
+\code{\link[=write_biomass_c_snapshots_parquet]{write_biomass_c_snapshots_parquet()}}
 }
 \concept{Vegetation transition helpers}

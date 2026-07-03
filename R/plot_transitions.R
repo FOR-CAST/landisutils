@@ -141,7 +141,7 @@ read_biomass_c_snapshots <- function(paths, times, run_name = NULL, cell_mask = 
 #' commands rather than inlining the `arrow::open_dataset() |> collect()` chain.
 #'
 #' The default `subdir = "_aggregates/biomass_snapshots"` matches the layout
-#' produced by `write_biomass_c_snapshots_parquet()`-style writers in the
+#' produced by [write_biomass_c_snapshots_parquet()]-style writers in the
 #' FOR-CAST post-processing pipeline; override for other layouts.
 #'
 #' @param scenario_dir Path to a scenario's root directory (e.g. `"LANDIS-II/ForCS_only"`).
@@ -170,6 +170,71 @@ read_biomass_c_snapshots_for_scenario <- function(
     return(NULL)
   }
   df
+}
+
+#' Write one replicate's biomass_snapshots to a partitioned parquet
+#'
+#' Reads a single replicate's `log_BiomassC.csv` via [read_biomass_c_snapshots()]
+#' (Arrow-filtered to `times`, masked to `cell_mask`, cohort ages summed) and
+#' writes it to
+#' `<scenario_dir>/<subdir>/replicate=<rep>/part-0.parquet`, where
+#' `scenario_dir` is inferred as `dirname(dirname(src_path))` and `<rep>` is the
+#' replicate directory. This is the writer counterpart to
+#' [read_biomass_c_snapshots_for_scenario()]; colocating the parquet inside the
+#' scenario directory means it is archived alongside the raw replicate outputs
+#' and adding a replicate is a single write with no downstream ripple.
+#'
+#' The publish is atomic: the parquet is written to a temporary file and then
+#' [fs::file_move()]d into place, so a concurrent reader or a retried write never
+#' observes a partial file -- safe for many replicate writers running at once
+#' against an NFS output directory. When `staging_dir` is supplied the temporary
+#' is written there (e.g. per-host scratch, keeping the interim bytes off NFS)
+#' and moved cross-filesystem; the default stages in the destination directory so
+#' the move is a same-filesystem atomic rename.
+#'
+#' @param src_path Path to one replicate's `log_BiomassC.csv`.
+#' @param times Integer vector of snapshot years (see [read_biomass_c_snapshots()]).
+#' @param cell_mask Optional `data.frame` with `row`/`column` columns identifying
+#'   the core-area cells to retain (see [read_biomass_c_snapshots()]).
+#' @param subdir Path within the scenario directory for the dataset root (default
+#'   `"_aggregates/biomass_snapshots"`, matching
+#'   [read_biomass_c_snapshots_for_scenario()]).
+#' @param staging_dir Optional directory for the temporary parquet before it is
+#'   moved into place; `NULL` (default) stages in the destination directory
+#'   (same-filesystem atomic rename).
+#'
+#' @return The written parquet path.
+#'
+#' @family Vegetation transition helpers
+#'
+#' @export
+write_biomass_c_snapshots_parquet <- function(
+  src_path,
+  times,
+  cell_mask = NULL,
+  subdir = "_aggregates/biomass_snapshots",
+  staging_dir = NULL
+) {
+  df <- read_biomass_c_snapshots(
+    paths = src_path,
+    times = times,
+    run_name = NULL,
+    cell_mask = cell_mask
+  )
+  if (nrow(df) == 0L) {
+    stop("write_biomass_c_snapshots_parquet(): empty input for ", src_path, call. = FALSE)
+  }
+  rep <- unique(df$replicate)
+  stopifnot(length(unique(df$scenario)) == 1L, length(rep) == 1L)
+  dst_dir <- file.path(dirname(dirname(src_path)), subdir, paste0("replicate=", rep))
+  fs::dir_create(dst_dir)
+  dst <- file.path(dst_dir, "part-0.parquet")
+  tmp_root <- staging_dir %||% dst_dir
+  fs::dir_create(tmp_root)
+  tmp <- tempfile("part-", tmpdir = tmp_root, fileext = ".parquet")
+  arrow::write_parquet(df, tmp)
+  fs::file_move(tmp, dst)
+  dst
 }
 
 #' Read Output.Biomass raster snapshots
