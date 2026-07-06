@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.63</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.64</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -40,6 +40,11 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.64" id="landisutils-0064">landisutils 0.0.64<a class="anchor" aria-label="anchor" href="#landisutils-0064"></a></h2>
+<ul><li>
+<code>BiomassHarvest</code>: fix the <code>EventLog</code> / <code>SummaryLog</code> default paths. The bare relative-string defaults (<code>"biomass-harvest/log.csv"</code>) were mangled by the <code>.relPath()</code> active binding whenever the extension <code>path</code> was deep or absolute (e.g. an absolute scratch dir), producing broken <code>../../</code> paths in the written config. They now default to <code>NULL</code> and resolve to full scenario paths in <code>initialize()</code> (mirroring <code>PrescriptionMaps</code>), so <code>.relPath()</code> renders them as scenario-relative <code>biomass-harvest/log.csv</code> again. <code>path = "."</code> is unchanged.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.63" id="landisutils-0063">landisutils 0.0.63<a class="anchor" aria-label="anchor" href="#landisutils-0063"></a></h2>
 <ul><li>

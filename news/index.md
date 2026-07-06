@@ -1,5 +1,16 @@
 # Changelog
 
+## landisutils 0.0.64
+
+- `BiomassHarvest`: fix the `EventLog` / `SummaryLog` default paths. The
+  bare relative-string defaults (`"biomass-harvest/log.csv"`) were
+  mangled by the `.relPath()` active binding whenever the extension
+  `path` was deep or absolute (e.g. an absolute scratch dir), producing
+  broken `../../` paths in the written config. They now default to
+  `NULL` and resolve to full scenario paths in `initialize()` (mirroring
+  `PrescriptionMaps`), so `.relPath()` renders them as scenario-relative
+  `biomass-harvest/log.csv` again. `path = "."` is unchanged.
+
 ## landisutils 0.0.63
 
 - [`read_forcs_log_summary()`](https://for-cast.github.io/landisutils/reference/read_forcs_log_summary.md),

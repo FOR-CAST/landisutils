@@ -111,8 +111,8 @@ Inherited methods
       HarvestImplementations = NULL,
       PrescriptionMaps = NULL,
       BiomassMaps = NULL,
-      EventLog = "biomass-harvest/log.csv",
-      SummaryLog = "biomass-harvest/summarylog.csv"
+      EventLog = NULL,
+      SummaryLog = NULL
     )
 
 #### Arguments
@@ -155,11 +155,13 @@ Inherited methods
 
 - `EventLog`:
 
-  Character. Relative file path for the event-level CSV log.
+  (Optional) Character. Path for the event-level CSV log. Defaults to
+  `<path>/biomass-harvest/log.csv`.
 
 - `SummaryLog`:
 
-  Character. Relative file path for the summary CSV log.
+  (Optional) Character. Path for the summary CSV log. Defaults to
+  `<path>/biomass-harvest/summarylog.csv`.
 
 ------------------------------------------------------------------------
 

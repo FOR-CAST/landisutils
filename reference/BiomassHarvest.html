@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.63</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.64</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -143,8 +143,8 @@ are NOT included here; they are discovered by <code><a href="tar_landis.html">ta
 <span>  HarvestImplementations <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  PrescriptionMaps <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  BiomassMaps <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  EventLog <span class="op">=</span> <span class="st">"biomass-harvest/log.csv"</span>,</span>
-<span>  SummaryLog <span class="op">=</span> <span class="st">"biomass-harvest/summarylog.csv"</span></span>
+<span>  EventLog <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  SummaryLog <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div><p></p><div class="section">
 <h4 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h4>
@@ -176,10 +176,12 @@ maps; must contain the literal <code>{timestep}</code>.</p></dd>
 maps; must contain the literal <code>{timestep}</code>.</p></dd>
 
       <dt><code>EventLog</code></dt>
-<dd><p>Character. Relative file path for the event-level CSV log.</p></dd>
+<dd><p>(Optional) Character. Path for the event-level CSV log.
+Defaults to <code>&lt;path&gt;/biomass-harvest/log.csv</code>.</p></dd>
 
       <dt><code>SummaryLog</code></dt>
-<dd><p>Character. Relative file path for the summary CSV log.</p></dd>
+<dd><p>(Optional) Character. Path for the summary CSV log.
+Defaults to <code>&lt;path&gt;/biomass-harvest/summarylog.csv</code>.</p></dd>
 
 
 </dl><p></p></div>
