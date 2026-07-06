@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.64</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.65</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -40,6 +40,11 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.65" id="landisutils-0065">landisutils 0.0.65<a class="anchor" aria-label="anchor" href="#landisutils-0065"></a></h2>
+<ul><li>
+<code>ForestRoadsSimulation$write()</code> now registers its two required input rasters (<code>RasterOfBuildableZones</code>, <code>InitialRoadNetworkMap</code>) via <code>add_file()</code>, so they are appended to <code>$files</code> and picked up by scenario collection / replicate staging (mirroring <code>DynamicFire</code> and <code>BiomassHarvest</code>). Previously only the config file was tracked, so the input rasters were silently omitted when a scenario was staged into per-replicate run directories.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.64" id="landisutils-0064">landisutils 0.0.64<a class="anchor" aria-label="anchor" href="#landisutils-0064"></a></h2>
 <ul><li>

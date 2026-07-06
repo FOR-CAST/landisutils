@@ -1,5 +1,15 @@
 # Changelog
 
+## landisutils 0.0.65
+
+- `ForestRoadsSimulation$write()` now registers its two required input
+  rasters (`RasterOfBuildableZones`, `InitialRoadNetworkMap`) via
+  `add_file()`, so they are appended to `$files` and picked up by
+  scenario collection / replicate staging (mirroring `DynamicFire` and
+  `BiomassHarvest`). Previously only the config file was tracked, so the
+  input rasters were silently omitted when a scenario was staged into
+  per-replicate run directories.
+
 ## landisutils 0.0.64
 
 - `BiomassHarvest`: fix the `EventLog` / `SummaryLog` default paths. The
