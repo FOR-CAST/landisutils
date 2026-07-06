@@ -215,6 +215,12 @@ ForestRoadsSimulation <- R6Class(
         file.path(self$path, self$files[1])
       )
 
+      ## register the two required input rasters so downstream scenario
+      ## collection / replicate staging picks them up (mirrors DynamicFire and
+      ## BiomassHarvest, which add_file() their map inputs after writing).
+      self$add_file(self$RasterOfBuildableZones)
+      self$add_file(self$InitialRoadNetworkMap)
+
       return(invisible(self))
     }
   ),

@@ -6,6 +6,11 @@ testthat::test_that("Forest Roads Simulation extension is properly created", {
 
   tmp_pth <- withr::local_tempdir("test_ForestRoads_")
 
+  ## write() registers the two required input rasters via add_file(), which
+  ## checks they exist under `path`; create stand-ins so the write() succeeds.
+  dir.create(file.path(tmp_pth, "input", "disturbances"), recursive = TRUE)
+  file.create(file.path(tmp_pth, "input", "disturbances", c("soils.tif", "roads.tif")))
+
   coarse_costs <- list(
     elevationCostRange(0, 9, 0),
     elevationCostRange(9, 16, 1000),
