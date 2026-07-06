@@ -1,3 +1,13 @@
+# landisutils 0.0.64
+
+* `BiomassHarvest`: fix the `EventLog` / `SummaryLog` default paths. The bare
+  relative-string defaults (`"biomass-harvest/log.csv"`) were mangled by the
+  `.relPath()` active binding whenever the extension `path` was deep or absolute
+  (e.g. an absolute scratch dir), producing broken `../../` paths in the written
+  config. They now default to `NULL` and resolve to full scenario paths in
+  `initialize()` (mirroring `PrescriptionMaps`), so `.relPath()` renders them as
+  scenario-relative `biomass-harvest/log.csv` again. `path = "."` is unchanged.
+
 # landisutils 0.0.63
 
 * `read_forcs_log_summary()`, `write_forcs_log_summary_parquet()`, and `open_forcs_log_summary_dataset()` process ForCS `log_Summary.csv` ecosystem-carbon outputs: read one scenario's replicates into a tibble (masking to core cells), write one replicate to a partitioned parquet at `<scenario>/_aggregates/forcs_log_summary/replicate=<rep>/part-0.parquet` (atomic publish via a temporary + `fs::file_move()`, optional `staging_dir` for per-host scratch), and open one or more per-scenario roots as one lazy Arrow dataset (single root, or a `UnionDataset` across scenarios). Consolidated from the FOR-CAST project-side post-processing pipelines.

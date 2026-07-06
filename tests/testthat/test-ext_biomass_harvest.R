@@ -106,3 +106,49 @@ testthat::test_that("Biomass Harvest inputs are properly created", {
 
   withr::deferred_run()
 })
+
+testthat::test_that("BiomassHarvest EventLog/SummaryLog defaults resolve under an absolute path", {
+  ## Regression (0.0.64): the bare relative-string defaults were mangled by the
+  ## `.relPath()` active binding when `path` was absolute, yielding broken
+  ## `../../` log paths. The defaults must render scenario-relative.
+  tmp_pth <- withr::local_tempdir("test_BiomassHarvest_default_logs_")
+
+  mgmt_file <- file.path(tmp_pth, "mgmt.tif")
+  stands_file <- file.path(tmp_pth, "stands.tif")
+  purrr::walk(c(mgmt_file, stands_file), ~ writeLines("", .x))
+
+  rx <- harvestPrescription(
+    name = "CC",
+    StandRanking = "MaxCohortAge",
+    SiteSelection = "Complete",
+    CohortsRemoved = "ClearCut"
+  )
+  impl <- tibble::tribble(
+    ~MgmtArea, ~Prescription, ~HarvestArea, ~BeginTime, ~EndTime,
+    1L, "CC", "10%", 0L, 10L
+  )
+
+  ext_bh <- BiomassHarvest$new(
+    path = tmp_pth,
+    Timestep = 1L,
+    ManagementAreas = mgmt_file,
+    Stands = stands_file,
+    Prescriptions = list(rx),
+    HarvestImplementations = impl
+    ## EventLog / SummaryLog omitted on purpose -> exercise the defaults
+  )
+
+  testthat::expect_equal(ext_bh$EventLog, "biomass-harvest/log.csv")
+  testthat::expect_equal(ext_bh$SummaryLog, "biomass-harvest/summarylog.csv")
+
+  ext_bh$write()
+  contents <- readLines(file.path(tmp_pth, ext_bh$files[1]))
+  testthat::expect_true(any(grepl("^EventLog\\s+biomass-harvest/log\\.csv", contents)))
+  testthat::expect_true(any(grepl(
+    "^SummaryLog\\s+biomass-harvest/summarylog\\.csv",
+    contents
+  )))
+  testthat::expect_false(any(grepl("\\.\\./", contents))) ## no broken ../ paths
+
+  withr::deferred_run()
+})

@@ -23,8 +23,10 @@ BiomassHarvest <- R6Class(
     #'   maps; must contain the literal `{timestep}`.
     #' @param BiomassMaps (Optional) Character. Filename pattern for biomass-removed output
     #'   maps; must contain the literal `{timestep}`.
-    #' @param EventLog Character. Relative file path for the event-level CSV log.
-    #' @param SummaryLog Character. Relative file path for the summary CSV log.
+    #' @param EventLog (Optional) Character. Path for the event-level CSV log.
+    #'   Defaults to `<path>/biomass-harvest/log.csv`.
+    #' @param SummaryLog (Optional) Character. Path for the summary CSV log.
+    #'   Defaults to `<path>/biomass-harvest/summarylog.csv`.
     initialize = function(
       path,
       Timestep = NULL,
@@ -34,8 +36,8 @@ BiomassHarvest <- R6Class(
       HarvestImplementations = NULL,
       PrescriptionMaps = NULL,
       BiomassMaps = NULL,
-      EventLog = "biomass-harvest/log.csv",
-      SummaryLog = "biomass-harvest/summarylog.csv"
+      EventLog = NULL,
+      SummaryLog = NULL
     ) {
       stopifnot(!is.null(path))
 
@@ -58,8 +60,12 @@ BiomassHarvest <- R6Class(
       self$HarvestImplementations <- HarvestImplementations
       self$PrescriptionMaps <- PrescriptionMaps %||% MapNames("prescripts", "harvest", self$path)
       self$BiomassMaps <- BiomassMaps %||% MapNames("biomass-removed", "harvest", self$path)
-      self$EventLog <- EventLog
-      self$SummaryLog <- SummaryLog
+      ## Default to full paths so the `.relPath` active binding resolves them to
+      ## scenario-relative paths; a bare relative-string default mangles through
+      ## `.relPath` when `self$path` is deep or absolute (mirrors PrescriptionMaps).
+      self$EventLog <- EventLog %||% file.path(self$path, "biomass-harvest", "log.csv")
+      self$SummaryLog <- SummaryLog %||%
+        file.path(self$path, "biomass-harvest", "summarylog.csv")
     },
 
     #' @param value `HarvestPrescription` object to append to `$Prescriptions`.

@@ -91,8 +91,8 @@ are NOT included here; they are discovered by \code{\link[=tar_landis]{tar_landi
   HarvestImplementations = NULL,
   PrescriptionMaps = NULL,
   BiomassMaps = NULL,
-  EventLog = "biomass-harvest/log.csv",
-  SummaryLog = "biomass-harvest/summarylog.csv"
+  EventLog = NULL,
+  SummaryLog = NULL
 )}
     \if{html}{\out{</div>}}
   }
@@ -110,8 +110,10 @@ are NOT included here; they are discovered by \code{\link[=tar_landis]{tar_landi
 maps; must contain the literal \code{{timestep}}.}
       \item{\code{BiomassMaps}}{(Optional) Character. Filename pattern for biomass-removed output
 maps; must contain the literal \code{{timestep}}.}
-      \item{\code{EventLog}}{Character. Relative file path for the event-level CSV log.}
-      \item{\code{SummaryLog}}{Character. Relative file path for the summary CSV log.}
+      \item{\code{EventLog}}{(Optional) Character. Path for the event-level CSV log.
+Defaults to \verb{<path>/biomass-harvest/log.csv}.}
+      \item{\code{SummaryLog}}{(Optional) Character. Path for the summary CSV log.
+Defaults to \verb{<path>/biomass-harvest/summarylog.csv}.}
     }
     \if{html}{\out{</div>}}
   }
