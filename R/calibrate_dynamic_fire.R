@@ -3016,17 +3016,47 @@ run_calibration_validation <- function(
   template_dir <- fs::path_real(dirname(scenario_template))
   paths <- list(scenario_template = template_dir, scratch_root = pool$scratch_root)
 
-  reps <- lapply(seq_len(as.integer(n_reps)), function(i) {
+  ## Run the replicates in PARALLEL across the warm pool. `landis_pool_start()`
+  ## above allocates one container per replicate, so map each replicate onto its
+  ## own container concurrently rather than serially -- a plain `lapply()` left
+  ## all but one container idle and made validation O(n_reps) slower than the
+  ## pool was sized for. `sim_landis()` is FORK-safe (it carries only file paths,
+  ## no terra/sf handles; see its `@details`) and each replicate uses a distinct
+  ## `pool_idx`, so FORK children never share a container. `mc.preschedule =
+  ## FALSE` forks one child per replicate to match the one-container-per-replicate
+  ## pool.
+  n_reps_i <- as.integer(n_reps)
+  sim_years_i <- as.integer(cfg$sim_years %||% 10L)
+  run_rep <- function(i) {
     sim_landis(
       par_vec = best_params,
       paths = paths,
-      sim_years = as.integer(cfg$sim_years %||% 10L),
+      sim_years = sim_years_i,
       base_seed = as.integer(base_seed) + i,
       pool = pool,
       pool_idx = i,
       method = "docker"
     )
-  })
+  }
+  reps <- if (n_reps_i > 1L) {
+    parallel::mclapply(seq_len(n_reps_i), run_rep, mc.cores = n_reps_i, mc.preschedule = FALSE)
+  } else {
+    lapply(seq_len(n_reps_i), run_rep)
+  }
+  ## `mclapply()` substitutes a `try-error` for any replicate that failed; surface
+  ## those rather than letting a malformed `reps` reach `loss_from_stats()`.
+  failed <- which(vapply(reps, inherits, logical(1), "try-error"))
+  if (length(failed)) {
+    stop(
+      sprintf(
+        "run_calibration_validation: %d of %d validation replicate(s) failed; first error: %s",
+        length(failed),
+        n_reps_i,
+        conditionMessage(attr(reps[[failed[1]]], "condition"))
+      ),
+      call. = FALSE
+    )
+  }
 
   observed <- readRDS(observed_targets_path)
   loss <- loss_from_stats(reps = reps, observed = observed, weights = cfg$weights)

@@ -1,3 +1,15 @@
+# landisutils 0.0.66
+
+* `run_calibration_validation()` now runs its `n_reps` goodness-of-fit replicates
+  in parallel across the warm Docker pool (`parallel::mclapply()`, one FORK child
+  per replicate) instead of a serial `lapply()`. `landis_pool_start()` already
+  allocates one container per replicate, so the previous serial loop left all but
+  one container idle and made validation roughly `n_reps` times slower than the
+  pool was sized for; wall-clock now tracks a single replicate rather than their
+  sum. `sim_landis()` is FORK-safe (paths only), and a failed replicate now
+  surfaces as an error instead of a malformed `reps` list reaching
+  `loss_from_stats()`.
+
 # landisutils 0.0.65
 
 * `ForestRoadsSimulation$write()` now registers its two required input rasters
