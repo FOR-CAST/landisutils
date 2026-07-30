@@ -1998,3 +1998,26 @@ test_that("calibrate_dynamic_fire() writes no checkpoint files when checkpoint_e
   expect_false(fs::file_exists(fs::path(out_dir, "best_params_so_far.rds")))
   expect_length(res$deoptim$member$bestvalit, 2L)
 })
+
+test_that("the warm pool is capped against the GRANTED container limit, not the estimate", {
+  ## Regression: the cap divided by cfg$mem_per_worker_gb while each container was granted 1.25x that
+  ## as --memory, so the pool over-subscribed the host by 25%. Observed on a 1007 GiB node: 27
+  ## containers admitted at 30.3 GiB/worker, each granted 38 GiB = 1026 GiB.
+  est <- 30.3
+  granted <- .mem_limit_to_gb(sprintf("%dg", max(8L, ceiling(est * 1.25)))) ## 38
+  expect_equal(granted, 38)
+
+  ## capping on the estimate over-subscribes ...
+  on_estimate <- .ram_pool_cap(90L, est, 0.85, avail_gb = 987)
+  expect_gt(on_estimate * granted, 987)
+
+  ## ... capping on the granted limit does not, and stays within the fraction
+  on_granted <- .ram_pool_cap(90L, granted, 0.85, avail_gb = 987)
+  expect_lte(on_granted * granted, 0.85 * 987)
+  expect_equal(on_granted, 22L)
+
+  ## an explicit mem_limit is honoured as the divisor
+  expect_equal(.ram_pool_cap(90L, .mem_limit_to_gb("50g"), 1, avail_gb = 1000), 20L)
+  ## never returns 0 workers, even when one container cannot fit
+  expect_equal(.ram_pool_cap(90L, 2000, 0.85, avail_gb = 987), 1L)
+})

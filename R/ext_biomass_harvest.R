@@ -64,8 +64,7 @@ BiomassHarvest <- R6Class(
       ## scenario-relative paths; a bare relative-string default mangles through
       ## `.relPath` when `self$path` is deep or absolute (mirrors PrescriptionMaps).
       self$EventLog <- EventLog %||% file.path(self$path, "biomass-harvest", "log.csv")
-      self$SummaryLog <- SummaryLog %||%
-        file.path(self$path, "biomass-harvest", "summarylog.csv")
+      self$SummaryLog <- SummaryLog %||% file.path(self$path, "biomass-harvest", "summarylog.csv")
     },
 
     #' @param value `HarvestPrescription` object to append to `$Prescriptions`.

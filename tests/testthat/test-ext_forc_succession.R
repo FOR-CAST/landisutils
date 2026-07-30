@@ -58,7 +58,7 @@ testthat::test_that("Forest Carbon Succession (ForCS) inputs are properly create
     "wind"        ,         9 , 0.0     , 1.0     , 0.0
   )
 
-  disturb_fire_biomass = tibble::tribble(
+  disturb_fire_biomass <- tibble::tribble(
     ~intensity , ~from_biomass , ~to_air , ~to_fps , ~to_dom ,
              1 ,             1 , 0       ,       0 , 1       ,
              1 ,             2 , 0.5     ,       0 , 0.5     ,
@@ -87,7 +87,7 @@ testthat::test_that("Forest Carbon Succession (ForCS) inputs are properly create
              5 ,             6 , 0       ,       0 , 1
   )
 
-  disturb_other_biomass = tibble::tribble(
+  disturb_other_biomass <- tibble::tribble(
     ~disturb_type , ~from_biomass , ~to_air , ~to_fps , ~to_dom ,
     "Clearcut"    ,             1 , 0       ,       1 , 0       ,
     "Clearcut"    ,             2 , 0       ,       0 , 1       ,

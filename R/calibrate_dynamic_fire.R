@@ -2343,12 +2343,19 @@ calibrate_dynamic_fire <- function(observed_targets_path, scenario_template, cfg
   ## FORK workers + the main R process.
   mem_per_worker <- as.numeric(cfg$mem_per_worker_gb %||% .mem_limit_to_gb(cfg$mem_limit %||% "8g"))
   avail_gb <- .available_ram_gb()
-  capped_cores <- .ram_pool_cap(n_cores, mem_per_worker, cfg$mem_fraction %||% 0.85, avail_gb)
+  ## Cap against what each container is ALLOWED to consume, not the estimate that allowance is derived
+  ## from. `mem_limit` grants 1.25x the estimate as headroom, so capping on the estimate over-subscribes
+  ## the host by that same 25%: at 30.3 GiB/worker the cap admitted 27 containers, each granted 38 GiB
+  ## -- 1026 GiB on a 1007 GiB node. A container is entitled to use its full --memory, so the invariant
+  ## that must hold is `n * mem_limit <= mem_fraction * avail`, and only capping on the limit gives it.
+  mem_limit <- cfg$mem_limit %||% sprintf("%dg", max(8L, ceiling(mem_per_worker * 1.25)))
+  mem_per_container <- .mem_limit_to_gb(mem_limit)
+  capped_cores <- .ram_pool_cap(n_cores, mem_per_container, cfg$mem_fraction %||% 0.85, avail_gb)
   if (capped_cores < n_cores) {
     message(glue::glue(
       "calibrate_dynamic_fire: RAM-capping warm pool {n_cores} -> {capped_cores} container(s) ",
-      "({round(avail_gb)} GiB avail x {cfg$mem_fraction %||% 0.85} / {round(mem_per_worker, 1)} ",
-      "GiB/worker). Set cfg$mem_per_worker_gb to tune."
+      "({round(avail_gb)} GiB avail x {cfg$mem_fraction %||% 0.85} / {round(mem_per_container, 1)} ",
+      "GiB per-container limit '{mem_limit}'). Set cfg$mem_per_worker_gb or cfg$mem_limit to tune."
     ))
     n_cores <- capped_cores
   }
@@ -2363,9 +2370,10 @@ calibrate_dynamic_fire <- function(observed_targets_path, scenario_template, cfg
       image = cfg$image,
       scratch_root = scratch_root,
       cpu_limit = cfg$cpu_limit %||% 2,
-      ## --memory must be >= expected per-container usage or docker OOM-kills the container; derive from
-      ## the RAM estimate (+25% headroom) when not set explicitly. Default 8g preserves small-area configs.
-      mem_limit = cfg$mem_limit %||% sprintf("%dg", max(8L, ceiling(mem_per_worker * 1.25))),
+      ## --memory must be >= expected per-container usage or docker OOM-kills the container; derived
+      ## above (RAM estimate + 25% headroom) when not set explicitly, and reused verbatim here so the
+      ## value the pool is CAPPED against is the value each container is GRANTED.
+      mem_limit = mem_limit,
       pull = isTRUE(cfg$pull %||% FALSE),
       name_prefix = paste0("landis-cal-", Sys.getpid())
     )

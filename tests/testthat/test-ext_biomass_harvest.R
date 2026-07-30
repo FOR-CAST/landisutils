@@ -124,8 +124,8 @@ testthat::test_that("BiomassHarvest EventLog/SummaryLog defaults resolve under a
     CohortsRemoved = "ClearCut"
   )
   impl <- tibble::tribble(
-    ~MgmtArea, ~Prescription, ~HarvestArea, ~BeginTime, ~EndTime,
-    1L, "CC", "10%", 0L, 10L
+    ~MgmtArea , ~Prescription , ~HarvestArea , ~BeginTime , ~EndTime ,
+    1L        , "CC"          , "10%"        , 0L         , 10L
   )
 
   ext_bh <- BiomassHarvest$new(
@@ -144,10 +144,7 @@ testthat::test_that("BiomassHarvest EventLog/SummaryLog defaults resolve under a
   ext_bh$write()
   contents <- readLines(file.path(tmp_pth, ext_bh$files[1]))
   testthat::expect_true(any(grepl("^EventLog\\s+biomass-harvest/log\\.csv", contents)))
-  testthat::expect_true(any(grepl(
-    "^SummaryLog\\s+biomass-harvest/summarylog\\.csv",
-    contents
-  )))
+  testthat::expect_true(any(grepl("^SummaryLog\\s+biomass-harvest/summarylog\\.csv", contents)))
   testthat::expect_false(any(grepl("\\.\\./", contents))) ## no broken ../ paths
 
   withr::deferred_run()
