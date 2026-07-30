@@ -1608,6 +1608,13 @@ build_calibration_scenario_template <- function(
 #'   `getOption("landisutils.run.method")`.
 #' @param image Character or NULL. Docker image (Docker only).
 #' @param pull Logical. `docker pull` before running (Docker only). Default FALSE.
+#' @param dedup Logical. Collapse duplicate communities in the resulting
+#'   snapshot via [dedup_community_snapshot()] before returning. Default TRUE.
+#'   Biomass Succession emits one map code per PIXEL, so on a large landscape the
+#'   snapshot is overwhelmingly duplicate rows and is liable to OOM the LANDIS-II
+#'   initial-communities parser when read back (see that function). The collapse
+#'   is state-preserving -- every pixel keeps exactly its cohort list -- so this
+#'   is on by default; set FALSE only to inspect the raw writer output.
 #'
 #' @returns Character scalar: absolute path to the year-0 snapshot CSV
 #'   (`<scenario_dir>/rep01/community-input-file-0.csv`). The TIF
@@ -1621,7 +1628,8 @@ run_calibration_spinup <- function(
   base_seed = 12345L,
   method = NULL,
   image = NULL,
-  pull = FALSE
+  pull = FALSE,
+  dedup = TRUE
 ) {
   stopifnot(fs::dir_exists(scenario_dir), is.numeric(base_seed), base_seed > 0)
   scenario_dir <- fs::path_real(scenario_dir)
@@ -1665,6 +1673,12 @@ run_calibration_spinup <- function(
       tif_path,
       call. = FALSE
     )
+  }
+  ## Collapse the per-pixel map codes the writer emits. Done HERE rather than at the point of use so
+  ## every consumer of the snapshot -- and every downstream copy of it -- gets the small form: the raw
+  ## file is what OOM-kills the LANDIS-II initial-communities parser on a large landscape.
+  if (isTRUE(dedup)) {
+    dedup_community_snapshot(as.character(csv_path), as.character(tif_path))
   }
   as.character(csv_path)
 }

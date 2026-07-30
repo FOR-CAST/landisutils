@@ -9,7 +9,8 @@ run_calibration_spinup(
   base_seed = 12345L,
   method = NULL,
   image = NULL,
-  pull = FALSE
+  pull = FALSE,
+  dedup = TRUE
 )
 }
 \arguments{
@@ -26,6 +27,14 @@ run_calibration_spinup(
 \item{image}{Character or NULL. Docker image (Docker only).}
 
 \item{pull}{Logical. \verb{docker pull} before running (Docker only). Default FALSE.}
+
+\item{dedup}{Logical. Collapse duplicate communities in the resulting
+snapshot via \code{\link[=dedup_community_snapshot]{dedup_community_snapshot()}} before returning. Default TRUE.
+Biomass Succession emits one map code per PIXEL, so on a large landscape the
+snapshot is overwhelmingly duplicate rows and is liable to OOM the LANDIS-II
+initial-communities parser when read back (see that function). The collapse
+is state-preserving -- every pixel keeps exactly its cohort list -- so this
+is on by default; set FALSE only to inspect the raw writer output.}
 }
 \value{
 Character scalar: absolute path to the year-0 snapshot CSV
