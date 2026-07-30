@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.68</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.69</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -40,6 +40,11 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.69" id="landisutils-0069">landisutils 0.0.69<a class="anchor" aria-label="anchor" href="#landisutils-0069"></a></h2>
+<ul><li>
+<code><a href="../reference/run_calibration_spinup.html">run_calibration_spinup()</a></code> now collapses duplicate communities in the snapshot it produces, via <code><a href="../reference/dedup_community_snapshot.html">dedup_community_snapshot()</a></code> (new <code>dedup</code> argument, default <code>TRUE</code>). The spinup’s whole purpose is to hand a spun-up initial-communities pair to the calibration trials, and the raw pair is exactly the thing LANDIS-II cannot read back on a large landscape – so deduplicating at the point of production means every consumer, and every archived copy, gets the small form. Set <code>dedup = FALSE</code> to inspect the raw writer output.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.68" id="landisutils-0068">landisutils 0.0.68<a class="anchor" aria-label="anchor" href="#landisutils-0068"></a></h2>
 <ul><li>

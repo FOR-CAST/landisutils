@@ -12,7 +12,8 @@ run_calibration_spinup(
   base_seed = 12345L,
   method = NULL,
   image = NULL,
-  pull = FALSE
+  pull = FALSE,
+  dedup = TRUE
 )
 ```
 
@@ -41,6 +42,17 @@ run_calibration_spinup(
 - pull:
 
   Logical. `docker pull` before running (Docker only). Default FALSE.
+
+- dedup:
+
+  Logical. Collapse duplicate communities in the resulting snapshot via
+  [`dedup_community_snapshot()`](https://for-cast.github.io/landisutils/reference/dedup_community_snapshot.md)
+  before returning. Default TRUE. Biomass Succession emits one map code
+  per PIXEL, so on a large landscape the snapshot is overwhelmingly
+  duplicate rows and is liable to OOM the LANDIS-II initial-communities
+  parser when read back (see that function). The collapse is
+  state-preserving – every pixel keeps exactly its cohort list – so this
+  is on by default; set FALSE only to inspect the raw writer output.
 
 ## Value
 

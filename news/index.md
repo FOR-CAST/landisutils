@@ -1,5 +1,17 @@
 # Changelog
 
+## landisutils 0.0.69
+
+- [`run_calibration_spinup()`](https://for-cast.github.io/landisutils/reference/run_calibration_spinup.md)
+  now collapses duplicate communities in the snapshot it produces, via
+  [`dedup_community_snapshot()`](https://for-cast.github.io/landisutils/reference/dedup_community_snapshot.md)
+  (new `dedup` argument, default `TRUE`). The spinup’s whole purpose is
+  to hand a spun-up initial-communities pair to the calibration trials,
+  and the raw pair is exactly the thing LANDIS-II cannot read back on a
+  large landscape – so deduplicating at the point of production means
+  every consumer, and every archived copy, gets the small form. Set
+  `dedup = FALSE` to inspect the raw writer output.
+
 ## landisutils 0.0.68
 
 - [`dedup_community_snapshot()`](https://for-cast.github.io/landisutils/reference/dedup_community_snapshot.md)

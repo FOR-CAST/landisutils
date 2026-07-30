@@ -11,7 +11,7 @@ Output Biomass Community extension landed on disk."><meta property="og:image" co
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.68</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.69</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -58,7 +58,8 @@ Output Biomass Community extension landed on disk.</p>
 <span>  base_seed <span class="op">=</span> <span class="fl">12345L</span>,</span>
 <span>  method <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  image <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  pull <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>  pull <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  dedup <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -88,6 +89,16 @@ Output Biomass Community extension landed on disk.</p>
 
 <dt id="arg-pull">pull<a class="anchor" aria-label="anchor" href="#arg-pull"></a></dt>
 <dd><p>Logical. <code>docker pull</code> before running (Docker only). Default FALSE.</p></dd>
+
+
+<dt id="arg-dedup">dedup<a class="anchor" aria-label="anchor" href="#arg-dedup"></a></dt>
+<dd><p>Logical. Collapse duplicate communities in the resulting
+snapshot via <code><a href="dedup_community_snapshot.html">dedup_community_snapshot()</a></code> before returning. Default TRUE.
+Biomass Succession emits one map code per PIXEL, so on a large landscape the
+snapshot is overwhelmingly duplicate rows and is liable to OOM the LANDIS-II
+initial-communities parser when read back (see that function). The collapse
+is state-preserving – every pixel keeps exactly its cohort list – so this
+is on by default; set FALSE only to inspect the raw writer output.</p></dd>
 
 </dl></div>
     <div class="section level2">
