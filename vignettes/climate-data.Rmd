@@ -25,14 +25,16 @@ VignetteDepends <- c(
   "withr",
   "zonal"
 )
-all_pkgs_avail <- vapply(
+## Availability only -- deliberately NOT require()/library(). Attaching these merely to test for them
+## is expensive and has side effects: BioSIM starts a J4R Java server on attach, which R CMD check
+## then carries for the life of the vignette (and leaks if the check is interrupted). Since every
+## chunk below is eval = FALSE, that cost bought nothing. system.file() answers the question without
+## loading or attaching anything.
+all_pkgs_avail <- all(nzchar(vapply(
   VignetteDepends,
-  function(pkg) {
-    require(pkg, character.only = TRUE, quietly = TRUE)
-  },
-  logical(1)
-) |>
-  all()
+  function(pkg) system.file(package = pkg),
+  character(1)
+)))
 
 knitr::opts_chunk$set(
   collapse = TRUE,

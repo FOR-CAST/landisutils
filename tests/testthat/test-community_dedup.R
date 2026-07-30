@@ -168,3 +168,34 @@ test_that("a snapshot with no empty communities reports empty_code = NA", {
   expect_true(is.na(res$empty_code))
   expect_equal(res$empty_cells, 0)
 })
+
+## LANDIS-II's GDAL reader accepts only Byte / Int16 / Int32 / Float32 / Float64. Writing the remapped
+## raster as UInt32 -- terra's natural choice for positive-only map codes, and what this function did
+## before 0.0.70 -- aborts the run with "Raster band is not byte, short, int, float, double" the moment
+## Biomass Succession opens it, so the pixel type is part of the contract, not an implementation detail.
+## Note INT1U is UNSIGNED: GDAL calls it Byte, which is on the accepted list. INT1S is not a substitute
+## (GDAL 3.7+ writes it as Int8, which is not).
+test_that("the remapped raster uses a pixel type LANDIS-II can read", {
+  dir <- withr::local_tempdir()
+  comms <- list("1" = .coh("Pinu_con", 50L, 1), "2" = .coh("Popu_tre", 20L, 2))
+  s <- .mk_snapshot(dir, c(1L, 2L, 1L, 0L), comms, nrow_grid = 2)
+  res <- dedup_community_snapshot(s$csv, s$tif, quiet = TRUE)
+
+  expect_equal(res$datatype, "INT1U")
+  expect_match(terra::datatype(terra::rast(s$tif)), "^INT1U$")
+})
+
+test_that("pixel type widens with the code range, staying within the accepted set", {
+  dir <- withr::local_tempdir()
+  ## 300 distinct communities forces something wider than a byte; still well inside Int16.
+  comms <- stats::setNames(
+    lapply(seq_len(300L), function(i) .coh("Pinu_con", 50L, i)),
+    as.character(seq_len(300L))
+  )
+  s <- .mk_snapshot(dir, c(seq_len(300L), 0L, 0L, 0L, 0L), comms, nrow_grid = 8)
+  res <- dedup_community_snapshot(s$csv, s$tif, quiet = TRUE)
+
+  expect_equal(res$map_codes_after, 300L)
+  expect_equal(res$datatype, "INT2S")
+  expect_match(terra::datatype(terra::rast(s$tif)), "^INT2S$")
+})

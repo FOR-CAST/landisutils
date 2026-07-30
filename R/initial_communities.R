@@ -96,8 +96,10 @@ prepInitialCommunities <- function(cohortData, pixelGroupMap, path) {
     initialCommunitiesMap,
     initialCommunitiesMapFile,
     overwrite = TRUE,
-    # datatype = "INT2U", ## corresponds best to 65535 values; but LANDIS doesn't like it?
-    datatype = "INT2S", ## this works, but limits mapcodes to 32767
+    ## NOT INT2U, despite map codes being positive: LANDIS-II's GDAL reader takes only byte/short/int/
+    ## float/double, so the unsigned types abort the run at extension-init. landis_datatype() widens to
+    ## INT4S past 32767 rather than silently capping there.
+    datatype = landis_datatype(max(terra::minmax(initialCommunitiesMap)[2], 0)),
     NAflag = 0L
   )
 

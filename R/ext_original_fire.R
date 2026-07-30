@@ -288,8 +288,8 @@ prepInitialFireRegionsMap <- function(r, file = "fire-regions-map.tif") {
     r,
     file,
     overwrite = TRUE,
-    # datatype = "INT2U", ## corresponds best to 65535 values; but LANDIS doesn't like it?
-    datatype = "INT2S", ## this works, but limits mapcodes to 32767
+    ## NOT INT2U: LANDIS-II's GDAL reader rejects the unsigned types (see landis_datatype()).
+    datatype = landis_datatype(max(terra::minmax(r)[2], 0)),
     NAflag = 0L
   )
 

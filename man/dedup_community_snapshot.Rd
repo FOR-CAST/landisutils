@@ -21,12 +21,19 @@ A snapshot can also contain \strong{empty communities}: active cells whose map
 code has no CSV rows at all (no cohorts -- recently disturbed, or active but
 unforested). Biomass Succession emits these itself. They are active landscape,
 so they are collapsed to one shared code and left active rather than zeroed;
-the active-cell count is asserted unchanged before anything is written.}
+the active-cell count is asserted unchanged before anything is written.
+
+The rewritten raster is written with the smallest pixel type LANDIS-II accepts
+that holds the largest new code: \code{INT1U} (GDAL \code{Byte}), \code{INT2S} (\code{Int16}) or
+\code{INT4S} (\code{Int32}). Its GDAL reader takes only byte, short, int, float and
+double, so the unsigned 16- and 32-bit types are rejected -- as is \code{INT1S},
+which GDAL 3.7+ writes as \code{Int8}. The type is pinned rather than inferred.}
 }
 \value{
 Invisibly, a list with \code{csv}, \code{tif}, \code{map_codes_before},
 \code{map_codes_after}, \code{rows_before}, \code{rows_after}, \code{empty_code} (the shared
-empty-community code, \code{NA} if there were none) and \code{empty_cells}.
+empty-community code, \code{NA} if there were none), \code{empty_cells} and
+\code{datatype}.
 }
 \description{
 Biomass Succession writes its Output Biomass Community state with \strong{one map

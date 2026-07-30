@@ -48,10 +48,20 @@ failure, and a partial destination could be mistaken for a complete run.)
 If \code{run_dir} and \code{final_dir} already resolve to the same path (no scratch in
 use), this is a no-op that returns \code{final_dir} without copying or deleting.
 
-Requires the \code{rsync} executable on \code{PATH} (standard on Linux/macOS). A
-missing \code{rsync}, or repeated failures, raises an error after \code{max_tries}
-attempts so the run target fails loudly and the scratch copy is retained for
-inspection rather than silently lost.
+On Linux and macOS this requires the \code{rsync} executable on \code{PATH}. A missing
+\code{rsync}, or repeated failures, raises an error after \code{max_tries} attempts so
+the run target fails loudly and the scratch copy is retained for inspection
+rather than silently lost.
+
+On \strong{Windows} the staging copy is made with \code{\link[fs:dir_copy]{fs::dir_copy()}} instead.
+\code{rsync} parses \code{host:path}, so a drive-qualified path like \verb{C:/Users/...}
+reads as the remote host \code{C}; with both ends drive-qualified it refuses to
+run at all ("The source and destination cannot both be remote"). What \code{rsync}
+buys here -- resumable, fault-tolerant transfer over a network share -- is a
+property of the Linux/macOS scratch-to-NFS deployment this function was
+written for, so a plain recursive copy is the right substitute rather than a
+degraded one. Steps 2 and 3 (atomic publish, then delete scratch) are
+identical on every platform.
 }
 \seealso{
 \code{\link[=tar_landis]{tar_landis()}}, \code{\link[=landis_run_docker]{landis_run_docker()}}, \code{\link[=landis_replicate]{landis_replicate()}}

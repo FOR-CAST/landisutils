@@ -42,9 +42,16 @@ utils::globalVariables(c("MapCode", ".sig", ".new"))
 #' so they are collapsed to one shared code and left active rather than zeroed;
 #' the active-cell count is asserted unchanged before anything is written.
 #'
+#' The rewritten raster is written with the smallest pixel type LANDIS-II accepts
+#' that holds the largest new code: `INT1U` (GDAL `Byte`), `INT2S` (`Int16`) or
+#' `INT4S` (`Int32`). Its GDAL reader takes only byte, short, int, float and
+#' double, so the unsigned 16- and 32-bit types are rejected -- as is `INT1S`,
+#' which GDAL 3.7+ writes as `Int8`. The type is pinned rather than inferred.
+#'
 #' @return Invisibly, a list with `csv`, `tif`, `map_codes_before`,
 #'   `map_codes_after`, `rows_before`, `rows_after`, `empty_code` (the shared
-#'   empty-community code, `NA` if there were none) and `empty_cells`.
+#'   empty-community code, `NA` if there were none), `empty_cells` and
+#'   `datatype`.
 #'
 #' @family Dynamic Fire calibration helpers
 #' @export
@@ -146,9 +153,14 @@ dedup_community_snapshot <- function(csv, tif, out_csv = csv, out_tif = tif, qui
     )
   }
 
+  ## Pixel type: see landis_datatype(). Map codes are positive by construction, so an unsigned type is
+  ## the tempting choice and is exactly the wrong one -- LANDIS-II rejects it at extension-init time.
+  ## Biomass Succession itself writes the snapshot as Int32, so this stays within what it already emits.
+  datatype <- landis_datatype(max(c(out$MapCode, empty_code), na.rm = TRUE))
+
   size_before <- file.size(csv) ## capture BEFORE writing: out_csv defaults to csv
   data.table::fwrite(out, out_csv)
-  terra::writeRaster(r2, out_tif, datatype = "INT4U", overwrite = TRUE)
+  terra::writeRaster(r2, out_tif, datatype = datatype, overwrite = TRUE)
 
   if (!quiet) {
     message(sprintf(
@@ -183,6 +195,7 @@ dedup_community_snapshot <- function(csv, tif, out_csv = csv, out_tif = tif, qui
     rows_before = rows_before,
     rows_after = nrow(out),
     empty_code = empty_code,
-    empty_cells = if (is.na(empty_code)) 0 else n_empty
+    empty_cells = if (is.na(empty_code)) 0 else n_empty,
+    datatype = datatype
   ))
 }

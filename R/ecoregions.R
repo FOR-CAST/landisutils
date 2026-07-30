@@ -19,7 +19,14 @@ prepEcoregionsFiles <- function(ecoregion, ecoregionMap, path = NULL) {
   stopifnot(er_range[1] >= 0, er_range[2] <= 65535)
 
   ecoregionsMapFile <- file.path(path, "ecoregions.tif")
-  terra::writeRaster(ecoregionMap, ecoregionsMapFile, overwrite = TRUE) ## TODO: datatype = "INT2U"?
+  ## NOT INT2U, which the stopifnot() range above might otherwise suggest: LANDIS-II's GDAL reader takes
+  ## only byte/short/int/float/double and aborts on the unsigned types. See landis_datatype().
+  terra::writeRaster(
+    ecoregionMap,
+    ecoregionsMapFile,
+    overwrite = TRUE,
+    datatype = landis_datatype(er_range[2])
+  )
 
   ecoregionsTable <- as.data.frame(ecoregion) |>
     dplyr::rename(Active = active) |>

@@ -970,10 +970,20 @@ landis_run_docker <- function(
 #' If `run_dir` and `final_dir` already resolve to the same path (no scratch in
 #' use), this is a no-op that returns `final_dir` without copying or deleting.
 #'
-#' Requires the `rsync` executable on `PATH` (standard on Linux/macOS). A
-#' missing `rsync`, or repeated failures, raises an error after `max_tries`
-#' attempts so the run target fails loudly and the scratch copy is retained for
-#' inspection rather than silently lost.
+#' On Linux and macOS this requires the `rsync` executable on `PATH`. A missing
+#' `rsync`, or repeated failures, raises an error after `max_tries` attempts so
+#' the run target fails loudly and the scratch copy is retained for inspection
+#' rather than silently lost.
+#'
+#' On **Windows** the staging copy is made with [fs::dir_copy()] instead.
+#' `rsync` parses `host:path`, so a drive-qualified path like `C:/Users/...`
+#' reads as the remote host `C`; with both ends drive-qualified it refuses to
+#' run at all ("The source and destination cannot both be remote"). What `rsync`
+#' buys here -- resumable, fault-tolerant transfer over a network share -- is a
+#' property of the Linux/macOS scratch-to-NFS deployment this function was
+#' written for, so a plain recursive copy is the right substitute rather than a
+#' degraded one. Steps 2 and 3 (atomic publish, then delete scratch) are
+#' identical on every platform.
 #'
 #' @param run_dir Character. The completed replicate directory to move (source).
 #' @param final_dir Character. The destination directory (created if needed).
@@ -999,36 +1009,64 @@ landis_archive_rep <- function(run_dir, final_dir, max_tries = 5L, backoff_sec =
   ## filesystem so the publish step below is an atomic rename. Trailing "/" on
   ## the source copies its CONTENTS into the staging dir.
   staging <- paste0(final_dir, ".partial")
-  fs::dir_create(staging)
-  args <- c("-a", "--partial", paste0(run_real, "/"), paste0(staging, "/"))
-  status <- NA_integer_
-  last_err <- ""
-  for (i in seq_len(max_tries)) {
-    res <- tryCatch(
-      processx::run("rsync", args, error_on_status = FALSE, echo = FALSE),
-      error = function(e) list(status = 127L, stderr = conditionMessage(e))
-    )
-    status <- as.integer(res$status)
-    last_err <- res$stderr %||% ""
-    if (identical(status, 0L)) {
-      break
+  if (.Platform$OS.type == "windows") {
+    ## No rsync on Windows: it reads the "C:" drive prefix as a remote host, and with both ends
+    ## drive-qualified it refuses outright. dir_copy() requires the destination NOT to exist, or it
+    ## nests a subdirectory instead of copying the contents -- so drop any stale staging dir first.
+    ## (This forfeits --partial resume, which is exactly the property Windows was never relying on.)
+    if (fs::dir_exists(staging)) {
+      fs::dir_delete(staging)
     }
-    if (i < max_tries) {
-      Sys.sleep(backoff_sec * i)
-    }
-  }
-  if (!identical(status, 0L)) {
-    stop(
-      sprintf(
-        "rsync of completed replicate failed after %d attempt(s) (exit %s): %s -> %s\n%s",
-        max_tries,
-        status,
-        run_real,
-        staging,
-        last_err
-      ),
-      call. = FALSE
+    err <- tryCatch(
+      {
+        fs::dir_copy(run_real, staging)
+        NULL
+      },
+      error = function(e) conditionMessage(e)
     )
+    if (!is.null(err)) {
+      stop(
+        sprintf("copy of completed replicate failed: %s -> %s\n%s", run_real, staging, err),
+        call. = FALSE
+      )
+    }
+  } else {
+    fs::dir_create(staging)
+    args <- c("-a", "--partial", paste0(run_real, "/"), paste0(staging, "/"))
+    status <- NA_integer_
+    last_err <- ""
+    for (i in seq_len(max_tries)) {
+      res <- tryCatch(
+        processx::run("rsync", args, error_on_status = FALSE, echo = FALSE),
+        error = function(e) list(status = 127L, stderr = conditionMessage(e))
+      )
+      status <- as.integer(res$status)
+      last_err <- res$stderr %||% ""
+      if (identical(status, 0L)) {
+        break
+      }
+      ## exit 1 is rsync's "syntax or usage error" -- deterministic, so retrying only burns the
+      ## backoff (50s at the defaults) before failing with the same message.
+      if (identical(status, 1L)) {
+        break
+      }
+      if (i < max_tries) {
+        Sys.sleep(backoff_sec * i)
+      }
+    }
+    if (!identical(status, 0L)) {
+      stop(
+        sprintf(
+          "rsync of completed replicate failed after %d attempt(s) (exit %s): %s -> %s\n%s",
+          i,
+          status,
+          run_real,
+          staging,
+          last_err
+        ),
+        call. = FALSE
+      )
+    }
   }
   ## atomic publish: a verified, complete copy replaces any existing final_dir
   if (fs::dir_exists(final_dir)) {

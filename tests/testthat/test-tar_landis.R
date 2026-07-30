@@ -145,7 +145,13 @@ testthat::test_that(".docker_container_running() is FALSE (not an error) for an 
 })
 
 testthat::test_that("landis_archive_rep() moves a completed rep and deletes the scratch source", {
-  testthat::skip_if(unname(Sys.which("rsync")) == "", "rsync not available")
+  ## Windows takes the fs::dir_copy() path, so rsync is irrelevant there -- and REQUIRING it was how
+  ## this test came to run rsync against "C:/..." paths on the Windows runner, which rsync reads as a
+  ## remote host and rejects with "The source and destination cannot both be remote".
+  testthat::skip_if(
+    .Platform$OS.type != "windows" && unname(Sys.which("rsync")) == "",
+    "rsync not available"
+  )
   root <- withr::local_tempdir()
   src <- fs::dir_create(fs::path(root, "scratch", "rep01"))
   fs::dir_create(fs::path(src, "log"))
