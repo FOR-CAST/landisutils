@@ -466,6 +466,9 @@
   : Move a completed LANDIS-II replicate from scratch to its final
   location
 
+- [`landis_datatype()`](https://for-cast.github.io/landisutils/reference/landis_datatype.md)
+  : Pick a raster pixel type LANDIS-II can read
+
 - [`landis_find()`](https://for-cast.github.io/landisutils/reference/landis_find.md)
   : Find the LANDIS-II console for a local installation
 

@@ -1,5 +1,55 @@
 # Changelog
 
+## landisutils 0.0.70
+
+- [`dedup_community_snapshot()`](https://for-cast.github.io/landisutils/reference/dedup_community_snapshot.md)
+  now writes the remapped map-code raster with the smallest pixel type
+  LANDIS-II accepts that holds the largest new code – `INT1U` (GDAL
+  `Byte`), `INT2S` (`Int16`) or `INT4S` (`Int32`) – instead of `INT4U`.
+  LANDIS-II opens map rasters through
+  `Landis.RasterIO.Gdal.GdalInputRaster.NewInputBand`, which accepts
+  only Byte / Int16 / Int32 / Float32 / Float64 and aborts the run with
+  “Raster band is not byte, short, int, float, double” on anything else.
+  Map codes are positive by construction, so an unsigned type is the
+  natural choice and is exactly the wrong one – `UInt16` and `UInt32`
+  are both rejected, as is `Int8`: every deduplicated snapshot produced
+  by 0.0.68 and 0.0.69 is unreadable, failing in Biomass Succession’s
+  `InitializeSites()` seconds after startup. Biomass Succession itself
+  writes the snapshot as Int32, so the pair now round-trips through the
+  type LANDIS-II already emits. The chosen type is returned as
+  `datatype`.
+- [`landis_archive_rep()`](https://for-cast.github.io/landisutils/reference/landis_archive_rep.md)
+  now stages its copy with
+  [`fs::dir_copy()`](https://fs.r-lib.org/reference/copy.html) on
+  Windows instead of `rsync`. `rsync` parses `host:path`, so a
+  drive-qualified path such as `C:/Users/...` reads as the remote host
+  `C`, and with both source and destination drive-qualified it refuses
+  to run at all: `The source and destination cannot both be remote`
+  (exit 1). This failed the Windows leg of R-CMD-check while Linux and
+  macOS passed. The resumable, fault-tolerant transfer `rsync` provides
+  is a property of the Linux/macOS scratch-to-NFS deployment the
+  function was written for, so the substitution costs Windows nothing it
+  was using. Relatedly, the retry loop no longer retries exit status 1 –
+  `rsync`’s “syntax or usage error” is deterministic, so retrying only
+  burned the backoff (50 seconds at the defaults) before failing with
+  the same message, and the reported attempt count is now the number
+  actually made.
+- [`landis_datatype()`](https://for-cast.github.io/landisutils/reference/landis_datatype.md)
+  (new, exported) returns the smallest raster pixel type LANDIS-II can
+  actually read for a given maximum value. LANDIS-II opens maps through
+  a GDAL wrapper that accepts only `Byte`, `Int16`, `Int32`, `Float32`
+  and `Float64`, so the unsigned integer types are unusable even though
+  map codes are positive by construction – and nothing catches a bad
+  choice at write time, since the model only rejects the band when the
+  extension initialises.
+  [`prepInitialCommunities()`](https://for-cast.github.io/landisutils/reference/prepInitialCommunities.md),
+  [`prepInitialFireRegionsMap()`](https://for-cast.github.io/landisutils/reference/prepInitialFireRegionsMap.md)
+  and `prepEcoregions()` now derive the type from the data through this
+  helper instead of hard-coding `INT2S`, which silently capped map codes
+  at 32767. A static test scans the package sources so a future
+  `writeRaster()` call with a rejected type fails the suite rather than
+  a simulation.
+
 ## landisutils 0.0.69
 
 - [`run_calibration_spinup()`](https://for-cast.github.io/landisutils/reference/run_calibration_spinup.md)

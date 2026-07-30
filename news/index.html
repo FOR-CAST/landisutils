@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.69</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.70</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -40,6 +40,15 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.70" id="landisutils-0070">landisutils 0.0.70<a class="anchor" aria-label="anchor" href="#landisutils-0070"></a></h2>
+<ul><li>
+<code><a href="../reference/dedup_community_snapshot.html">dedup_community_snapshot()</a></code> now writes the remapped map-code raster with the smallest pixel type LANDIS-II accepts that holds the largest new code – <code>INT1U</code> (GDAL <code>Byte</code>), <code>INT2S</code> (<code>Int16</code>) or <code>INT4S</code> (<code>Int32</code>) – instead of <code>INT4U</code>. LANDIS-II opens map rasters through <code>Landis.RasterIO.Gdal.GdalInputRaster.NewInputBand</code>, which accepts only Byte / Int16 / Int32 / Float32 / Float64 and aborts the run with “Raster band is not byte, short, int, float, double” on anything else. Map codes are positive by construction, so an unsigned type is the natural choice and is exactly the wrong one – <code>UInt16</code> and <code>UInt32</code> are both rejected, as is <code>Int8</code>: every deduplicated snapshot produced by 0.0.68 and 0.0.69 is unreadable, failing in Biomass Succession’s <code>InitializeSites()</code> seconds after startup. Biomass Succession itself writes the snapshot as Int32, so the pair now round-trips through the type LANDIS-II already emits. The chosen type is returned as <code>datatype</code>.</li>
+<li>
+<code><a href="../reference/landis_archive_rep.html">landis_archive_rep()</a></code> now stages its copy with <code><a href="https://fs.r-lib.org/reference/copy.html" class="external-link">fs::dir_copy()</a></code> on Windows instead of <code>rsync</code>. <code>rsync</code> parses <code>host:path</code>, so a drive-qualified path such as <code>C:/Users/...</code> reads as the remote host <code>C</code>, and with both source and destination drive-qualified it refuses to run at all: <code>The source and destination cannot both be remote</code> (exit 1). This failed the Windows leg of R-CMD-check while Linux and macOS passed. The resumable, fault-tolerant transfer <code>rsync</code> provides is a property of the Linux/macOS scratch-to-NFS deployment the function was written for, so the substitution costs Windows nothing it was using. Relatedly, the retry loop no longer retries exit status 1 – <code>rsync</code>’s “syntax or usage error” is deterministic, so retrying only burned the backoff (50 seconds at the defaults) before failing with the same message, and the reported attempt count is now the number actually made.</li>
+<li>
+<code><a href="../reference/landis_datatype.html">landis_datatype()</a></code> (new, exported) returns the smallest raster pixel type LANDIS-II can actually read for a given maximum value. LANDIS-II opens maps through a GDAL wrapper that accepts only <code>Byte</code>, <code>Int16</code>, <code>Int32</code>, <code>Float32</code> and <code>Float64</code>, so the unsigned integer types are unusable even though map codes are positive by construction – and nothing catches a bad choice at write time, since the model only rejects the band when the extension initialises. <code><a href="../reference/prepInitialCommunities.html">prepInitialCommunities()</a></code>, <code><a href="../reference/prepInitialFireRegionsMap.html">prepInitialFireRegionsMap()</a></code> and <code>prepEcoregions()</code> now derive the type from the data through this helper instead of hard-coding <code>INT2S</code>, which silently capped map codes at 32767. A static test scans the package sources so a future <code>writeRaster()</code> call with a rejected type fails the suite rather than a simulation.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.69" id="landisutils-0069">landisutils 0.0.69<a class="anchor" aria-label="anchor" href="#landisutils-0069"></a></h2>
 <ul><li>

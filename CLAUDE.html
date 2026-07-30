@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.69</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.70</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -125,6 +125,8 @@
 <strong>Spelling</strong>: the <code>spelling</code> package is used (see <a href="tests/spelling.R">tests/spelling.R</a>); add new domain terms to <a href="inst/WORDLIST">inst/WORDLIST</a> rather than suppressing the check.</li>
 <li>
 <strong>Extension test references</strong>: every <code>ext_*.R</code> extension must have a corresponding <code>tests/testthat/test-ext_*.R</code> file whose reference values come from the upstream LANDIS-II repo’s Core8 (v8) test input — i.e. its <code>testings/Core8-*</code> (or <code>testing/Core8-*</code>) directory on GitHub. Cite the specific path and URL in a <code>## NOTE:</code> comment at the top of the test, and prefer values copied verbatim from that input over made-up examples. PnET-Succession is the exception: it has no <code>testings/</code> directory upstream, so its test references <code>deploy/examples/biomass-Pnet-succession-example-v8</code> instead.</li>
+<li>
+<strong>Raster pixel types LANDIS-II can read</strong>: LANDIS-II opens every map through <code>Landis.RasterIO.Gdal.GdalInputRaster.NewInputBand</code>, which accepts <strong>only GDAL <code>Byte</code>, <code>Int16</code>, <code>Int32</code>, <code>Float32</code> and <code>Float64</code></strong> — in terra terms <code>INT1U</code>, <code>INT2S</code>, <code>INT4S</code>, <code>FLT4S</code>, <code>FLT8S</code>. Anything else aborts the run with <code>Raster band is not byte, short, int, float, double</code>. The rejected types are exactly the tempting ones: map codes, ecoregion codes and fire-region codes are all positive by construction, so <code>INT2U</code> / <code>INT4U</code> look like the natural fit and cover the same range in the same number of bytes. <code>INT1S</code> is out too — GDAL 3.7+ writes it as <code>Int8</code>, which is not <code>Byte</code>. Never hand-pick a <code>datatype</code> for a LANDIS-II map; call <strong><code>landis_datatype(max_value)</code></strong> (<a href="R/landis_datatype.R">R/landis_datatype.R</a>), which returns the smallest acceptable type. This failure is nasty to diagnose: nothing rejects the file at write time, the model dies a few seconds into extension initialisation, and the R-side runner reports only a non-zero exit with <em>empty</em> stderr — the real message is in <code>Landis-log.txt</code> in the run directory. <code>tests/testthat/test-landis_datatype.R</code> carries a static guard that scans <code>R/</code> for <code>datatype = "..."</code> literals outside the accepted set, so a bad type fails the suite instead of a simulation.</li>
 <li>
 <strong>Config-syntax claims</strong>: when a PDF user guide and the extension’s <code>src/</code> parser (e.g. <code>*Parser.cs</code>, <code>MapFileNames.cs</code>) or its <code>Core8-*</code> test inputs disagree about a placeholder/keyword/parameter name, trust the parser + Core8 — the PDFs are sometimes stale (e.g. the <code>Extension-Output-Wildlife-Habitat</code> v3 PDF documents <code>{wildlife-name}</code> but the parser and Core8 input both use <code>{wildlifeName}</code>).</li>
 <li>

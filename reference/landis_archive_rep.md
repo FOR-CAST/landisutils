@@ -60,10 +60,22 @@ If `run_dir` and `final_dir` already resolve to the same path (no
 scratch in use), this is a no-op that returns `final_dir` without
 copying or deleting.
 
-Requires the `rsync` executable on `PATH` (standard on Linux/macOS). A
+On Linux and macOS this requires the `rsync` executable on `PATH`. A
 missing `rsync`, or repeated failures, raises an error after `max_tries`
 attempts so the run target fails loudly and the scratch copy is retained
 for inspection rather than silently lost.
+
+On **Windows** the staging copy is made with
+[`fs::dir_copy()`](https://fs.r-lib.org/reference/copy.html) instead.
+`rsync` parses `host:path`, so a drive-qualified path like
+`C:/Users/...` reads as the remote host `C`; with both ends
+drive-qualified it refuses to run at all ("The source and destination
+cannot both be remote"). What `rsync` buys here – resumable,
+fault-tolerant transfer over a network share – is a property of the
+Linux/macOS scratch-to-NFS deployment this function was written for, so
+a plain recursive copy is the right substitute rather than a degraded
+one. Steps 2 and 3 (atomic publish, then delete scratch) are identical
+on every platform.
 
 ## See also
 

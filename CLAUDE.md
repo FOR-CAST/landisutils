@@ -216,6 +216,27 @@ one of those omission categories.
   over made-up examples. PnET-Succession is the exception: it has no
   `testings/` directory upstream, so its test references
   `deploy/examples/biomass-Pnet-succession-example-v8` instead.
+- **Raster pixel types LANDIS-II can read**: LANDIS-II opens every map
+  through `Landis.RasterIO.Gdal.GdalInputRaster.NewInputBand`, which
+  accepts **only GDAL `Byte`, `Int16`, `Int32`, `Float32` and
+  `Float64`** — in terra terms `INT1U`, `INT2S`, `INT4S`, `FLT4S`,
+  `FLT8S`. Anything else aborts the run with
+  `Raster band is not byte, short, int, float, double`. The rejected
+  types are exactly the tempting ones: map codes, ecoregion codes and
+  fire-region codes are all positive by construction, so `INT2U` /
+  `INT4U` look like the natural fit and cover the same range in the same
+  number of bytes. `INT1S` is out too — GDAL 3.7+ writes it as `Int8`,
+  which is not `Byte`. Never hand-pick a `datatype` for a LANDIS-II map;
+  call **`landis_datatype(max_value)`**
+  ([R/landis_datatype.R](https://for-cast.github.io/landisutils/R/landis_datatype.R)),
+  which returns the smallest acceptable type. This failure is nasty to
+  diagnose: nothing rejects the file at write time, the model dies a few
+  seconds into extension initialisation, and the R-side runner reports
+  only a non-zero exit with *empty* stderr — the real message is in
+  `Landis-log.txt` in the run directory.
+  `tests/testthat/test-landis_datatype.R` carries a static guard that
+  scans `R/` for `datatype = "..."` literals outside the accepted set,
+  so a bad type fails the suite instead of a simulation.
 - **Config-syntax claims**: when a PDF user guide and the extension’s
   `src/` parser (e.g. `*Parser.cs`, `MapFileNames.cs`) or its `Core8-*`
   test inputs disagree about a placeholder/keyword/parameter name, trust

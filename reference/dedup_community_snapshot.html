@@ -17,7 +17,7 @@ the CSV."><meta property="og:image" content="https://for-cast.github.io/landisut
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.69</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.70</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -89,14 +89,20 @@ the CSV.</p>
 code has no CSV rows at all (no cohorts – recently disturbed, or active but
 unforested). Biomass Succession emits these itself. They are active landscape,
 so they are collapsed to one shared code and left active rather than zeroed;
-the active-cell count is asserted unchanged before anything is written.</p></dd>
+the active-cell count is asserted unchanged before anything is written.</p>
+<p>The rewritten raster is written with the smallest pixel type LANDIS-II accepts
+that holds the largest new code: <code>INT1U</code> (GDAL <code>Byte</code>), <code>INT2S</code> (<code>Int16</code>) or
+<code>INT4S</code> (<code>Int32</code>). Its GDAL reader takes only byte, short, int, float and
+double, so the unsigned 16- and 32-bit types are rejected – as is <code>INT1S</code>,
+which GDAL 3.7+ writes as <code>Int8</code>. The type is pinned rather than inferred.</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>Invisibly, a list with <code>csv</code>, <code>tif</code>, <code>map_codes_before</code>,
 <code>map_codes_after</code>, <code>rows_before</code>, <code>rows_after</code>, <code>empty_code</code> (the shared
-empty-community code, <code>NA</code> if there were none) and <code>empty_cells</code>.</p>
+empty-community code, <code>NA</code> if there were none), <code>empty_cells</code> and
+<code>datatype</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
