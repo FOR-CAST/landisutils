@@ -1,5 +1,22 @@
 # Changelog
 
+## landisutils 0.0.67
+
+- [`calibrate_dynamic_fire()`](https://for-cast.github.io/landisutils/reference/calibrate_dynamic_fire.md)
+  no longer over-subscribes host RAM when sizing the warm Docker pool.
+  The cap divided the RAM budget by `cfg$mem_per_worker_gb` (the
+  *estimate*), while each container was granted `--memory` of 1.25x that
+  estimate as headroom – so the admitted pool could exceed physical RAM
+  by 25%. On a 1007 GiB node with a 2.98M-cell landscape the cap
+  admitted 27 containers at a 38 GiB grant each: 1026 GiB. The cap now
+  divides by the granted per-container limit, so the invariant
+  `n_containers * mem_limit <= mem_fraction * available` holds by
+  construction (22 containers, 836 GiB, in that case). The same value is
+  passed to
+  [`landis_pool_start()`](https://for-cast.github.io/landisutils/reference/landis_pool_start.md),
+  so the figure the pool is capped against and the figure each container
+  is granted cannot drift apart.
+
 ## landisutils 0.0.66
 
 - [`run_calibration_validation()`](https://for-cast.github.io/landisutils/reference/run_calibration_validation.md)

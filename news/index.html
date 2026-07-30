@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.66</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.67</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -40,6 +40,11 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.67" id="landisutils-0067">landisutils 0.0.67<a class="anchor" aria-label="anchor" href="#landisutils-0067"></a></h2>
+<ul><li>
+<code><a href="../reference/calibrate_dynamic_fire.html">calibrate_dynamic_fire()</a></code> no longer over-subscribes host RAM when sizing the warm Docker pool. The cap divided the RAM budget by <code>cfg$mem_per_worker_gb</code> (the <em>estimate</em>), while each container was granted <code>--memory</code> of 1.25x that estimate as headroom – so the admitted pool could exceed physical RAM by 25%. On a 1007 GiB node with a 2.98M-cell landscape the cap admitted 27 containers at a 38 GiB grant each: 1026 GiB. The cap now divides by the granted per-container limit, so the invariant <code>n_containers * mem_limit &lt;= mem_fraction * available</code> holds by construction (22 containers, 836 GiB, in that case). The same value is passed to <code><a href="../reference/landis_pool_start.html">landis_pool_start()</a></code>, so the figure the pool is capped against and the figure each container is granted cannot drift apart.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.66" id="landisutils-0066">landisutils 0.0.66<a class="anchor" aria-label="anchor" href="#landisutils-0066"></a></h2>
 <ul><li>
