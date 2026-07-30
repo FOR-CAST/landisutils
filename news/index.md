@@ -1,5 +1,27 @@
 # Changelog
 
+## landisutils 0.0.68
+
+- [`dedup_community_snapshot()`](https://for-cast.github.io/landisutils/reference/dedup_community_snapshot.md)
+  (new, exported) collapses duplicate communities in an Output Biomass
+  Community snapshot and remaps the map-code raster to match. Biomass
+  Succession writes its state with one map code per PIXEL and never
+  re-collapses cells whose cohort lists ended up identical, so a large
+  landscape’s snapshot is overwhelmingly duplicate rows. That matters
+  because LANDIS-II reads initial communities back through a parser that
+  builds a `System.Dynamic.ExpandoObject` per row, at a memory cost many
+  times the file size: a big enough snapshot exhausts the container’s
+  `--memory` and aborts with `System.OutOfMemoryException` inside
+  `ReadCSVInputFile` before the simulation starts. Measured on a
+  2.98M-active-cell landscape: 2,684,154 map codes carrying only 4,153
+  distinct communities, a 1,472 MB CSV. Communities are compared exactly
+  on all cohort columns after canonical ordering, so cohort ORDER does
+  not prevent collapsing and no two cells that genuinely differ are ever
+  merged; every pixel still resolves to precisely the cohort list it had
+  before. The rewritten pair is verified before writing – every map code
+  left in the raster must exist in the CSV, or the call errors rather
+  than emitting a pair LANDIS-II would reject with “Unknown map code”.
+
 ## landisutils 0.0.67
 
 - [`calibrate_dynamic_fire()`](https://for-cast.github.io/landisutils/reference/calibrate_dynamic_fire.md)

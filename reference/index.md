@@ -177,6 +177,10 @@
 - [`create_locations_df()`](https://for-cast.github.io/landisutils/reference/create_locations_df.md)
   : Build batched point-location table from a study area
 
+- [`dedup_community_snapshot()`](https://for-cast.github.io/landisutils/reference/dedup_community_snapshot.md)
+  : Collapse duplicate communities in an Output Biomass Community
+  snapshot
+
 - [`defaultDGSDammMcNIPParameters()`](https://for-cast.github.io/landisutils/reference/defaultDGSDammMcNIPParameters.md)
   : Default DGS Succession DAMM-McNiP scalar parameters
 

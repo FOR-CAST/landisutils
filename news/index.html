@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.67</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.68</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -40,6 +40,11 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.68" id="landisutils-0068">landisutils 0.0.68<a class="anchor" aria-label="anchor" href="#landisutils-0068"></a></h2>
+<ul><li>
+<code><a href="../reference/dedup_community_snapshot.html">dedup_community_snapshot()</a></code> (new, exported) collapses duplicate communities in an Output Biomass Community snapshot and remaps the map-code raster to match. Biomass Succession writes its state with one map code per PIXEL and never re-collapses cells whose cohort lists ended up identical, so a large landscape’s snapshot is overwhelmingly duplicate rows. That matters because LANDIS-II reads initial communities back through a parser that builds a <code>System.Dynamic.ExpandoObject</code> per row, at a memory cost many times the file size: a big enough snapshot exhausts the container’s <code>--memory</code> and aborts with <code>System.OutOfMemoryException</code> inside <code>ReadCSVInputFile</code> before the simulation starts. Measured on a 2.98M-active-cell landscape: 2,684,154 map codes carrying only 4,153 distinct communities, a 1,472 MB CSV. Communities are compared exactly on all cohort columns after canonical ordering, so cohort ORDER does not prevent collapsing and no two cells that genuinely differ are ever merged; every pixel still resolves to precisely the cohort list it had before. The rewritten pair is verified before writing – every map code left in the raster must exist in the CSV, or the call errors rather than emitting a pair LANDIS-II would reject with “Unknown map code”.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.67" id="landisutils-0067">landisutils 0.0.67<a class="anchor" aria-label="anchor" href="#landisutils-0067"></a></h2>
 <ul><li>
