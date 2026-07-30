@@ -1,6 +1,6 @@
 Package: landisutils
 Title: Utilities for running LANDIS-II simulations
-Version: 0.0.67
+Version: 0.0.68
 Authors@R: 
     person(c("Alex", "M"), "Chubaty", , "achubaty@for-cast.ca", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0001-7146-8135"))
@@ -87,6 +87,7 @@ Collate:
     'climate_monthly_biosim.R'
     'climate_monthly_climr.R'
     'climate_monthly_terraclim.R'
+    'community_dedup.R'
     'data.R'
     'ecoregions.R'
     'ext_utils.R'

@@ -21,3 +21,7 @@ tests/testthat/testthat-problems.rds
 J4RTmpFile
 nohup.out
 TODO.md
+
+## R CMD build / check artifacts
+*.tar.gz
+*.Rcheck/
