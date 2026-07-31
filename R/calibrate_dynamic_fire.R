@@ -2233,6 +2233,22 @@ sim_mock <- function(
 #'     \item{simulator}{`"landis"` (default), `"r_reimpl"`, or `"mock"`.}
 #'     \item{method}{`"docker"` (default) or `"local"`.}
 #'     \item{image, cpu_limit, mem_limit, pull}{Pool settings (Docker only).}
+#'     \item{nodes}{Optional named vector of workers per host, e.g.
+#'       `c(host1 = 30, host2 = 30)`, spreading the search across machines via a
+#'       PSOCK cluster. Each worker runs its own single container on its own
+#'       host. Per-host counts are capped against that host's available RAM and
+#'       the total is trimmed to `NP` (workers beyond `NP` never receive a task
+#'       but still hold a container). Requires the `parallelly` package, the
+#'       Docker image on every host, and -- under renv -- the project at the same
+#'       path everywhere. Unset (default) uses a local FORK cluster and one
+#'       shared pool, which is unchanged. Note the workload is
+#'       memory-bandwidth-bound, so one host saturates well before its cores are
+#'       busy; spreading a fixed `NP` over more hosts therefore helps more than
+#'       the host count suggests, because each host also returns to its
+#'       unsaturated regime.}
+#'     \item{rscript}{Path to `Rscript` on the worker hosts. Defaults to the
+#'       coordinator's own (`file.path(R.home("bin"), "Rscript")`), which keeps
+#'       the workers on a matching R version.}
 #'     \item{checkpoint_every}{Optional integer >= 1. When set, run the search in
 #'       blocks of this many generations and persist a resumable checkpoint to
 #'       `out_dir` between blocks (see Details). `NULL` (default) = single
@@ -2375,10 +2391,43 @@ calibrate_dynamic_fire <- function(observed_targets_path, scenario_template, cfg
   }
   use_parallel <- isTRUE(cfg$parallel %||% TRUE) && n_cores > 1L
 
+  ## ---- multi-node (PSOCK) path ---------------------------------------------------------------
+  ## cfg$nodes = c(host1 = n1, host2 = n2, ...) spreads the search across machines. Each worker owns
+  ## a single container on its own host, so no shared pool and no cross-host container index exist.
+  ## Unset (the default) leaves the single-node FORK path below untouched.
+  multi <- NULL
+  pool <- NULL
+  cl <- NULL
+  if (!is.null(cfg$nodes) && use_parallel) {
+    needs_docker <- simulator_name == "landis" && method == "docker"
+    multi <- .start_calibration_cluster(
+      nodes = cfg$nodes,
+      ## DEoptim dispatches exactly NP tasks per generation; workers beyond that idle while holding
+      ## a container, so cap the fleet at NP.
+      ## NB: must read cfg$NP, not control_args$NP -- control_args is not built until further down.
+      ## Mirror its default (60L) so the cap matches what DEoptim will actually dispatch.
+      max_workers = as.integer(cfg$NP %||% 60L),
+      image = cfg$image,
+      scratch_root = scratch_root,
+      cpu_limit = cfg$cpu_limit %||% 2,
+      mem_limit = mem_limit,
+      mem_fraction = cfg$mem_fraction %||% 0.85,
+      pull = isTRUE(cfg$pull %||% FALSE),
+      name_prefix = paste0("landis-cal-", Sys.getpid()),
+      rscript = cfg$rscript %||% file.path(R.home("bin"), "Rscript"),
+      start_pools = needs_docker
+    )
+  }
+  if (!is.null(multi)) {
+    cl <- multi$cl
+    n_cores <- multi$total
+    ## Pools live on the workers, so they must be stopped through the cluster and BEFORE it.
+    on.exit(.stop_calibration_cluster(multi), add = TRUE, after = FALSE)
+  }
+
   ## Pool lifecycle: only LANDIS-II Docker + parallel needs a pool. Mock /
   ## r_reimpl / local-method runs don't touch Docker.
-  pool <- NULL
-  if (simulator_name == "landis" && method == "docker" && use_parallel) {
+  if (is.null(multi) && simulator_name == "landis" && method == "docker" && use_parallel) {
     pool <- landis_pool_start(
       n = n_cores,
       image = cfg$image,
@@ -2396,9 +2445,9 @@ calibrate_dynamic_fire <- function(observed_targets_path, scenario_template, cfg
     on.exit(landis_pool_stop(pool), add = TRUE)
   }
 
-  ## FORK cluster -- workers inherit the parent's environment including `pool`.
-  cl <- NULL
-  if (use_parallel && .Platform$OS.type != "windows") {
+  ## FORK cluster -- workers inherit the parent's environment including `pool`. Skipped entirely when
+  ## a multi-node PSOCK cluster is already up.
+  if (is.null(multi) && use_parallel && .Platform$OS.type != "windows") {
     cl <- parallel::makeCluster(n_cores, type = "FORK")
     on.exit(parallel::stopCluster(cl), add = TRUE, after = FALSE)
     if (!is.null(pool)) {
@@ -2464,11 +2513,10 @@ calibrate_dynamic_fire <- function(observed_targets_path, scenario_template, cfg
         return(cached)
       }
     }
-    pool_idx <- if (!is.null(pool)) {
-      as.integer(Sys.getenv("LANDIS_POOL_CONTAINER_IDX", "1"))
-    } else {
-      NULL
-    }
+    ## On a PSOCK worker this returns that worker's OWN single-container pool (idx 1); on a FORK child
+    ## or the coordinator it falls through to the shared pool + LANDIS_POOL_CONTAINER_IDX. Either way
+    ## `landis_pool_exec()` ends up naming a container on the machine it is executing on.
+    .pi <- .resolve_pool(pool)
     reps <- lapply(seq_len(n_reps), function(i) {
       simulator(
         par_vec = par_vec,
@@ -2476,8 +2524,8 @@ calibrate_dynamic_fire <- function(observed_targets_path, scenario_template, cfg
         paths = paths,
         sim_years = sim_years,
         base_seed = base_seed + i,
-        pool = pool,
-        pool_idx = pool_idx,
+        pool = .pi$pool,
+        pool_idx = .pi$idx,
         method = method
       )
     })
@@ -2606,7 +2654,16 @@ calibrate_dynamic_fire <- function(observed_targets_path, scenario_template, cfg
   eval_fp = NA_character_
 ) {
   pid <- Sys.getpid()
-  f <- fs::path(dir, sprintf("worker_%d.csv", pid))
+  ## Key the sidecar by HOST + pid, not pid alone. `dir` is on shared storage (the caller passes the
+  ## NFS out_dir), and PIDs are unique per host only -- once workers span nodes, two of them can hold
+  ## the same pid and append interleaved rows to one file, corrupting both the trace and the
+  ## memoization cache built from it. The host segment is sanitised because it lands in a filename.
+  host <- tryCatch(as.character(Sys.info()[["nodename"]]), error = function(e) "")
+  if (!length(host) || is.na(host) || !nzchar(host)) {
+    host <- "localhost"
+  }
+  host <- gsub("[^A-Za-z0-9]+", "-", host)
+  f <- fs::path(dir, sprintf("worker_%s_%d.csv", host, pid))
   comp_names <- names(components)
   weight_vals <- as.numeric(weights[comp_names])
   weighted <- as.numeric(components) * weight_vals
@@ -2762,7 +2819,10 @@ calibrate_dynamic_fire <- function(observed_targets_path, scenario_template, cfg
       out_dir,
       recurse = TRUE,
       type = "file",
-      regexp = "worker_[0-9]+\\.csv$",
+      ## Matches BOTH the legacy `worker_<pid>.csv` and the host-qualified
+      ## `worker_<host>_<pid>.csv` written since multi-node support, so a resumed run still folds
+      ## sidecars written by an older version into its cache.
+      regexp = "worker_.*[0-9]+\\.csv$",
       fail = FALSE
     ),
     fs::dir_ls(

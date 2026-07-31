@@ -29,6 +29,22 @@ Pass \code{cfg$steptol = NULL} to fall back to the upstream DEoptim default
 \item{simulator}{\code{"landis"} (default), \code{"r_reimpl"}, or \code{"mock"}.}
 \item{method}{\code{"docker"} (default) or \code{"local"}.}
 \item{image, cpu_limit, mem_limit, pull}{Pool settings (Docker only).}
+\item{nodes}{Optional named vector of workers per host, e.g.
+\code{c(host1 = 30, host2 = 30)}, spreading the search across machines via a
+PSOCK cluster. Each worker runs its own single container on its own
+host. Per-host counts are capped against that host's available RAM and
+the total is trimmed to \code{NP} (workers beyond \code{NP} never receive a task
+but still hold a container). Requires the \code{parallelly} package, the
+Docker image on every host, and -- under renv -- the project at the same
+path everywhere. Unset (default) uses a local FORK cluster and one
+shared pool, which is unchanged. Note the workload is
+memory-bandwidth-bound, so one host saturates well before its cores are
+busy; spreading a fixed \code{NP} over more hosts therefore helps more than
+the host count suggests, because each host also returns to its
+unsaturated regime.}
+\item{rscript}{Path to \code{Rscript} on the worker hosts. Defaults to the
+coordinator's own (\code{file.path(R.home("bin"), "Rscript")}), which keeps
+the workers on a matching R version.}
 \item{checkpoint_every}{Optional integer >= 1. When set, run the search in
 blocks of this many generations and persist a resumable checkpoint to
 \code{out_dir} between blocks (see Details). \code{NULL} (default) = single
