@@ -2470,12 +2470,13 @@ calibrate_dynamic_fire <- function(observed_targets_path, scenario_template, cfg
 
   ## Loss-config fingerprint: hashes everything BESIDES the parameter vector that
   ## determines objfn's return value (weights, per-trial sim settings, observed
-  ## targets, Docker image). Stamped into every trial-trace row and the checkpoint
-  ## so a reused out_dir seeds the memoization cache / resumes the population ONLY
-  ## from evaluations produced under the identical loss config -- change any of
-  ## these and the stale state self-invalidates instead of poisoning the new run's
-  ## objective. (The narrower population fingerprint in .run_deoptim_checkpointed()
-  ## additionally guards the population geometry: par names + bounds + NP.)
+  ## targets, Docker image, and the scenario template's contents). Stamped into
+  ## every trial-trace row and the checkpoint so a reused out_dir seeds the
+  ## memoization cache / resumes the population ONLY from evaluations produced
+  ## under the identical loss config -- change any of these and the stale state
+  ## self-invalidates instead of poisoning the new run's objective. (The narrower
+  ## population fingerprint in .run_deoptim_checkpointed() additionally guards the
+  ## population geometry: par names + bounds + NP.)
   eval_fp <- .eval_fingerprint(
     par_names = par_names,
     weights = weights,
@@ -2485,7 +2486,8 @@ calibrate_dynamic_fire <- function(observed_targets_path, scenario_template, cfg
     simulator_name = simulator_name,
     method = method,
     image = cfg$image %||% getOption("landisutils.docker.image"),
-    observed = observed
+    observed = observed,
+    template_digest = .scenario_template_digest(scenario_template)
   )
 
   ## Memoization cache (strategy #2; only when checkpointing). Keyed by a stable
@@ -2741,19 +2743,53 @@ calibrate_dynamic_fire <- function(observed_targets_path, scenario_template, cfg
   digest::digest(.fmt_par(par_vec), algo = "xxhash64")
 }
 
+## Internal: content digest of a calibration scenario template directory. Hashes each file's name
+## and contents (sorted, so directory-listing order cannot perturb it), giving one value that changes
+## whenever ANY simulated input changes. NULL / a missing directory digests to NULL, which keeps the
+## mock and non-Docker simulators -- which have no template -- working unchanged.
+##
+## Content, not mtime: `build_calibration_scenario_template()` rewrites the whole directory on every
+## build, so mtimes change even when nothing simulated does, and a timestamp-based digest would
+## discard a valid cache on every rebuild.
+.scenario_template_digest <- function(scenario_template) {
+  if (is.null(scenario_template) || !fs::dir_exists(scenario_template)) {
+    return(NULL)
+  }
+  files <- sort(as.character(fs::dir_ls(scenario_template, type = "file")))
+  if (!length(files)) {
+    return(NULL)
+  }
+  digest::digest(
+    list(
+      names = basename(files),
+      ## unname(): vapply carries `files` (ABSOLUTE paths) through as names, and digest() hashes
+      ## names as well as values -- so without this, two byte-identical templates staged under
+      ## different directories digest differently and every rebuild discards a valid cache.
+      contents = unname(vapply(
+        files,
+        digest::digest,
+        character(1L),
+        file = TRUE,
+        algo = "xxhash64"
+      ))
+    ),
+    algo = "xxhash64"
+  )
+}
+
 ## Loss-config fingerprint: a stable hash of everything BESIDES the parameter
 ## vector that determines objfn's return value for a given par_vec -- the loss
 ## `weights`, the per-trial sim settings (`n_reps`, `sim_years`, `base_seed`,
-## `simulator`, `method`, Docker `image`), the `observed` targets, and the
-## parameter ordering. Written into each trial-trace row and the checkpoint so a
-## resumed run / seeded memoization cache reuses ONLY evaluations produced under
-## the identical loss config: change any input and the stale cache is silently
-## dropped instead of poisoning the new run's objective (so the caller need not
-## clear out_dir on a config change). Weights are name-sorted so input order does
-## not perturb the hash. DEoptim search knobs (NP, bounds, strategy, core count)
-## are deliberately excluded -- they steer the search but do not change the loss
-## VALUE at a given par_vec; population geometry is guarded separately by the
-## checkpoint's `fingerprint`.
+## `simulator`, `method`, Docker `image`), the `observed` targets, the scenario
+## template's contents, and the parameter ordering. Written into each trial-trace
+## row and the checkpoint so a resumed run / seeded memoization cache reuses ONLY
+## evaluations produced under the identical loss config: change any input and the
+## stale cache is silently dropped instead of poisoning the new run's objective
+## (so the caller need not clear out_dir on a config change). Weights are
+## name-sorted so input order does not perturb the hash. DEoptim search knobs (NP,
+## bounds, strategy, core count) are deliberately excluded -- they steer the search
+## but do not change the loss VALUE at a given par_vec; population geometry is
+## guarded separately by the checkpoint's `fingerprint`.
 .eval_fingerprint <- function(
   par_names,
   weights,
@@ -2763,7 +2799,8 @@ calibrate_dynamic_fire <- function(observed_targets_path, scenario_template, cfg
   simulator_name,
   method,
   image,
-  observed
+  observed,
+  template_digest = NULL
 ) {
   digest::digest(
     list(
@@ -2775,7 +2812,14 @@ calibrate_dynamic_fire <- function(observed_targets_path, scenario_template, cfg
       simulator = simulator_name,
       method = method,
       image = image,
-      observed = observed
+      observed = observed,
+      ## The scenario template is the largest determinant of a trial's loss and was absent here until
+      ## 0.0.75. `sim_years` above does NOT stand in for it: that value is informational (sim_landis()
+      ## documents the run Duration as coming from the template's scenario.txt), so a template rebuilt
+      ## at a different Duration hashed IDENTICALLY to the old one and its losses were served straight
+      ## out of the memoization cache. Initial communities, ecoregions, the weather database, the fuel
+      ## and fire tables and the landscape extent were all equally invisible.
+      template = template_digest
     ),
     algo = "xxhash64"
   )

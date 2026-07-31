@@ -1854,10 +1854,55 @@ test_that(".eval_fingerprint changes iff a loss-affecting input changes", {
     within(base, base_seed <- 999L),
     within(base, image <- "img:v2"),
     within(base, method <- "local"),
-    within(base, observed$primary$lambda_obs <- 9.1)
+    within(base, observed$primary$lambda_obs <- 9.1),
+    within(base, template_digest <- "some-other-template")
   )) {
     expect_false(fp(mut) == fp0)
   }
+})
+
+test_that(".scenario_template_digest() tracks file CONTENTS, not names or mtimes", {
+  ## One root for the whole test, so every staged template outlives the digest call that reads it.
+  root <- withr::local_tempdir()
+  n <- 0L
+  mk <- function(duration, extra = NULL) {
+    n <<- n + 1L
+    d <- fs::dir_create(fs::path(root, paste0("tmpl", n)))
+    writeLines(c("LandisData Scenario", paste("Duration", duration)), fs::path(d, "scenario.txt"))
+    writeLines("LandisData 'Dynamic Fire System'", fs::path(d, "dynamic-fire.txt"))
+    if (!is.null(extra)) {
+      writeLines(extra, fs::path(d, "extra.csv"))
+    }
+    d
+  }
+
+  a <- mk(10)
+  b <- mk(10)
+  ## Same contents, different directories and mtimes -> same digest. The template is rewritten on
+  ## every build, so a timestamp-sensitive digest would throw away a valid cache each time.
+  expect_identical(
+    landisutils:::.scenario_template_digest(a),
+    landisutils:::.scenario_template_digest(b)
+  )
+
+  ## THE REGRESSION: a template differing only in the run Duration must NOT hash the same. Before
+  ## 0.0.75 the fingerprint carried only cfg$sim_years -- which does not set Duration -- so losses
+  ## from a 10-year template were served from cache to a 30-year run.
+  expect_false(identical(
+    landisutils:::.scenario_template_digest(mk(10)),
+    landisutils:::.scenario_template_digest(mk(30))
+  ))
+
+  ## An added input file changes it too (initial communities, weather db, fuel tables, ...).
+  expect_false(identical(
+    landisutils:::.scenario_template_digest(a),
+    landisutils:::.scenario_template_digest(mk(10, extra = "MapCode,SpeciesName"))
+  ))
+
+  ## No template (mock / non-Docker simulators) contributes nothing rather than erroring.
+  expect_null(landisutils:::.scenario_template_digest(NULL))
+  expect_null(landisutils:::.scenario_template_digest(fs::path(root, "does-not-exist")))
+  expect_null(landisutils:::.scenario_template_digest(fs::dir_create(fs::path(root, "empty"))))
 })
 
 test_that("calibrate_dynamic_fire() writes checkpoint artefacts and a full trajectory when checkpointing", {
