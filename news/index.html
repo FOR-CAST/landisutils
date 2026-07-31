@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.75</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.76</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -40,6 +40,11 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.76" id="landisutils-0076">landisutils 0.0.76<a class="anchor" aria-label="anchor" href="#landisutils-0076"></a></h2>
+<ul><li>
+<code><a href="../reference/calibrate_dynamic_fire.html">calibrate_dynamic_fire()</a></code> now caps each host’s worker count by its PHYSICAL core count as well as its RAM, taking whichever binds. RAM alone is not sufficient on a heterogeneous cluster: two hosts can carry the same ~1 TB of memory while differing 2.7x in cores (128 vs 48 physical, measured here), so a RAM-only cap admitted 45 containers to both and booked the smaller host to ~94% of its cores while the larger sat at ~35%. Because DEoptim waits for every population member, the entire generation then ran at the saturated host’s pace – 68 min per replicate there against 40 min on the roomy one, throwing away roughly a third of the multi-node gain. Physical cores are counted (distinct <code>physical id</code>/<code>core id</code> pairs), not logical: SMT siblings share execution units, so counting threads overstates capacity 2x. Tunable via <code>cfg$cores_per_worker</code> (default 1, since LANDIS-II is effectively single-threaded) and <code>cfg$cpu_fraction</code> (default 0.85). Note the cap prevents over-subscription but does not redistribute: to balance a heterogeneous fleet, set <code>cfg$nodes</code> in proportion to each host’s cores.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.75" id="landisutils-0075">landisutils 0.0.75<a class="anchor" aria-label="anchor" href="#landisutils-0075"></a></h2>
 <ul><li>
