@@ -14,7 +14,12 @@ landis_run_docker(
   mem_limit = "8g",
   mem_margin = 1.5,
   post_completion_timeout_sec = 300,
-  startup_jitter = NULL
+  startup_jitter = NULL,
+  stream_to = NULL,
+  stream_every_sec = 600,
+  stream_lag_steps = 2L,
+  stream_jitter_frac = 0.25,
+  stream_patterns = .default_stream_patterns()
 )
 }
 \arguments{
@@ -82,6 +87,30 @@ never invalidates completed replicates. \code{NULL} (the default) reads the
 \code{LANDIS_STARTUP_JITTER} environment variable (so it can be set once in a
 project \code{.Rprofile} that \code{crew} workers inherit); an unset/invalid value
 means \code{0} (no stagger).}
+
+\item{stream_to}{Character or \code{NULL}. When set, completed output maps are
+moved here while the simulation runs, so local scratch holds only the
+working set instead of the whole replicate. Nothing is discarded -- files
+are relocated, not pruned. Point this at the \verb{<final>.partial} staging
+directory used by \code{\link[=landis_archive_rep]{landis_archive_rep()}} so the atomic-rename publish, and
+therefore the all-or-nothing appearance of the final directory, is
+preserved. \code{NULL} (default) disables streaming.}
+
+\item{stream_every_sec}{Numeric. Seconds between sync attempts (default
+\code{600}). Actual intervals are jittered; see \code{stream_jitter_frac}.}
+
+\item{stream_lag_steps}{Integer. How many timesteps behind the simulation to
+stay (default \code{2}). LANDIS-II writes several rasters per timestep, so a file
+for step \code{t} can still be open when the log already reports \verb{Current time: t}; the lag is what makes "written" mean "closed".}
+
+\item{stream_jitter_frac}{Numeric in \verb{[0, 1]}. Fraction by which each interval
+is randomly stretched or shrunk (default \code{0.25}). Replicates launched
+together would otherwise sync in lockstep for the whole run, turning a
+steady trickle into periodic bursts against one shared filesystem.}
+
+\item{stream_patterns}{Character vector of regexes matching output maps that
+are safe to move mid-run. Defaults to write-once fire and fuels maps;
+deliberately excludes \verb{TimeOfLastFire-*}, which may be simulation state.}
 }
 \value{
 Named list with \code{exit_code} (integer), \code{elapsed_sec} (numeric), and

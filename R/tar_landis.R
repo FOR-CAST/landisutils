@@ -552,6 +552,26 @@ landis_run_local <- function(scenario_dir, scenario_file = "scenario.txt", conso
 #'   (outputs are already on disk, so the sim itself completed cleanly). On
 #'   timeout the container is stopped and exit codes 137/143 are remapped to
 #'   `0`. Set to `Inf` to disable the watchdog. Default `300` (5 min).
+#' @param stream_to Character or `NULL`. When set, completed output maps are
+#'   moved here while the simulation runs, so local scratch holds only the
+#'   working set instead of the whole replicate. Nothing is discarded -- files
+#'   are relocated, not pruned. Point this at the `<final>.partial` staging
+#'   directory used by [landis_archive_rep()] so the atomic-rename publish, and
+#'   therefore the all-or-nothing appearance of the final directory, is
+#'   preserved. `NULL` (default) disables streaming.
+#' @param stream_every_sec Numeric. Seconds between sync attempts (default
+#'   `600`). Actual intervals are jittered; see `stream_jitter_frac`.
+#' @param stream_lag_steps Integer. How many timesteps behind the simulation to
+#'   stay (default `2`). LANDIS-II writes several rasters per timestep, so a file
+#'   for step `t` can still be open when the log already reports `Current time:
+#'   t`; the lag is what makes "written" mean "closed".
+#' @param stream_jitter_frac Numeric in `[0, 1]`. Fraction by which each interval
+#'   is randomly stretched or shrunk (default `0.25`). Replicates launched
+#'   together would otherwise sync in lockstep for the whole run, turning a
+#'   steady trickle into periodic bursts against one shared filesystem.
+#' @param stream_patterns Character vector of regexes matching output maps that
+#'   are safe to move mid-run. Defaults to write-once fire and fuels maps;
+#'   deliberately excludes `TimeOfLastFire-*`, which may be simulation state.
 #' @param startup_jitter Numeric seconds or `NULL`. Upper bound on a random
 #'   start delay applied **before** the function touches Docker, to stagger
 #'   container launches and avoid a thundering-herd surge on the Docker daemon
@@ -581,7 +601,12 @@ landis_run_docker <- function(
   mem_limit = "8g",
   mem_margin = 1.5,
   post_completion_timeout_sec = 300,
-  startup_jitter = NULL
+  startup_jitter = NULL,
+  stream_to = NULL,
+  stream_every_sec = 600,
+  stream_lag_steps = 2L,
+  stream_jitter_frac = 0.25,
+  stream_patterns = .default_stream_patterns()
 ) {
   image <- image %||% getOption("landisutils.docker.image")
   console <- console %||% landis_find_docker()
@@ -779,7 +804,35 @@ landis_run_docker <- function(
     completion_seen <- FALSE
     completion_seen_at <- NA_real_
     stopped_for_timeout <- FALSE
+    ## Stream completed output maps off scratch while the sim runs (see R/landis_stream.R). The FIRST
+    ## interval is jittered too, so replicates launched together do not line up on the very first
+    ## sync and burst against the share.
+    stream_on <- !is.null(stream_to)
+    next_stream_at <- if (stream_on) {
+      .next_stream_at(proc.time()[["elapsed"]], stream_every_sec, stream_jitter_frac)
+    } else {
+      Inf
+    }
+    streamed_files <- 0L
     while (docker_proc$is_alive()) {
+      if (stream_on && proc.time()[["elapsed"]] >= next_stream_at) {
+        n <- tryCatch(
+          .stream_completed_outputs(
+            run_dir = scenario_dir,
+            dest = stream_to,
+            lag_steps = stream_lag_steps,
+            patterns = stream_patterns
+          ),
+          ## Never let a storage problem fail an otherwise healthy simulation.
+          error = function(e) 0L
+        )
+        streamed_files <- streamed_files + as.integer(n)
+        next_stream_at <- .next_stream_at(
+          proc.time()[["elapsed"]],
+          stream_every_sec,
+          stream_jitter_frac
+        )
+      }
       stats_raw <- tryCatch(
         system2(
           "docker",
@@ -1181,6 +1234,12 @@ landis_archive_rep <- function(run_dir, final_dir, max_tries = 5L, backoff_sec =
 #'   the .NET shutdown path after outputs are already on disk). Default `300`
 #'   (5 min); pass `Inf` to disable the watchdog. No effect for
 #'   `method = "local"`.
+#' @param stream_every_sec,stream_lag_steps,stream_jitter_frac Streaming
+#'   controls passed to [landis_run_docker()]. Completed output maps are moved to
+#'   the replicate's staging directory while the run proceeds, so node-local
+#'   scratch holds only the working set rather than the whole replicate. Active
+#'   only when `work_root` places the run on scratch. See [landis_run_docker()]
+#'   for the safety model.
 #' @param work_root Character or `NULL`. Optional fast, local, Docker-bind-
 #'   mountable scratch root used to RUN each replicate, separate from the final
 #'   (tracked) `scenario_dir`. Needed when `scenario_dir` lives on storage the
@@ -1221,6 +1280,9 @@ tar_landis <- function(
   mem_margin = 1.5,
   post_completion_timeout_sec = 300,
   work_root = NULL,
+  stream_every_sec = 600,
+  stream_lag_steps = 2L,
+  stream_jitter_frac = 0.25,
   pattern = NULL,
   packages = targets::tar_option_get("packages"),
   library = targets::tar_option_get("library"),
@@ -1257,6 +1319,9 @@ tar_landis <- function(
   mem_margin_val <- as.numeric(mem_margin)
   post_completion_timeout_sec_val <- post_completion_timeout_sec
   work_root_val <- if (is.null(work_root)) NULL else as.character(work_root)
+  stream_every_sec_val <- as.numeric(stream_every_sec)
+  stream_lag_steps_val <- as.integer(stream_lag_steps)
+  stream_jitter_frac_val <- as.numeric(stream_jitter_frac)
 
   ## Resolve method and image at factory-call time.
   method <- method %||%
@@ -1424,7 +1489,20 @@ tar_landis <- function(
     cpu_limit = .(cpu_limit_val),
     mem_limit = .(mem_limit_val),
     mem_margin = .(mem_margin_val),
-    post_completion_timeout_sec = .(post_completion_timeout_sec_val)
+    post_completion_timeout_sec = .(post_completion_timeout_sec_val),
+    ## Stream completed output maps to durable storage DURING the run, so scratch holds only the
+    ## working set instead of the whole replicate. Only meaningful when running on scratch
+    ## (work_root set) -- with no staging the run already IS at its final location and there is
+    ## nothing to relieve. Destination is the SAME `<final>.partial` that landis_archive_rep()
+    ## publishes by atomic rename, so `final_rep_dir` still only ever appears complete.
+    stream_to = if (identical(.run_rep_dir, .final_rep_dir)) {
+      NULL
+    } else {
+      paste0(.final_rep_dir, ".partial")
+    },
+    stream_every_sec = .(stream_every_sec_val),
+    stream_lag_steps = .(stream_lag_steps_val),
+    stream_jitter_frac = .(stream_jitter_frac_val)
   ))
   run_local_call <- bquote(landisutils::landis_run_local(
     scenario_dir = .run_rep_dir,

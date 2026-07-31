@@ -22,6 +22,9 @@ tar_landis(
   mem_margin = 1.5,
   post_completion_timeout_sec = 300,
   work_root = NULL,
+  stream_every_sec = 600,
+  stream_lag_steps = 2L,
+  stream_jitter_frac = 0.25,
   pattern = NULL,
   packages = targets::tar_option_get("packages"),
   library = targets::tar_option_get("library"),
@@ -123,6 +126,13 @@ and output collection both read the final \code{scenario_dir/repNN}. When \code{
 (so \code{{crew}} workers can set it via \code{.Rprofile}); when that is also empty
 the rep runs in place under \code{scenario_dir} (original behaviour). No effect
 for \code{method = "local"}.}
+
+\item{stream_every_sec, stream_lag_steps, stream_jitter_frac}{Streaming
+controls passed to \code{\link[=landis_run_docker]{landis_run_docker()}}. Completed output maps are moved to
+the replicate's staging directory while the run proceeds, so node-local
+scratch holds only the working set rather than the whole replicate. Active
+only when \code{work_root} places the run on scratch. See \code{\link[=landis_run_docker]{landis_run_docker()}}
+for the safety model.}
 
 \item{pattern}{Expression (unquoted). Dynamic-branching pattern covering
 both the scenario and replicate dimensions, e.g.
