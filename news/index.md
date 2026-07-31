@@ -1,5 +1,18 @@
 # Changelog
 
+## landisutils 0.0.74
+
+- [`calibrate_dynamic_fire()`](https://for-cast.github.io/landisutils/reference/calibrate_dynamic_fire.md)
+  now launches the workers belonging to the coordinator’s OWN machine as
+  `localhost`, without SSH. The coordinator normally runs on one of the
+  fleet hosts, so the fleet almost always includes the local machine;
+  naming it explicitly made `parallelly` open an SSH connection from a
+  host to itself, which a machine’s own name need not accept (it can
+  resolve to a loopback alias with no listening sshd). The result was a
+  cluster setup that stalled indefinitely with no diagnostic and no
+  child processes to inspect. Localised workers are also cheaper, since
+  they skip SSH entirely.
+
 ## landisutils 0.0.73
 
 - [`calibrate_dynamic_fire()`](https://for-cast.github.io/landisutils/reference/calibrate_dynamic_fire.md):
