@@ -1,5 +1,27 @@
 # Changelog
 
+## landisutils 0.0.75
+
+- [`calibrate_dynamic_fire()`](https://for-cast.github.io/landisutils/reference/calibrate_dynamic_fire.md)
+  now folds a content digest of the scenario template into the
+  evaluation fingerprint that keys the memoization cache and the resume
+  checkpoint. The template was previously absent from that fingerprint
+  entirely, and `cfg$sim_years` did not stand in for it:
+  [`sim_landis()`](https://for-cast.github.io/landisutils/reference/sim_landis.md)
+  documents the run Duration as coming from the template’s
+  `scenario.txt`, so `cfg$sim_years` is informational. A template
+  rebuilt at a different Duration therefore hashed IDENTICALLY to the
+  old one, and a reused `out_dir` served the previous Duration’s losses
+  straight back out of the cache. Observed on a 90-member population
+  where 88 members returned instantly from evaluations run at a third of
+  the intended Duration – silent, and it would have produced a
+  calibrated parameter set fitted almost entirely to the wrong
+  simulation length. Initial communities, ecoregions, the weather
+  database, the fuel and fire tables and the landscape extent were
+  equally invisible; all of them now invalidate stale state. The digest
+  hashes file contents rather than mtimes, so rebuilding a template that
+  is byte-identical still hits the cache.
+
 ## landisutils 0.0.74
 
 - [`calibrate_dynamic_fire()`](https://for-cast.github.io/landisutils/reference/calibrate_dynamic_fire.md)
