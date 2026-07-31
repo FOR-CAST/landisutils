@@ -70,6 +70,29 @@ calibrate_dynamic_fire(observed_targets_path, scenario_template, cfg, out_dir)
 
   :   Pool settings (Docker only).
 
+  nodes
+
+  :   Optional named vector of workers per host, e.g.
+      `c(host1 = 30, host2 = 30)`, spreading the search across machines
+      via a PSOCK cluster. Each worker runs its own single container on
+      its own host. Per-host counts are capped against that host's
+      available RAM and the total is trimmed to `NP` (workers beyond
+      `NP` never receive a task but still hold a container). Requires
+      the `parallelly` package, the Docker image on every host, and –
+      under renv – the project at the same path everywhere. Unset
+      (default) uses a local FORK cluster and one shared pool, which is
+      unchanged. Note the workload is memory-bandwidth-bound, so one
+      host saturates well before its cores are busy; spreading a fixed
+      `NP` over more hosts therefore helps more than the host count
+      suggests, because each host also returns to its unsaturated
+      regime.
+
+  rscript
+
+  :   Path to `Rscript` on the worker hosts. Defaults to the
+      coordinator's own (`file.path(R.home("bin"), "Rscript")`), which
+      keeps the workers on a matching R version.
+
   checkpoint_every
 
   :   Optional integer \>= 1. When set, run the search in blocks of this

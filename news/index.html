@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.70</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.71</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -40,6 +40,17 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.71" id="landisutils-0071">landisutils 0.0.71<a class="anchor" aria-label="anchor" href="#landisutils-0071"></a></h2>
+<ul><li>
+<code><a href="../reference/calibrate_dynamic_fire.html">calibrate_dynamic_fire()</a></code> gains <code>cfg$nodes</code> (a named vector like <code>c(host1 = 30, host2 = 30)</code>), which spreads the DEoptim search across machines. Unset – the default – leaves the single-node FORK path completely unchanged. This matters because per-node throughput is memory-bandwidth-bound, not CPU-bound: on a dual-socket EPYC 7702 growing the warm pool from 22 to 90 containers bought only ~1.25x throughput while per-rep wall-clock grew ~5x, so a single host saturates long before its cores are busy. Since DEoptim dispatches exactly <code>NP</code> tasks per generation, spreading those same <code>NP</code> workers over more hosts both adds hosts AND returns each one to its unsaturated regime, so the gain exceeds the host count.</li>
+<li>
+<code><a href="../reference/calibrate_dynamic_fire.html">calibrate_dynamic_fire()</a></code> gives every multi-node worker its OWN single-container pool on its OWN host, rather than federating one shared pool. <code><a href="../reference/landis_pool_exec.html">landis_pool_exec()</a></code> already resolves <code>pool$names[idx]</code> against the LOCAL docker daemon, so a worker only ever needs a pool describing containers on the machine it is running on – there is no cross-host container index to map, and <code><a href="../reference/landis_pool_exec.html">landis_pool_exec()</a></code> is unchanged. Worker pools are torn down through the cluster before it is stopped, since only the worker knows its own container’s name.</li>
+<li>
+<code><a href="../reference/calibrate_dynamic_fire.html">calibrate_dynamic_fire()</a></code> caps each host’s worker count against THAT host’s available RAM (hosts in a cluster differ, and a coordinator-wide figure over-subscribes the smaller ones), then trims the fleet to <code>NP</code>: workers beyond <code>NP</code> never receive a task while still holding a container and its RAM.</li>
+<li>
+<code><a href="../reference/dedup_community_snapshot.html">dedup_community_snapshot()</a></code> and the calibration trace: per-worker trial-trace sidecars are now keyed by host AND pid (<code>worker_&lt;host&gt;_&lt;pid&gt;.csv</code>), not pid alone. The directory lives on shared storage while pids are unique per host only, so once workers span nodes two of them could collide and append interleaved rows to a single file, corrupting both the trace and the memoization cache built from it. The eval-cache scan matches both the new and legacy names, so a resumed run still folds in sidecars written by an older version.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.70" id="landisutils-0070">landisutils 0.0.70<a class="anchor" aria-label="anchor" href="#landisutils-0070"></a></h2>
 <ul><li>

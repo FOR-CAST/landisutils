@@ -1,5 +1,43 @@
 # Changelog
 
+## landisutils 0.0.71
+
+- [`calibrate_dynamic_fire()`](https://for-cast.github.io/landisutils/reference/calibrate_dynamic_fire.md)
+  gains `cfg$nodes` (a named vector like `c(host1 = 30, host2 = 30)`),
+  which spreads the DEoptim search across machines. Unset – the default
+  – leaves the single-node FORK path completely unchanged. This matters
+  because per-node throughput is memory-bandwidth-bound, not CPU-bound:
+  on a dual-socket EPYC 7702 growing the warm pool from 22 to 90
+  containers bought only ~1.25x throughput while per-rep wall-clock grew
+  ~5x, so a single host saturates long before its cores are busy. Since
+  DEoptim dispatches exactly `NP` tasks per generation, spreading those
+  same `NP` workers over more hosts both adds hosts AND returns each one
+  to its unsaturated regime, so the gain exceeds the host count.
+- [`calibrate_dynamic_fire()`](https://for-cast.github.io/landisutils/reference/calibrate_dynamic_fire.md)
+  gives every multi-node worker its OWN single-container pool on its OWN
+  host, rather than federating one shared pool.
+  [`landis_pool_exec()`](https://for-cast.github.io/landisutils/reference/landis_pool_exec.md)
+  already resolves `pool$names[idx]` against the LOCAL docker daemon, so
+  a worker only ever needs a pool describing containers on the machine
+  it is running on – there is no cross-host container index to map, and
+  [`landis_pool_exec()`](https://for-cast.github.io/landisutils/reference/landis_pool_exec.md)
+  is unchanged. Worker pools are torn down through the cluster before it
+  is stopped, since only the worker knows its own container’s name.
+- [`calibrate_dynamic_fire()`](https://for-cast.github.io/landisutils/reference/calibrate_dynamic_fire.md)
+  caps each host’s worker count against THAT host’s available RAM (hosts
+  in a cluster differ, and a coordinator-wide figure over-subscribes the
+  smaller ones), then trims the fleet to `NP`: workers beyond `NP` never
+  receive a task while still holding a container and its RAM.
+- [`dedup_community_snapshot()`](https://for-cast.github.io/landisutils/reference/dedup_community_snapshot.md)
+  and the calibration trace: per-worker trial-trace sidecars are now
+  keyed by host AND pid (`worker_<host>_<pid>.csv`), not pid alone. The
+  directory lives on shared storage while pids are unique per host only,
+  so once workers span nodes two of them could collide and append
+  interleaved rows to a single file, corrupting both the trace and the
+  memoization cache built from it. The eval-cache scan matches both the
+  new and legacy names, so a resumed run still folds in sidecars written
+  by an older version.
+
 ## landisutils 0.0.70
 
 - [`dedup_community_snapshot()`](https://for-cast.github.io/landisutils/reference/dedup_community_snapshot.md)

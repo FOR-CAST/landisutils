@@ -13,7 +13,7 @@ on.exit() regardless of success / error / interrupt."><meta property="og:image" 
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.70</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.71</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -103,6 +103,26 @@ Pass <code>cfg$steptol = NULL</code> to fall back to the upstream DEoptim defaul
 
 <dt>image, cpu_limit, mem_limit, pull</dt>
 <dd><p>Pool settings (Docker only).</p></dd>
+
+<dt>nodes</dt>
+<dd><p>Optional named vector of workers per host, e.g.
+<code>c(host1 = 30, host2 = 30)</code>, spreading the search across machines via a
+PSOCK cluster. Each worker runs its own single container on its own
+host. Per-host counts are capped against that host's available RAM and
+the total is trimmed to <code>NP</code> (workers beyond <code>NP</code> never receive a task
+but still hold a container). Requires the <code>parallelly</code> package, the
+Docker image on every host, and – under renv – the project at the same
+path everywhere. Unset (default) uses a local FORK cluster and one
+shared pool, which is unchanged. Note the workload is
+memory-bandwidth-bound, so one host saturates well before its cores are
+busy; spreading a fixed <code>NP</code> over more hosts therefore helps more than
+the host count suggests, because each host also returns to its
+unsaturated regime.</p></dd>
+
+<dt>rscript</dt>
+<dd><p>Path to <code>Rscript</code> on the worker hosts. Defaults to the
+coordinator's own (<code>file.path(R.home("bin"), "Rscript")</code>), which keeps
+the workers on a matching R version.</p></dd>
 
 <dt>checkpoint_every</dt>
 <dd><p>Optional integer &gt;= 1. When set, run the search in
