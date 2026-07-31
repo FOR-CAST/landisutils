@@ -1,5 +1,20 @@
 # Changelog
 
+## landisutils 0.0.73
+
+- [`calibrate_dynamic_fire()`](https://for-cast.github.io/landisutils/reference/calibrate_dynamic_fire.md):
+  the multi-node image check now quotes the
+  `docker image inspect --format` argument.
+  [`system2()`](https://rdrr.io/r/base/system2.html) pastes its
+  arguments together WITHOUT quoting, so `{{index .RepoDigests 0}}` was
+  split into three shell words and docker exited 64 (usage error).
+  Because a usage error and a genuinely absent image are both non-zero,
+  the guard added in 0.0.72 reported “image is missing” for EVERY host
+  and would have blocked every multi-node run. The accompanying test
+  only covered the missing-image path, which fails identically either
+  way; it now also asserts the positive case, so a malformed command
+  cannot pass again.
+
 ## landisutils 0.0.72
 
 - [`calibrate_dynamic_fire()`](https://for-cast.github.io/landisutils/reference/calibrate_dynamic_fire.md)

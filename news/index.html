@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.72</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.73</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -40,6 +40,11 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.73" id="landisutils-0073">landisutils 0.0.73<a class="anchor" aria-label="anchor" href="#landisutils-0073"></a></h2>
+<ul><li>
+<code><a href="../reference/calibrate_dynamic_fire.html">calibrate_dynamic_fire()</a></code>: the multi-node image check now quotes the <code>docker image inspect --format</code> argument. <code><a href="https://rdrr.io/r/base/system2.html" class="external-link">system2()</a></code> pastes its arguments together WITHOUT quoting, so <code>{{index .RepoDigests 0}}</code> was split into three shell words and docker exited 64 (usage error). Because a usage error and a genuinely absent image are both non-zero, the guard added in 0.0.72 reported “image is missing” for EVERY host and would have blocked every multi-node run. The accompanying test only covered the missing-image path, which fails identically either way; it now also asserts the positive case, so a malformed command cannot pass again.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.72" id="landisutils-0072">landisutils 0.0.72<a class="anchor" aria-label="anchor" href="#landisutils-0072"></a></h2>
 <ul><li>
