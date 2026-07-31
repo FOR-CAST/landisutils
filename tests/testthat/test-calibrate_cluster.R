@@ -202,3 +202,39 @@ test_that(".localise_hosts rewrites this machine to localhost, in any spelling",
   ## repeats (one entry per worker) are all rewritten
   expect_equal(.localise_hosts(rep("nodeA", 3L), me = "nodeA"), rep("localhost", 3L))
 })
+
+
+## Regression: RAM alone is not a sufficient cap on a heterogeneous cluster. Two hosts can hold the
+## same ~1 TB while differing 2.7x in physical cores, so a RAM-only cap books the smaller host to
+## ~94% of its cores and the larger to ~35%. DEoptim waits for every population member, so the whole
+## generation then runs at the saturated host's pace (measured: 68 vs 40 min per rep).
+test_that(".cap_nodes_by_cpu caps each host by its OWN physical core count", {
+  capped <- .cap_nodes_by_cpu(
+    nodes = c(big = 45L, small = 45L),
+    cores = list(big = 128, small = 48),
+    cores_per_worker = 1,
+    cpu_fraction = 0.85
+  )
+  expect_equal(capped[["big"]], 45L) ## floor(128 * 0.85) = 108, so the request stands
+  expect_equal(capped[["small"]], 40L) ## floor(48 * 0.85) = 40, so it binds
+})
+
+test_that(".cap_nodes_by_cpu leaves a host alone when its core count is unknown", {
+  capped <- .cap_nodes_by_cpu(c(a = 12L), list(a = NA_real_), 1, 0.85)
+  expect_equal(capped[["a"]], 12L)
+})
+
+test_that(".cap_nodes_by_cpu scales with cores_per_worker", {
+  ## a worker needing 2 cores halves what a host can hold
+  capped <- .cap_nodes_by_cpu(c(a = 100L), list(a = 48), cores_per_worker = 2, cpu_fraction = 1)
+  expect_equal(capped[["a"]], 24L)
+})
+
+test_that("the tighter of the RAM and CPU caps wins, per host", {
+  nodes <- c(ramBound = 60L, cpuBound = 60L)
+  by_ram <- .cap_nodes_by_ram(nodes, list(ramBound = 100, cpuBound = 1000), 9, 0.85)
+  by_cpu <- .cap_nodes_by_cpu(nodes, list(ramBound = 128, cpuBound = 48), 1, 0.85)
+  capped <- pmin(by_ram, by_cpu)
+  expect_equal(unname(capped[["ramBound"]]), 9L) ## RAM binds here
+  expect_equal(unname(capped[["cpuBound"]]), 40L) ## cores bind here
+})

@@ -155,11 +155,11 @@
   })
 }
 
-## Ask each host how much RAM it actually has free, by standing up a throwaway 1-worker-per-host
+## Ask each host for its available RAM AND physical core count, by standing up a throwaway
 ## cluster. Done in R rather than over ssh so the probe uses exactly the transport the real cluster
 ## will use -- if PSOCK cannot reach a host, that surfaces here, cheaply, instead of after the pools
 ## are up. Returns a named numeric vector of GiB; hosts that fail to answer are dropped.
-.probe_node_ram_gb <- function(hosts, rscript, outfile = nullfile()) {
+.probe_node_capacity <- function(hosts, rscript, outfile = nullfile()) {
   hosts <- unique(hosts)
   cl <- .psock_cluster(hosts, rscript = rscript)
   on.exit(try(parallel::stopCluster(cl), silent = TRUE), add = TRUE)
@@ -184,13 +184,54 @@
       },
       error = function(e) NA_real_
     )
-    list(host = as.character(Sys.info()[["nodename"]]), avail = .avail)
+    ## PHYSICAL cores, not logical. LANDIS-II is effectively single-threaded, so one container needs
+    ## roughly one core -- but SMT siblings share execution units, so counting threads overstates
+    ## capacity by 2x and lets a host be booked to ~2x its real throughput. Count distinct
+    ## (physical id, core id) pairs; fall back to the logical count only if that is unavailable.
+    .cores <- tryCatch(
+      {
+        ci <- readLines("/proc/cpuinfo")
+        pid <- grep("^physical id", ci, value = TRUE)
+        cid <- grep("^core id", ci, value = TRUE)
+        if (length(pid) && length(pid) == length(cid)) {
+          length(unique(paste(pid, cid)))
+        } else {
+          length(grep("^processor", ci))
+        }
+      },
+      error = function(e) NA_real_
+    )
+    list(host = as.character(Sys.info()[["nodename"]]), avail = .avail, cores = as.numeric(.cores))
   })
-  out <- vapply(res, function(x) as.numeric(x$avail), numeric(1))
-  names(out) <- vapply(res, function(x) as.character(x$host), character(1))
   ## Re-key by the host string the CALLER used: nodename may be an FQDN while cfg$nodes uses a short
   ## name, and every downstream lookup is by the caller's spelling.
-  stats::setNames(as.numeric(out), hosts[seq_along(out)])
+  list(
+    ram = stats::setNames(vapply(res, function(x) as.numeric(x$avail), numeric(1)), hosts),
+    cores = stats::setNames(vapply(res, function(x) as.numeric(x$cores), numeric(1)), hosts)
+  )
+}
+
+## Cap each host's worker count by its own PHYSICAL core count.
+##
+## The RAM cap alone is not enough on a heterogeneous cluster. Two hosts can carry the same ~1 TB of
+## memory while differing 2.7x in cores (128 vs 48 physical here), so a RAM-only cap admits the same
+## number of containers to both and books the smaller one to ~94% of its cores while the larger sits
+## at 35%. Because DEoptim waits for every population member, a generation then runs at the pace of
+## the saturated host: measured 68 min/rep there against 40 min/rep on the roomy one.
+##
+## `cores_per_worker` is 1 by default because LANDIS-II is effectively single-threaded -- the docker
+## `--cpus` limit is a ceiling, not a reservation, so sizing against it would badly under-fill hosts.
+.cap_nodes_by_cpu <- function(nodes, cores, cores_per_worker = 1, cpu_fraction = 0.85) {
+  capped <- nodes
+  for (h in names(nodes)) {
+    n <- cores[[h]]
+    if (is.null(n) || !is.finite(n) || n <= 0) {
+      next
+    }
+    cap <- max(1L, as.integer(floor(n * cpu_fraction / max(cores_per_worker, 1e-9))))
+    capped[[h]] <- min(nodes[[h]], cap)
+  }
+  capped
 }
 
 ## Cap each host's worker count by its own RAM budget. The single-node cap divides one host's budget;
@@ -312,7 +353,9 @@
   pull,
   name_prefix,
   rscript = file.path(R.home("bin"), "Rscript"),
-  start_pools = TRUE
+  start_pools = TRUE,
+  cores_per_worker = 1,
+  cpu_fraction = 0.85
 ) {
   nodes <- .parse_nodes(nodes)
   if (is.null(nodes)) {
@@ -320,13 +363,25 @@
   }
   mem_per_container <- .mem_limit_to_gb(mem_limit)
 
-  avail <- .probe_node_ram_gb(names(nodes), rscript = rscript)
-  capped <- .cap_nodes_by_ram(nodes, avail, mem_per_container, mem_fraction)
+  cap_info <- .probe_node_capacity(names(nodes), rscript = rscript)
+  avail <- cap_info$ram
+  by_ram <- .cap_nodes_by_ram(nodes, avail, mem_per_container, mem_fraction)
+  by_cpu <- .cap_nodes_by_cpu(nodes, cap_info$cores, cores_per_worker, cpu_fraction)
+  ## Both constraints bind independently: RAM decides how many landscapes fit, physical cores decide
+  ## how many can actually run at once. Take whichever is tighter, per host.
+  capped <- pmin(by_ram, by_cpu)
+  capped <- stats::setNames(as.integer(capped), names(nodes))
   for (h in names(nodes)) {
     if (capped[[h]] < nodes[[h]]) {
+      why <- if (by_cpu[[h]] <= by_ram[[h]]) {
+        glue::glue("{cap_info$cores[[h]]} physical core(s) x {cpu_fraction} / {cores_per_worker}")
+      } else {
+        glue::glue(
+          "{round(avail[[h]])} GiB avail x {mem_fraction} / {round(mem_per_container, 1)} GiB limit"
+        )
+      }
       message(glue::glue(
-        "calibrate_dynamic_fire: RAM-capping {h} {nodes[[h]]} -> {capped[[h]]} worker(s) ",
-        "({round(avail[[h]])} GiB avail x {mem_fraction} / {round(mem_per_container, 1)} GiB limit)."
+        "calibrate_dynamic_fire: capping {h} {nodes[[h]]} -> {capped[[h]]} worker(s) ({why})."
       ))
     }
   }

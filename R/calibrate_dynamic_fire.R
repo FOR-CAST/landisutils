@@ -2415,7 +2415,10 @@ calibrate_dynamic_fire <- function(observed_targets_path, scenario_template, cfg
       pull = isTRUE(cfg$pull %||% FALSE),
       name_prefix = paste0("landis-cal-", Sys.getpid()),
       rscript = cfg$rscript %||% file.path(R.home("bin"), "Rscript"),
-      start_pools = needs_docker
+      start_pools = needs_docker,
+      ## LANDIS-II is effectively single-threaded, so one container occupies ~one PHYSICAL core.
+      cores_per_worker = as.numeric(cfg$cores_per_worker %||% 1),
+      cpu_fraction = as.numeric(cfg$cpu_fraction %||% 0.85)
     )
   }
   if (!is.null(multi)) {
