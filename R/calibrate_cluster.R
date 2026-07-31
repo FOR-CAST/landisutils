@@ -85,6 +85,22 @@
   if (nzchar(p) && file.exists(file.path(p, "renv", "activate.R"))) p else ""
 }
 
+## Rewrite any host that IS this machine to "localhost".
+##
+## The coordinator normally runs ON one of the fleet hosts (the crew worker that executes the
+## calibration target is placed on the first configured host), so the fleet virtually always includes
+## the local machine. Naming it explicitly makes parallelly open an SSH connection from the host to
+## ITSELF, and a machine's own name need not be reachable over SSH from itself: here it resolves to
+## 127.0.1.1, where sshd is not accepting, so the connection is refused and cluster setup stalls.
+## "localhost" makes parallelly launch those workers directly, with no SSH at all -- correct, faster,
+## and immune to how the host resolves its own name.
+.localise_hosts <- function(hosts, me = as.character(Sys.info()[["nodename"]])) {
+  me_short <- sub("\\..*$", "", me)
+  local <- hosts == me | hosts == me_short | sub("\\..*$", "", hosts) == me_short
+  hosts[local] <- "localhost"
+  hosts
+}
+
 ## Open a PSOCK cluster over `hosts` (one worker per element, so repeat a host to get several).
 ##
 ## Uses parallelly::makeClusterPSOCK rather than parallel::makeCluster for two reasons that are not
@@ -115,6 +131,7 @@
   ## coordinator can be on a different Ubuntu release than the compute nodes, in which case the
   ## copied path simply does not exist there and every worker reports the package missing. Letting
   ## the worker source renv/activate.R makes it resolve its own platform's library.
+  hosts <- .localise_hosts(hosts)
   args <- list(hosts, rscript = rscript, revtunnel = TRUE)
   if (nzchar(project)) {
     ## Must be CHARACTER, not a language object: passing an expression here is accepted silently but

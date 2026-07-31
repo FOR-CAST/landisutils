@@ -1,3 +1,7 @@
+# landisutils 0.0.74
+
+* `calibrate_dynamic_fire()` now launches the workers belonging to the coordinator's OWN machine as `localhost`, without SSH. The coordinator normally runs on one of the fleet hosts, so the fleet almost always includes the local machine; naming it explicitly made `parallelly` open an SSH connection from a host to itself, which a machine's own name need not accept (it can resolve to a loopback alias with no listening sshd). The result was a cluster setup that stalled indefinitely with no diagnostic and no child processes to inspect. Localised workers are also cheaper, since they skip SSH entirely.
+
 # landisutils 0.0.73
 
 * `calibrate_dynamic_fire()`: the multi-node image check now quotes the `docker image inspect --format` argument. `system2()` pastes its arguments together WITHOUT quoting, so `{{index .RepoDigests 0}}` was split into three shell words and docker exited 64 (usage error). Because a usage error and a genuinely absent image are both non-zero, the guard added in 0.0.72 reported "image is missing" for EVERY host and would have blocked every multi-node run. The accompanying test only covered the missing-image path, which fails identically either way; it now also asserts the positive case, so a malformed command cannot pass again.

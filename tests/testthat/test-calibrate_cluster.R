@@ -180,3 +180,25 @@ test_that(".verify_node_images accepts a consistent image and rejects a missing 
   expect_false(is.na(digest))
   expect_match(digest, "@sha256:|busybox")
 })
+
+## Regression: the coordinator runs ON one of the fleet hosts, so the fleet almost always contains the
+## local machine. Naming it explicitly makes parallelly SSH from the host to itself, which fails when
+## the machine's own name does not resolve to a listening sshd (127.0.1.1 here) -- cluster setup then
+## stalls with no diagnostic. Localised hosts are launched directly, without SSH.
+test_that(".localise_hosts rewrites this machine to localhost, in any spelling", {
+  expect_equal(.localise_hosts(c("nodeA", "nodeB"), me = "nodeA"), c("localhost", "nodeB"))
+  ## FQDN coordinator vs short name in the fleet, and vice versa
+  expect_equal(
+    .localise_hosts(c("nodeA", "nodeB"), me = "nodeA.example.ca"),
+    c("localhost", "nodeB")
+  )
+  expect_equal(
+    .localise_hosts(c("nodeA.example.ca", "nodeB"), me = "nodeA"),
+    c("localhost", "nodeB")
+  )
+  ## already-local entries stay local; unrelated hosts are untouched
+  expect_equal(.localise_hosts("localhost", me = "nodeA"), "localhost")
+  expect_equal(.localise_hosts(c("nodeB", "nodeC"), me = "nodeA"), c("nodeB", "nodeC"))
+  ## repeats (one entry per worker) are all rewritten
+  expect_equal(.localise_hosts(rep("nodeA", 3L), me = "nodeA"), rep("localhost", 3L))
+})
