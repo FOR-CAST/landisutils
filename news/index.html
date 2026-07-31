@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.78</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.79</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -40,6 +40,11 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.79" id="landisutils-0079">landisutils 0.0.79<a class="anchor" aria-label="anchor" href="#landisutils-0079"></a></h2>
+<ul><li>Output streaming now works on Windows. <code>.stream_copy()</code> used <code>rsync</code> unconditionally, and <code>rsync</code> parses <code>host:path</code>, so a drive-qualified path like <code>C:/Users/...</code> reads as the remote host <code>C</code> – every sync silently moved nothing. This is the same defect <code><a href="../reference/landis_archive_rep.html">landis_archive_rep()</a></code> was fixed for in 0.0.70, reintroduced in a new code path; Windows now uses a direct copy, Unix keeps <code>rsync --files-from</code> (one process per batch, which matters when many replicates sync concurrently to a shared filesystem). The backend is now a <code>use_rsync</code> argument rather than an inline <code>.Platform</code> check, so BOTH paths are reachable from a test on either OS – the direct-copy path shipped broken precisely because it could not be exercised where the suite runs.</li>
+<li>Test fixes, no behaviour change: the PSOCK cluster test asserted exactly two workers, but the per-host caps added in 0.0.76 are RAM- and physical-core-aware and legitimately trim to one worker on a small CI runner; it now asserts the reported total matches the cluster actually built. The <code>.verify_node_images()</code> positive case guarded on <code>{{.Id}}</code> while the function reads <code>{{index .RepoDigests 0}}</code>, so an image built locally but never pulled satisfied the guard and then failed inside the function; the guard now probes exactly what the function probes.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.78" id="landisutils-0078">landisutils 0.0.78<a class="anchor" aria-label="anchor" href="#landisutils-0078"></a></h2>
 <ul><li>The streaming allow-list no longer excludes <code>TimeOfLastFire-*</code> or <code>TOLD-*</code>. They were held back in 0.0.77 on the suspicion that they were simulation state read back on a later timestep; checking the LANDIS-II v8 extension sources shows both are pure outputs, so they now stream like any other map. Dynamic Fire keeps <code>TimeOfLastFire</code> as an in-memory <code>ISiteVar&lt;int&gt;</code> (<code>SiteVars.cs</code>), initialised from <code>StartTime - maxAge</code> and written through <code>IOutputRaster&lt;ShortPixel&gt;</code> (<code>PlugIn.cs</code>); its only <code>OpenRaster</code> calls read topography and the fire-regions input map. Root Rot’s <code>PlugIn.cs</code> writes exclusively through <code>IOutputRaster&lt;IntPixel&gt;</code>, and its single <code>OpenRaster</code> (<code>SiteVars.cs</code>) reads a configured input map. (<code>TimeSince*</code> never applied: those are C# stand-ranking class names in Library-Harvest-Mgmt and Base-BDA, not raster outputs.)</li>

@@ -1,5 +1,29 @@
 # Changelog
 
+## landisutils 0.0.79
+
+- Output streaming now works on Windows. `.stream_copy()` used `rsync`
+  unconditionally, and `rsync` parses `host:path`, so a drive-qualified
+  path like `C:/Users/...` reads as the remote host `C` – every sync
+  silently moved nothing. This is the same defect
+  [`landis_archive_rep()`](https://for-cast.github.io/landisutils/reference/landis_archive_rep.md)
+  was fixed for in 0.0.70, reintroduced in a new code path; Windows now
+  uses a direct copy, Unix keeps `rsync --files-from` (one process per
+  batch, which matters when many replicates sync concurrently to a
+  shared filesystem). The backend is now a `use_rsync` argument rather
+  than an inline `.Platform` check, so BOTH paths are reachable from a
+  test on either OS – the direct-copy path shipped broken precisely
+  because it could not be exercised where the suite runs.
+- Test fixes, no behaviour change: the PSOCK cluster test asserted
+  exactly two workers, but the per-host caps added in 0.0.76 are RAM-
+  and physical-core-aware and legitimately trim to one worker on a small
+  CI runner; it now asserts the reported total matches the cluster
+  actually built. The `.verify_node_images()` positive case guarded on
+  `{{.Id}}` while the function reads `{{index .RepoDigests 0}}`, so an
+  image built locally but never pulled satisfied the guard and then
+  failed inside the function; the guard now probes exactly what the
+  function probes.
+
 ## landisutils 0.0.78
 
 - The streaming allow-list no longer excludes `TimeOfLastFire-*` or
