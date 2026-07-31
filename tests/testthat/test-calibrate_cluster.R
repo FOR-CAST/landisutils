@@ -92,7 +92,7 @@ test_that("the eval-cache scan matches both legacy and host-qualified sidecars",
   writeLines(paste0(hdr, "2026-01-01T00:00:00,1,1.5,0.25,fp1"), file.path(dir, "worker_123.csv"))
   writeLines(
     paste0(hdr, "2026-01-01T00:00:01,2,2.5,0.75,fp1"),
-    file.path(dir, "worker_pinus_456.csv")
+    file.path(dir, "worker_nodeB_456.csv")
   )
 
   cache <- new.env(parent = emptyenv())
@@ -142,4 +142,23 @@ test_that(".start_calibration_cluster returns NULL when no nodes are configured"
 
 test_that(".stop_calibration_cluster is a no-op for NULL", {
   expect_null(.stop_calibration_cluster(NULL))
+})
+
+## The image guard protects two silent failures: a host missing the image (pools start with
+## pull = FALSE, so it fails late and only on that host) and hosts holding DIFFERENT digests behind
+## the same mutable tag, which would evaluate trials against different LANDIS-II builds without
+## erroring at all. Exercised against a fake 2-"host" cluster on localhost.
+test_that(".verify_node_images accepts a consistent image and rejects a missing one", {
+  skip_if(unname(Sys.which("docker")) == "", "docker not available")
+  cl <- parallel::makeCluster(2L, type = "PSOCK")
+  on.exit(try(parallel::stopCluster(cl), silent = TRUE), add = TRUE)
+
+  ## NULL image = nothing to check (mock / local-method runs)
+  expect_true(is.na(.verify_node_images(cl, NULL)))
+
+  ## an image that certainly does not exist must name the offending hosts
+  expect_error(
+    .verify_node_images(cl, "landisutils/definitely-not-a-real-image:nope"),
+    "is missing on"
+  )
 })

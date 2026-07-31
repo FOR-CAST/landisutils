@@ -191,6 +191,71 @@
   capped
 }
 
+## Verify every host can run the SAME image before any pool starts.
+##
+## Two distinct failures, both silent or late without this:
+##   * A host missing the image. Pools are started with `pull = FALSE` by default, so the failure
+##     surfaces as a container that will not start, after the cluster is already up -- and only on the
+##     hosts that lack it, so the run limps along at reduced capacity or dies mid-generation.
+##   * Hosts holding DIFFERENT digests behind the same tag. `:ubuntu-24.04` is mutable, so nodes
+##     pulled at different times can disagree. Nothing would error: the calibration would simply
+##     evaluate some trials against one LANDIS-II build and some against another, and the resulting
+##     loss surface would mix them. That is a reproducibility failure, which is worse than a crash
+##     because it is invisible in the output.
+##
+## Returns the common digest invisibly.
+.verify_node_images <- function(cl, image) {
+  if (is.null(image) || !nzchar(image)) {
+    return(invisible(NA_character_))
+  }
+  info <- parallel::clusterCall(
+    cl,
+    function(img) {
+      d <- suppressWarnings(system2(
+        "docker",
+        c("image", "inspect", "--format", "{{index .RepoDigests 0}}", img),
+        stdout = TRUE,
+        stderr = FALSE
+      ))
+      list(
+        host = as.character(Sys.info()[["nodename"]]),
+        digest = if (length(d) && nzchar(d[1])) d[1] else NA_character_
+      )
+    },
+    image
+  )
+  hosts <- vapply(info, function(x) x$host, character(1))
+  digests <- vapply(info, function(x) as.character(x$digest), character(1))
+
+  missing <- is.na(digests)
+  if (any(missing)) {
+    stop(
+      "docker image '",
+      image,
+      "' is missing on: ",
+      paste(unique(hosts[missing]), collapse = ", "),
+      ". Pull it there (docker pull ",
+      image,
+      ") or set cfg$pull = TRUE.",
+      call. = FALSE
+    )
+  }
+  uniq <- unique(digests)
+  if (length(uniq) > 1L) {
+    stop(
+      "docker image '",
+      image,
+      "' resolves to ",
+      length(uniq),
+      " different digests across hosts, so trials would not be comparable: ",
+      paste(sprintf("%s=%s", hosts, substr(digests, 1, 26)), collapse = "; "),
+      ". Re-pull so every host agrees.",
+      call. = FALSE
+    )
+  }
+  invisible(uniq)
+}
+
 ## Trim a per-host worker allocation down to `max_workers` total. More workers than DEoptim has
 ## population members just idle: DEoptim dispatches exactly NP tasks per generation, so worker NP+1
 ## onwards never receives one while still holding a container and its RAM. Trims from the LAST host
@@ -288,6 +353,13 @@
   }
   parallel::clusterEvalQ(cl, library(landisutils))
   if (isTRUE(start_pools)) {
+    ## Fail fast and loudly if the hosts cannot agree on the image, BEFORE any container starts.
+    digest <- .verify_node_images(cl, image)
+    if (!is.na(digest)) {
+      message(glue::glue(
+        "calibrate_dynamic_fire: image digest {substr(digest, 1, 26)} on all hosts"
+      ))
+    }
     ## Pass the function OBJECT rather than wrapping a `landisutils:::` call: clusterCall serialises
     ## the closure (its namespace resolves on the worker, which has the package attached), so this
     ## needs no ::: into our own namespace -- which R CMD check flags, rightly.

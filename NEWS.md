@@ -1,3 +1,7 @@
+# landisutils 0.0.72
+
+* `calibrate_dynamic_fire()` verifies, before starting any container, that every host in `cfg$nodes` has the configured Docker image AND that they all resolve to the SAME digest. Pools start with `pull = FALSE`, so a host missing the image previously failed late and only on that host; worse, hosts holding different digests behind a mutable tag (such as `:ubuntu-24.04`) would not error at all -- the search would simply evaluate some trials against one LANDIS-II build and some against another, mixing them into one loss surface. That is a reproducibility failure, and invisible in the output, which is why it is now a hard error naming the offending hosts.
+
 # landisutils 0.0.71
 
 * `calibrate_dynamic_fire()` gains `cfg$nodes` (a named vector like `c(host1 = 30, host2 = 30)`), which spreads the DEoptim search across machines. Unset -- the default -- leaves the single-node FORK path completely unchanged. This matters because per-node throughput is memory-bandwidth-bound, not CPU-bound: on a dual-socket EPYC 7702 growing the warm pool from 22 to 90 containers bought only ~1.25x throughput while per-rep wall-clock grew ~5x, so a single host saturates long before its cores are busy. Since DEoptim dispatches exactly `NP` tasks per generation, spreading those same `NP` workers over more hosts both adds hosts AND returns each one to its unsaturated regime, so the gain exceeds the host count.
