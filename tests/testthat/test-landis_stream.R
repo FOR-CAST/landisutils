@@ -75,7 +75,9 @@ test_that("non-output files are never streamed or deleted", {
   expect_false(fs::file_exists(fs::path(dest, "scenario.txt")))
 })
 
-test_that("TimeOfLastFire is NOT streamed by default (may be simulation state)", {
+## TimeOfLastFire was excluded on suspicion of being simulation state; the Dynamic Fire sources show
+## it is an in-memory ISiteVar written out through IOutputRaster, so it streams like any other map.
+test_that("TimeOfLastFire IS streamed (verified pure output)", {
   skip_if(unname(Sys.which("rsync")) == "", "rsync not available")
   root <- withr::local_tempdir()
   run <- fs::dir_create(fs::path(root, "run"))
@@ -85,7 +87,22 @@ test_that("TimeOfLastFire is NOT streamed by default (may be simulation state)",
   writeLines("x", fs::path(run, "DFFS-output", "TimeOfLastFire-3.tif"))
 
   .stream_completed_outputs(run, dest, lag_steps = 2L)
-  expect_true(fs::file_exists(fs::path(run, "DFFS-output", "TimeOfLastFire-3.tif")))
+  expect_false(fs::file_exists(fs::path(run, "DFFS-output", "TimeOfLastFire-3.tif")))
+  expect_true(fs::file_exists(fs::path(dest, "DFFS-output", "TimeOfLastFire-3.tif")))
+})
+
+## The exclusion mechanism still has to work, for the one real hazard: an extension that reads a
+## timestep-templated INPUT map (Land Use Plus does) configured to live inside an output directory.
+test_that("stream_exclude still suppresses a named map", {
+  skip_if(unname(Sys.which("rsync")) == "", "rsync not available")
+  root <- withr::local_tempdir()
+  run <- fs::dir_create(fs::path(root, "run"))
+  dest <- fs::path(root, "dest")
+  .mk_run(run, current_t = 10L)
+
+  .stream_completed_outputs(run, dest, lag_steps = 2L, exclude = "^severity")
+  expect_true(fs::file_exists(fs::path(run, "fire", "severity-1.tif"))) ## held back
+  expect_false(fs::file_exists(fs::path(run, "fire", "FuelType-1.tif"))) ## streamed
 })
 
 test_that("nothing is moved before the sim has reported enough timesteps", {
@@ -163,9 +180,7 @@ test_that("root-level timestep files and stateful maps are never streamed", {
     "landuse-8.tif", # Land Use Plus INPUT at scenario root
     "initial-communities.tif",
     "scenario.txt",
-    "fire/log.csv",
-    "DFFS-output/TimeOfLastFire-3.tif", # may be simulation state
-    "rootrot/TOLD-4.img" # time of last disturbance: state
+    "fire/log.csv"
   )) {
     expect_false(streamable(f), info = f)
   }

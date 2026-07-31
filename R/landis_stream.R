@@ -52,16 +52,27 @@
 
 ## Map basenames that are NOT safe to move, even inside an output directory.
 ##
-## These look like ordinary output maps but may be simulation STATE that the extension reads back on
-## a later timestep. Nothing here has verified against the extension sources that they are
-## write-only, and moving a file the simulation later reads corrupts the run SILENTLY -- no error,
-## just wrong results. They are a small share of the volume, so excluding them costs little.
+## Empty by default. Earlier versions excluded `TimeOfLastFire-*` and `TOLD-*` on the suspicion that
+## they were simulation STATE read back on a later timestep. Checked against the extension sources
+## (LANDIS-II-Foundation, v8), both are pure outputs:
+##
+##   * Dynamic Fire System -- `TimeOfLastFire` is an in-memory `ISiteVar<int>` registered with the
+##     model core (`SiteVars.cs`), initialised from `StartTime - maxAge` and written out through
+##     `IOutputRaster<ShortPixel>` (`PlugIn.cs`). The extension's only `OpenRaster` calls read
+##     topography (`Topography.cs`) and the fire-regions input map (`FireRegions.cs`).
+##   * Root Rot -- `PlugIn.cs` uses `IOutputRaster<IntPixel>` exclusively; its single `OpenRaster`
+##     (`SiteVars.cs`) reads a configured INPUT map.
+##
+## (`TimeSince*` never applied: those names are C# stand-ranking classes in Library-Harvest-Mgmt and
+## Base-BDA, not raster outputs.)
+##
+## The mechanism is kept because one real hazard remains: a few extensions read TIMESTEP-TEMPLATED
+## input maps at runtime -- Land Use Plus resolves `MapNames.ReplaceTemplateVars(inputMapTemplate,
+## CurrentTime)` and opens it every timestep (`Main.cs`). Such inputs normally sit at the scenario
+## root, which the directory scoping in `.default_stream_dirs()` already excludes. If a scenario ever
+## configures one INSIDE an output directory, list its basename pattern here.
 .default_stream_exclude <- function() {
-  c(
-    "^TimeOfLast", # Dynamic Fire: time since last fire
-    "^TimeSince",
-    "^TOLD" # root rot: time of last disturbance
-  )
+  character(0)
 }
 
 ## Regexes matching output maps that are safe to move mid-run: inside a known output directory, with
