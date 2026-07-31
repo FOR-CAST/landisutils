@@ -161,4 +161,22 @@ test_that(".verify_node_images accepts a consistent image and rejects a missing 
     .verify_node_images(cl, "landisutils/definitely-not-a-real-image:nope"),
     "is missing on"
   )
+
+  ## POSITIVE case. Without this, the test above passes even when the docker call is malformed --
+  ## a usage error and a genuinely absent image both come back non-zero, so "missing" is reported
+  ## either way. That is exactly how an unquoted --format string (which system2() splits into
+  ## separate shell words) shipped as a guard that failed every host it checked.
+  skip_if(
+    length(suppressWarnings(system2(
+      "docker",
+      c("image", "inspect", "--format", shQuote("{{.Id}}"), "busybox:latest"),
+      stdout = TRUE,
+      stderr = FALSE
+    ))) ==
+      0L,
+    "busybox:latest not present locally"
+  )
+  digest <- .verify_node_images(cl, "busybox:latest")
+  expect_false(is.na(digest))
+  expect_match(digest, "@sha256:|busybox")
 })

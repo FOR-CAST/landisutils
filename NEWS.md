@@ -1,3 +1,7 @@
+# landisutils 0.0.73
+
+* `calibrate_dynamic_fire()`: the multi-node image check now quotes the `docker image inspect --format` argument. `system2()` pastes its arguments together WITHOUT quoting, so `{{index .RepoDigests 0}}` was split into three shell words and docker exited 64 (usage error). Because a usage error and a genuinely absent image are both non-zero, the guard added in 0.0.72 reported "image is missing" for EVERY host and would have blocked every multi-node run. The accompanying test only covered the missing-image path, which fails identically either way; it now also asserts the positive case, so a malformed command cannot pass again.
+
 # landisutils 0.0.72
 
 * `calibrate_dynamic_fire()` verifies, before starting any container, that every host in `cfg$nodes` has the configured Docker image AND that they all resolve to the SAME digest. Pools start with `pull = FALSE`, so a host missing the image previously failed late and only on that host; worse, hosts holding different digests behind a mutable tag (such as `:ubuntu-24.04`) would not error at all -- the search would simply evaluate some trials against one LANDIS-II build and some against another, mixing them into one loss surface. That is a reproducibility failure, and invisible in the output, which is why it is now a hard error naming the offending hosts.

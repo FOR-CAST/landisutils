@@ -211,9 +211,12 @@
   info <- parallel::clusterCall(
     cl,
     function(img) {
+      ## shQuote the format string: system2() pastes args together WITHOUT quoting, so an unquoted
+      ## "{{index .RepoDigests 0}}" splits into three shell words and docker exits 64 (usage error) --
+      ## which is indistinguishable from a missing image, and would fail every host.
       d <- suppressWarnings(system2(
         "docker",
-        c("image", "inspect", "--format", "{{index .RepoDigests 0}}", img),
+        c("image", "inspect", "--format", shQuote("{{index .RepoDigests 0}}"), shQuote(img)),
         stdout = TRUE,
         stderr = FALSE
       ))
