@@ -116,7 +116,12 @@ test_that(".start_calibration_cluster builds and tears down a PSOCK cluster", {
     name_prefix = "landis-cal-test",
     start_pools = FALSE
   )
-  expect_equal(mc$total, 2L)
+  ## NOT `== 2`: the per-host caps are RAM- and physical-core-aware, so a small CI runner can
+  ## legitimately be trimmed to one worker. What must hold regardless of hardware is that the
+  ## reported total matches the cluster actually built.
+  expect_gte(mc$total, 1L)
+  expect_lte(mc$total, 2L)
+  expect_length(mc$cl, mc$total)
   expect_s3_class(mc$cl, "cluster")
   ## workers must have landisutils attached -- PSOCK inherits nothing, unlike FORK
   loaded <- parallel::clusterEvalQ(mc$cl, "landisutils" %in% loadedNamespaces())
@@ -162,6 +167,9 @@ test_that(".verify_node_images accepts a consistent image and rejects a missing 
     "is missing on"
   )
 
+  ## Probe EXACTLY what .verify_node_images() probes: guarding on {{.Id}} while the function reads
+  ## {{index .RepoDigests 0}} lets the two disagree -- an image built locally but never pulled has
+  ## an Id and no RepoDigests, so the guard passes and the function then errors.
   ## POSITIVE case. Without this, the test above passes even when the docker call is malformed --
   ## a usage error and a genuinely absent image both come back non-zero, so "missing" is reported
   ## either way. That is exactly how an unquoted --format string (which system2() splits into
@@ -169,12 +177,12 @@ test_that(".verify_node_images accepts a consistent image and rejects a missing 
   skip_if(
     length(suppressWarnings(system2(
       "docker",
-      c("image", "inspect", "--format", shQuote("{{.Id}}"), "busybox:latest"),
+      c("image", "inspect", "--format", shQuote("{{index .RepoDigests 0}}"), "busybox:latest"),
       stdout = TRUE,
       stderr = FALSE
     ))) ==
       0L,
-    "busybox:latest not present locally"
+    "busybox:latest has no local RepoDigest"
   )
   digest <- .verify_node_images(cl, "busybox:latest")
   expect_false(is.na(digest))

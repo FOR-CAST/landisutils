@@ -41,7 +41,7 @@ test_that(".stream_file_timestep parses the trailing timestep, NA when absent", 
 ## step t can still be OPEN when the log already reports `Current time: t`. Anything at or above
 ## (current - lag) must be left alone.
 test_that("only timesteps at or below current-lag are moved", {
-  skip_if(unname(Sys.which("rsync")) == "", "rsync not available")
+  skip_if(.Platform$OS.type != "windows" && unname(Sys.which("rsync")) == "", "rsync not available")
   root <- withr::local_tempdir()
   run <- fs::dir_create(fs::path(root, "run"))
   dest <- fs::path(root, "dest")
@@ -60,7 +60,7 @@ test_that("only timesteps at or below current-lag are moved", {
 })
 
 test_that("non-output files are never streamed or deleted", {
-  skip_if(unname(Sys.which("rsync")) == "", "rsync not available")
+  skip_if(.Platform$OS.type != "windows" && unname(Sys.which("rsync")) == "", "rsync not available")
   root <- withr::local_tempdir()
   run <- fs::dir_create(fs::path(root, "run"))
   dest <- fs::path(root, "dest")
@@ -78,7 +78,7 @@ test_that("non-output files are never streamed or deleted", {
 ## TimeOfLastFire was excluded on suspicion of being simulation state; the Dynamic Fire sources show
 ## it is an in-memory ISiteVar written out through IOutputRaster, so it streams like any other map.
 test_that("TimeOfLastFire IS streamed (verified pure output)", {
-  skip_if(unname(Sys.which("rsync")) == "", "rsync not available")
+  skip_if(.Platform$OS.type != "windows" && unname(Sys.which("rsync")) == "", "rsync not available")
   root <- withr::local_tempdir()
   run <- fs::dir_create(fs::path(root, "run"))
   dest <- fs::path(root, "dest")
@@ -94,7 +94,7 @@ test_that("TimeOfLastFire IS streamed (verified pure output)", {
 ## The exclusion mechanism still has to work, for the one real hazard: an extension that reads a
 ## timestep-templated INPUT map (Land Use Plus does) configured to live inside an output directory.
 test_that("stream_exclude still suppresses a named map", {
-  skip_if(unname(Sys.which("rsync")) == "", "rsync not available")
+  skip_if(.Platform$OS.type != "windows" && unname(Sys.which("rsync")) == "", "rsync not available")
   root <- withr::local_tempdir()
   run <- fs::dir_create(fs::path(root, "run"))
   dest <- fs::path(root, "dest")
@@ -106,7 +106,7 @@ test_that("stream_exclude still suppresses a named map", {
 })
 
 test_that("nothing is moved before the sim has reported enough timesteps", {
-  skip_if(unname(Sys.which("rsync")) == "", "rsync not available")
+  skip_if(.Platform$OS.type != "windows" && unname(Sys.which("rsync")) == "", "rsync not available")
   root <- withr::local_tempdir()
   run <- fs::dir_create(fs::path(root, "run"))
   .mk_run(run, current_t = 1L)
@@ -184,4 +184,40 @@ test_that("root-level timestep files and stateful maps are never streamed", {
   )) {
     expect_false(streamable(f), info = f)
   }
+})
+
+## Both copy backends must behave identically. The Windows (direct-copy) branch is unreachable from a
+## Linux CI run, which is how it shipped broken: rsync parses "host:path", so a drive-qualified
+## "C:/..." reads as the remote host "C" and every sync silently moved nothing.
+test_that("both copy backends preserve the relative layout", {
+  for (use_rsync in c(TRUE, FALSE)) {
+    if (use_rsync && unname(Sys.which("rsync")) == "") {
+      next
+    }
+    root <- withr::local_tempdir()
+    run <- fs::dir_create(fs::path(root, "run"))
+    dest <- fs::path(root, "dest")
+    fs::dir_create(fs::path(run, "fire"))
+    writeLines("a", fs::path(run, "fire", "severity-1.tif"))
+    fs::dir_create(fs::path(run, "outputs", "biomass"))
+    writeLines("b", fs::path(run, "outputs", "biomass", "biomass-2.tif"))
+    rel <- c("fire/severity-1.tif", "outputs/biomass/biomass-2.tif")
+
+    expect_true(.stream_copy(run, dest, rel, use_rsync = use_rsync), info = use_rsync)
+    expect_true(fs::file_exists(fs::path(dest, "fire", "severity-1.tif")), info = use_rsync)
+    expect_true(
+      fs::file_exists(fs::path(dest, "outputs", "biomass", "biomass-2.tif")),
+      info = use_rsync
+    )
+    expect_equal(readLines(fs::path(dest, "fire", "severity-1.tif")), "a", info = use_rsync)
+  }
+})
+
+test_that("the direct-copy backend reports failure rather than claiming success", {
+  root <- withr::local_tempdir()
+  run <- fs::dir_create(fs::path(root, "run"))
+  writeLines("x", fs::path(run, "present.tif"))
+  ## a source file that does not exist must make the copy report FALSE, so the caller keeps the
+  ## originals instead of deleting files it never transferred
+  expect_false(.stream_copy(run, fs::path(root, "dest"), "missing.tif", use_rsync = FALSE))
 })

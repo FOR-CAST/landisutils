@@ -101,6 +101,52 @@
   suppressWarnings(as.integer(sub(".*[^0-9]([0-9]+)\\.(tif|img)$", "\\1", basename(paths))))
 }
 
+## Copy `rel` (paths relative to `run_dir`) into `dest`, preserving the relative layout. Returns TRUE
+## only if every file arrived, so the caller can safely delete the originals.
+##
+## Two implementations, for the same reason `landis_archive_rep()` has two: rsync parses `host:path`,
+## so a drive-qualified Windows path like `C:/Users/...` reads as the remote host `C`. On Unix rsync
+## is worth it -- `--files-from` moves the whole batch in ONE process, which matters when many
+## replicates sync concurrently to a network share. On Windows a direct copy is both correct and
+## sufficient, since the scratch-to-share deployment this exists for is a Linux arrangement.
+## `use_rsync` is a parameter rather than an inline `.Platform` check so BOTH branches are reachable
+## from a test on either OS. The direct-copy path shipped broken precisely because it could not be
+## exercised where the suite runs.
+.stream_copy <- function(run_dir, dest, rel, use_rsync = .Platform$OS.type != "windows") {
+  if (!use_rsync) {
+    for (r in rel) {
+      failed <- inherits(
+        tryCatch(
+          {
+            fs::dir_create(fs::path(dest, fs::path_dir(r)))
+            fs::file_copy(fs::path(run_dir, r), fs::path(dest, r), overwrite = TRUE)
+          },
+          error = function(e) e
+        ),
+        "error"
+      )
+      if (failed) {
+        return(FALSE)
+      }
+    }
+    return(TRUE)
+  }
+  ## --files-from keeps the relative layout without one rsync per file.
+  list_file <- fs::file_temp(ext = "txt")
+  on.exit(unlink(list_file), add = TRUE)
+  writeLines(rel, list_file)
+  res <- tryCatch(
+    processx::run(
+      "rsync",
+      c("-a", "--files-from", list_file, paste0(run_dir, "/"), paste0(dest, "/")),
+      error_on_status = FALSE,
+      echo = FALSE
+    ),
+    error = function(e) list(status = 127L)
+  )
+  identical(as.integer(res$status), 0L)
+}
+
 ## Move every output map for timestep <= (current - lag) into `dest`, preserving paths relative to
 ## `run_dir`, and delete the local copy ONLY after rsync reports success.
 ##
@@ -157,22 +203,7 @@
   if (inherits(tryCatch(fs::dir_create(dest), error = function(e) e), "error")) {
     return(invisible(0L))
   }
-  ## --files-from keeps the relative layout without one rsync per file, which matters when 50
-  ## replicates sync concurrently over a network share.
-  list_file <- fs::file_temp(ext = "txt")
-  on.exit(unlink(list_file), add = TRUE)
-  writeLines(src_rel, list_file)
-
-  res <- tryCatch(
-    processx::run(
-      "rsync",
-      c("-a", "--files-from", list_file, paste0(run_dir, "/"), paste0(dest, "/")),
-      error_on_status = FALSE,
-      echo = FALSE
-    ),
-    error = function(e) list(status = 127L)
-  )
-  if (!identical(as.integer(res$status), 0L)) {
+  if (!.stream_copy(run_dir, dest, src_rel)) {
     return(invisible(0L)) ## leave everything in place; retry next interval
   }
   ## Verified copy exists -> reclaim the scratch copy.
