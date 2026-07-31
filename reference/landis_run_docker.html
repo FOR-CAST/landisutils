@@ -25,7 +25,7 @@ pin runs to a specific image regardless of subsequent tag movement."><meta prope
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.76</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.77</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -84,7 +84,12 @@ pin runs to a specific image regardless of subsequent tag movement.</p>
 <span>  mem_limit <span class="op">=</span> <span class="st">"8g"</span>,</span>
 <span>  mem_margin <span class="op">=</span> <span class="fl">1.5</span>,</span>
 <span>  post_completion_timeout_sec <span class="op">=</span> <span class="fl">300</span>,</span>
-<span>  startup_jitter <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  startup_jitter <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  stream_to <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  stream_every_sec <span class="op">=</span> <span class="fl">600</span>,</span>
+<span>  stream_lag_steps <span class="op">=</span> <span class="fl">2L</span>,</span>
+<span>  stream_jitter_frac <span class="op">=</span> <span class="fl">0.25</span>,</span>
+<span>  stream_patterns <span class="op">=</span> <span class="fu">.default_stream_patterns</span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -175,6 +180,40 @@ never invalidates completed replicates. <code>NULL</code> (the default) reads th
 <code>LANDIS_STARTUP_JITTER</code> environment variable (so it can be set once in a
 project <code>.Rprofile</code> that <code>crew</code> workers inherit); an unset/invalid value
 means <code>0</code> (no stagger).</p></dd>
+
+
+<dt id="arg-stream-to">stream_to<a class="anchor" aria-label="anchor" href="#arg-stream-to"></a></dt>
+<dd><p>Character or <code>NULL</code>. When set, completed output maps are
+moved here while the simulation runs, so local scratch holds only the
+working set instead of the whole replicate. Nothing is discarded – files
+are relocated, not pruned. Point this at the <code>&lt;final&gt;.partial</code> staging
+directory used by <code><a href="landis_archive_rep.html">landis_archive_rep()</a></code> so the atomic-rename publish, and
+therefore the all-or-nothing appearance of the final directory, is
+preserved. <code>NULL</code> (default) disables streaming.</p></dd>
+
+
+<dt id="arg-stream-every-sec">stream_every_sec<a class="anchor" aria-label="anchor" href="#arg-stream-every-sec"></a></dt>
+<dd><p>Numeric. Seconds between sync attempts (default
+<code>600</code>). Actual intervals are jittered; see <code>stream_jitter_frac</code>.</p></dd>
+
+
+<dt id="arg-stream-lag-steps">stream_lag_steps<a class="anchor" aria-label="anchor" href="#arg-stream-lag-steps"></a></dt>
+<dd><p>Integer. How many timesteps behind the simulation to
+stay (default <code>2</code>). LANDIS-II writes several rasters per timestep, so a file
+for step <code>t</code> can still be open when the log already reports <code>Current time: t</code>; the lag is what makes "written" mean "closed".</p></dd>
+
+
+<dt id="arg-stream-jitter-frac">stream_jitter_frac<a class="anchor" aria-label="anchor" href="#arg-stream-jitter-frac"></a></dt>
+<dd><p>Numeric in <code>[0, 1]</code>. Fraction by which each interval
+is randomly stretched or shrunk (default <code>0.25</code>). Replicates launched
+together would otherwise sync in lockstep for the whole run, turning a
+steady trickle into periodic bursts against one shared filesystem.</p></dd>
+
+
+<dt id="arg-stream-patterns">stream_patterns<a class="anchor" aria-label="anchor" href="#arg-stream-patterns"></a></dt>
+<dd><p>Character vector of regexes matching output maps that
+are safe to move mid-run. Defaults to write-once fire and fuels maps;
+deliberately excludes <code>TimeOfLastFire-*</code>, which may be simulation state.</p></dd>
 
 </dl></div>
     <div class="section level2">

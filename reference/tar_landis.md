@@ -25,6 +25,9 @@ tar_landis(
   mem_margin = 1.5,
   post_completion_timeout_sec = 300,
   work_root = NULL,
+  stream_every_sec = 600,
+  stream_lag_steps = 2L,
+  stream_jitter_frac = 0.25,
   pattern = NULL,
   packages = targets::tar_option_get("packages"),
   library = targets::tar_option_get("library"),
@@ -165,6 +168,17 @@ tar_landis(
   workers can set it via `.Rprofile`); when that is also empty the rep
   runs in place under `scenario_dir` (original behaviour). No effect for
   `method = "local"`.
+
+- stream_every_sec, stream_lag_steps, stream_jitter_frac:
+
+  Streaming controls passed to
+  [`landis_run_docker()`](https://for-cast.github.io/landisutils/reference/landis_run_docker.md).
+  Completed output maps are moved to the replicate's staging directory
+  while the run proceeds, so node-local scratch holds only the working
+  set rather than the whole replicate. Active only when `work_root`
+  places the run on scratch. See
+  [`landis_run_docker()`](https://for-cast.github.io/landisutils/reference/landis_run_docker.md)
+  for the safety model.
 
 - pattern:
 

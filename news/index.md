@@ -1,5 +1,52 @@
 # Changelog
 
+## landisutils 0.0.77
+
+- [`landis_run_docker()`](https://for-cast.github.io/landisutils/reference/landis_run_docker.md)
+  and
+  [`tar_landis()`](https://for-cast.github.io/landisutils/reference/tar_landis.md)
+  can stream completed output maps to durable storage WHILE a replicate
+  runs, via `stream_to` (wired automatically by
+  [`tar_landis()`](https://for-cast.github.io/landisutils/reference/tar_landis.md)
+  whenever `work_root` puts the run on scratch). Previously a replicate
+  was moved only once it finished, so peak scratch was (concurrent
+  replicates) x (whole replicate). That does not scale to production
+  length: a 1200-year run writing several rasters per timestep is tens
+  of GB, and replicate concurrency is sized against RAM rather than
+  disk, so a large enough run exhausts scratch hours in – after most of
+  the compute has been paid for. Streaming leaves only the working set
+  on scratch.
+- Nothing is discarded: files are MOVED, not pruned. Outputs no
+  downstream target reads today are still archived, because re-running
+  1200 years to recover them costs far more than storing them.
+- Streaming writes into the same `<final>.partial` staging directory
+  that
+  [`landis_archive_rep()`](https://for-cast.github.io/landisutils/reference/landis_archive_rep.md)
+  publishes by atomic rename, so the all-or-nothing guarantee is
+  unchanged – a partially streamed replicate can never be mistaken for a
+  finished one by a skip-check reading the final directory.
+- The allow-list is scoped by output DIRECTORY (`fire/`, `ForCS/`,
+  `NECN/`, `harvest/`, `bda/`, `eda/`, `rootrot/`, `output/`,
+  `outputs/`, wind, hurricane, …) rather than by map name, so it covers
+  every extension instead of only the ones one project happens to run –
+  LANDIS-II output maps share a `<dir>/<name>-{timestep}.<ext>`
+  convention, so enumerating names would mean chasing each new
+  extension. Directory scoping is also the safer shape: a bare
+  `-{timestep}.tif` pattern would match `landuse-{timestep}.tif`, which
+  Land Use Plus READS as input from the scenario root, so root-level
+  inputs are now excluded structurally rather than by memory.
+- Safety: only write-once output maps matching an allow-list are moved,
+  and only for timesteps at or below `current - stream_lag_steps`
+  (default 2), since LANDIS-II writes several rasters per timestep and a
+  file for step `t` can still be open when the log already reports
+  `Current time: t`. Local copies are removed only after `rsync` reports
+  success, so a storage failure costs a retry rather than the outputs.
+  `TimeOfLastFire-*` is deliberately excluded: it may be simulation
+  state rather than pure output, and that has not been verified against
+  the extension source. Intervals are jittered (`stream_jitter_frac`,
+  default 0.25) so replicates launched together do not sync in lockstep
+  and burst against one shared filesystem.
+
 ## landisutils 0.0.76
 
 - [`calibrate_dynamic_fire()`](https://for-cast.github.io/landisutils/reference/calibrate_dynamic_fire.md)

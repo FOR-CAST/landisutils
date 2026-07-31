@@ -11,7 +11,7 @@ replicate's output files."><meta property="og:image" content="https://for-cast.g
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.76</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.77</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -71,6 +71,9 @@ replicate's output files.</p>
 <span>  mem_margin <span class="op">=</span> <span class="fl">1.5</span>,</span>
 <span>  post_completion_timeout_sec <span class="op">=</span> <span class="fl">300</span>,</span>
 <span>  work_root <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  stream_every_sec <span class="op">=</span> <span class="fl">600</span>,</span>
+<span>  stream_lag_steps <span class="op">=</span> <span class="fl">2L</span>,</span>
+<span>  stream_jitter_frac <span class="op">=</span> <span class="fl">0.25</span>,</span>
 <span>  pattern <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  packages <span class="op">=</span> <span class="fu">targets</span><span class="fu">::</span><span class="fu"><a href="https://docs.ropensci.org/targets/reference/tar_option_get.html" class="external-link">tar_option_get</a></span><span class="op">(</span><span class="st">"packages"</span><span class="op">)</span>,</span>
 <span>  library <span class="op">=</span> <span class="fu">targets</span><span class="fu">::</span><span class="fu"><a href="https://docs.ropensci.org/targets/reference/tar_option_get.html" class="external-link">tar_option_get</a></span><span class="op">(</span><span class="st">"library"</span><span class="op">)</span>,</span>
@@ -203,6 +206,15 @@ and output collection both read the final <code>scenario_dir/repNN</code>. When 
 (so <code>{crew}</code> workers can set it via <code>.Rprofile</code>); when that is also empty
 the rep runs in place under <code>scenario_dir</code> (original behaviour). No effect
 for <code>method = "local"</code>.</p></dd>
+
+
+<dt id="arg-stream-every-sec-stream-lag-steps-stream-jitter-frac">stream_every_sec, stream_lag_steps, stream_jitter_frac<a class="anchor" aria-label="anchor" href="#arg-stream-every-sec-stream-lag-steps-stream-jitter-frac"></a></dt>
+<dd><p>Streaming
+controls passed to <code><a href="landis_run_docker.html">landis_run_docker()</a></code>. Completed output maps are moved to
+the replicate's staging directory while the run proceeds, so node-local
+scratch holds only the working set rather than the whole replicate. Active
+only when <code>work_root</code> places the run on scratch. See <code><a href="landis_run_docker.html">landis_run_docker()</a></code>
+for the safety model.</p></dd>
 
 
 <dt id="arg-pattern">pattern<a class="anchor" aria-label="anchor" href="#arg-pattern"></a></dt>
