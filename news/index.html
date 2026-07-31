@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.71</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.72</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -40,6 +40,11 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.72" id="landisutils-0072">landisutils 0.0.72<a class="anchor" aria-label="anchor" href="#landisutils-0072"></a></h2>
+<ul><li>
+<code><a href="../reference/calibrate_dynamic_fire.html">calibrate_dynamic_fire()</a></code> verifies, before starting any container, that every host in <code>cfg$nodes</code> has the configured Docker image AND that they all resolve to the SAME digest. Pools start with <code>pull = FALSE</code>, so a host missing the image previously failed late and only on that host; worse, hosts holding different digests behind a mutable tag (such as <code>:ubuntu-24.04</code>) would not error at all – the search would simply evaluate some trials against one LANDIS-II build and some against another, mixing them into one loss surface. That is a reproducibility failure, and invisible in the output, which is why it is now a hard error naming the offending hosts.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.71" id="landisutils-0071">landisutils 0.0.71<a class="anchor" aria-label="anchor" href="#landisutils-0071"></a></h2>
 <ul><li>

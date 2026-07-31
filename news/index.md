@@ -1,5 +1,19 @@
 # Changelog
 
+## landisutils 0.0.72
+
+- [`calibrate_dynamic_fire()`](https://for-cast.github.io/landisutils/reference/calibrate_dynamic_fire.md)
+  verifies, before starting any container, that every host in
+  `cfg$nodes` has the configured Docker image AND that they all resolve
+  to the SAME digest. Pools start with `pull = FALSE`, so a host missing
+  the image previously failed late and only on that host; worse, hosts
+  holding different digests behind a mutable tag (such as
+  `:ubuntu-24.04`) would not error at all – the search would simply
+  evaluate some trials against one LANDIS-II build and some against
+  another, mixing them into one loss surface. That is a reproducibility
+  failure, and invisible in the output, which is why it is now a hard
+  error naming the offending hosts.
+
 ## landisutils 0.0.71
 
 - [`calibrate_dynamic_fire()`](https://for-cast.github.io/landisutils/reference/calibrate_dynamic_fire.md)
