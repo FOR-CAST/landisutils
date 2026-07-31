@@ -1,5 +1,29 @@
 # Changelog
 
+## landisutils 0.0.78
+
+- The streaming allow-list no longer excludes `TimeOfLastFire-*` or
+  `TOLD-*`. They were held back in 0.0.77 on the suspicion that they
+  were simulation state read back on a later timestep; checking the
+  LANDIS-II v8 extension sources shows both are pure outputs, so they
+  now stream like any other map. Dynamic Fire keeps `TimeOfLastFire` as
+  an in-memory `ISiteVar<int>` (`SiteVars.cs`), initialised from
+  `StartTime - maxAge` and written through `IOutputRaster<ShortPixel>`
+  (`PlugIn.cs`); its only `OpenRaster` calls read topography and the
+  fire-regions input map. Root Rot’s `PlugIn.cs` writes exclusively
+  through `IOutputRaster<IntPixel>`, and its single `OpenRaster`
+  (`SiteVars.cs`) reads a configured input map. (`TimeSince*` never
+  applied: those are C# stand-ranking class names in
+  Library-Harvest-Mgmt and Base-BDA, not raster outputs.)
+- The `stream_exclude` mechanism is retained, and documented against the
+  hazard that actually exists: a few extensions read TIMESTEP-TEMPLATED
+  input maps at runtime – Land Use Plus resolves
+  `MapNames.ReplaceTemplateVars(inputMapTemplate, CurrentTime)` and
+  opens it every timestep (`Main.cs`). Such inputs normally live at the
+  scenario root, which the directory scoping already excludes; if a
+  scenario ever places one inside an output directory, list it in
+  `stream_exclude`.
+
 ## landisutils 0.0.77
 
 - [`landis_run_docker()`](https://for-cast.github.io/landisutils/reference/landis_run_docker.md)
