@@ -1,3 +1,7 @@
+# landisutils 0.0.82
+
+* The docker gate for tests is now a shared `helper-docker.R` rather than a copy inside one test file. testthat scopes a test file's top-level definitions to that file, so `.docker_available()` -- which already knew that Windows CI runners have the docker CLI but are configured for Windows containers only, and therefore cannot pull, inspect or run a Linux image such as busybox -- was invisible to the other docker-backed test files. Those files had each rolled a weaker `Sys.which("docker")` check, which passes on exactly such a runner and then fails for a reason unrelated to the package. All docker tests now share the one gate.
+
 # landisutils 0.0.81
 
 * Two more test-only fixes for CI. The `.verify_node_images()` guard probed the MAIN process for `busybox:latest` while the function probes the cluster WORKERS -- in CI the image satisfied the main-process guard and the function then reported it missing from the workers, so the test errored instead of skipping. It now probes on the workers, where the function looks. Separately, a `paste()`d `info` string was referenced before it was assigned (an earlier edit landed the reference but not the assignment), which surfaced only on the platform where that branch fails.

@@ -1,17 +1,5 @@
-## Docker-gated tests for the warm pool helpers. Skip unless `docker` is on PATH
-## (so the test file runs cleanly in CI without Docker installed).
-
-.docker_available <- function() {
-  ## Pool tests use a Linux base image (busybox); Windows CI runners typically
-  ## have docker CLI present but configured for Windows containers only, so
-  ## `docker run busybox:latest` fails with exit status 125. Skip on Windows
-  ## rather than try (and fail) to start a Linux container.
-  if (.Platform$OS.type == "windows") {
-    return(FALSE)
-  }
-  rc <- suppressWarnings(system2("docker", "version", stdout = FALSE, stderr = FALSE))
-  identical(as.integer(rc), 0L)
-}
+## Docker-gated tests for the warm pool helpers. The `.docker_available()` gate lives in
+## helper-docker.R so every docker-backed test file shares one definition.
 
 test_that("landis_pool_start + exec + stop round-trips against a busybox image", {
   skip_if_not(.docker_available(), "docker CLI not available")

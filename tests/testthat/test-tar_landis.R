@@ -139,7 +139,7 @@ testthat::test_that(".landis_run_complete() detects the completion marker in Lan
 })
 
 testthat::test_that(".docker_container_running() is FALSE (not an error) for an unknown container", {
-  testthat::skip_if(unname(Sys.which("docker")) == "", "docker not available")
+  testthat::skip_if_not(.docker_available(), "docker (with Linux containers) not available")
   running <- landisutils:::.docker_container_running
   testthat::expect_identical(running("landis-run-pkgtest-does-not-exist-0000"), FALSE)
 })

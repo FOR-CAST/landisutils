@@ -154,7 +154,7 @@ test_that(".stop_calibration_cluster is a no-op for NULL", {
 ## the same mutable tag, which would evaluate trials against different LANDIS-II builds without
 ## erroring at all. Exercised against a fake 2-"host" cluster on localhost.
 test_that(".verify_node_images accepts a consistent image and rejects a missing one", {
-  skip_if(unname(Sys.which("docker")) == "", "docker not available")
+  skip_if_not(.docker_available(), "docker (with Linux containers) not available")
   cl <- parallel::makeCluster(2L, type = "PSOCK")
   on.exit(try(parallel::stopCluster(cl), silent = TRUE), add = TRUE)
 
