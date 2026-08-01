@@ -117,12 +117,12 @@ test_that("a failed sync leaves scratch untouched", {
   root <- withr::local_tempdir()
   run <- fs::dir_create(fs::path(root, "run"))
   .mk_run(run, current_t = 10L)
-  ## an unwritable destination makes rsync fail; the scratch copy must survive so the next
-  ## interval can retry rather than the outputs being lost
-  bad <- fs::path(root, "nope", "deeper")
-  fs::dir_create(fs::path(root, "nope"))
-  fs::file_chmod(fs::path(root, "nope"), "a-w")
-  on.exit(try(fs::file_chmod(fs::path(root, "nope"), "u+w"), silent = TRUE), add = TRUE)
+  ## Make the destination impossible to create on ANY OS: its parent is a regular FILE. (chmod is
+  ## not usable here -- "a-w" does not stop writes on Windows, so the copy would succeed there and
+  ## the test would assert the opposite of what happened.)
+  blocker <- fs::path(root, "blocker")
+  writeLines("i am a file", blocker)
+  bad <- fs::path(blocker, "dest")
 
   n <- suppressWarnings(.stream_completed_outputs(run, bad, lag_steps = 2L))
   expect_equal(n, 0L)
@@ -203,13 +203,10 @@ test_that("both copy backends preserve the relative layout", {
     writeLines("b", fs::path(run, "outputs", "biomass", "biomass-2.tif"))
     rel <- c("fire/severity-1.tif", "outputs/biomass/biomass-2.tif")
 
-    expect_true(.stream_copy(run, dest, rel, use_rsync = use_rsync), info = use_rsync)
-    expect_true(fs::file_exists(fs::path(dest, "fire", "severity-1.tif")), info = use_rsync)
-    expect_true(
-      fs::file_exists(fs::path(dest, "outputs", "biomass", "biomass-2.tif")),
-      info = use_rsync
-    )
-    expect_equal(readLines(fs::path(dest, "fire", "severity-1.tif")), "a", info = use_rsync)
+    expect_true(.stream_copy(run, dest, rel, use_rsync = use_rsync), info = nfo)
+    expect_true(fs::file_exists(fs::path(dest, "fire", "severity-1.tif")), info = nfo)
+    expect_true(fs::file_exists(fs::path(dest, "outputs", "biomass", "biomass-2.tif")), info = nfo)
+    expect_equal(readLines(fs::path(dest, "fire", "severity-1.tif")), "a", info = nfo)
   }
 })
 

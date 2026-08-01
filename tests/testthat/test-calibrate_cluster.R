@@ -174,16 +174,26 @@ test_that(".verify_node_images accepts a consistent image and rejects a missing 
   ## a usage error and a genuinely absent image both come back non-zero, so "missing" is reported
   ## either way. That is exactly how an unquoted --format string (which system2() splits into
   ## separate shell words) shipped as a guard that failed every host it checked.
-  skip_if(
-    length(suppressWarnings(system2(
+  ## ENSURE the image rather than skipping on its absence. testthat runs files in PARALLEL here, so
+  ## whether busybox is present depends on whether another file's docker test happened to pull it
+  ## first -- a guard on presence makes this test's coverage a race. Pulling is ~2 MB.
+  .digest_of <- function(img) {
+    suppressWarnings(system2(
       "docker",
-      c("image", "inspect", "--format", shQuote("{{index .RepoDigests 0}}"), "busybox:latest"),
+      c("image", "inspect", "--format", shQuote("{{index .RepoDigests 0}}"), img),
       stdout = TRUE,
       stderr = FALSE
-    ))) ==
-      0L,
-    "busybox:latest has no local RepoDigest"
-  )
+    ))
+  }
+  if (length(.digest_of("busybox:latest")) == 0L) {
+    suppressWarnings(system2(
+      "docker",
+      c("pull", "-q", "busybox:latest"),
+      stdout = FALSE,
+      stderr = FALSE
+    ))
+  }
+  skip_if(length(.digest_of("busybox:latest")) == 0L, "could not obtain busybox:latest")
   digest <- .verify_node_images(cl, "busybox:latest")
   expect_false(is.na(digest))
   expect_match(digest, "@sha256:|busybox")
