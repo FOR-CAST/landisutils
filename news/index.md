@@ -1,5 +1,18 @@
 # Changelog
 
+## landisutils 0.0.81
+
+- Two more test-only fixes for CI. The `.verify_node_images()` guard
+  probed the MAIN process for `busybox:latest` while the function probes
+  the cluster WORKERS – in CI the image satisfied the main-process guard
+  and the function then reported it missing from the workers, so the
+  test errored instead of skipping. It now probes on the workers, where
+  the function looks. Separately, a
+  [`paste()`](https://rdrr.io/r/base/paste.html)d `info` string was
+  referenced before it was assigned (an earlier edit landed the
+  reference but not the assignment), which surfaced only on the platform
+  where that branch fails.
+
 ## landisutils 0.0.80
 
 - Test fixes only, no behaviour change; all three were tests that

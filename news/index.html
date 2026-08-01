@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.80</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.81</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -40,6 +40,10 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.81" id="landisutils-0081">landisutils 0.0.81<a class="anchor" aria-label="anchor" href="#landisutils-0081"></a></h2>
+<ul><li>Two more test-only fixes for CI. The <code>.verify_node_images()</code> guard probed the MAIN process for <code>busybox:latest</code> while the function probes the cluster WORKERS – in CI the image satisfied the main-process guard and the function then reported it missing from the workers, so the test errored instead of skipping. It now probes on the workers, where the function looks. Separately, a <code><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste()</a></code>d <code>info</code> string was referenced before it was assigned (an earlier edit landed the reference but not the assignment), which surfaced only on the platform where that branch fails.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.80" id="landisutils-0080">landisutils 0.0.80<a class="anchor" aria-label="anchor" href="#landisutils-0080"></a></h2>
 <ul><li>Test fixes only, no behaviour change; all three were tests that encoded the development machine rather than testing the package. (1) The <code>.verify_node_images()</code> positive case guarded on <code>busybox:latest</code> being present, but testthat runs files in PARALLEL here and it is another file’s docker test that pulls it – so this test’s coverage was a race. It now ENSURES the image (pulling if needed, ~2 MB) and skips only if that fails. (2) The failed-sync test made its destination unwritable with <code>chmod a-w</code>, which does not stop writes on Windows – the copy succeeded there and the test asserted the opposite of what happened. It now uses a destination whose parent is a regular FILE, which cannot be created on any OS, and both backends are confirmed to report failure while leaving the source intact. (3) The both-backends test passed a LOGICAL as testthat’s <code>info</code>, which must be character: on Linux both branches passed so it was never evaluated, and it only surfaced as an error on Windows where the rsync branch legitimately fails. That branch is now skipped on Windows, since rsync’s inability to address drive-qualified paths is precisely why the other backend exists.</li>
