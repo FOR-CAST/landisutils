@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.79</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.80</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -40,6 +40,10 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.80" id="landisutils-0080">landisutils 0.0.80<a class="anchor" aria-label="anchor" href="#landisutils-0080"></a></h2>
+<ul><li>Test fixes only, no behaviour change; all three were tests that encoded the development machine rather than testing the package. (1) The <code>.verify_node_images()</code> positive case guarded on <code>busybox:latest</code> being present, but testthat runs files in PARALLEL here and it is another file’s docker test that pulls it – so this test’s coverage was a race. It now ENSURES the image (pulling if needed, ~2 MB) and skips only if that fails. (2) The failed-sync test made its destination unwritable with <code>chmod a-w</code>, which does not stop writes on Windows – the copy succeeded there and the test asserted the opposite of what happened. It now uses a destination whose parent is a regular FILE, which cannot be created on any OS, and both backends are confirmed to report failure while leaving the source intact. (3) The both-backends test passed a LOGICAL as testthat’s <code>info</code>, which must be character: on Linux both branches passed so it was never evaluated, and it only surfaced as an error on Windows where the rsync branch legitimately fails. That branch is now skipped on Windows, since rsync’s inability to address drive-qualified paths is precisely why the other backend exists.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.79" id="landisutils-0079">landisutils 0.0.79<a class="anchor" aria-label="anchor" href="#landisutils-0079"></a></h2>
 <ul><li>Output streaming now works on Windows. <code>.stream_copy()</code> used <code>rsync</code> unconditionally, and <code>rsync</code> parses <code>host:path</code>, so a drive-qualified path like <code>C:/Users/...</code> reads as the remote host <code>C</code> – every sync silently moved nothing. This is the same defect <code><a href="../reference/landis_archive_rep.html">landis_archive_rep()</a></code> was fixed for in 0.0.70, reintroduced in a new code path; Windows now uses a direct copy, Unix keeps <code>rsync --files-from</code> (one process per batch, which matters when many replicates sync concurrently to a shared filesystem). The backend is now a <code>use_rsync</code> argument rather than an inline <code>.Platform</code> check, so BOTH paths are reachable from a test on either OS – the direct-copy path shipped broken precisely because it could not be exercised where the suite runs.</li>

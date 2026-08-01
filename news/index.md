@@ -1,5 +1,26 @@
 # Changelog
 
+## landisutils 0.0.80
+
+- Test fixes only, no behaviour change; all three were tests that
+  encoded the development machine rather than testing the package. (1)
+  The `.verify_node_images()` positive case guarded on `busybox:latest`
+  being present, but testthat runs files in PARALLEL here and it is
+  another file’s docker test that pulls it – so this test’s coverage was
+  a race. It now ENSURES the image (pulling if needed, ~2 MB) and skips
+  only if that fails. (2) The failed-sync test made its destination
+  unwritable with `chmod a-w`, which does not stop writes on Windows –
+  the copy succeeded there and the test asserted the opposite of what
+  happened. It now uses a destination whose parent is a regular FILE,
+  which cannot be created on any OS, and both backends are confirmed to
+  report failure while leaving the source intact. (3) The both-backends
+  test passed a LOGICAL as testthat’s `info`, which must be character:
+  on Linux both branches passed so it was never evaluated, and it only
+  surfaced as an error on Windows where the rsync branch legitimately
+  fails. That branch is now skipped on Windows, since rsync’s inability
+  to address drive-qualified paths is precisely why the other backend
+  exists.
+
 ## landisutils 0.0.79
 
 - Output streaming now works on Windows. `.stream_copy()` used `rsync`
