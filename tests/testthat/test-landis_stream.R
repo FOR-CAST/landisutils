@@ -191,9 +191,11 @@ test_that("root-level timestep files and stateful maps are never streamed", {
 ## "C:/..." reads as the remote host "C" and every sync silently moved nothing.
 test_that("both copy backends preserve the relative layout", {
   for (use_rsync in c(TRUE, FALSE)) {
-    if (use_rsync && unname(Sys.which("rsync")) == "") {
+    ## rsync cannot address drive-qualified paths, which is the very reason the other backend exists
+    if (use_rsync && (.Platform$OS.type == "windows" || unname(Sys.which("rsync")) == "")) {
       next
     }
+    nfo <- paste("use_rsync =", use_rsync)
     root <- withr::local_tempdir()
     run <- fs::dir_create(fs::path(root, "run"))
     dest <- fs::path(root, "dest")

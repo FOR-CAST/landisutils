@@ -174,26 +174,33 @@ test_that(".verify_node_images accepts a consistent image and rejects a missing 
   ## a usage error and a genuinely absent image both come back non-zero, so "missing" is reported
   ## either way. That is exactly how an unquoted --format string (which system2() splits into
   ## separate shell words) shipped as a guard that failed every host it checked.
-  ## ENSURE the image rather than skipping on its absence. testthat runs files in PARALLEL here, so
-  ## whether busybox is present depends on whether another file's docker test happened to pull it
-  ## first -- a guard on presence makes this test's coverage a race. Pulling is ~2 MB.
-  .digest_of <- function(img) {
-    suppressWarnings(system2(
+  ## Probe the image ON THE WORKERS, which is where .verify_node_images() looks. Probing the main
+  ## process instead lets the two disagree -- exactly what happened in CI, where the image satisfied
+  ## a main-process guard and the function then reported it missing from the workers. Pull first
+  ## (~2 MB): testthat runs files in PARALLEL here, so relying on another file's docker test to have
+  ## pulled busybox makes this test's coverage depend on file ordering.
+  suppressWarnings(system2(
+    "docker",
+    c("pull", "-q", "busybox:latest"),
+    stdout = FALSE,
+    stderr = FALSE
+  ))
+  on_workers <- unlist(parallel::clusterCall(cl, function() {
+    length(suppressWarnings(system2(
       "docker",
-      c("image", "inspect", "--format", shQuote("{{index .RepoDigests 0}}"), img),
+      c(
+        "image",
+        "inspect",
+        "--format",
+        shQuote("{{index .RepoDigests 0}}"),
+        shQuote("busybox:latest")
+      ),
       stdout = TRUE,
       stderr = FALSE
-    ))
-  }
-  if (length(.digest_of("busybox:latest")) == 0L) {
-    suppressWarnings(system2(
-      "docker",
-      c("pull", "-q", "busybox:latest"),
-      stdout = FALSE,
-      stderr = FALSE
-    ))
-  }
-  skip_if(length(.digest_of("busybox:latest")) == 0L, "could not obtain busybox:latest")
+    ))) >
+      0L
+  }))
+  skip_if(!all(on_workers), "busybox:latest not visible to the cluster workers")
   digest <- .verify_node_images(cl, "busybox:latest")
   expect_false(is.na(digest))
   expect_match(digest, "@sha256:|busybox")
