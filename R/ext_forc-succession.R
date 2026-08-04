@@ -680,14 +680,22 @@ insertForCSMapControl <- function(df) {
 #'
 #' @export
 insertAvailableLightBiomass <- function(df) {
-  df <- cbind(df[, 1], apply(df[, -1], 2, appendPercent))
+  ## `drop = FALSE` and a column-wise lapply(), NOT `apply(df[, -1], 2, ...)`:
+  ## with a SINGLE ecoregion `df[, -1]` collapses to a vector and apply() fails
+  ## with "dim(X) must have a positive length".
+  vals <- df
+  vals[, -1] <- lapply(df[, -1, drop = FALSE], appendPercent)
 
   c(
     glue::glue("AvailableLightBiomass"),
     glue::glue(">>  Shade"),
     glue::glue(">>  Class   Ecoregions"),
-    glue::glue_collapse(colnames(df), sep = "   "),
-    apply(df, 1, function(x) {
+    ## The header row carries the ECOREGION names only; the shade-class column
+    ## is deliberately left unlabelled. LANDIS-II parses this line as the
+    ## ecoregion list, so emitting a name for the first column makes it read
+    ## that name as an ecoregion and abort with "Class is not an ecoregion name".
+    glue::glue_collapse(c("", names(df)[-1]), sep = "   "),
+    apply(vals, 1, function(x) {
       glue::glue_collapse(x, sep = "  ")
     }),
     glue::glue("") ## add blank line after each item group

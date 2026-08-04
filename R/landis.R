@@ -116,26 +116,149 @@ landis_replicate <- function(
 #' Find the LANDIS-II console for a local installation
 #'
 #' Returns the path to `Landis.Console.dll` for a locally-installed LANDIS-II.
-#' Resolution order: `LANDIS_CONSOLE` environment variable; filesystem search
-#' under `/opt` for a `build/Release/` path.
+#' Resolution order: the `LANDIS_CONSOLE` environment variable, then a
+#' filesystem search under `/opt` for a `build/Release/` path.
 #'
-#' @returns Character. Path to `Landis.Console.dll`, or `NA` if not found.
+#' The `/opt` search is a Linux convention and finds nothing on Windows, where
+#' `LANDIS_CONSOLE` is the only route. `method = "local"` is the default there
+#' (see [tar_landis()]), so a Windows user must set that variable.
+#'
+#' @param check_version Logical. When `TRUE` (default), verify the console's
+#'   major version with [landis_version()] and stop if it is not
+#'   `required_major`. A version that cannot be determined only warns.
+#' @param required_major Integer. Required LANDIS-II major version.
+#'
+#' @returns Character. Path to `Landis.Console.dll`, or `NA_character_` if not
+#'   found.
 #'
 #' @family LANDIS-II execution helpers
-#' @seealso [landis_find_docker()], [landis_run_local()], [tar_landis()]
+#' @seealso [landis_version()], [landis_find_docker()], [landis_run_local()],
+#'   [tar_landis()]
 #' @export
-landis_find <- function() {
+landis_find <- function(check_version = TRUE, required_major = 8L) {
+  ## An explicit LANDIS_CONSOLE wins. The condition used to be inverted: when
+  ## the variable WAS set its value was discarded and replaced by the /opt
+  ## search, and when it was unset the function returned "". On Windows, where
+  ## /opt does not exist, that meant local runs could never find the console.
   landis_console <- Sys.getenv("LANDIS_CONSOLE")
-  if (nzchar(landis_console)) {
-    landis_console <- list.files(
+
+  if (!nzchar(landis_console)) {
+    hits <- list.files(
       "/opt",
       "Landis[.]Console[.]dll$",
       full.names = TRUE,
       recursive = TRUE
     ) |>
       grep(x = _, pattern = "/build/Release/", value = TRUE)
+
+    landis_console <- if (length(hits) == 0L) NA_character_ else hits[[1L]]
   }
-  landis_console[1]
+
+  if (isTRUE(check_version) && !is.na(landis_console)) {
+    .assert_landis_major(landis_console, required_major)
+  }
+
+  landis_console
+}
+
+## Stop when the console is a major version this package's input writers do not
+## target. v7 and v8 differ in the input-file formats (initial communities moved
+## to a CSV + raster pair, ForCS gained the SpinUp BiomassSpinUpFlag column and
+## the map-control block, core species.txt dropped shade/fire tolerance), so a v7
+## console silently mis-parses v8 inputs rather than failing cleanly.
+.assert_landis_major <- function(console, required_major) {
+  version <- landis_version(console, check_version = FALSE)
+
+  if (is.na(version)) {
+    warning(
+      sprintf(
+        paste0(
+          "could not determine the LANDIS-II version of '%s'; proceeding, but the input ",
+          "writers in this package target v%d and v7 input formats differ"
+        ),
+        console,
+        as.integer(required_major)
+      ),
+      call. = FALSE
+    )
+    return(invisible(NULL))
+  }
+
+  major <- as.integer(unclass(version)[[1L]][1L])
+  if (!identical(major, as.integer(required_major))) {
+    stop(
+      sprintf(
+        paste0(
+          "LANDIS-II v%s found at '%s', but this package writes v%d input files. ",
+          "v7 and v8 input formats differ (initial communities, ForCS SpinUp and map ",
+          "control, core species.txt), so a mismatched console mis-parses the inputs ",
+          "rather than failing cleanly. Point LANDIS_CONSOLE at a v%d install."
+        ),
+        as.character(version),
+        console,
+        as.integer(required_major),
+        as.integer(required_major)
+      ),
+      call. = FALSE
+    )
+  }
+  invisible(NULL)
+}
+
+#' Report the version of a local LANDIS-II console
+#'
+#' Runs the console with no scenario file. It prints its version banner --
+#' `LANDIS-II 8.0 (8)` -- and then exits with an error about the missing
+#' scenario, so a non-zero status is expected and is not treated as failure.
+#'
+#' @param console Character or `NULL`. Path to `Landis.Console.dll`; resolved
+#'   via [landis_find()] when `NULL`.
+#' @param timeout Numeric. Seconds to wait for the console to print its banner.
+#' @param check_version Logical. Passed to [landis_find()] when `console` is
+#'   `NULL`; `FALSE` here avoids infinite recursion.
+#'
+#' @returns A [numeric_version], or `NA` when the console, `dotnet`, or the
+#'   banner cannot be found.
+#'
+#' @family LANDIS-II execution helpers
+#' @seealso [landis_find()]
+#' @export
+landis_version <- function(console = NULL, timeout = 60, check_version = FALSE) {
+  console <- console %||% landis_find(check_version = check_version)
+
+  if (length(console) != 1L || is.na(console) || !nzchar(console) || !file.exists(console)) {
+    return(NA)
+  }
+
+  dotnet <- Sys.which("dotnet")
+  if (!nzchar(dotnet)) {
+    return(NA)
+  }
+
+  out <- tryCatch(
+    processx::run(
+      dotnet,
+      args = console,
+      wd = dirname(console),
+      error_on_status = FALSE, ## "No scenario file specified." is expected
+      timeout = timeout
+    ),
+    error = function(e) NULL
+  )
+  if (is.null(out)) {
+    return(NA)
+  }
+
+  txt <- paste(out$stdout, out$stderr)
+  hit <- regmatches(txt, regexpr("LANDIS-II[[:space:]]+[0-9]+(\\.[0-9]+)*", txt))
+  if (length(hit) == 0L) {
+    return(NA)
+  }
+
+  tryCatch(
+    numeric_version(sub("^LANDIS-II[[:space:]]+", "", hit[[1L]])),
+    error = function(e) NA
+  )
 }
 
 #' Find the LANDIS-II console path inside a Docker container

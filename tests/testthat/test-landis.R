@@ -227,3 +227,41 @@ testthat::test_that("landis_find_docker reads the option or returns default", {
     testthat::expect_equal(landis_find_docker(), "/custom/path/Landis.Console.dll")
   })
 })
+
+## ---- landis_find / landis_version --------------------------------------------------------------
+
+testthat::test_that("landis_find honours LANDIS_CONSOLE", {
+  ## Regression: the condition was inverted, so a set LANDIS_CONSOLE was
+  ## discarded in favour of an /opt search that finds nothing on Windows.
+  console <- withr::local_tempfile(fileext = ".dll")
+  file.create(console)
+
+  withr::local_envvar(LANDIS_CONSOLE = console)
+  testthat::expect_identical(landis_find(check_version = FALSE), console)
+})
+
+testthat::test_that("landis_find returns NA_character_ when nothing is found", {
+  testthat::skip_if(
+    length(list.files("/opt", "Landis[.]Console[.]dll$", recursive = TRUE)) > 0L,
+    "a local LANDIS-II install is present"
+  )
+
+  withr::local_envvar(LANDIS_CONSOLE = "")
+  testthat::expect_identical(landis_find(check_version = FALSE), NA_character_)
+})
+
+testthat::test_that("landis_find warns when the version cannot be determined", {
+  ## A fixed literal path, not a tempfile: the path appears in the warning and
+  ## therefore in the snapshot, so it has to be stable across runs and machines.
+  console <- "/nonexistent/Landis.Console.dll"
+  withr::local_envvar(LANDIS_CONSOLE = console)
+
+  testthat::expect_snapshot(res <- landis_find())
+  testthat::expect_identical(res, console)
+})
+
+testthat::test_that("landis_version returns NA for an unresolvable console", {
+  testthat::expect_identical(landis_version("/nonexistent/Landis.Console.dll"), NA)
+  testthat::expect_identical(landis_version(NA_character_), NA)
+  testthat::expect_identical(landis_version(character(0)), NA)
+})

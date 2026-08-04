@@ -489,3 +489,32 @@ testthat::test_that("ForCS can be written without a SnagFile", {
 
   withr::deferred_run()
 })
+
+## ---- insertAvailableLightBiomass ----------------------------------------------------------------
+
+testthat::test_that("insertAvailableLightBiomass handles a single ecoregion", {
+  ## Regression: `apply(df[, -1], 2, ...)` collapsed to a vector with one
+  ## ecoregion and died with "dim(X) must have a positive length".
+  out <- insertAvailableLightBiomass(data.frame(Class = 1L:5L, eco1 = c(15, 35, 55, 80, 100)))
+
+  testthat::expect_type(out, "character")
+  testthat::expect_true(any(grepl("^AvailableLightBiomass$", out)))
+  testthat::expect_true(any(grepl("15%", out)))
+})
+
+testthat::test_that("insertAvailableLightBiomass header lists ecoregions only", {
+  ## LANDIS-II parses the row after the comment block as the ecoregion list, so
+  ## the shade-class column must stay unlabelled or the run aborts with
+  ## "Class is not an ecoregion name".
+  out <- insertAvailableLightBiomass(data.frame(Class = 1L:2L, eco1 = c(15, 35), eco2 = c(15, 35)))
+  header <- out[[which(grepl("Class   Ecoregions", out)) + 1L]]
+
+  testthat::expect_false(grepl("Class", header))
+  testthat::expect_match(header, "eco1")
+  testthat::expect_match(header, "eco2")
+})
+
+testthat::test_that("insertAvailableLightBiomass keeps values already carrying a percent sign", {
+  out <- insertAvailableLightBiomass(data.frame(Class = 1L:2L, eco1 = c("15%", "35%")))
+  testthat::expect_false(any(grepl("%%", out)))
+})
