@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.81</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.83</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -40,6 +40,15 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.83" id="landisutils-0083">landisutils 0.0.83<a class="anchor" aria-label="anchor" href="#landisutils-0083"></a></h2>
+<ul><li>
+<code><a href="../reference/calibrate_dynamic_fire.html">calibrate_dynamic_fire()</a></code> gains <code>cfg$retries</code> (default <code>0</code>, i.e. unchanged), threaded through <code><a href="../reference/sim_landis.html">sim_landis()</a></code> into <code><a href="../reference/landis_pool_exec.html">landis_pool_exec()</a></code>. A single failed exec previously aborted the WHOLE search: the error propagates through <code>parApply</code>, unwinds DEoptim and errors the target, discarding every generation since the last checkpoint. A production search is <code>NP x n_reps x itermax</code> container executions – 90,000 at NP = 90, n_reps = 10, itermax = 100 – so even a very rare transient is near-certain to hit at least once. Observed twice in ~27 h of running: LANDIS-II exited 139 (SIGSEGV) about one second in, immediately after <code>Sites: N active</code> and before the succession extension loaded, writing no managed exception, with the staged trial directory verified byte-identical to the template apart from its own patched <code>dynamic-fire.txt</code>. Retrying costs nothing diagnostically – a real input fault (a pixel type the GDAL reader rejects, an unknown map code, a memory grant below the landscape’s peak) fails identically on every attempt and still surfaces, only later by the duration of the retries.</li>
+</ul></div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.82" id="landisutils-0082">landisutils 0.0.82<a class="anchor" aria-label="anchor" href="#landisutils-0082"></a></h2>
+<ul><li>The docker gate for tests is now a shared <code>helper-docker.R</code> rather than a copy inside one test file. testthat scopes a test file’s top-level definitions to that file, so <code>.docker_available()</code> – which already knew that Windows CI runners have the docker CLI but are configured for Windows containers only, and therefore cannot pull, inspect or run a Linux image such as busybox – was invisible to the other docker-backed test files. Those files had each rolled a weaker <code>Sys.which("docker")</code> check, which passes on exactly such a runner and then fails for a reason unrelated to the package. All docker tests now share the one gate.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.81" id="landisutils-0081">landisutils 0.0.81<a class="anchor" aria-label="anchor" href="#landisutils-0081"></a></h2>
 <ul><li>Two more test-only fixes for CI. The <code>.verify_node_images()</code> guard probed the MAIN process for <code>busybox:latest</code> while the function probes the cluster WORKERS – in CI the image satisfied the main-process guard and the function then reported it missing from the workers, so the test errored instead of skipping. It now probes on the workers, where the function looks. Separately, a <code><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste()</a></code>d <code>info</code> string was referenced before it was assigned (an earlier edit landed the reference but not the assignment), which surfaced only on the platform where that branch fails.</li>

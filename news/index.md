@@ -1,5 +1,41 @@
 # Changelog
 
+## landisutils 0.0.83
+
+- [`calibrate_dynamic_fire()`](https://for-cast.github.io/landisutils/reference/calibrate_dynamic_fire.md)
+  gains `cfg$retries` (default `0`, i.e. unchanged), threaded through
+  [`sim_landis()`](https://for-cast.github.io/landisutils/reference/sim_landis.md)
+  into
+  [`landis_pool_exec()`](https://for-cast.github.io/landisutils/reference/landis_pool_exec.md).
+  A single failed exec previously aborted the WHOLE search: the error
+  propagates through `parApply`, unwinds DEoptim and errors the target,
+  discarding every generation since the last checkpoint. A production
+  search is `NP x n_reps x itermax` container executions – 90,000 at NP
+  = 90, n_reps = 10, itermax = 100 – so even a very rare transient is
+  near-certain to hit at least once. Observed twice in ~27 h of running:
+  LANDIS-II exited 139 (SIGSEGV) about one second in, immediately after
+  `Sites: N active` and before the succession extension loaded, writing
+  no managed exception, with the staged trial directory verified
+  byte-identical to the template apart from its own patched
+  `dynamic-fire.txt`. Retrying costs nothing diagnostically – a real
+  input fault (a pixel type the GDAL reader rejects, an unknown map
+  code, a memory grant below the landscape’s peak) fails identically on
+  every attempt and still surfaces, only later by the duration of the
+  retries.
+
+## landisutils 0.0.82
+
+- The docker gate for tests is now a shared `helper-docker.R` rather
+  than a copy inside one test file. testthat scopes a test file’s
+  top-level definitions to that file, so `.docker_available()` – which
+  already knew that Windows CI runners have the docker CLI but are
+  configured for Windows containers only, and therefore cannot pull,
+  inspect or run a Linux image such as busybox – was invisible to the
+  other docker-backed test files. Those files had each rolled a weaker
+  `Sys.which("docker")` check, which passes on exactly such a runner and
+  then fails for a reason unrelated to the package. All docker tests now
+  share the one gate.
+
 ## landisutils 0.0.81
 
 - Two more test-only fixes for CI. The `.verify_node_images()` guard

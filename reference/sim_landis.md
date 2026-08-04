@@ -18,7 +18,8 @@ sim_landis(
   pool_idx = NULL,
   method = NULL,
   pixel_area_ha = 1,
-  keep_scratch = FALSE
+  keep_scratch = FALSE,
+  retries = 0L
 )
 ```
 
@@ -83,6 +84,17 @@ sim_landis(
 
   Logical. Leave the per-trial scratch dir in place for debugging.
   Default FALSE.
+
+- retries:
+
+  Integer \>= 0. Extra attempts if the simulator exits non-zero, passed
+  to
+  [`landis_pool_exec()`](https://for-cast.github.io/landisutils/reference/landis_pool_exec.md).
+  Default 0 preserves fail-fast. Set it (via `cfg$retries`) for long
+  searches: one failed exec aborts the entire calibration, and a
+  production run makes tens of thousands of container executions, so a
+  rare transient becomes near-certain. Only the pooled path honours
+  this; a genuine input fault fails on every attempt regardless.
 
 ## Value
 

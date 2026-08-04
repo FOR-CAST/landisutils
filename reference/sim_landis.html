@@ -13,7 +13,7 @@ no pool is supplied), parse the resulting Dynamic Fire logs."><meta property="og
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.81</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.83</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -66,7 +66,8 @@ no pool is supplied), parse the resulting Dynamic Fire logs.</p>
 <span>  pool_idx <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  method <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  pixel_area_ha <span class="op">=</span> <span class="fl">1</span>,</span>
-<span>  keep_scratch <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>  keep_scratch <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  retries <span class="op">=</span> <span class="fl">0L</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -127,6 +128,15 @@ NULL. Default from <code>getOption("landisutils.run.method")</code>.</p></dd>
 <dt id="arg-keep-scratch">keep_scratch<a class="anchor" aria-label="anchor" href="#arg-keep-scratch"></a></dt>
 <dd><p>Logical. Leave the per-trial scratch dir in place for
 debugging. Default FALSE.</p></dd>
+
+
+<dt id="arg-retries">retries<a class="anchor" aria-label="anchor" href="#arg-retries"></a></dt>
+<dd><p>Integer &gt;= 0. Extra attempts if the simulator exits non-zero,
+passed to <code><a href="landis_pool_exec.html">landis_pool_exec()</a></code>. Default 0 preserves fail-fast. Set it (via
+<code>cfg$retries</code>) for long searches: one failed exec aborts the entire
+calibration, and a production run makes tens of thousands of container
+executions, so a rare transient becomes near-certain. Only the pooled path
+honours this; a genuine input fault fails on every attempt regardless.</p></dd>
 
 </dl></div>
     <div class="section level2">
