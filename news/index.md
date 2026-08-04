@@ -1,5 +1,41 @@
 # Changelog
 
+## landisutils 0.0.84
+
+- [`landis_find()`](https://for-cast.github.io/landisutils/reference/landis_find.md)
+  honours `LANDIS_CONSOLE` again. The condition was inverted: when the
+  variable WAS set its value was discarded and replaced by the `/opt`
+  filesystem search, and when it was unset the function returned `""`.
+  Since `/opt` is a Linux convention that does not exist on Windows –
+  where `method = "local"` is the default – a Windows user could never
+  resolve the console, whatever they set. Now an explicit
+  `LANDIS_CONSOLE` wins, the `/opt` search is the fallback, and a
+  genuine miss returns `NA_character_` rather than `""`.
+- New
+  [`landis_version()`](https://for-cast.github.io/landisutils/reference/landis_version.md)
+  runs a local console with no scenario file and parses the version
+  banner it prints (`LANDIS-II 8.0 (8)`) before exiting on the missing
+  scenario, so the expected non-zero status is not treated as failure.
+  [`landis_find()`](https://for-cast.github.io/landisutils/reference/landis_find.md)
+  now calls it by default (`check_version = TRUE`) and stops when the
+  major version is not 8. v7 and v8 differ in the input formats this
+  package writes – initial communities moved to a CSV + raster pair,
+  ForCS gained the `SpinUp` `BiomassSpinUpFlag` column and the
+  map-control block, and core `species.txt` dropped shade and fire
+  tolerance – so a v7 console mis-parses v8 inputs rather than failing
+  cleanly. A version that cannot be determined (no `dotnet`, unreadable
+  console) only warns.
+- [`insertAvailableLightBiomass()`](https://for-cast.github.io/landisutils/reference/insertAvailableLightBiomass.md)
+  no longer fails on a single-ecoregion landscape. It used
+  `apply(df[, -1], 2, ...)`, and with one ecoregion `df[, -1]` collapses
+  to a vector, so the call died with “dim(X) must have a positive
+  length”. Column-wise assignment with `drop = FALSE` fixes it. The
+  emitted header row still carries the ecoregion names only, with the
+  shade-class column deliberately unlabelled: LANDIS-II parses that line
+  as the ecoregion list, so naming the first column makes it read the
+  name as an ecoregion and abort with “Class is not an ecoregion name”.
+  Surfaced by single-cell ForCS growth-curve calibration runs.
+
 ## landisutils 0.0.83
 
 - [`calibrate_dynamic_fire()`](https://for-cast.github.io/landisutils/reference/calibrate_dynamic_fire.md)

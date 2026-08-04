@@ -503,6 +503,9 @@
 - [`landis_run_local()`](https://for-cast.github.io/landisutils/reference/landis_run_local.md)
   : Run a LANDIS-II simulation locally (synchronous)
 
+- [`landis_version()`](https://for-cast.github.io/landisutils/reference/landis_version.md)
+  : Report the version of a local LANDIS-II console
+
 - [`leading_species()`](https://for-cast.github.io/landisutils/reference/leading_species.md)
   : Leading species per cell at each snapshot
 

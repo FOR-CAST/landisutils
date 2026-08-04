@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.83</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.84</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -40,6 +40,14 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.84" id="landisutils-0084">landisutils 0.0.84<a class="anchor" aria-label="anchor" href="#landisutils-0084"></a></h2>
+<ul><li>
+<code><a href="../reference/landis_find.html">landis_find()</a></code> honours <code>LANDIS_CONSOLE</code> again. The condition was inverted: when the variable WAS set its value was discarded and replaced by the <code>/opt</code> filesystem search, and when it was unset the function returned <code>""</code>. Since <code>/opt</code> is a Linux convention that does not exist on Windows – where <code>method = "local"</code> is the default – a Windows user could never resolve the console, whatever they set. Now an explicit <code>LANDIS_CONSOLE</code> wins, the <code>/opt</code> search is the fallback, and a genuine miss returns <code>NA_character_</code> rather than <code>""</code>.</li>
+<li>New <code><a href="../reference/landis_version.html">landis_version()</a></code> runs a local console with no scenario file and parses the version banner it prints (<code>LANDIS-II 8.0 (8)</code>) before exiting on the missing scenario, so the expected non-zero status is not treated as failure. <code><a href="../reference/landis_find.html">landis_find()</a></code> now calls it by default (<code>check_version = TRUE</code>) and stops when the major version is not 8. v7 and v8 differ in the input formats this package writes – initial communities moved to a CSV + raster pair, ForCS gained the <code>SpinUp</code> <code>BiomassSpinUpFlag</code> column and the map-control block, and core <code>species.txt</code> dropped shade and fire tolerance – so a v7 console mis-parses v8 inputs rather than failing cleanly. A version that cannot be determined (no <code>dotnet</code>, unreadable console) only warns.</li>
+<li>
+<code><a href="../reference/insertAvailableLightBiomass.html">insertAvailableLightBiomass()</a></code> no longer fails on a single-ecoregion landscape. It used <code>apply(df[, -1], 2, ...)</code>, and with one ecoregion <code>df[, -1]</code> collapses to a vector, so the call died with “dim(X) must have a positive length”. Column-wise assignment with <code>drop = FALSE</code> fixes it. The emitted header row still carries the ecoregion names only, with the shade-class column deliberately unlabelled: LANDIS-II parses that line as the ecoregion list, so naming the first column makes it read the name as an ecoregion and abort with “Class is not an ecoregion name”. Surfaced by single-cell ForCS growth-curve calibration runs.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.83" id="landisutils-0083">landisutils 0.0.83<a class="anchor" aria-label="anchor" href="#landisutils-0083"></a></h2>
 <ul><li>

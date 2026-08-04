@@ -33,6 +33,7 @@ Other LANDIS-II execution helpers:
 [`landis_replicate()`](https://for-cast.github.io/landisutils/reference/landis_replicate.md),
 [`landis_run_docker()`](https://for-cast.github.io/landisutils/reference/landis_run_docker.md),
 [`landis_run_local()`](https://for-cast.github.io/landisutils/reference/landis_run_local.md),
+[`landis_version()`](https://for-cast.github.io/landisutils/reference/landis_version.md),
 [`read_landis_resource_logs()`](https://for-cast.github.io/landisutils/reference/read_landis_resource_logs.md),
 [`tar_landis()`](https://for-cast.github.io/landisutils/reference/tar_landis.md),
 [`write_landis_scenario_file()`](https://for-cast.github.io/landisutils/reference/write_landis_scenario_file.md)
