@@ -14,7 +14,8 @@ sim_landis(
   pool_idx = NULL,
   method = NULL,
   pixel_area_ha = 1,
-  keep_scratch = FALSE
+  keep_scratch = FALSE,
+  retries = 0L
 )
 }
 \arguments{
@@ -49,6 +50,13 @@ NULL. Default from \code{getOption("landisutils.run.method")}.}
 
 \item{keep_scratch}{Logical. Leave the per-trial scratch dir in place for
 debugging. Default FALSE.}
+
+\item{retries}{Integer >= 0. Extra attempts if the simulator exits non-zero,
+passed to \code{\link[=landis_pool_exec]{landis_pool_exec()}}. Default 0 preserves fail-fast. Set it (via
+\code{cfg$retries}) for long searches: one failed exec aborts the entire
+calibration, and a production run makes tens of thousands of container
+executions, so a rare transient becomes near-certain. Only the pooled path
+honours this; a genuine input fault fails on every attempt regardless.}
 }
 \value{
 The output of \code{\link[=parse_dynamic_fire_logs]{parse_dynamic_fire_logs()}} for the trial's \verb{rep01/}.

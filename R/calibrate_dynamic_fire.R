@@ -1720,6 +1720,12 @@ run_calibration_spinup <- function(
 #' @param pixel_area_ha Numeric. Hectares per cell. Default 1.
 #' @param keep_scratch Logical. Leave the per-trial scratch dir in place for
 #'   debugging. Default FALSE.
+#' @param retries Integer >= 0. Extra attempts if the simulator exits non-zero,
+#'   passed to [landis_pool_exec()]. Default 0 preserves fail-fast. Set it (via
+#'   `cfg$retries`) for long searches: one failed exec aborts the entire
+#'   calibration, and a production run makes tens of thousands of container
+#'   executions, so a rare transient becomes near-certain. Only the pooled path
+#'   honours this; a genuine input fault fails on every attempt regardless.
 #'
 #' @returns The output of [parse_dynamic_fire_logs()] for the trial's `rep01/`.
 #'
@@ -1736,7 +1742,8 @@ sim_landis <- function(
   pool_idx = NULL,
   method = NULL,
   pixel_area_ha = 1.0,
-  keep_scratch = FALSE
+  keep_scratch = FALSE,
+  retries = 0L
 ) {
   if (is.null(names(par_vec)) && !is.null(par_names)) {
     names(par_vec) <- par_names
@@ -1816,7 +1823,19 @@ sim_landis <- function(
       command = "dotnet",
       args = c(console, "scenario.txt"),
       stdout_log = fs::path(log_dir, "pool_stdout.log"),
-      stderr_log = fs::path(log_dir, "pool_stderr.log")
+      stderr_log = fs::path(log_dir, "pool_stderr.log"),
+      ## A failed exec aborts the WHOLE calibration: the error propagates through parApply, unwinds
+      ## DEoptim and errors the target, discarding every generation since the last checkpoint. A
+      ## production search is ~NP x n_reps x itermax container executions (90 x 10 x 100 = 90,000),
+      ## so even a very rare transient is near-certain to hit once. Observed twice in ~27 h: LANDIS-II
+      ## exited 139 (SIGSEGV) about one second in, right after "Sites: N active" and before the
+      ## succession extension loaded, with no managed exception and a staged trial directory verified
+      ## byte-identical to the template -- i.e. nothing wrong with the inputs.
+      ##
+      ## Retrying costs nothing diagnostically: a genuine input fault (unreadable pixel type, unknown
+      ## map code, a grant below the landscape's peak RSS) fails identically on every attempt and
+      ## still surfaces, only later by the duration of the retries.
+      retries = retries
     )
   } else {
     method <- method %||%
@@ -2531,7 +2550,10 @@ calibrate_dynamic_fire <- function(observed_targets_path, scenario_template, cfg
         base_seed = base_seed + i,
         pool = .pi$pool,
         pool_idx = .pi$idx,
-        method = method
+        method = method,
+        ## Retry a failed simulator exec rather than aborting the search; see sim_landis()'s
+        ## `retries` docs. `sim_mock` ignores extra arguments via its `...`.
+        retries = as.integer(cfg$retries %||% 0L)
       )
     })
     .loss <- loss_from_stats(reps, observed, weights)

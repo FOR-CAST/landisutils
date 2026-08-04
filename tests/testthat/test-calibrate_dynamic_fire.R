@@ -2066,3 +2066,44 @@ test_that("the warm pool is capped against the GRANTED container limit, not the 
   ## never returns 0 workers, even when one container cannot fit
   expect_equal(.ram_pool_cap(90L, 2000, 0.85, avail_gb = 987), 1L)
 })
+
+test_that("cfg$retries reaches landis_pool_exec and defaults to fail-fast", {
+  ## Signature guard: the pooled path must expose `retries`, and its default must stay 0 so
+  ## existing callers keep fail-fast semantics.
+  expect_true("retries" %in% names(formals(sim_landis)))
+  expect_identical(eval(formals(sim_landis)$retries), 0L)
+
+  ## The value must actually be FORWARDED. Stub landis_pool_exec inside the package namespace and
+  ## record what it receives -- a `retries` argument that is accepted and then dropped on the way to
+  ## the exec is precisely the bug this guards, and a formals check alone would not catch it.
+  seen <- new.env(parent = emptyenv())
+  local_mocked_bindings(
+    ## Stub the staging steps that need a real scenario, so this exercises the ARGUMENT PATH rather
+    ## than re-testing config patching.
+    patch_fire_config = function(...) invisible(NULL),
+    landis_replicate = function(...) invisible(NULL),
+    landis_pool_exec = function(..., retries = 0L) {
+      seen$retries <- retries
+      stop("stop after capture", call. = FALSE)
+    }
+  )
+  tmpl <- withr::local_tempdir()
+  file.create(fs::path(tmpl, c("scenario.txt", "dynamic-fire.txt")))
+  ## sim_landis asserts the pool's bind-mount root IS the scratch root, so the container can see the
+  ## trial dir; the fake pool must therefore carry the same path.
+  scratch <- withr::local_tempdir()
+  fake_pool <- structure(list(names = "c1", scratch_root = scratch), class = "landis_pool")
+  suppressMessages(try(
+    sim_landis(
+      par_vec = stats::setNames(rep(0.5, length(calibration_par_names())), calibration_par_names()),
+      paths = list(scenario_template = tmpl, scratch_root = scratch),
+      sim_years = 1L,
+      base_seed = 1L,
+      pool = fake_pool,
+      pool_idx = 1L,
+      retries = 2L
+    ),
+    silent = TRUE
+  ))
+  expect_identical(seen$retries, 2L)
+})
