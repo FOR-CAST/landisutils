@@ -278,6 +278,12 @@
   : Resolve a writable, Docker-bind-mountable run root for calibration
   runs
 
+- [`growth_climatic_distance()`](https://for-cast.github.io/landisutils/reference/growth_climatic_distance.md)
+  : Score each observation by climatic distance from a target
+
+- [`growth_climatic_weight()`](https://for-cast.github.io/landisutils/reference/growth_climatic_weight.md)
+  : Turn climatic distance into a calibration weight
+
 - [`growth_expand_over_pseudo_species()`](https://for-cast.github.io/landisutils/reference/growth_expand_over_pseudo_species.md)
   : Expand a per-species parameter table over pseudo-species
 

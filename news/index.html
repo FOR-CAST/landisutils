@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.88</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.89</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -42,6 +42,12 @@
     </div>
 
     <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.89" id="landisutils-0089">landisutils 0.0.89<a class="anchor" aria-label="anchor" href="#landisutils-0089"></a></h2>
+<ul><li>New <code><a href="../reference/growth_climatic_distance.html">growth_climatic_distance()</a></code> and <code><a href="../reference/growth_climatic_weight.html">growth_climatic_weight()</a></code> let a calibration draw on ground plots from beyond the modelled landscape, weighted by how closely each plot’s climate resembles it. Distance is scored PER PLOT rather than by aggregating plots into map units and comparing unit means: a unit’s climate is only as well estimated as the number of plots inside it, so a ranking of units is least reliable exactly where it gets used – at the top. Resampling put a 14-plot unit’s rank anywhere between 10th and 26th of 137 in the network this was built against, while a 95-plot unit sat within four ranks.</li>
+<li>
+<code><a href="../reference/growth_bin_observations.html">growth_bin_observations()</a></code> and <code><a href="../reference/growth_reference_curves.html">growth_reference_curves()</a></code> gain <code>weight</code>, naming a per-observation weight column; the within-bin quantile is then weighted, and the returned series carries the total weight behind each bin so a bin resting on many barely-relevant plots is visible as such. A weight is preferred to a distance cut-off because any threshold is arbitrary and a plot just past it is not meaningfully different from one just inside.</li>
+</ul></div>
+    <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.88" id="landisutils-0088">landisutils 0.0.88<a class="anchor" aria-label="anchor" href="#landisutils-0088"></a></h2>
 <ul><li>
 <code><a href="../reference/growth_bin_observations.html">growth_bin_observations()</a></code> gains <code>site</code>, naming the column that identifies a sampling location. Permanent-plot networks remeasure on a schedule that reflects program history rather than anything ecological, so treating every visit as an independent observation weights each age bin toward whichever locations happen to have been revisited most – pseudo-replication that biases the binned quantile rather than merely tightening it. When <code>site</code> is given, each location contributes one value per bin and <code>n</code> counts locations rather than visits. Naming a column that does not exist is an error, so the correction cannot be silently skipped.</li>
@@ -51,7 +57,7 @@
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.87" id="landisutils-0087">landisutils 0.0.87<a class="anchor" aria-label="anchor" href="#landisutils-0087"></a></h2>
 <ul><li>
-<code><a href="../reference/prepMinRelativeBiomass.html">prepMinRelativeBiomass()</a></code> no longer collapses on a landscape with a SINGLE ecoregion. <code><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply()</a></code> over a one-row table dropped its result to a vector, so the ecoregion code was recycled across the five shade classes: the written table declared the same ecoregion five times and carried one shade row, and LANDIS-II aborted loading Biomass Succession with “The ecoregion N appears more than once”. Single-ecoregion landscapes are rare in production but are exactly what a growth-curve calibration builds. It also now rejects an unrecognised input schema with a message naming the columns it got, rather than failing later with “object ‘out’ not found”.</li>
+<code><a href="../reference/prepMinRelativeBiomass.html">prepMinRelativeBiomass()</a></code> no longer collapses on a landscape with a SINGLE ecoregion. <code><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply()</a></code> over a one-row table dropped its result to a vector, so the ecoregion code was recycled across the five shade classes: the written table declared the same ecoregion five times and carried one shade row, and LANDIS-II aborted loading Biomass Succession with “The ecoregion N appears more than once”. Single-ecoregion landscapes are rare in production but are exactly what a growth-curve calibration builds. It also now rejects an unrecognized input schema with a message naming the columns it got, rather than failing later with “object ‘out’ not found”.</li>
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.86" id="landisutils-0086">landisutils 0.0.86<a class="anchor" aria-label="anchor" href="#landisutils-0086"></a></h2>
@@ -237,7 +243,7 @@
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.55" id="landisutils-0055">landisutils 0.0.55<a class="anchor" aria-label="anchor" href="#landisutils-0055"></a></h2>
-<ul><li>Bug fix: <code>.preflight_calibrate()</code>’s <code>cfg$weights</code> whitelist (added in v0.0.45) was never updated when v0.0.51 added the <code>size_tail</code> loss component, so any <code>cfg$weights</code> entry named <code>size_tail</code> was silently stripped with the warning <code>cfg$weights has unrecognised components (ignored): size_tail</code> and DEoptim ran with the tail term effectively disabled. The gitanyow re-calibration (9h 13m, 2026-06-25, after the v0.0.54 cell-gate fix) hit this and reported the warning but landed a calibrated parameter set with no upper-tail signal. Whitelist now includes <code>size_tail</code>, and the two stale <code>cfg$weights %||%</code> defaults elsewhere in <code>calibrate_dynamic_fire.R</code> also include <code>size_tail</code>. Two new regression tests: (1) <code>size_tail</code> in weights passes preflight without warning; (2) genuinely-unknown weight names still warn.</li>
+<ul><li>Bug fix: <code>.preflight_calibrate()</code>’s <code>cfg$weights</code> whitelist (added in v0.0.45) was never updated when v0.0.51 added the <code>size_tail</code> loss component, so any <code>cfg$weights</code> entry named <code>size_tail</code> was silently stripped with the warning <code>cfg$weights has unrecognized components (ignored): size_tail</code> and DEoptim ran with the tail term effectively disabled. The gitanyow re-calibration (9h 13m, 2026-06-25, after the v0.0.54 cell-gate fix) hit this and reported the warning but landed a calibrated parameter set with no upper-tail signal. Whitelist now includes <code>size_tail</code>, and the two stale <code>cfg$weights %||%</code> defaults elsewhere in <code>calibrate_dynamic_fire.R</code> also include <code>size_tail</code>. Two new regression tests: (1) <code>size_tail</code> in weights passes preflight without warning; (2) genuinely-unknown weight names still warn.</li>
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.54" id="landisutils-0054">landisutils 0.0.54<a class="anchor" aria-label="anchor" href="#landisutils-0054"></a></h2>

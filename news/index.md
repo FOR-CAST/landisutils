@@ -1,5 +1,30 @@
 # Changelog
 
+## landisutils 0.0.89
+
+- New
+  [`growth_climatic_distance()`](https://for-cast.github.io/landisutils/reference/growth_climatic_distance.md)
+  and
+  [`growth_climatic_weight()`](https://for-cast.github.io/landisutils/reference/growth_climatic_weight.md)
+  let a calibration draw on ground plots from beyond the modelled
+  landscape, weighted by how closely each plot’s climate resembles it.
+  Distance is scored PER PLOT rather than by aggregating plots into map
+  units and comparing unit means: a unit’s climate is only as well
+  estimated as the number of plots inside it, so a ranking of units is
+  least reliable exactly where it gets used – at the top. Resampling put
+  a 14-plot unit’s rank anywhere between 10th and 26th of 137 in the
+  network this was built against, while a 95-plot unit sat within four
+  ranks.
+- [`growth_bin_observations()`](https://for-cast.github.io/landisutils/reference/growth_bin_observations.md)
+  and
+  [`growth_reference_curves()`](https://for-cast.github.io/landisutils/reference/growth_reference_curves.md)
+  gain `weight`, naming a per-observation weight column; the within-bin
+  quantile is then weighted, and the returned series carries the total
+  weight behind each bin so a bin resting on many barely-relevant plots
+  is visible as such. A weight is preferred to a distance cut-off
+  because any threshold is arbitrary and a plot just past it is not
+  meaningfully different from one just inside.
+
 ## landisutils 0.0.88
 
 - [`growth_bin_observations()`](https://for-cast.github.io/landisutils/reference/growth_bin_observations.md)
@@ -29,7 +54,7 @@
   loading Biomass Succession with “The ecoregion N appears more than
   once”. Single-ecoregion landscapes are rare in production but are
   exactly what a growth-curve calibration builds. It also now rejects an
-  unrecognised input schema with a message naming the columns it got,
+  unrecognized input schema with a message naming the columns it got,
   rather than failing later with “object ‘out’ not found”.
 
 ## landisutils 0.0.86
@@ -753,7 +778,7 @@
   v0.0.45) was never updated when v0.0.51 added the `size_tail` loss
   component, so any `cfg$weights` entry named `size_tail` was silently
   stripped with the warning
-  `cfg$weights has unrecognised components (ignored): size_tail` and
+  `cfg$weights has unrecognized components (ignored): size_tail` and
   DEoptim ran with the tail term effectively disabled. The gitanyow
   re-calibration (9h 13m, 2026-06-25, after the v0.0.54 cell-gate fix)
   hit this and reported the warning but landed a calibrated parameter

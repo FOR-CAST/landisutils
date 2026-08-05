@@ -15,7 +15,8 @@ growth_reference_curves(
   min_plots = 50L,
   n_grid = 60L,
   use_tipsy = FALSE,
-  site = NULL
+  site = NULL,
+  weight = NULL
 )
 ```
 
@@ -54,6 +55,14 @@ growth_reference_curves(
   [`growth_bin_observations()`](https://for-cast.github.io/landisutils/reference/growth_bin_observations.md);
   when given, `n_plots` counts distinct locations rather than visits.
 
+- weight:
+
+  Optional column name holding a per-observation climatic weight. Passed
+  to
+  [`growth_bin_observations()`](https://for-cast.github.io/landisutils/reference/growth_bin_observations.md);
+  see
+  [`growth_climatic_weight()`](https://for-cast.github.io/landisutils/reference/growth_climatic_weight.md).
+
 ## Value
 
 A list with `ages`, `series`, `levels`, `n_plots`, `n_bins`,
@@ -76,6 +85,8 @@ Other growth calibration helpers:
 [`growth_calibration_design()`](https://for-cast.github.io/landisutils/reference/growth_calibration_design.md),
 [`growth_calibration_partition()`](https://for-cast.github.io/landisutils/reference/growth_calibration_partition.md),
 [`growth_calibration_work_root()`](https://for-cast.github.io/landisutils/reference/growth_calibration_work_root.md),
+[`growth_climatic_distance()`](https://for-cast.github.io/landisutils/reference/growth_climatic_distance.md),
+[`growth_climatic_weight()`](https://for-cast.github.io/landisutils/reference/growth_climatic_weight.md),
 [`growth_expand_over_pseudo_species()`](https://for-cast.github.io/landisutils/reference/growth_expand_over_pseudo_species.md),
 [`growth_factorial_ratio_grid()`](https://for-cast.github.io/landisutils/reference/growth_factorial_ratio_grid.md),
 [`growth_fitting_windows()`](https://for-cast.github.io/landisutils/reference/growth_fitting_windows.md),

@@ -9,7 +9,13 @@ shape being tested is ForCS's own.
 ## Usage
 
 ``` r
-growth_bin_observations(obs, bin = 20L, probs = 0.5, site = NULL)
+growth_bin_observations(
+  obs,
+  bin = 20L,
+  probs = 0.5,
+  site = NULL,
+  weight = NULL
+)
 ```
 
 ## Arguments
@@ -34,9 +40,18 @@ growth_bin_observations(obs, bin = 20L, probs = 0.5, site = NULL)
   if the named column is absent, rather than silently skipping the
   correction.
 
+- weight:
+
+  Optional column name holding a per-observation weight, typically from
+  [`growth_climatic_weight()`](https://for-cast.github.io/landisutils/reference/growth_climatic_weight.md).
+  When given, the within-bin quantile is weighted, so plots resembling
+  the modelled landscape carry more of it. `n` still counts
+  observations; `weight` reports the weight behind each bin, so a bin
+  resting on many barely-relevant plots is visible as such.
+
 ## Value
 
-A tibble with `age` (bin mean), `value`, and `n`.
+A tibble with `age` (bin mean), `value`, `n`, and `weight`.
 
 ## Details
 
@@ -67,6 +82,8 @@ Other growth calibration helpers:
 [`growth_calibration_design()`](https://for-cast.github.io/landisutils/reference/growth_calibration_design.md),
 [`growth_calibration_partition()`](https://for-cast.github.io/landisutils/reference/growth_calibration_partition.md),
 [`growth_calibration_work_root()`](https://for-cast.github.io/landisutils/reference/growth_calibration_work_root.md),
+[`growth_climatic_distance()`](https://for-cast.github.io/landisutils/reference/growth_climatic_distance.md),
+[`growth_climatic_weight()`](https://for-cast.github.io/landisutils/reference/growth_climatic_weight.md),
 [`growth_expand_over_pseudo_species()`](https://for-cast.github.io/landisutils/reference/growth_expand_over_pseudo_species.md),
 [`growth_factorial_ratio_grid()`](https://for-cast.github.io/landisutils/reference/growth_factorial_ratio_grid.md),
 [`growth_fitting_windows()`](https://for-cast.github.io/landisutils/reference/growth_fitting_windows.md),

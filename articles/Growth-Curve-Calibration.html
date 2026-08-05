@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.88</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.89</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -108,7 +108,7 @@ landscape’s own cohort structures when single-cohort cells are not
 representative enough.</p>
 </div>
 <div class="section level2">
-<h2 id="three-properties-that-keep-the-ranking-honest">Three properties that keep the ranking honest<a class="anchor" aria-label="anchor" href="#three-properties-that-keep-the-ranking-honest"></a>
+<h2 id="four-properties-that-keep-the-ranking-honest">Four properties that keep the ranking honest<a class="anchor" aria-label="anchor" href="#four-properties-that-keep-the-ranking-honest"></a>
 </h2>
 <p>These are worth understanding before wiring anything, because each
 fixes a way the obvious implementation goes wrong.</p>
@@ -135,8 +135,25 @@ program history rather than by anything ecological, so counting every
 visit as an independent observation weights each age bin toward
 whichever locations were revisited most. Naming the location column
 gives each one a single vote per bin.</p>
+<p><strong>Widen the plot pool by climate, one plot at a time.</strong>
+Local plots are usually too few to constrain every species, and the fix
+is to admit plots from further afield in proportion to how much their
+climate resembles the modelled landscape. Score each plot on its own
+coordinates:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/growth_reference_curves.html">growth_reference_curves</a></span><span class="op">(</span><span class="va">reference</span>, <span class="va">window</span>, site <span class="op">=</span> <span class="st">"site_identifier"</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">plots</span><span class="op">$</span><span class="va">distance</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/growth_climatic_distance.html">growth_climatic_distance</a></span><span class="op">(</span><span class="va">plots</span>, target <span class="op">=</span> <span class="va">landscape_climate</span><span class="op">)</span></span>
+<span><span class="va">plots</span><span class="op">$</span><span class="va">w</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/growth_climatic_weight.html">growth_climatic_weight</a></span><span class="op">(</span><span class="va">plots</span><span class="op">$</span><span class="va">distance</span>, bandwidth <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="../reference/growth_reference_curves.html">growth_reference_curves</a></span><span class="op">(</span><span class="va">reference</span>, <span class="va">window</span>, site <span class="op">=</span> <span class="st">"site_identifier"</span>, weight <span class="op">=</span> <span class="st">"w"</span><span class="op">)</span></span></code></pre></div>
+<p>Resist the temptation to aggregate plots into map units (ecoregions,
+climate zones, site types) and compare unit means instead. A unit’s
+climate is only as well estimated as the number of plots inside it, and
+the units with fewest plots get the noisiest estimates – so a ranking of
+units is least reliable exactly where it is used, at the top. In the
+network this was built against, resampling put a 14-plot unit’s rank
+anywhere between 10th and 26th of 137, while a 95-plot unit sat within
+four ranks. Per-plot distances have no such problem, and they yield a
+continuous weight rather than an arbitrary “which units are in” cut.</p>
 <p><strong>Level is derived, not searched.</strong> A cohort never quite
 reaches its maximum-biomass parameter: it approaches the asymptote while
 mortality is already removing biomass. The fraction it does achieve
