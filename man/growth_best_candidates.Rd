@@ -4,7 +4,14 @@
 \alias{growth_best_candidates}
 \title{Best candidate per species, or an explicit refusal}
 \usage{
-growth_best_candidates(scores, growth_params, windows, scoring = NULL)
+growth_best_candidates(
+  scores,
+  growth_params,
+  windows,
+  scoring = NULL,
+  top_frac = 0.1,
+  level_frac_warn = 0.9
+)
 }
 \arguments{
 \item{scores}{A tibble from \code{\link[=growth_score_fit]{growth_score_fit()}} with an \code{objective_rmse}.}
@@ -14,6 +21,13 @@ growth_best_candidates(scores, growth_params, windows, scoring = NULL)
 \item{windows}{A tibble from \code{\link[=growth_fitting_windows]{growth_fitting_windows()}}.}
 
 \item{scoring}{A tibble from \code{\link[=read_growth_scoring]{read_growth_scoring()}}, or \code{NULL}.}
+
+\item{top_frac}{Numeric. Fraction of each species' ranking treated as
+indistinguishable from the winner, over which the level band is reported.}
+
+\item{level_frac_warn}{Numeric. Warn when the selected candidate reached less
+than this fraction of its own asymptote, so its level is an extrapolation.
+\code{NA} disables the warning.}
 }
 \value{
 One row per species.
@@ -33,6 +47,26 @@ Those species come back with \code{fitted = FALSE}, no parameters, and the value
 currently in use carried through untouched. That is the honest answer, and it
 names what would change it: more plots, or promoting a SORTIE curve to \code{used}.
 }
+\section{Reading the level band}{
+Ranking is on shape alone and the level is recovered afterwards, by dividing
+the reference plateau by the fraction of its own asymptote the simulated
+curve reached (see \code{\link[=growth_inflation_factor]{growth_inflation_factor()}}). That division is the whole
+reason \code{biomass_max_est} is not simply read off the winner and trusted: its
+leverage on any error in the simulated curve is \code{1 / achieved_frac}. A
+candidate that plateaued cleanly recovers its level almost exactly, while one
+still climbing when the run ended is extrapolating, and two candidates a
+fraction of a percent apart in shape error can then imply levels differing by
+a factor of two or more.
+
+So \code{biomass_max_lo} / \code{biomass_max_hi} report the range of \code{biomass_max_est}
+across the candidates that cannot be told apart from the winner, and
+\code{level_extrapolated} flags a winner that never approached its asymptote.
+A wide band is not noise to be averaged away: it says the references do not
+determine the level, and the fix is a longer run, a better-constrained
+reference, or a wider sweep -- not a different summary of the same surface.
+Use \code{\link[=growth_identifiability]{growth_identifiability()}} to see which swept parameter is responsible.
+}
+
 \seealso{
 Other growth calibration helpers:
 \code{\link[=extract_landscape_cohort_structures]{extract_landscape_cohort_structures()}},
@@ -47,6 +81,7 @@ Other growth calibration helpers:
 \code{\link[=growth_expand_over_pseudo_species]{growth_expand_over_pseudo_species()}},
 \code{\link[=growth_factorial_ratio_grid]{growth_factorial_ratio_grid()}},
 \code{\link[=growth_fitting_windows]{growth_fitting_windows()}},
+\code{\link[=growth_identifiability]{growth_identifiability()}},
 \code{\link[=growth_inflation_factor]{growth_inflation_factor()}},
 \code{\link[=growth_pseudo_species_name]{growth_pseudo_species_name()}},
 \code{\link[=growth_reference_curves]{growth_reference_curves()}},

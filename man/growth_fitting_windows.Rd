@@ -39,6 +39,7 @@ Other growth calibration helpers:
 \code{\link[=growth_climatic_weight]{growth_climatic_weight()}},
 \code{\link[=growth_expand_over_pseudo_species]{growth_expand_over_pseudo_species()}},
 \code{\link[=growth_factorial_ratio_grid]{growth_factorial_ratio_grid()}},
+\code{\link[=growth_identifiability]{growth_identifiability()}},
 \code{\link[=growth_inflation_factor]{growth_inflation_factor()}},
 \code{\link[=growth_pseudo_species_name]{growth_pseudo_species_name()}},
 \code{\link[=growth_reference_curves]{growth_reference_curves()}},

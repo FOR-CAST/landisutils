@@ -592,6 +592,132 @@ growth_add_objective <- function(scores) {
   dplyr::mutate(scores, objective_rmse = .data$nrmse_shape, objective = "shape")
 }
 
+## Candidates within the top `frac` of a species' ranking, at least two so a
+## band is always defined. Ties are kept: dropping them would understate the
+## very ambiguity this is measuring.
+.growth_top_candidates <- function(scores, frac) {
+  stopifnot(frac > 0, frac <= 1)
+  scorable <- dplyr::filter(scores, !is.na(.data$objective_rmse))
+  scorable |>
+    dplyr::group_by(.data$species) |>
+    dplyr::filter(dplyr::min_rank(.data$objective_rmse) <= max(2L, ceiling(frac * dplyr::n()))) |>
+    dplyr::ungroup()
+}
+
+#' Is a swept parameter actually determined by the references?
+#'
+#' Taking an argmin over a factorial presumes the objective surface has a
+#' well-defined minimum. Often it does not, and the reported best combination
+#' is then whichever cell happened to sort first rather than a fitted value.
+#' Nothing in a ranked table distinguishes the two cases, so this reports the
+#' distinction directly: for each swept parameter, the range of values spanned
+#' by the best-scoring candidates and the error spread across them.
+#'
+#' A parameter whose top candidates span most of the swept grid while their
+#' errors differ by a few percent is not being estimated. Two patterns recur
+#' and both are worth naming in a calibration's own output:
+#'
+#' * Mortality shape is routinely unidentified. Once a curve has reached its
+#'   level, the shape of the approach barely moves the residual, so the
+#'   objective is nearly flat along that axis. This appears to be inherent to
+#'   fitting a plateau rather than a property of any one data set.
+#' * An argmin on the edge of the swept grid means the optimum may lie outside
+#'   it, and `boundary` flags this. It also makes any weighted average of the
+#'   candidates biased inward by construction, which is the main reason to
+#'   check identifiability before reaching for model averaging as the remedy.
+#'
+#' Species with no scorable candidate are absent from the result; see
+#' [growth_best_candidates()], which reports them as an explicit refusal.
+#'
+#' @param scores A tibble from [growth_score_fit()] with an `objective_rmse`,
+#'   as returned by [growth_add_objective()].
+#' @param params Character vector of swept parameter columns to assess.
+#' @param top_frac Numeric. Fraction of each species' ranking treated as the
+#'   set of candidates that cannot be told apart.
+#' @param identified_below Numeric. A parameter is reported as identified when
+#'   its top candidates span no more than this fraction of the swept grid.
+#'
+#' @return One row per species and parameter, with the argmin value, the range
+#'   spanned by the top candidates, the fraction of the grid that range covers,
+#'   whether the argmin sits on a grid boundary, and the relative spread in
+#'   objective across the top candidates.
+#' @family growth calibration helpers
+#' @export
+growth_identifiability <- function(
+  scores,
+  params = c("growth_shp", "mort_shp", "anpp_prop"),
+  top_frac = 0.10,
+  identified_below = 0.5
+) {
+  missing_cols <- setdiff(c("species", "objective_rmse", params), names(scores))
+  if (length(missing_cols)) {
+    stop("`scores` has no column(s): ", paste(missing_cols, collapse = ", "), call. = FALSE)
+  }
+
+  top <- .growth_top_candidates(scores, top_frac)
+  if (nrow(top) == 0L) {
+    return(tibble::tibble(
+      species = character(),
+      parameter = character(),
+      n_candidates = integer(),
+      n_top = integer(),
+      error_spread = numeric(),
+      best = numeric(),
+      top_min = numeric(),
+      top_max = numeric(),
+      grid_min = numeric(),
+      grid_max = numeric(),
+      grid_frac = numeric(),
+      boundary = character(),
+      identified = logical()
+    ))
+  }
+
+  scorable <- dplyr::filter(scores, !is.na(.data$objective_rmse))
+  out <- lapply(split(scorable, scorable$species), function(d) {
+    if (!nrow(d)) {
+      return(NULL)
+    }
+    t <- top[top$species == d$species[[1L]], , drop = FALSE]
+    argmin <- d[which.min(d$objective_rmse), , drop = FALSE]
+    rows <- lapply(params, function(p) {
+      grid <- sort(unique(d[[p]]))
+      inside <- unique(t[[p]])
+      ## Compared on the grid, not on the raw value: a sweep is a set of
+      ## nominated values, so "how much of what was asked for is still in play"
+      ## is the question, and it is unaffected by uneven spacing.
+      at <- which.min(abs(grid - argmin[[p]]))
+      tibble::tibble(
+        species = argmin$species,
+        parameter = p,
+        n_candidates = nrow(d),
+        n_top = nrow(t),
+        error_spread = max(t$objective_rmse) / min(t$objective_rmse) - 1,
+        best = argmin[[p]],
+        top_min = min(inside),
+        top_max = max(inside),
+        grid_min = min(grid),
+        grid_max = max(grid),
+        grid_frac = length(inside) / length(grid),
+        boundary = if (length(grid) < 2L) {
+          NA_character_
+        } else if (at == 1L) {
+          "min"
+        } else if (at == length(grid)) {
+          "max"
+        } else {
+          NA_character_
+        }
+      )
+    })
+    dplyr::bind_rows(rows)
+  })
+
+  dplyr::bind_rows(out) |>
+    dplyr::mutate(identified = .data$grid_frac <= identified_below) |>
+    dplyr::arrange(.data$species, .data$parameter)
+}
+
 #' Best candidate per species, or an explicit refusal
 #'
 #' A species with no scorable reference series MUST NOT produce a
@@ -607,15 +733,47 @@ growth_add_objective <- function(scores) {
 #' currently in use carried through untouched. That is the honest answer, and it
 #' names what would change it: more plots, or promoting a SORTIE curve to `used`.
 #'
+#' # Reading the level band
+#'
+#' Ranking is on shape alone and the level is recovered afterwards, by dividing
+#' the reference plateau by the fraction of its own asymptote the simulated
+#' curve reached (see [growth_inflation_factor()]). That division is the whole
+#' reason `biomass_max_est` is not simply read off the winner and trusted: its
+#' leverage on any error in the simulated curve is `1 / achieved_frac`. A
+#' candidate that plateaued cleanly recovers its level almost exactly, while one
+#' still climbing when the run ended is extrapolating, and two candidates a
+#' fraction of a percent apart in shape error can then imply levels differing by
+#' a factor of two or more.
+#'
+#' So `biomass_max_lo` / `biomass_max_hi` report the range of `biomass_max_est`
+#' across the candidates that cannot be told apart from the winner, and
+#' `level_extrapolated` flags a winner that never approached its asymptote.
+#' A wide band is not noise to be averaged away: it says the references do not
+#' determine the level, and the fix is a longer run, a better-constrained
+#' reference, or a wider sweep -- not a different summary of the same surface.
+#' Use [growth_identifiability()] to see which swept parameter is responsible.
+#'
 #' @param scores A tibble from [growth_score_fit()] with an `objective_rmse`.
 #' @param growth_params The parameters currently in use.
 #' @param windows A tibble from [growth_fitting_windows()].
 #' @param scoring A tibble from [read_growth_scoring()], or `NULL`.
+#' @param top_frac Numeric. Fraction of each species' ranking treated as
+#'   indistinguishable from the winner, over which the level band is reported.
+#' @param level_frac_warn Numeric. Warn when the selected candidate reached less
+#'   than this fraction of its own asymptote, so its level is an extrapolation.
+#'   `NA` disables the warning.
 #'
 #' @return One row per species.
 #' @family growth calibration helpers
 #' @export
-growth_best_candidates <- function(scores, growth_params, windows, scoring = NULL) {
+growth_best_candidates <- function(
+  scores,
+  growth_params,
+  windows,
+  scoring = NULL,
+  top_frac = 0.10,
+  level_frac_warn = 0.9
+) {
   ## The first four columns after `species` are the promotable set: exactly the
   ## four ForCS growth parameters, in the units `forcs_growth_params.csv` uses,
   ## ready to copy across. Everything after them is diagnostic. `anpp_prop` is
@@ -647,10 +805,51 @@ growth_best_candidates <- function(scores, growth_params, windows, scoring = NUL
   )
 
   scorable <- dplyr::filter(scores, !is.na(.data$objective_rmse))
+
+  ## What the level would have been had the ranking picked any of the other
+  ## candidates it cannot distinguish from the winner. Reported beside the point
+  ## estimate rather than instead of it: the argmin is still the recommendation,
+  ## the band is how far it can be trusted.
+  ## A candidate can rank on shape and still recover no level, when the series
+  ## it was told to take its level from has none. `min(NA, na.rm = TRUE)` would
+  ## answer `Inf` and a warning about no non-missing arguments; the band is
+  ## simply undefined.
+  rng <- function(x, f) if (all(is.na(x))) NA_real_ else f(x, na.rm = TRUE)
+  band <- .growth_top_candidates(scorable, top_frac) |>
+    dplyr::summarise(
+      biomass_max_lo = rng(.data$biomass_max_est, min),
+      biomass_max_hi = rng(.data$biomass_max_est, max),
+      anpp_max_lo = rng(.data$anpp_max_est, min),
+      anpp_max_hi = rng(.data$anpp_max_est, max),
+      n_indistinct = dplyr::n(),
+      .by = "species"
+    )
+
   best <- scorable |>
     dplyr::slice_min(.data$objective_rmse, n = 1L, by = "species", with_ties = FALSE) |>
     dplyr::select(dplyr::all_of(keep)) |>
-    dplyr::mutate(fitted = TRUE)
+    dplyr::mutate(fitted = TRUE) |>
+    dplyr::left_join(band, by = "species") |>
+    dplyr::mutate(
+      level_leverage = 1 / .data$achieved_frac,
+      level_extrapolated = !is.na(level_frac_warn) &
+        !is.na(.data$achieved_frac) &
+        .data$achieved_frac < level_frac_warn
+    )
+
+  flagged <- best$species[best$level_extrapolated]
+  if (length(flagged)) {
+    warning(
+      "level recovered by extrapolation for ",
+      paste(flagged, collapse = ", "),
+      ": the best candidate reached under ",
+      round(100 * level_frac_warn),
+      "% of its own asymptote, so `biomass_max_est` is scaled up by ",
+      paste0(round(best$level_leverage[best$level_extrapolated], 2), "x", collapse = ", "),
+      ". Check `biomass_max_lo`/`biomass_max_hi` before promoting it.",
+      call. = FALSE
+    )
+  }
 
   ## Species that produced no scorable combination at all. Keep their
   ## diagnostics -- plot count, requested level source -- so the reason is on
@@ -688,9 +887,28 @@ growth_best_candidates <- function(scores, growth_params, windows, scoring = NUL
   }
 
   best |>
-    dplyr::mutate(
-      biomass_max_est = round(.data$biomass_max_est),
-      anpp_max_est = round(.data$anpp_max_est)
+    dplyr::mutate(dplyr::across(
+      dplyr::any_of(c(
+        "biomass_max_est",
+        "anpp_max_est",
+        "biomass_max_lo",
+        "biomass_max_hi",
+        "anpp_max_lo",
+        "anpp_max_hi"
+      )),
+      round
+    )) |>
+    ## Band beside the estimate it qualifies, so a reader copying a value across
+    ## cannot reach it without passing the range it could equally have taken.
+    dplyr::relocate(
+      "anpp_max_lo",
+      "anpp_max_hi",
+      "biomass_max_lo",
+      "biomass_max_hi",
+      "n_indistinct",
+      "level_leverage",
+      "level_extrapolated",
+      .after = "biomass_max_est"
     ) |>
     dplyr::left_join(
       dplyr::select(

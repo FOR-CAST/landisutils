@@ -325,3 +325,123 @@ test_that("site collapsing and climatic weighting compose", {
   expect_equal(out$n, 2L)
   expect_equal(out$value, 10)
 })
+
+## A ranked factorial with every column growth_best_candidates() carries, so a
+## surface can be given whatever shape a test needs without routing it through
+## a simulated curve.
+ranked <- function(n) {
+  tibble::tibble(
+    species = "Aa",
+    map_code = seq_len(n),
+    growth_shp = 0.9,
+    mort_shp = 10,
+    anpp_prop = 6.7,
+    objective = "shape",
+    objective_rmse = 0.1,
+    rmse_sortie = 1,
+    rmse_tipsy = NA_real_,
+    rmse_plots = NA_real_,
+    n_series = 1L,
+    n_plots = 10L,
+    n_bins = 5L,
+    plots_sparse = FALSE,
+    achieved = 150,
+    achieved_frac = 1,
+    level_used = 150,
+    level_source_requested = NA_character_,
+    level_source_used = "sortie",
+    biomass_max_est = 30000,
+    anpp_max_est = 2000,
+    biomass_at_end = 150
+  )
+}
+
+current <- tibble::tibble(
+  species = "Aa",
+  growth_shp = 0.8,
+  mort_shp = 11,
+  anpp_max = 2000,
+  biomass_max = 30000
+)
+
+window_aa <- tibble::tibble(
+  species = "Aa",
+  mature_from = 20,
+  mature_to = 180,
+  window_source = "derived"
+)
+
+test_that("identifiability tells a determined parameter from a free one", {
+  grid <- expand.grid(growth_shp = seq(0.5, 0.9, by = 0.1), mort_shp = c(5, 10, 15, 20, 25))
+  ## Error depends on growth shape alone, so mortality shape is unconstrained:
+  ## every mortality value appears among the best candidates at the same error.
+  scores <- tibble::tibble(
+    species = "Aa",
+    growth_shp = grid$growth_shp,
+    mort_shp = grid$mort_shp,
+    objective_rmse = (grid$growth_shp - 0.7)^2 + 1e-3
+  )
+
+  out <- growth_identifiability(scores, params = c("growth_shp", "mort_shp"), top_frac = 0.2)
+
+  expect_equal(out$parameter, c("growth_shp", "mort_shp"))
+  expect_equal(out$identified, c(TRUE, FALSE))
+  expect_equal(out$grid_frac, c(0.2, 1))
+  expect_equal(out$best[[1L]], 0.7)
+  expect_equal(out$top_min[[2L]], 5)
+  expect_equal(out$top_max[[2L]], 25)
+})
+
+test_that("identifiability flags an argmin sitting on the edge of the sweep", {
+  scores <- tibble::tibble(
+    species = "Aa",
+    growth_shp = c(0.5, 0.6, 0.7, 0.8, 0.9),
+    objective_rmse = c(0.9, 0.7, 0.5, 0.3, 0.1)
+  )
+
+  out <- growth_identifiability(scores, params = "growth_shp", top_frac = 0.2)
+
+  expect_equal(out$best, 0.9)
+  expect_equal(out$boundary, "max")
+})
+
+test_that("the level band spans the candidates that cannot be told apart", {
+  scores <- ranked(3) |>
+    dplyr::mutate(
+      objective_rmse = c(0.100, 0.101, 0.500),
+      biomass_max_est = c(30000, 45000, 99000),
+      anpp_max_est = c(2000, 3000, 6600)
+    )
+
+  best <- growth_best_candidates(scores, current, window_aa, top_frac = 0.5)
+
+  ## Two candidates are within the band, the third is not.
+  expect_equal(best$n_indistinct, 2L)
+  expect_equal(best$biomass_max_est, 30000)
+  expect_equal(best$biomass_max_lo, 30000)
+  expect_equal(best$biomass_max_hi, 45000)
+  expect_equal(best$anpp_max_hi, 3000)
+  expect_false(best$level_extrapolated)
+})
+
+test_that("a level recovered from a curve that never plateaued warns", {
+  scores <- ranked(2) |>
+    dplyr::mutate(
+      objective_rmse = c(0.1, 0.2),
+      ## Winner stopped at half its own asymptote, so its level is doubled.
+      achieved_frac = c(0.5, 1)
+    )
+
+  expect_snapshot(best <- growth_best_candidates(scores, current, window_aa))
+  expect_true(best$level_extrapolated)
+  expect_equal(best$level_leverage, 2)
+})
+
+test_that("the promotable parameters stay the first four columns after species", {
+  best <- growth_best_candidates(ranked(2), current, window_aa)
+
+  expect_equal(
+    names(best)[1:5],
+    c("species", "growth_shp", "mort_shp", "anpp_max_est", "biomass_max_est")
+  )
+})
