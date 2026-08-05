@@ -293,6 +293,9 @@
 - [`growth_fitting_windows()`](https://for-cast.github.io/landisutils/reference/growth_fitting_windows.md)
   : Per-species fitting windows
 
+- [`growth_identifiability()`](https://for-cast.github.io/landisutils/reference/growth_identifiability.md)
+  : Is a swept parameter actually determined by the references?
+
 - [`growth_inflation_factor()`](https://for-cast.github.io/landisutils/reference/growth_inflation_factor.md)
   :
 

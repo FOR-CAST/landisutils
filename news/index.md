@@ -1,5 +1,29 @@
 # Changelog
 
+## landisutils 0.0.94
+
+- [`growth_best_candidates()`](https://for-cast.github.io/landisutils/reference/growth_best_candidates.md)
+  reports the range of `biomass_max_est` and `anpp_max_est` across the
+  candidates that cannot be told apart from the winner, and warns when
+  the winning curve never approached its own asymptote. Ranking is on
+  shape and the level is recovered afterwards by dividing by that
+  fraction, so an error in the simulated curve reaches the recommended
+  level multiplied by `1 / achieved_frac`. In the calibration this was
+  built against, a species whose best curve stopped at 66% of its
+  asymptote had a level band of 32,700 to 125,000 across candidates
+  spanning 15% of error, while the two species that plateaued cleanly
+  had bands of 4% and 5%. A point estimate alone does not distinguish
+  those cases.
+- New
+  [`growth_identifiability()`](https://for-cast.github.io/landisutils/reference/growth_identifiability.md)
+  reports, per species and swept parameter, the range of values spanned
+  by the best-scoring candidates and the error spread across them.
+  Taking an argmin presumes the objective surface has a minimum; where
+  it does not, the reported combination is whichever cell sorted first,
+  and nothing in a ranked table says which case you are in. It also
+  flags an argmin sitting on the edge of the swept grid, which means the
+  optimum may lie outside it.
+
 ## landisutils 0.0.93
 
 - [`plot_growth_candidate()`](https://for-cast.github.io/landisutils/reference/plot_growth_candidate.md)

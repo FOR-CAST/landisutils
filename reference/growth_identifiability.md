@@ -1,28 +1,80 @@
-# Rank fit statistics
+# Is a swept parameter actually determined by the references?
 
-Ranking is on `nrmse_shape`: mean level-normalized shape error across
-the reference series that exist for that species.
+Taking an argmin over a factorial presumes the objective surface has a
+well-defined minimum. Often it does not, and the reported best
+combination is then whichever cell happened to sort first rather than a
+fitted value. Nothing in a ranked table distinguishes the two cases, so
+this reports the distinction directly: for each swept parameter, the
+range of values spanned by the best-scoring candidates and the error
+spread across them.
 
 ## Usage
 
 ``` r
-growth_add_objective(scores)
+growth_identifiability(
+  scores,
+  params = c("growth_shp", "mort_shp", "anpp_prop"),
+  top_frac = 0.1,
+  identified_below = 0.5
+)
 ```
 
 ## Arguments
 
 - scores:
 
-  A tibble of per-combination fit statistics.
+  A tibble from
+  [`growth_score_fit()`](https://for-cast.github.io/landisutils/reference/growth_score_fit.md)
+  with an `objective_rmse`, as returned by
+  [`growth_add_objective()`](https://for-cast.github.io/landisutils/reference/growth_add_objective.md).
+
+- params:
+
+  Character vector of swept parameter columns to assess.
+
+- top_frac:
+
+  Numeric. Fraction of each species' ranking treated as the set of
+  candidates that cannot be told apart.
+
+- identified_below:
+
+  Numeric. A parameter is reported as identified when its top candidates
+  span no more than this fraction of the swept grid.
 
 ## Value
 
-`scores` with `objective_rmse` and `objective`.
+One row per species and parameter, with the argmin value, the range
+spanned by the top candidates, the fraction of the grid that range
+covers, whether the argmin sits on a grid boundary, and the relative
+spread in objective across the top candidates.
+
+## Details
+
+A parameter whose top candidates span most of the swept grid while their
+errors differ by a few percent is not being estimated. Two patterns
+recur and both are worth naming in a calibration's own output:
+
+- Mortality shape is routinely unidentified. Once a curve has reached
+  its level, the shape of the approach barely moves the residual, so the
+  objective is nearly flat along that axis. This appears to be inherent
+  to fitting a plateau rather than a property of any one data set.
+
+- An argmin on the edge of the swept grid means the optimum may lie
+  outside it, and `boundary` flags this. It also makes any weighted
+  average of the candidates biased inward by construction, which is the
+  main reason to check identifiability before reaching for model
+  averaging as the remedy.
+
+Species with no scorable candidate are absent from the result; see
+[`growth_best_candidates()`](https://for-cast.github.io/landisutils/reference/growth_best_candidates.md),
+which reports them as an explicit refusal.
 
 ## See also
 
 Other growth calibration helpers:
 [`extract_landscape_cohort_structures()`](https://for-cast.github.io/landisutils/reference/extract_landscape_cohort_structures.md),
+[`growth_add_objective()`](https://for-cast.github.io/landisutils/reference/growth_add_objective.md),
 [`growth_auto_window()`](https://for-cast.github.io/landisutils/reference/growth_auto_window.md),
 [`growth_best_candidates()`](https://for-cast.github.io/landisutils/reference/growth_best_candidates.md),
 [`growth_bin_observations()`](https://for-cast.github.io/landisutils/reference/growth_bin_observations.md),
@@ -34,7 +86,6 @@ Other growth calibration helpers:
 [`growth_expand_over_pseudo_species()`](https://for-cast.github.io/landisutils/reference/growth_expand_over_pseudo_species.md),
 [`growth_factorial_ratio_grid()`](https://for-cast.github.io/landisutils/reference/growth_factorial_ratio_grid.md),
 [`growth_fitting_windows()`](https://for-cast.github.io/landisutils/reference/growth_fitting_windows.md),
-[`growth_identifiability()`](https://for-cast.github.io/landisutils/reference/growth_identifiability.md),
 [`growth_inflation_factor()`](https://for-cast.github.io/landisutils/reference/growth_inflation_factor.md),
 [`growth_pseudo_species_name()`](https://for-cast.github.io/landisutils/reference/growth_pseudo_species_name.md),
 [`growth_reference_curves()`](https://for-cast.github.io/landisutils/reference/growth_reference_curves.md),

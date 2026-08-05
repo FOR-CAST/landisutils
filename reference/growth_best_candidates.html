@@ -21,7 +21,7 @@ whichever combination happened to sort first, dressed up as a result."><meta pro
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.93</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.94</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -69,7 +69,14 @@ whichever combination happened to sort first, dressed up as a result.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">growth_best_candidates</span><span class="op">(</span><span class="va">scores</span>, <span class="va">growth_params</span>, <span class="va">windows</span>, scoring <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">growth_best_candidates</span><span class="op">(</span></span>
+<span>  <span class="va">scores</span>,</span>
+<span>  <span class="va">growth_params</span>,</span>
+<span>  <span class="va">windows</span>,</span>
+<span>  scoring <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  top_frac <span class="op">=</span> <span class="fl">0.1</span>,</span>
+<span>  level_frac_warn <span class="op">=</span> <span class="fl">0.9</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -91,6 +98,17 @@ whichever combination happened to sort first, dressed up as a result.</p>
 <dt id="arg-scoring">scoring<a class="anchor" aria-label="anchor" href="#arg-scoring"></a></dt>
 <dd><p>A tibble from <code><a href="read_growth_scoring.html">read_growth_scoring()</a></code>, or <code>NULL</code>.</p></dd>
 
+
+<dt id="arg-top-frac">top_frac<a class="anchor" aria-label="anchor" href="#arg-top-frac"></a></dt>
+<dd><p>Numeric. Fraction of each species' ranking treated as
+indistinguishable from the winner, over which the level band is reported.</p></dd>
+
+
+<dt id="arg-level-frac-warn">level_frac_warn<a class="anchor" aria-label="anchor" href="#arg-level-frac-warn"></a></dt>
+<dd><p>Numeric. Warn when the selected candidate reached less
+than this fraction of its own asymptote, so its level is an extrapolation.
+<code>NA</code> disables the warning.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -101,6 +119,25 @@ whichever combination happened to sort first, dressed up as a result.</p>
     <p>Those species come back with <code>fitted = FALSE</code>, no parameters, and the values
 currently in use carried through untouched. That is the honest answer, and it
 names what would change it: more plots, or promoting a SORTIE curve to <code>used</code>.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="reading-the-level-band">Reading the level band<a class="anchor" aria-label="anchor" href="#reading-the-level-band"></a></h2>
+    <p>Ranking is on shape alone and the level is recovered afterwards, by dividing
+the reference plateau by the fraction of its own asymptote the simulated
+curve reached (see <code><a href="growth_inflation_factor.html">growth_inflation_factor()</a></code>). That division is the whole
+reason <code>biomass_max_est</code> is not simply read off the winner and trusted: its
+leverage on any error in the simulated curve is <code>1 / achieved_frac</code>. A
+candidate that plateaued cleanly recovers its level almost exactly, while one
+still climbing when the run ended is extrapolating, and two candidates a
+fraction of a percent apart in shape error can then imply levels differing by
+a factor of two or more.</p>
+<p>So <code>biomass_max_lo</code> / <code>biomass_max_hi</code> report the range of <code>biomass_max_est</code>
+across the candidates that cannot be told apart from the winner, and
+<code>level_extrapolated</code> flags a winner that never approached its asymptote.
+A wide band is not noise to be averaged away: it says the references do not
+determine the level, and the fix is a longer run, a better-constrained
+reference, or a wider sweep – not a different summary of the same surface.
+Use <code><a href="growth_identifiability.html">growth_identifiability()</a></code> to see which swept parameter is responsible.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
@@ -117,6 +154,7 @@ names what would change it: more plots, or promoting a SORTIE curve to <code>use
 <code><a href="growth_expand_over_pseudo_species.html">growth_expand_over_pseudo_species()</a></code>,
 <code><a href="growth_factorial_ratio_grid.html">growth_factorial_ratio_grid()</a></code>,
 <code><a href="growth_fitting_windows.html">growth_fitting_windows()</a></code>,
+<code><a href="growth_identifiability.html">growth_identifiability()</a></code>,
 <code><a href="growth_inflation_factor.html">growth_inflation_factor()</a></code>,
 <code><a href="growth_pseudo_species_name.html">growth_pseudo_species_name()</a></code>,
 <code><a href="growth_reference_curves.html">growth_reference_curves()</a></code>,

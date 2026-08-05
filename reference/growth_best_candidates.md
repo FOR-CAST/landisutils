@@ -12,7 +12,14 @@ dressed up as a result.
 ## Usage
 
 ``` r
-growth_best_candidates(scores, growth_params, windows, scoring = NULL)
+growth_best_candidates(
+  scores,
+  growth_params,
+  windows,
+  scoring = NULL,
+  top_frac = 0.1,
+  level_frac_warn = 0.9
+)
 ```
 
 ## Arguments
@@ -38,6 +45,18 @@ growth_best_candidates(scores, growth_params, windows, scoring = NULL)
   [`read_growth_scoring()`](https://for-cast.github.io/landisutils/reference/read_growth_scoring.md),
   or `NULL`.
 
+- top_frac:
+
+  Numeric. Fraction of each species' ranking treated as
+  indistinguishable from the winner, over which the level band is
+  reported.
+
+- level_frac_warn:
+
+  Numeric. Warn when the selected candidate reached less than this
+  fraction of its own asymptote, so its level is an extrapolation. `NA`
+  disables the warning.
+
 ## Value
 
 One row per species.
@@ -48,6 +67,30 @@ Those species come back with `fitted = FALSE`, no parameters, and the
 values currently in use carried through untouched. That is the honest
 answer, and it names what would change it: more plots, or promoting a
 SORTIE curve to `used`.
+
+## Reading the level band
+
+Ranking is on shape alone and the level is recovered afterwards, by
+dividing the reference plateau by the fraction of its own asymptote the
+simulated curve reached (see
+[`growth_inflation_factor()`](https://for-cast.github.io/landisutils/reference/growth_inflation_factor.md)).
+That division is the whole reason `biomass_max_est` is not simply read
+off the winner and trusted: its leverage on any error in the simulated
+curve is `1 / achieved_frac`. A candidate that plateaued cleanly
+recovers its level almost exactly, while one still climbing when the run
+ended is extrapolating, and two candidates a fraction of a percent apart
+in shape error can then imply levels differing by a factor of two or
+more.
+
+So `biomass_max_lo` / `biomass_max_hi` report the range of
+`biomass_max_est` across the candidates that cannot be told apart from
+the winner, and `level_extrapolated` flags a winner that never
+approached its asymptote. A wide band is not noise to be averaged away:
+it says the references do not determine the level, and the fix is a
+longer run, a better-constrained reference, or a wider sweep – not a
+different summary of the same surface. Use
+[`growth_identifiability()`](https://for-cast.github.io/landisutils/reference/growth_identifiability.md)
+to see which swept parameter is responsible.
 
 ## See also
 
@@ -64,6 +107,7 @@ Other growth calibration helpers:
 [`growth_expand_over_pseudo_species()`](https://for-cast.github.io/landisutils/reference/growth_expand_over_pseudo_species.md),
 [`growth_factorial_ratio_grid()`](https://for-cast.github.io/landisutils/reference/growth_factorial_ratio_grid.md),
 [`growth_fitting_windows()`](https://for-cast.github.io/landisutils/reference/growth_fitting_windows.md),
+[`growth_identifiability()`](https://for-cast.github.io/landisutils/reference/growth_identifiability.md),
 [`growth_inflation_factor()`](https://for-cast.github.io/landisutils/reference/growth_inflation_factor.md),
 [`growth_pseudo_species_name()`](https://for-cast.github.io/landisutils/reference/growth_pseudo_species_name.md),
 [`growth_reference_curves()`](https://for-cast.github.io/landisutils/reference/growth_reference_curves.md),
