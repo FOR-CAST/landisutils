@@ -250,14 +250,28 @@ testthat::test_that("landis_find returns NA_character_ when nothing is found", {
   testthat::expect_identical(landis_find(check_version = FALSE), NA_character_)
 })
 
-testthat::test_that("landis_find warns when the version cannot be determined", {
-  ## A fixed literal path, not a tempfile: the path appears in the warning and
-  ## therefore in the snapshot, so it has to be stable across runs and machines.
+testthat::test_that("landis_find STOPS when the version cannot be determined", {
+  ## Behaviour change (v0.0.97): this used to warn and hand back the console anyway.
+  ## An undetermined version is not evidence of a usable core -- it is exactly what a
+  ## wrong-generation console looks like when it fails to announce itself -- so the
+  ## local path now refuses, matching the two Docker paths.
   console <- "/nonexistent/Landis.Console.dll"
   withr::local_envvar(LANDIS_CONSOLE = console)
 
-  testthat::expect_snapshot(res <- landis_find())
-  testthat::expect_identical(res, console)
+  testthat::expect_error(landis_find(), "could not determine the LANDIS-II version")
+})
+
+testthat::test_that("landis_find honours the version-check opt-out", {
+  console <- "/nonexistent/Landis.Console.dll"
+  withr::local_envvar(LANDIS_CONSOLE = console)
+
+  ## Explicitly skipped ...
+  withr::local_options(landisutils.skip_version_check = TRUE)
+  testthat::expect_identical(landis_find(), console)
+
+  ## ... and not asked for in the first place.
+  withr::local_options(landisutils.skip_version_check = FALSE)
+  testthat::expect_identical(landis_find(check_version = FALSE), console)
 })
 
 testthat::test_that("landis_version returns NA for an unresolvable console", {

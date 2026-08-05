@@ -611,6 +611,10 @@ landis_run_docker <- function(
   image <- image %||% getOption("landisutils.docker.image")
   console <- console %||% landis_find_docker()
 
+  ## Require the target core generation before staging or launching anything
+  ## (memoized per image, so a sequence of one-off runs on the same image probes once).
+  landis_assert_version(image = image)
+
   scenario_dir <- fs::path_real(scenario_dir)
 
   if (!fs::file_exists(fs::path(scenario_dir, scenario_file))) {

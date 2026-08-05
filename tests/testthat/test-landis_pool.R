@@ -1,5 +1,13 @@
 ## Docker-gated tests for the warm pool helpers. The `.docker_available()` gate lives in
 ## helper-docker.R so every docker-backed test file shares one definition.
+##
+## These exercise pool PLUMBING against a tiny stand-in image (busybox), not LANDIS-II
+## semantics -- so the core-version guard in `landis_pool_start()` has nothing to find
+## and would (correctly) refuse to start every pool here. Opting out is the honest
+## response: the alternative is pulling a multi-GB LANDIS image to test `docker exec`
+## argument handling. `landis_assert_version()` has its own coverage in
+## test-landis_version.R, including against the real image.
+withr::local_options(landisutils.skip_version_check = TRUE, .local_envir = teardown_env())
 
 test_that("landis_pool_start + exec + stop round-trips against a busybox image", {
   skip_if_not(.docker_available(), "docker CLI not available")

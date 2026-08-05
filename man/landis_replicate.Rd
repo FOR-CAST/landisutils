@@ -72,6 +72,7 @@ changes existing seeds.
 Other LANDIS-II execution helpers:
 \code{\link[=host_cpu_info]{host_cpu_info()}},
 \code{\link[=landis_archive_rep]{landis_archive_rep()}},
+\code{\link[=landis_assert_version]{landis_assert_version()}},
 \code{\link[=landis_find]{landis_find()}},
 \code{\link[=landis_find_docker]{landis_find_docker()}},
 \code{\link[=landis_pool_exec]{landis_pool_exec()}},
@@ -80,6 +81,7 @@ Other LANDIS-II execution helpers:
 \code{\link[=landis_pool_stop]{landis_pool_stop()}},
 \code{\link[=landis_run_docker]{landis_run_docker()}},
 \code{\link[=landis_run_local]{landis_run_local()}},
+\code{\link[=landis_target_version]{landis_target_version()}},
 \code{\link[=landis_version]{landis_version()}},
 \code{\link[=read_landis_resource_logs]{read_landis_resource_logs()}},
 \code{\link[=tar_landis]{tar_landis()}},

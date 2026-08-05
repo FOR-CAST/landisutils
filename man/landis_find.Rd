@@ -4,14 +4,16 @@
 \alias{landis_find}
 \title{Find the LANDIS-II console for a local installation}
 \usage{
-landis_find(check_version = TRUE, required_major = 8L)
+landis_find(check_version = TRUE, required_major = landis_target_version())
 }
 \arguments{
 \item{check_version}{Logical. When \code{TRUE} (default), verify the console's
-major version with \code{\link[=landis_version]{landis_version()}} and stop if it is not
-\code{required_major}. A version that cannot be determined only warns.}
+major version with \code{\link[=landis_assert_version]{landis_assert_version()}} and stop if it is not
+\code{required_major}. A version that cannot be determined also stops -- see
+that function for why, and for the opt-out.}
 
-\item{required_major}{Integer. Required LANDIS-II major version.}
+\item{required_major}{Integer. Required LANDIS-II major version. Defaults to
+\code{\link[=landis_target_version]{landis_target_version()}}, the generation this package is built for.}
 }
 \value{
 Character. Path to \code{Landis.Console.dll}, or \code{NA_character_} if not
@@ -28,12 +30,13 @@ The \verb{/opt} search is a Linux convention and finds nothing on Windows, where
 (see \code{\link[=tar_landis]{tar_landis()}}), so a Windows user must set that variable.
 }
 \seealso{
-\code{\link[=landis_version]{landis_version()}}, \code{\link[=landis_find_docker]{landis_find_docker()}}, \code{\link[=landis_run_local]{landis_run_local()}},
-\code{\link[=tar_landis]{tar_landis()}}
+\code{\link[=landis_assert_version]{landis_assert_version()}}, \code{\link[=landis_version]{landis_version()}}, \code{\link[=landis_find_docker]{landis_find_docker()}},
+\code{\link[=landis_run_local]{landis_run_local()}}, \code{\link[=tar_landis]{tar_landis()}}
 
 Other LANDIS-II execution helpers:
 \code{\link[=host_cpu_info]{host_cpu_info()}},
 \code{\link[=landis_archive_rep]{landis_archive_rep()}},
+\code{\link[=landis_assert_version]{landis_assert_version()}},
 \code{\link[=landis_find_docker]{landis_find_docker()}},
 \code{\link[=landis_pool_exec]{landis_pool_exec()}},
 \code{\link[=landis_pool_restart_one]{landis_pool_restart_one()}},
@@ -42,6 +45,7 @@ Other LANDIS-II execution helpers:
 \code{\link[=landis_replicate]{landis_replicate()}},
 \code{\link[=landis_run_docker]{landis_run_docker()}},
 \code{\link[=landis_run_local]{landis_run_local()}},
+\code{\link[=landis_target_version]{landis_target_version()}},
 \code{\link[=landis_version]{landis_version()}},
 \code{\link[=read_landis_resource_logs]{read_landis_resource_logs()}},
 \code{\link[=tar_landis]{tar_landis()}},

@@ -150,6 +150,25 @@ landis_pool_start <- function(
     character(1)
   )
 
+  ## Require the target core generation ONCE per pool, against a container that is
+  ## already up, before any caller can exec work into it. Every container in a pool
+  ## shares one image, so a single probe covers them all and the sub-second cost is
+  ## paid at pool creation rather than per replicate. Tear the pool down on failure --
+  ## leaving containers running for a pool that will never be used is how orphans
+  ## accumulate.
+  tryCatch(landis_assert_version(container = container_names[[1L]]), error = function(e) {
+    tryCatch(
+      processx::run(
+        "docker",
+        c("rm", "-f", container_names),
+        error_on_status = FALSE,
+        echo = FALSE
+      ),
+      error = function(e2) NULL
+    )
+    stop(conditionMessage(e), call. = FALSE)
+  })
+
   message(glue::glue("landis_pool_start: {n} container(s) started ({pool_id}, image {image})"))
 
   structure(

@@ -2,13 +2,23 @@
 % Please edit documentation in R/landis.R
 \name{landis_version}
 \alias{landis_version}
-\title{Report the version of a local LANDIS-II console}
+\title{Report the version of a LANDIS-II console}
 \usage{
-landis_version(console = NULL, timeout = 60, check_version = FALSE)
+landis_version(
+  console = NULL,
+  image = NULL,
+  container = NULL,
+  timeout = 60,
+  check_version = FALSE
+)
 }
 \arguments{
 \item{console}{Character or \code{NULL}. Path to \code{Landis.Console.dll}; resolved
-via \code{\link[=landis_find]{landis_find()}} when \code{NULL}.}
+via \code{\link[=landis_find]{landis_find()}} when \code{NULL} and no \code{image}/\code{container} is given.}
+
+\item{image}{Character or \code{NULL}. Docker image to probe.}
+
+\item{container}{Character or \code{NULL}. Running container to probe.}
 
 \item{timeout}{Numeric. Seconds to wait for the console to print its banner.}
 
@@ -24,12 +34,17 @@ Runs the console with no scenario file. It prints its version banner --
 \verb{LANDIS-II 8.0 (8)} -- and then exits with an error about the missing
 scenario, so a non-zero status is expected and is not treated as failure.
 }
+\details{
+The console can be a local install, a Docker \code{image} (probed with a throwaway
+container), or a \code{container} that is already running (probed with \verb{docker exec}). Supply at most one of the three; \code{console} is the default.
+}
 \seealso{
-\code{\link[=landis_find]{landis_find()}}
+\code{\link[=landis_find]{landis_find()}}, \code{\link[=landis_assert_version]{landis_assert_version()}}
 
 Other LANDIS-II execution helpers:
 \code{\link[=host_cpu_info]{host_cpu_info()}},
 \code{\link[=landis_archive_rep]{landis_archive_rep()}},
+\code{\link[=landis_assert_version]{landis_assert_version()}},
 \code{\link[=landis_find]{landis_find()}},
 \code{\link[=landis_find_docker]{landis_find_docker()}},
 \code{\link[=landis_pool_exec]{landis_pool_exec()}},
@@ -39,6 +54,7 @@ Other LANDIS-II execution helpers:
 \code{\link[=landis_replicate]{landis_replicate()}},
 \code{\link[=landis_run_docker]{landis_run_docker()}},
 \code{\link[=landis_run_local]{landis_run_local()}},
+\code{\link[=landis_target_version]{landis_target_version()}},
 \code{\link[=read_landis_resource_logs]{read_landis_resource_logs()}},
 \code{\link[=tar_landis]{tar_landis()}},
 \code{\link[=write_landis_scenario_file]{write_landis_scenario_file()}}
