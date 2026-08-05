@@ -72,6 +72,7 @@ utils::globalVariables(c(
 #'
 #' @export
 read_biomass_c_snapshots <- function(paths, times, run_name = NULL, cell_mask = NULL) {
+  .need("arrow", "Reading biomass-community snapshots")
   stopifnot(is.character(paths), length(paths) >= 1L, is.numeric(times), length(times) >= 1L)
   if (!is.null(cell_mask)) {
     stopifnot(is.data.frame(cell_mask), all(c("row", "column") %in% names(cell_mask)))
@@ -159,6 +160,7 @@ read_biomass_c_snapshots_for_scenario <- function(
   scenario_dir,
   subdir = "_aggregates/biomass_snapshots"
 ) {
+  .need("arrow", "Reading a scenario's biomass-community dataset")
   scen_root <- file.path(scenario_dir, subdir)
   if (!dir.exists(scen_root)) {
     return(NULL)
@@ -215,6 +217,7 @@ write_biomass_c_snapshots_parquet <- function(
   subdir = "_aggregates/biomass_snapshots",
   staging_dir = NULL
 ) {
+  .need("arrow", "Writing a parquet snapshot")
   df <- read_biomass_c_snapshots(
     paths = src_path,
     times = times,

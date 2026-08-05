@@ -78,6 +78,7 @@ write_forcs_log_summary_parquet <- function(
   subdir = "_aggregates/forcs_log_summary",
   staging_dir = NULL
 ) {
+  .need("arrow", "Writing a parquet summary")
   df <- read_forcs_log_summary(src_path, run_name = NULL, cell_mask = cell_mask)
   if (nrow(df) == 0L) {
     stop("write_forcs_log_summary_parquet(): empty input for ", src_path, call. = FALSE)
@@ -112,6 +113,7 @@ write_forcs_log_summary_parquet <- function(
 #'
 #' @export
 open_forcs_log_summary_dataset <- function(dataset_roots) {
+  .need("arrow", "Opening a parquet dataset")
   existing <- dataset_roots[dir.exists(dataset_roots)]
   if (length(existing) == 0L) {
     return(NULL)
