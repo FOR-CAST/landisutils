@@ -4,7 +4,7 @@
 \alias{growth_bin_observations}
 \title{Condense a ground-plot cloud into an age-binned series}
 \usage{
-growth_bin_observations(obs, bin = 20L, probs = 0.5)
+growth_bin_observations(obs, bin = 20L, probs = 0.5, site = NULL)
 }
 \arguments{
 \item{obs}{A tibble with \code{age} and \code{aboveground_c_mg_ha}.}
@@ -12,6 +12,11 @@ growth_bin_observations(obs, bin = 20L, probs = 0.5)
 \item{bin}{Numeric. Bin width in years.}
 
 \item{probs}{Numeric. Quantile to take within each bin.}
+
+\item{site}{Optional column name identifying the sampling location. When
+given, repeated visits to one location are averaged within a bin before the
+quantile is taken, so \code{n} counts locations rather than visits. Errors if the
+named column is absent, rather than silently skipping the correction.}
 }
 \value{
 A tibble with \code{age} (bin mean), \code{value}, and \code{n}.
@@ -30,6 +35,15 @@ where a fully stocked, single-cohort simulation belongs: the plots span every
 stocking level, site quality and partial-disturbance history, and whole-plot
 volume is attributed to the leading species, which holds a median of 69\% of
 the stand here.
+
+Where observations come from a permanent-plot network, pass \code{site} so that
+each location contributes one value per bin. Permanent plots are remeasured
+on a schedule that reflects program history rather than anything ecological
+-- in the network this was built against, 78\% of locations carry more than one
+visit and some carry thirteen -- so treating every visit as an independent
+observation silently weights each bin toward whichever locations happen to
+have been revisited most. That is pseudo-replication, and it biases the
+quantile rather than merely tightening it.
 }
 \seealso{
 Other growth calibration helpers:

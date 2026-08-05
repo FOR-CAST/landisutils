@@ -97,20 +97,45 @@ growth_scoring_for <- function(scoring, species) {
 #' volume is attributed to the leading species, which holds a median of 69% of
 #' the stand here.
 #'
+#' Where observations come from a permanent-plot network, pass `site` so that
+#' each location contributes one value per bin. Permanent plots are remeasured
+#' on a schedule that reflects program history rather than anything ecological
+#' -- in the network this was built against, 78% of locations carry more than one
+#' visit and some carry thirteen -- so treating every visit as an independent
+#' observation silently weights each bin toward whichever locations happen to
+#' have been revisited most. That is pseudo-replication, and it biases the
+#' quantile rather than merely tightening it.
+#'
 #' @param obs A tibble with `age` and `aboveground_c_mg_ha`.
 #' @param bin Numeric. Bin width in years.
 #' @param probs Numeric. Quantile to take within each bin.
+#' @param site Optional column name identifying the sampling location. When
+#'   given, repeated visits to one location are averaged within a bin before the
+#'   quantile is taken, so `n` counts locations rather than visits. Errors if the
+#'   named column is absent, rather than silently skipping the correction.
 #'
 #' @return A tibble with `age` (bin mean), `value`, and `n`.
 #' @family growth calibration helpers
 #' @export
-growth_bin_observations <- function(obs, bin = 20L, probs = 0.5) {
+growth_bin_observations <- function(obs, bin = 20L, probs = 0.5, site = NULL) {
+  if (!is.null(site) && !site %in% names(obs)) {
+    stop("`site` column '", site, "' not found in `obs`.", call. = FALSE)
+  }
   d <- dplyr::filter(obs, !is.na(.data$age), !is.na(.data$aboveground_c_mg_ha))
   if (nrow(d) == 0L) {
     return(tibble::tibble(age = numeric(0), value = numeric(0), n = integer(0)))
   }
+  d <- dplyr::mutate(d, .bin = floor(.data$age / bin))
+  if (!is.null(site)) {
+    ## One value per location per bin, so a plot visited five times counts once.
+    d <- dplyr::summarise(
+      d,
+      age = mean(.data$age),
+      aboveground_c_mg_ha = mean(.data$aboveground_c_mg_ha),
+      .by = dplyr::all_of(c(".bin", site))
+    )
+  }
   d |>
-    dplyr::mutate(.bin = floor(.data$age / bin)) |>
     dplyr::summarise(
       age = mean(.data$age),
       value = stats::quantile(.data$aboveground_c_mg_ha, probs, names = FALSE),
@@ -140,6 +165,9 @@ growth_bin_observations <- function(obs, bin = 20L, probs = 0.5) {
 #'   [growth_bin_observations()] and [read_growth_scoring()].
 #' @param n_grid Integer. Number of ages in the common grid.
 #' @param use_tipsy Logical. Score against TIPSY as well.
+#' @param site Optional column name identifying the sampling location of a
+#'   ground-plot observation. Passed to [growth_bin_observations()]; when given,
+#'   `n_plots` counts distinct locations rather than visits.
 #'
 #' @return A list with `ages`, `series`, `levels`, `n_plots`, `n_bins`,
 #'   `plots_sparse`.
@@ -152,16 +180,18 @@ growth_reference_curves <- function(
   plot_quantile = 0.5,
   min_plots = 50L,
   n_grid = 60L,
-  use_tipsy = FALSE
+  use_tipsy = FALSE,
+  site = NULL
 ) {
   ages <- seq(window[[1L]], window[[2L]], length.out = n_grid)
 
-  as_series <- function(src) {
-    dplyr::transmute(
-      dplyr::filter(reference, .data$source == src),
-      age = .data$age,
-      value = .data$aboveground_c_mg_ha
-    ) |>
+  as_series <- function(src, extra = character(0)) {
+    dplyr::filter(reference, .data$source == src) |>
+      dplyr::select(
+        age = "age",
+        value = "aboveground_c_mg_ha",
+        dplyr::all_of(intersect(extra, names(reference)))
+      ) |>
       dplyr::filter(!is.na(.data$age), !is.na(.data$value)) |>
       dplyr::arrange(.data$age)
   }
@@ -173,8 +203,14 @@ growth_reference_curves <- function(
     stats::approx(d$age, d$value, xout = ages, rule = 1)$y
   }
 
-  obs <- as_series("Ground plots")
-  n_plots <- nrow(obs)
+  obs <- as_series("Ground plots", extra = if (is.null(site)) character(0) else site)
+  ## Count locations, not visits, whenever the caller has identified them: a
+  ## permanent plot measured five times is one plot's worth of evidence.
+  n_plots <- if (!is.null(site) && site %in% names(obs)) {
+    dplyr::n_distinct(obs[[site]])
+  } else {
+    nrow(obs)
+  }
   ## ALWAYS bin and always score. `plots_warn_below` is advisory only: where
   ## observations are thin they are also the only evidence there is, and
   ## declining to fit leaves the parameter with no support at all rather than
@@ -182,9 +218,10 @@ growth_reference_curves <- function(
   ## can weigh the fit accordingly.
   plots_sparse <- n_plots < min_plots
   binned <- growth_bin_observations(
-    dplyr::rename(obs, aboveground_c_mg_ha = value),
+    dplyr::rename(obs, aboveground_c_mg_ha = "value"),
     bin = bin,
-    probs = plot_quantile
+    probs = plot_quantile,
+    site = site
   )
 
   raw <- list(sortie = as_series("SORTIE"), tipsy = as_series("TIPSY"), plots = binned)

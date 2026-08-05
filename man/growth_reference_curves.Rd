@@ -11,7 +11,8 @@ growth_reference_curves(
   plot_quantile = 0.5,
   min_plots = 50L,
   n_grid = 60L,
-  use_tipsy = FALSE
+  use_tipsy = FALSE,
+  site = NULL
 )
 }
 \arguments{
@@ -28,6 +29,10 @@ advisory and only sets \code{plots_sparse}. See
 \item{n_grid}{Integer. Number of ages in the common grid.}
 
 \item{use_tipsy}{Logical. Score against TIPSY as well.}
+
+\item{site}{Optional column name identifying the sampling location of a
+ground-plot observation. Passed to \code{\link[=growth_bin_observations]{growth_bin_observations()}}; when given,
+\code{n_plots} counts distinct locations rather than visits.}
 }
 \value{
 A list with \code{ages}, \code{series}, \code{levels}, \code{n_plots}, \code{n_bins},

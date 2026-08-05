@@ -35,6 +35,58 @@ test_that("binning gives one point per age band regardless of plot count", {
   expect_equal(out$value, c(30, 99))
 })
 
+test_that("repeat visits to one location count once per bin", {
+  ## Site A visited four times, sites B and C once each, all inside one bin.
+  ## Visit-weighted the median is 10 (A dominates); location-weighted it is 30.
+  obs <- tibble::tibble(
+    site = c("A", "A", "A", "A", "B", "C"),
+    age = c(1, 2, 3, 4, 5, 6),
+    aboveground_c_mg_ha = c(10, 10, 10, 10, 30, 50)
+  )
+
+  expect_equal(growth_bin_observations(obs, bin = 20)$value, 10)
+  expect_equal(growth_bin_observations(obs, bin = 20, site = "site")$value, 30)
+})
+
+test_that("site weighting reports locations rather than visits", {
+  obs <- tibble::tibble(
+    site = c("A", "A", "A", "B"),
+    age = c(1, 2, 3, 4),
+    aboveground_c_mg_ha = c(10, 20, 30, 40)
+  )
+
+  expect_equal(growth_bin_observations(obs, bin = 20)$n, 4L)
+  expect_equal(growth_bin_observations(obs, bin = 20, site = "site")$n, 2L)
+})
+
+test_that("a location visited across two bins contributes to each", {
+  obs <- tibble::tibble(site = c("A", "A"), age = c(5, 25), aboveground_c_mg_ha = c(10, 80))
+  out <- growth_bin_observations(obs, bin = 20, site = "site")
+
+  expect_equal(nrow(out), 2L)
+  expect_equal(out$n, c(1L, 1L))
+  expect_equal(out$value, c(10, 80))
+})
+
+test_that("a missing site column is an error, not a silent skip", {
+  obs <- tibble::tibble(age = 1:3, aboveground_c_mg_ha = c(10, 20, 30))
+
+  expect_snapshot(error = TRUE, growth_bin_observations(obs, site = "site"))
+})
+
+test_that("growth_reference_curves counts distinct locations when told about them", {
+  ref <- dplyr::mutate(
+    reference(),
+    site = ifelse(.data$source == "Ground plots", rep_len(c("A", "A", "B"), dplyr::n()), NA)
+  )
+
+  plain <- growth_reference_curves(ref, window = c(20, 180))
+  keyed <- growth_reference_curves(ref, window = c(20, 180), site = "site")
+
+  expect_equal(plain$n_plots, 12L)
+  expect_equal(keyed$n_plots, 2L)
+})
+
 test_that("the quantile selects where in the cloud the binned series sits", {
   obs <- tibble::tibble(age = rep(5, 5L), aboveground_c_mg_ha = c(10, 20, 30, 40, 50))
 
