@@ -31,7 +31,6 @@ NULL
 
 ## usethis namespace: start
 #' @importFrom callr r_bg
-#' @importFrom cffdrs grass_fuel_moisture_code
 #' @importFrom data.table :=
 #' @importFrom data.table .BY
 #' @importFrom data.table .EACHI

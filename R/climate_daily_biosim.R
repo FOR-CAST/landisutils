@@ -658,8 +658,13 @@ assemble_climate_library_file_scf <- function(dataset_path, vars, id_col = "EcoI
   df
 }
 
-## non-exported cffdrs helpers - resolved lazily on first use
+## non-exported cffdrs helpers - resolved lazily on first use.
+##
+## cffdrs is a Suggests: it pulls in 16 packages (class, classInt, DBI, doParallel, e1071, foreach,
+## ...) that nothing else here needs, and only this FWI recomputation path uses it. Resolving lazily
+## was already the pattern; the guard makes the failure legible when it is absent.
 .cffdrs_fn <- function(name) {
+  .need("cffdrs", "Recomputing the Fire Weather Index")
   utils::getFromNamespace(name, "cffdrs")
 }
 
