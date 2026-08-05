@@ -1,5 +1,12 @@
 # Changelog
 
+## landisutils 0.0.90
+
+- The TIPSY reference curve is now drawn dotted rather than dashed. At
+  the line width these figures use, a dashed line is indistinguishable
+  from a solid one in the legend key, which is the one place a reader
+  needs to tell them apart.
+
 ## landisutils 0.0.89
 
 - New
