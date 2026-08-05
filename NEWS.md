@@ -1,3 +1,7 @@
+# landisutils 0.0.93
+
+* `plot_growth_candidate()` maps point shape to the raw species code, so a reviewer can see which member of a lumped group is setting the curve. Codes routinely lump into one modelled species and the members are not interchangeable: in the network this was built against, black cottonwood carries a median 180 Mg C/ha against trembling aspen's 53, and the highest observations in the pooled cloud were all cottonwood.
+
 # landisutils 0.0.92
 
 * `plot_growth_factorial_sensitivity()` classifies a candidate against the calibrated value on a RELATIVE tolerance. The absolute `1e-6` it used before failed silently and badly: swept candidates are reconstructed from a rounded ratio, so the candidate that IS the calibrated value can differ from it by about one part in three thousand, which binned it as "lower" or "higher" and removed the reference box the figure is read against. Five of six species were missing that box.

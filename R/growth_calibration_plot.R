@@ -177,12 +177,23 @@ plot_growth_candidate <- function(
       fill = "goldenrod2",
       alpha = 0.13
     ) +
+    ## Shape carries the RAW species code, not the modelled one. Several codes
+    ## commonly lump into one modelled species, and the members are not
+    ## interchangeable -- in the network this was built against, black cottonwood
+    ## carries a median 180 Mg C/ha against trembling aspen's 53. Without this a
+    ## reviewer cannot see which member is setting the curve.
     ggplot2::geom_point(
       data = obs,
-      ggplot2::aes(x = .data$age, y = .data$aboveground_c_mg_ha, colour = plots_label),
+      ggplot2::aes(
+        x = .data$age,
+        y = .data$aboveground_c_mg_ha,
+        colour = plots_label,
+        shape = .data$leading_raw
+      ),
       alpha = 0.6,
-      size = 1.3
+      size = 1.5
     ) +
+    ggplot2::scale_shape_manual(values = c(16, 17, 15, 3, 7, 8, 4, 10, 12)) +
     ggplot2::geom_line(
       data = model,
       ggplot2::aes(x = .data$age, y = .data$aboveground_c_mg_ha, linetype = .data$source),
@@ -233,6 +244,7 @@ plot_growth_candidate <- function(
       x = "Stand age (years)",
       y = expression("Aboveground live carbon" ~ (Mg ~ C ~ ha^-1)),
       colour = NULL,
+      shape = "Leading species",
       linetype = "Reference curve",
       title = species,
       subtitle = subtitle %||%
