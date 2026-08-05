@@ -21,11 +21,15 @@ read_growth_scoring <- function(path) {
           "plot_quantile",
           "weight_sortie",
           "weight_tipsy",
+          "weight_vdyp",
           "weight_plots"
         )),
         as.numeric
       )
     ) |>
+    ## `weight_vdyp` postdates the other three, so a scoring file written before it
+    ## must still read rather than error on a missing column
+    (\(x) if ("weight_vdyp" %in% names(x)) x else dplyr::mutate(x, weight_vdyp = NA_real_))() |>
     dplyr::select(
       species,
       age_min,
@@ -35,6 +39,7 @@ read_growth_scoring <- function(path) {
       plots_warn_below,
       weight_sortie,
       weight_tipsy,
+      weight_vdyp,
       weight_plots,
       level_source,
       note
@@ -60,6 +65,10 @@ growth_scoring_for <- function(scoring, species) {
     ## quantitative score until that is confirmed. A species may still take its
     ## LEVEL from TIPSY, which back-calculation does support.
     weight_tipsy = 0,
+    ## VDYP defaults OUT of the ranking for the same reason as TIPSY: a project
+    ## that supplies no VDYP curve must not have its scoring changed by the
+    ## series existing. Switch it on per species in `growth_scoring.csv`.
+    weight_vdyp = 0,
     weight_plots = 1,
     level_source = NA_character_
   )
@@ -76,6 +85,7 @@ growth_scoring_for <- function(scoring, species) {
   out$plots_warn_below <- keep(ctl$plots_warn_below, out$plots_warn_below)
   out$weight_sortie <- keep(ctl$weight_sortie, out$weight_sortie)
   out$weight_tipsy <- keep(ctl$weight_tipsy, out$weight_tipsy)
+  out$weight_vdyp <- keep(ctl$weight_vdyp, out$weight_vdyp)
   out$weight_plots <- keep(ctl$weight_plots, out$weight_plots)
   lvl <- keep(ctl$level_source, NA_character_)
   out$level_source <- if (is.character(lvl) && nzchar(trimws(lvl))) trimws(lvl) else NA_character_
@@ -289,6 +299,11 @@ growth_bin_observations <- function(obs, bin = 20L, probs = 0.5, site = NULL, we
 #'   [growth_bin_observations()] and [read_growth_scoring()].
 #' @param n_grid Integer. Number of ages in the common grid.
 #' @param use_tipsy Logical. Score against TIPSY as well.
+#' @param use_vdyp Logical. Score against VDYP as well. VDYP is the British
+#'   Columbia Variable Density Yield Projection model, whose curves are natural
+#'   (unmanaged) stand yields; it is a separate series from TIPSY, which
+#'   projects MANAGED stands, because a natural-disturbance model wants the
+#'   former and the distinction must not be lost in the outputs.
 #' @param site Optional column name identifying the sampling location of a
 #'   ground-plot observation. Passed to [growth_bin_observations()]; when given,
 #'   `n_plots` counts distinct locations rather than visits.
@@ -307,6 +322,7 @@ growth_reference_curves <- function(
   min_plots = 50L,
   n_grid = 60L,
   use_tipsy = FALSE,
+  use_vdyp = FALSE,
   site = NULL,
   weight = NULL
 ) {
@@ -352,7 +368,12 @@ growth_reference_curves <- function(
     weight = weight
   )
 
-  raw <- list(sortie = as_series("SORTIE"), tipsy = as_series("TIPSY"), plots = binned)
+  raw <- list(
+    sortie = as_series("SORTIE"),
+    tipsy = as_series("TIPSY"),
+    vdyp = as_series("VDYP"),
+    plots = binned
+  )
 
   ## The plateau each series implies. For the modelled curves that is the
   ## maximum of the WHOLE curve, which is the potential the stand is heading
@@ -361,6 +382,7 @@ growth_reference_curves <- function(
   levels <- c(
     sortie = if (nrow(raw$sortie)) max(raw$sortie$value) else NA_real_,
     tipsy = if (nrow(raw$tipsy)) max(raw$tipsy$value) else NA_real_,
+    vdyp = if (nrow(raw$vdyp)) max(raw$vdyp$value) else NA_real_,
     plots = if (nrow(binned)) {
       inside <- binned$age >= window[[1L]] & binned$age <= window[[2L]]
       if (any(inside)) max(binned$value[inside]) else max(binned$value)
@@ -369,7 +391,7 @@ growth_reference_curves <- function(
     }
   )
 
-  scored <- c("sortie", "plots", if (isTRUE(use_tipsy)) "tipsy")
+  scored <- c("sortie", "plots", if (isTRUE(use_tipsy)) "tipsy", if (isTRUE(use_vdyp)) "vdyp")
   series <- lapply(stats::setNames(scored, scored), function(nm) at_grid(raw[[nm]]))
 
   list(
@@ -466,7 +488,7 @@ growth_score_fit <- function(
   curve,
   ref,
   level_source = NA_character_,
-  weights = c(sortie = 1, tipsy = 1, plots = 1),
+  weights = c(sortie = 1, tipsy = 1, vdyp = 1, plots = 1),
   biomass_max_scale = 200
 ) {
   empty <- tibble::tibble(
@@ -476,6 +498,7 @@ growth_score_fit <- function(
     plots_sparse = NA,
     rmse_sortie = NA_real_,
     rmse_tipsy = NA_real_,
+    rmse_vdyp = NA_real_,
     rmse_plots = NA_real_,
     nrmse_shape = NA_real_,
     achieved = NA_real_,
@@ -533,7 +556,7 @@ growth_score_fit <- function(
   }
 
   ## Which plateau to report a level recommendation against.
-  order_pref <- c("sortie", "tipsy", "plots")
+  order_pref <- c("sortie", "tipsy", "vdyp", "plots")
   usable <- order_pref[!is.na(ref$levels[order_pref])]
   chosen <- if (!is.na(level_source)) {
     ## A NOMINATED level source is a constraint, not a preference. Quietly
@@ -561,6 +584,7 @@ growth_score_fit <- function(
     plots_sparse = ref$plots_sparse,
     rmse_sortie = rmse_of("sortie"),
     rmse_tipsy = rmse_of("tipsy"),
+    rmse_vdyp = rmse_of("vdyp"),
     rmse_plots = rmse_of("plots"),
     nrmse_shape = shape,
     achieved = achieved,
@@ -791,6 +815,10 @@ growth_best_candidates <- function(
     "objective_rmse",
     "rmse_sortie",
     "rmse_tipsy",
+    ## `rmse_vdyp` postdates the other three: a scores table built by an earlier
+    ## release will not carry it, so the per-series residuals are selected with
+    ## any_of() below rather than required outright
+    "rmse_vdyp",
     "rmse_plots",
     "n_series",
     "n_plots",
@@ -827,7 +855,7 @@ growth_best_candidates <- function(
 
   best <- scorable |>
     dplyr::slice_min(.data$objective_rmse, n = 1L, by = "species", with_ties = FALSE) |>
-    dplyr::select(dplyr::all_of(keep)) |>
+    dplyr::select(dplyr::any_of(keep)) |>
     dplyr::mutate(fitted = TRUE) |>
     dplyr::left_join(band, by = "species") |>
     dplyr::mutate(
@@ -859,7 +887,7 @@ growth_best_candidates <- function(
     stub <- scores |>
       dplyr::filter(.data$species %in% missing) |>
       dplyr::slice_head(n = 1L, by = "species") |>
-      dplyr::select(dplyr::all_of(keep)) |>
+      dplyr::select(dplyr::any_of(keep)) |>
       dplyr::mutate(
         dplyr::across(
           dplyr::any_of(c(
@@ -870,6 +898,7 @@ growth_best_candidates <- function(
             "objective_rmse",
             "rmse_sortie",
             "rmse_tipsy",
+            "rmse_vdyp",
             "rmse_plots",
             "achieved",
             "achieved_frac",

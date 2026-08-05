@@ -19,7 +19,7 @@ utils::globalVariables(c(
   "shadetolerance", "species", "SpeciesCode", "speciesCode", "SpeciesName", "SproutAgeMax",
   "SproutAgeMin", "SRad", "starts_with", "structure_id", "swept_species", "Tmax", "Tmin",
   "total_biomass", "Value", "value", "Variable", "VegReprodProb", "WD", "weight_plots",
-  "weight_sortie", "weight_tipsy", "window_source", "WndD", "WndS", "WoodDecayRate",
+  "weight_sortie", "weight_tipsy", "weight_vdyp", "window_source", "WndD", "WndS", "WoodDecayRate",
   "wooddecayrate", "WS", "xBar", "YEAR", "Year", "year"
 ))
 
