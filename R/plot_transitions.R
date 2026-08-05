@@ -614,7 +614,7 @@ plot_species_biomass <- function(summary_df, colours = NULL, title = NULL) {
 #'
 #' @export
 plot_transitions <- function(lodes_df, colours = NULL, title = NULL) {
-  .need("ggplot2", "Plotting transitions")
+  .need(c("ggplot2", "ggalluvial"), "Plotting transitions")
   labels <- sort(unique(lodes_df$stratum))
 
   fill_scale <- if (!is.null(colours)) {
