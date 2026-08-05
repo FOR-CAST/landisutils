@@ -2,9 +2,7 @@
 
 Stops + removes the container at index `idx` if it exists, then starts a
 fresh replacement with identical config (image, scratch_root bind-mount,
-user, cpu_limit, mem_limit) using a new auto-generated container name.
-The pool object's `$names[idx]` is updated to point at the new
-container.
+user, cpu_limit, mem_limit) **under the same container name**.
 
 ## Usage
 
@@ -25,10 +23,16 @@ landis_pool_restart_one(pool, idx)
 
 ## Value
 
-The pool (invisibly), with `$names[idx]` updated to the new container
-name.
+The pool (invisibly, unchanged – `$names[idx]` still names the
+container, which is now a freshly started one).
 
 ## Details
+
+Reusing the name is deliberate: `landis_pool` is a plain list, so a
+rename could not be propagated back to whichever frame owns the pool,
+and that owner would go on addressing a container that no longer exists.
+A stable name also keeps the container name usable as a cross-process
+mutex.
 
 Intended for use by
 [`landis_pool_exec()`](https://for-cast.github.io/landisutils/reference/landis_pool_exec.md)'s

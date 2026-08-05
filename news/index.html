@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.95</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.96</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,6 +41,11 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.96" id="landisutils-0096">landisutils 0.0.96<a class="anchor" aria-label="anchor" href="#landisutils-0096"></a></h2>
+<ul><li>
+<code><a href="../reference/landis_pool_restart_one.html">landis_pool_restart_one()</a></code> restarts the container under its existing name instead of generating a fresh <code>-r&lt;rand&gt;</code> one. <code>landis_pool</code> is a plain list, so the rename reached only the frame that called the restart; every frame above it – including whichever one owns the pool – kept the name of the container that had just been removed. The result was self-sustaining rather than transient: after one genuine container failure, that worker’s every subsequent <code><a href="../reference/landis_pool_exec.html">landis_pool_exec()</a></code> addressed a container that no longer existed, failed, restarted, abandoned the replacement, and succeeded only on its retry. Observed in a 90-worker calibration as one worker accumulating an idle container per replicate (about 3.5 per hour) while still returning correct results, so nothing in the run’s own output showed it. A stable name is also what lets the container name serve as a cross-process mutex against duplicate dispatch, which the random suffix defeated. Restarts now tolerate the daemon briefly still holding the name after <code>docker rm -f</code>, waiting up to 30 s for it rather than sidestepping the conflict.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.95" id="landisutils-0095">landisutils 0.0.95<a class="anchor" aria-label="anchor" href="#landisutils-0095"></a></h2>
 <ul><li>

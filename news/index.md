@@ -1,5 +1,27 @@
 # Changelog
 
+## landisutils 0.0.96
+
+- [`landis_pool_restart_one()`](https://for-cast.github.io/landisutils/reference/landis_pool_restart_one.md)
+  restarts the container under its existing name instead of generating a
+  fresh `-r<rand>` one. `landis_pool` is a plain list, so the rename
+  reached only the frame that called the restart; every frame above it –
+  including whichever one owns the pool – kept the name of the container
+  that had just been removed. The result was self-sustaining rather than
+  transient: after one genuine container failure, that worker’s every
+  subsequent
+  [`landis_pool_exec()`](https://for-cast.github.io/landisutils/reference/landis_pool_exec.md)
+  addressed a container that no longer existed, failed, restarted,
+  abandoned the replacement, and succeeded only on its retry. Observed
+  in a 90-worker calibration as one worker accumulating an idle
+  container per replicate (about 3.5 per hour) while still returning
+  correct results, so nothing in the run’s own output showed it. A
+  stable name is also what lets the container name serve as a
+  cross-process mutex against duplicate dispatch, which the random
+  suffix defeated. Restarts now tolerate the daemon briefly still
+  holding the name after `docker rm -f`, waiting up to 30 s for it
+  rather than sidestepping the conflict.
+
 ## landisutils 0.0.95
 
 - [`dedup_community_snapshot()`](https://for-cast.github.io/landisutils/reference/dedup_community_snapshot.md)
