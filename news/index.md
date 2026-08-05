@@ -1,5 +1,19 @@
 # Changelog
 
+## landisutils 0.0.87
+
+- [`prepMinRelativeBiomass()`](https://for-cast.github.io/landisutils/reference/prepMinRelativeBiomass.md)
+  no longer collapses on a landscape with a SINGLE ecoregion.
+  [`apply()`](https://rdrr.io/r/base/apply.html) over a one-row table
+  dropped its result to a vector, so the ecoregion code was recycled
+  across the five shade classes: the written table declared the same
+  ecoregion five times and carried one shade row, and LANDIS-II aborted
+  loading Biomass Succession with “The ecoregion N appears more than
+  once”. Single-ecoregion landscapes are rare in production but are
+  exactly what a growth-curve calibration builds. It also now rejects an
+  unrecognised input schema with a message naming the columns it got,
+  rather than failing later with “object ‘out’ not found”.
+
 ## landisutils 0.0.86
 
 - New vignette, *Calibrating Species Growth Curves*, documenting how to

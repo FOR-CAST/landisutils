@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.86</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.87</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,6 +41,11 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.87" id="landisutils-0087">landisutils 0.0.87<a class="anchor" aria-label="anchor" href="#landisutils-0087"></a></h2>
+<ul><li>
+<code><a href="../reference/prepMinRelativeBiomass.html">prepMinRelativeBiomass()</a></code> no longer collapses on a landscape with a SINGLE ecoregion. <code><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply()</a></code> over a one-row table dropped its result to a vector, so the ecoregion code was recycled across the five shade classes: the written table declared the same ecoregion five times and carried one shade row, and LANDIS-II aborted loading Biomass Succession with “The ecoregion N appears more than once”. Single-ecoregion landscapes are rare in production but are exactly what a growth-curve calibration builds. It also now rejects an unrecognised input schema with a message naming the columns it got, rather than failing later with “object ‘out’ not found”.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.86" id="landisutils-0086">landisutils 0.0.86<a class="anchor" aria-label="anchor" href="#landisutils-0086"></a></h2>
 <ul><li>New vignette, <em>Calibrating Species Growth Curves</em>, documenting how to wire a project-side growth calibration on top of the toolkit added in 0.0.85: how the sweep is encoded as one landscape, which parameters map onto the canonical names for ForC Succession and Biomass Succession, what <code>biomass_max_scale</code> means for each, what deliberately stays project-side, and why the calibration belongs in its own <a href="https://docs.ropensci.org/targets/" class="external-link">targets</a> project. It also records the three properties that keep the ranking honest, and the reasoning behind each, so a second implementation does not have to rediscover them.</li>
