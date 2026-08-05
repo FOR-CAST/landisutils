@@ -715,7 +715,7 @@ growth_best_candidates <- function(scores, growth_params, windows, scoring = NUL
 ## on every figure. Without `drop = FALSE` ggplot assigns linetypes from the
 ## levels PRESENT, so a panel with only TIPSY would draw it solid -- exactly the
 ## key that means SORTIE everywhere else.
-.growth_reference_linetypes <- c(SORTIE = "solid", TIPSY = "dashed")
+.growth_reference_linetypes <- c(SORTIE = "solid", TIPSY = "dotted")
 
 #' Age at which a reference growth curve's increment peaks
 #'

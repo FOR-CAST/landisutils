@@ -1,3 +1,7 @@
+# landisutils 0.0.90
+
+* The TIPSY reference curve is now drawn dotted rather than dashed. At the line width these figures use, a dashed line is indistinguishable from a solid one in the legend key, which is the one place a reader needs to tell them apart.
+
 # landisutils 0.0.89
 
 * New `growth_climatic_distance()` and `growth_climatic_weight()` let a calibration draw on ground plots from beyond the modelled landscape, weighted by how closely each plot's climate resembles it. Distance is scored PER PLOT rather than by aggregating plots into map units and comparing unit means: a unit's climate is only as well estimated as the number of plots inside it, so a ranking of units is least reliable exactly where it gets used -- at the top. Resampling put a 14-plot unit's rank anywhere between 10th and 26th of 137 in the network this was built against, while a 95-plot unit sat within four ranks.
