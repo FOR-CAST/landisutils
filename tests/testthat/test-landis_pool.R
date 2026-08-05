@@ -104,7 +104,18 @@ test_that("sim_r_reimpl() errors with the not-yet-implemented message", {
   expect_error(sim_r_reimpl(par_vec = c(a = 1)), "not yet implemented")
 })
 
-test_that("landis_pool_restart_one() replaces a container with a fresh one", {
+## Container ID behind a name; NA_character_ if no such container.
+.container_id <- function(name) {
+  rc <- suppressWarnings(processx::run(
+    "docker",
+    c("inspect", "--format", "{{.Id}}", name),
+    error_on_status = FALSE,
+    echo = FALSE
+  ))
+  if (rc$status != 0L) NA_character_ else trimws(rc$stdout)
+}
+
+test_that("landis_pool_restart_one() replaces the container but keeps its name", {
   skip_if_not(.docker_available(), "docker CLI not available")
 
   scratch <- withr::local_tempdir()
@@ -117,29 +128,60 @@ test_that("landis_pool_restart_one() replaces a container with a fresh one", {
   withr::defer(landis_pool_stop(pool))
 
   original_name <- pool$names[1L]
-  ## Restart and capture the (updated) pool returned
-  pool <- landis_pool_restart_one(pool, 1L)
-  new_name <- pool$names[1L]
+  original_id <- .container_id(original_name)
+  expect_false(is.na(original_id))
 
-  expect_false(identical(original_name, new_name))
-  ## Confirm the new container is running
+  pool <- landis_pool_restart_one(pool, 1L)
+
+  ## The name is a stable identity -- callers that hold a copy of the pool (and
+  ## R's copy-on-modify guarantees some do) must still address the container.
+  expect_identical(pool$names[1L], original_name)
+
+  ## ... but it is genuinely a new container, and it is running.
+  new_id <- .container_id(original_name)
+  expect_false(is.na(new_id))
+  expect_false(identical(original_id, new_id))
+
   rc <- suppressWarnings(processx::run(
     "docker",
-    c("inspect", "--format", "{{.State.Running}}", new_name),
+    c("inspect", "--format", "{{.State.Running}}", original_name),
     error_on_status = FALSE,
     echo = FALSE
   ))
-  expect_equal(rc$status, 0L)
   expect_equal(trimws(rc$stdout), "true")
+})
 
-  ## And the old one is gone
-  rc_old <- suppressWarnings(processx::run(
+test_that("repeated restarts do not leak containers", {
+  skip_if_not(.docker_available(), "docker CLI not available")
+
+  scratch <- withr::local_tempdir()
+  prefix <- "landispool-leak"
+  pool <- landis_pool_start(
+    n = 1L,
+    image = "busybox:latest",
+    scratch_root = scratch,
+    name_prefix = prefix
+  )
+  withr::defer(landis_pool_stop(pool))
+
+  ## Regression guard: restarts once generated a fresh `-r<rand>` name each time,
+  ## so the previous container was abandoned rather than replaced and the pool's
+  ## owner kept exec'ing a removed one. Three restarts must still leave exactly
+  ## one container belonging to this pool.
+  for (i in seq_len(3L)) {
+    ## Deliberately discard the return value: the owner must not have to
+    ## reassign for the pool to stay valid.
+    landis_pool_restart_one(pool, 1L)
+  }
+
+  live <- processx::run(
     "docker",
-    c("inspect", original_name),
+    c("ps", "--filter", paste0("name=", pool$pool_id), "--format", "{{.Names}}"),
     error_on_status = FALSE,
     echo = FALSE
-  ))
-  expect_true(rc_old$status != 0L)
+  )
+  live_names <- Filter(nzchar, trimws(strsplit(live$stdout, "\n")[[1L]]))
+  expect_identical(live_names, pool$names[1L])
 })
 
 test_that("landis_pool_exec(retries=1) retries after a container failure", {

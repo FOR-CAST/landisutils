@@ -173,7 +173,20 @@ landis_pool_start <- function(
 
 ## Internal: start a single warm container with the given name + args.
 ## Returns the container name on success; stops with diagnostics on failure.
-.landis_pool_start_one <- function(name, image, scratch_root, user_args, cpu_args, mem_args) {
+##
+## `name_conflict_wait_sec > 0` re-tries the `docker run` while the daemon still
+## holds the name. Only [landis_pool_restart_one()] needs this: it reuses the
+## name it just removed, and `docker rm -f` returns before the daemon has always
+## finished releasing it.
+.landis_pool_start_one <- function(
+  name,
+  image,
+  scratch_root,
+  user_args,
+  cpu_args,
+  mem_args,
+  name_conflict_wait_sec = 0
+) {
   args <- c(
     "run",
     "-d",
@@ -198,20 +211,28 @@ landis_pool_start <- function(
   ## Use processx::run rather than system2 -- the container command contains
   ## a semicolon which `system2` would route through /bin/sh -c, splitting it
   ## as two shell commands and only the first would land inside the container.
-  res <- processx::run("docker", args, error_on_status = FALSE, echo = FALSE)
-  if (res$status != 0L) {
-    stop(
-      "failed to start pool container ",
-      name,
-      " (status ",
-      res$status,
-      ")\n",
-      "stderr: ",
-      substr(res$stderr, 1L, 500L),
-      call. = FALSE
-    )
+  deadline <- Sys.time() + as.numeric(name_conflict_wait_sec)
+  repeat {
+    res <- processx::run("docker", args, error_on_status = FALSE, echo = FALSE)
+    if (res$status == 0L) {
+      return(name)
+    }
+    name_taken <- grepl("already in use", res$stderr, fixed = TRUE)
+    if (!name_taken || Sys.time() >= deadline) {
+      break
+    }
+    Sys.sleep(1)
   }
-  name
+  stop(
+    "failed to start pool container ",
+    name,
+    " (status ",
+    res$status,
+    ")\n",
+    "stderr: ",
+    substr(res$stderr, 1L, 500L),
+    call. = FALSE
+  )
 }
 
 #' Execute a command in one of the warm-pool containers
@@ -360,8 +381,12 @@ landis_pool_exec <- function(
 #'
 #' Stops + removes the container at index `idx` if it exists, then starts a fresh
 #' replacement with identical config (image, scratch_root bind-mount, user,
-#' cpu_limit, mem_limit) using a new auto-generated container name. The pool
-#' object's `$names[idx]` is updated to point at the new container.
+#' cpu_limit, mem_limit) **under the same container name**.
+#'
+#' Reusing the name is deliberate: `landis_pool` is a plain list, so a rename
+#' could not be propagated back to whichever frame owns the pool, and that owner
+#' would go on addressing a container that no longer exists. A stable name also
+#' keeps the container name usable as a cross-process mutex.
 #'
 #' Intended for use by [landis_pool_exec()]'s `retries` mechanism, but also
 #' safe to call directly when a calibration driver detects a container is
@@ -370,8 +395,8 @@ landis_pool_exec <- function(
 #' @param pool A `landis_pool` object from [landis_pool_start()].
 #' @param idx Integer. 1-based index of the container to replace.
 #'
-#' @returns The pool (invisibly), with `$names[idx]` updated to the new
-#'   container name.
+#' @returns The pool (invisibly, unchanged -- `$names[idx]` still names the
+#'   container, which is now a freshly started one).
 #'
 #' @family LANDIS-II execution helpers
 #' @seealso [landis_pool_start()], [landis_pool_exec()], [landis_pool_stop()]
@@ -396,43 +421,27 @@ landis_pool_restart_one <- function(pool, idx) {
     error = function(e) NULL
   )
 
-  ## Start a replacement with a fresh name based on the pool id + index +
-  ## a short random suffix (so multiple restarts don't collide).
-  new_name <- sprintf(
-    "%s-%02d-r%s",
-    pool$pool_id,
-    as.integer(idx),
-    sprintf("%04d", sample.int(9999L, 1L))
-  )
-  pool$names[as.integer(idx)] <- .landis_pool_start_one(
-    name = new_name,
+  ## Start the replacement under the SAME name. R is copy-on-modify, so a fresh
+  ## name would only ever reach this function's local `pool` -- every caller
+  ## further up (the pool's owner) would keep the name of the container we just
+  ## removed, exec against it, fail, restart, and leak the replacement. That is
+  ## self-sustaining: one transient failure degrades the worker for the rest of
+  ## the run, at one abandoned container per exec. Reusing the name sidesteps
+  ## propagation entirely and keeps `pool$names[idx]` a stable identity for the
+  ## pool's lifetime -- which is also what makes the name usable as a
+  ## cross-process mutex against duplicate dispatch.
+  ##
+  ## `docker rm -f` above can return before the daemon has released the name, so
+  ## allow a bounded wait for it rather than sidestepping the conflict.
+  .landis_pool_start_one(
+    name = old_name,
     image = pool$image,
     scratch_root = pool$scratch_root,
     user_args = pool$user_args,
     cpu_args = pool$cpu_args,
-    mem_args = pool$mem_args
+    mem_args = pool$mem_args,
+    name_conflict_wait_sec = 30
   )
-
-  ## The caller holds the pool by reference (it's a list) but R is copy-on-modify.
-  ## Return the updated pool so callers (incl. landis_pool_exec's retry loop)
-  ## see the new name. landis_pool_exec mutates its local `pool` via direct
-  ## reassignment after this call -- actually, R won't propagate the rename
-  ## back to the caller's pool unless we use <<- or explicit return. We do
-  ## both: return the pool (caller can choose to update), and additionally
-  ## use eval.parent() to update the caller's `pool` object in-place when
-  ## called from landis_pool_exec.
-  ##
-  ## Implementation note: instead of relying on lexical-frame mutation magic,
-  ## landis_pool_exec re-reads `pool$names[idx]` at the start of each attempt;
-  ## here we use parent.frame() to update the caller's `pool` if it has one.
-  parent_env <- parent.frame()
-  if (exists("pool", envir = parent_env, inherits = FALSE)) {
-    parent_pool <- get("pool", envir = parent_env)
-    if (inherits(parent_pool, "landis_pool")) {
-      parent_pool$names[as.integer(idx)] <- new_name
-      assign("pool", parent_pool, envir = parent_env)
-    }
-  }
 
   invisible(pool)
 }

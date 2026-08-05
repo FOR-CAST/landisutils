@@ -12,16 +12,20 @@ landis_pool_restart_one(pool, idx)
 \item{idx}{Integer. 1-based index of the container to replace.}
 }
 \value{
-The pool (invisibly), with \verb{$names[idx]} updated to the new
-container name.
+The pool (invisibly, unchanged -- \verb{$names[idx]} still names the
+container, which is now a freshly started one).
 }
 \description{
 Stops + removes the container at index \code{idx} if it exists, then starts a fresh
 replacement with identical config (image, scratch_root bind-mount, user,
-cpu_limit, mem_limit) using a new auto-generated container name. The pool
-object's \verb{$names[idx]} is updated to point at the new container.
+cpu_limit, mem_limit) \strong{under the same container name}.
 }
 \details{
+Reusing the name is deliberate: \code{landis_pool} is a plain list, so a rename
+could not be propagated back to whichever frame owns the pool, and that owner
+would go on addressing a container that no longer exists. A stable name also
+keeps the container name usable as a cross-process mutex.
+
 Intended for use by \code{\link[=landis_pool_exec]{landis_pool_exec()}}'s \code{retries} mechanism, but also
 safe to call directly when a calibration driver detects a container is
 wedged or has been OOM-killed.
