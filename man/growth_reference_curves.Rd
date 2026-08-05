@@ -12,6 +12,7 @@ growth_reference_curves(
   min_plots = 50L,
   n_grid = 60L,
   use_tipsy = FALSE,
+  use_vdyp = FALSE,
   site = NULL,
   weight = NULL
 )
@@ -30,6 +31,12 @@ advisory and only sets \code{plots_sparse}. See
 \item{n_grid}{Integer. Number of ages in the common grid.}
 
 \item{use_tipsy}{Logical. Score against TIPSY as well.}
+
+\item{use_vdyp}{Logical. Score against VDYP as well. VDYP is the British
+Columbia Variable Density Yield Projection model, whose curves are natural
+(unmanaged) stand yields; it is a separate series from TIPSY, which
+projects MANAGED stands, because a natural-disturbance model wants the
+former and the distinction must not be lost in the outputs.}
 
 \item{site}{Optional column name identifying the sampling location of a
 ground-plot observation. Passed to \code{\link[=growth_bin_observations]{growth_bin_observations()}}; when given,

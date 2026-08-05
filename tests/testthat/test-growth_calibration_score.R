@@ -445,3 +445,71 @@ test_that("the promotable parameters stay the first four columns after species",
     c("species", "growth_shp", "mort_shp", "anpp_max_est", "biomass_max_est")
   )
 })
+
+## ---- VDYP as a series in its own right -----------------------------------------------------------
+## VDYP used to have to travel in the TIPSY slot, which made `rmse_tipsy` a VDYP residual and left a
+## reader unable to tell from the outputs which model produced the number. TIPSY projects MANAGED
+## stands and VDYP unmanaged natural ones, so they must not share a slot.
+
+vdyp_reference <- function() {
+  ages <- 1:300
+  dplyr::bind_rows(
+    reference(),
+    tibble::tibble(
+      source = "VDYP",
+      age = ages,
+      ## deliberately a different curve from the SORTIE one, so a series mix-up shows up
+      aboveground_c_mg_ha = 240 * (1 - exp(-0.01 * ages))
+    )
+  )
+}
+
+test_that("a VDYP series is carried and its level read from the whole curve", {
+  ref <- growth_reference_curves(vdyp_reference(), window = c(20, 180), use_vdyp = TRUE)
+
+  expect_true("vdyp" %in% names(ref$series))
+  expect_false(all(is.na(ref$series$vdyp)))
+  ## the modelled level is the maximum of the WHOLE curve, not just inside the window
+  expect_equal(unname(ref$levels[["vdyp"]]), 240 * (1 - exp(-0.01 * 300)))
+})
+
+test_that("VDYP is scored separately from TIPSY rather than sharing its slot", {
+  ref <- growth_reference_curves(vdyp_reference(), window = c(20, 180), use_vdyp = TRUE)
+  fit <- growth_score_fit(sim_curve(), ref)
+
+  expect_false(is.na(fit$rmse_vdyp))
+  ## no TIPSY curve was supplied, so its residual must stay empty
+  expect_true(is.na(fit$rmse_tipsy))
+})
+
+test_that("VDYP stays out of the ranking unless it is switched on", {
+  off <- growth_reference_curves(vdyp_reference(), window = c(20, 180))
+  expect_false("vdyp" %in% names(off$series))
+})
+
+test_that("a scoring file written before weight_vdyp still reads", {
+  path <- withr::local_tempfile(fileext = ".csv")
+  utils::write.csv(
+    data.frame(
+      species = "Pinu_con",
+      age_min = NA,
+      age_max = NA,
+      age_bin = 20L,
+      plot_quantile = 0.5,
+      plots_warn_below = 50L,
+      weight_sortie = 1,
+      weight_tipsy = 0,
+      weight_plots = 1,
+      level_source = "plots",
+      note = ""
+    ),
+    path,
+    row.names = FALSE
+  )
+
+  scoring <- read_growth_scoring(path)
+  expect_true("weight_vdyp" %in% names(scoring))
+  ## absent means absent, and the default keeps it out of the ranking
+  expect_true(is.na(scoring$weight_vdyp))
+  expect_equal(growth_scoring_for(scoring, "Pinu_con")$weight_vdyp, 0)
+})
