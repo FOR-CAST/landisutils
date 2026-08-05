@@ -238,7 +238,6 @@ export(yesno)
 import(methods)
 importFrom(R6,R6Class)
 importFrom(callr,r_bg)
-importFrom(cffdrs,grass_fuel_moisture_code)
 importFrom(data.table,
   ":=",
   .BY,

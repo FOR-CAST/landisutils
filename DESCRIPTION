@@ -13,7 +13,6 @@ Depends:
 Imports:
     arrow,
     callr,
-    cffdrs,
     data.table,
     digest,
     dplyr,
@@ -40,6 +39,7 @@ Suggests:
     appeears,
     bcdata,
     BioSIM,
+    cffdrs,
     climateR,
     climr,
     DEoptim,
