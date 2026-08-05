@@ -1,5 +1,16 @@
 # Changelog
 
+## landisutils 0.0.92
+
+- [`plot_growth_factorial_sensitivity()`](https://for-cast.github.io/landisutils/reference/plot_growth_factorial_sensitivity.md)
+  classifies a candidate against the calibrated value on a RELATIVE
+  tolerance. The absolute `1e-6` it used before failed silently and
+  badly: swept candidates are reconstructed from a rounded ratio, so the
+  candidate that IS the calibrated value can differ from it by about one
+  part in three thousand, which binned it as “lower” or “higher” and
+  removed the reference box the figure is read against. Five of six
+  species were missing that box.
+
 ## landisutils 0.0.91
 
 - The TIPSY reference curve is now drawn as round dots rather than
