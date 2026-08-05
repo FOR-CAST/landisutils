@@ -1,5 +1,18 @@
 # Changelog
 
+## landisutils 0.0.86
+
+- New vignette, *Calibrating Species Growth Curves*, documenting how to
+  wire a project-side growth calibration on top of the toolkit added in
+  0.0.85: how the sweep is encoded as one landscape, which parameters
+  map onto the canonical names for ForC Succession and Biomass
+  Succession, what `biomass_max_scale` means for each, what deliberately
+  stays project-side, and why the calibration belongs in its own
+  [targets](https://docs.ropensci.org/targets/) project. It also records
+  the three properties that keep the ranking honest, and the reasoning
+  behind each, so a second implementation does not have to rediscover
+  them.
+
 ## landisutils 0.0.85
 
 - New growth-curve calibration toolkit, extracted from a ForC Succession

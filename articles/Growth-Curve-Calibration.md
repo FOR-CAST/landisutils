@@ -1,0 +1,264 @@
+# Calibrating Species Growth Curves
+
+Every succession extension needs per-species growth parameters, and they
+are usually set by eye against whatever reference curves and plot data a
+project has. This vignette describes how to run that calibration as a
+pipeline step instead: sweep the parameters, score the resulting curves
+against the references, and report a recommendation.
+
+The toolkit is **succession-agnostic**. It works for any extension that
+keys growth and mortality shape per species but maximum ANPP and maximum
+biomass per (ecoregion, species) – which covers ForC Succession and
+Biomass Succession alike, and is precisely the asymmetry the design
+exploits.
+
+## Why a whole sweep fits in one simulation
+
+Because shape is a species attribute and level is an (ecoregion,
+species) attribute, a sweep can be encoded as a landscape rather than as
+repeated runs:
+
+- one **pseudo-species** per (species, growth shape, mortality shape), a
+  clone of the real species differing only in those two fields;
+- one **pseudo-ecoregion** per (max ANPP, max biomass) combination;
+- one cell per (pseudo-species, pseudo-ecoregion) pair.
+
+[`growth_calibration_design()`](https://for-cast.github.io/landisutils/reference/growth_calibration_design.md)
+builds that table. Hundreds of combinations then run in a single
+simulation, at the cost of one landscape. This follows the approach of
+the `Biomass_speciesFactorial` module.
+
+``` r
+
+design <- growth_calibration_design(growth_params, grid = sweep_grid)
+```
+
+[`growth_calibration_partition()`](https://for-cast.github.io/landisutils/reference/growth_calibration_partition.md)
+splits a design too large to hold in memory into batches, always cutting
+on cell boundaries so a mixed cell’s cohorts stay together.
+[`growth_structure_design()`](https://for-cast.github.io/landisutils/reference/growth_structure_design.md)
+crosses the sweep with a landscape’s own cohort structures when
+single-cohort cells are not representative enough.
+
+## Three properties that keep the ranking honest
+
+These are worth understanding before wiring anything, because each fixes
+a way the obvious implementation goes wrong.
+
+**Only the extension’s own curve is parametric.** Plot observations are
+condensed non-parametrically by
+[`growth_bin_observations()`](https://for-cast.github.io/landisutils/reference/growth_bin_observations.md),
+which bins on stand age and takes a quantile per bin. Fitting an
+empirical growth equation through the plot cloud first – as
+`Biomass_speciesParameters` does with Chapman-Richards, Gompertz and
+logistic forms – is right there, because those equations are the ones
+that module’s own succession implementation uses. It is wrong anywhere
+else: it inserts a curve family the extension does not use, and then
+matches the extension’s output to that intermediary rather than to the
+data.
+
+**Every reference series carries the same weight.**
+[`growth_reference_curves()`](https://for-cast.github.io/landisutils/reference/growth_reference_curves.md)
+evaluates all series on one common age grid, so a modelled curve
+contributing several hundred points and a plot cloud contributing a
+dozen count equally. Pooling raw observations instead makes the
+effective objective an accident of how many rows each series happens to
+have – in practice the species that score worst are simply the ones with
+no modelled reference curve.
+
+**Level is derived, not searched.** A cohort never quite reaches its
+maximum-biomass parameter: it approaches the asymptote while mortality
+is already removing biomass. The fraction it does achieve depends only
+on the shapes and on the ratio of maximum ANPP to maximum biomass, not
+on the absolute level. So hold maximum biomass fixed across the sweep,
+rank on shape alone, and recover the level arithmetically with
+[`growth_inflation_factor()`](https://for-cast.github.io/landisutils/reference/growth_inflation_factor.md).
+Sweeping level alongside shape lets the two trade off against each
+other, and the ranking then settles wherever the reference data happen
+to be centred rather than where the growth curve belongs.
+
+Verify that invariance on your own extension before relying on it: run
+combinations that share an ANPP-to-biomass ratio but differ in absolute
+maximum biomass, and confirm they agree on the achieved fraction.
+
+## Mapping your extension onto the canonical names
+
+The toolkit uses four canonical column names. Rename your extension’s
+parameters onto them before calling, and rename back when promoting:
+
+| Canonical     | ForC Succession           | Biomass Succession |
+|---------------|---------------------------|--------------------|
+| `growth_shp`  | `GrowthCurve`             | `GrowthCurve`      |
+| `mort_shp`    | `MortalityShape`          | `MortalityShape`   |
+| `anpp_max`    | `ANPPTimeSeries` max ANPP | `maxANPP`          |
+| `biomass_max` | `MaxBiomassTimeSeries`    | `maxBiomass`       |
+
+The one genuinely extension-specific quantity is `biomass_max_scale`:
+divide the maximum-biomass parameter by it to express that parameter in
+whatever units the curves are in.
+
+``` r
+
+## ForC Succession: biomass_max is g/m^2 of biomass, the summary log reports
+## g C/m^2, and curves are conventionally Mg C/ha -- so 200.
+growth_score_fit(curve, ref, biomass_max_scale = 200)
+
+## Biomass Succession: maxBiomass and the log are both g/m^2 of biomass.
+growth_score_fit(curve, ref, biomass_max_scale = 1)
+```
+
+Get this wrong and the shape ranking is unaffected – it is scale-free –
+but every recovered `biomass_max_est` is off by the ratio of the two
+scales. Check it against a species whose level you already trust.
+
+## What stays on the project side
+
+Deliberately not in this package, because each is project- or
+extension-specific:
+
+- **the succession config writer** – the calibration landscape needs a
+  species table, ecoregions, initial communities, a climate file and a
+  scenario file, and the succession extension’s own config;
+- **the output reader** – extensions write different logs, and the
+  column holding aboveground biomass differs;
+- **reference assembly** – which curves and plot datasets exist, and how
+  they are read, varies by project. Produce a data frame with `source`,
+  `age` and a value column, and the toolkit takes it from there;
+- **the parameter table itself** – see the promotion loop below.
+
+## Run it as a separate targets project
+
+Give the calibration its own
+[targets](https://docs.ropensci.org/targets/) project rather than
+folding it into an existing pipeline.
+[targets](https://docs.ropensci.org/targets/) takes an exclusive lock on
+the store for the whole of `tar_make()`, so a shared store makes it
+impossible to calibrate while another phase of the same pipeline is
+running. Separate stores remove the contention, and the calibration then
+needs none of the main pipeline’s inputs.
+
+Hand results across by **file**, not by cross-store `tar_read()`: a
+report cannot track a target in another store as a dependency, and would
+stop rendering from a clean checkout.
+
+A minimal chain:
+
+``` r
+
+list(
+  ## references -> windows -> curves, computed once per species
+  tar_target(windows, growth_fitting_windows(references, species_core, scoring)),
+  tar_target(
+    ref_curves,
+    growth_reference_curves(
+      references[[sp]],
+      window = growth_window_for(windows, sp),
+      bin = ctl$age_bin,
+      plot_quantile = ctl$plot_quantile
+    ),
+    pattern = map(sp), iteration = "list"
+  ),
+
+  ## sweep -> landscape -> one run -> curves
+  tar_target(design, growth_calibration_design(growth_params, grid = grid)),
+  tar_target(inputs, write_my_calibration_inputs(design, ...), format = "file"),
+  tar_landis(name = run, scenario_dir = dir, deps = list(inputs)),
+  tar_target(curves, read_my_calibration_curves(run, design)),
+
+  ## score -> rank -> report
+  tar_target(scores, {
+    curves |>
+      dplyr::group_split(map_code) |>
+      purrr::map(\(cur) dplyr::bind_cols(
+        meta(cur),
+        growth_score_fit(cur, ref_curves[[species_of(cur)]])
+      )) |>
+      dplyr::bind_rows() |>
+      growth_add_objective()
+  }),
+  tar_target(best, growth_best_candidates(scores, growth_params, windows, scoring)),
+  tar_target(review, write_growth_review_bundle(dir, sp, curves, ...), format = "file")
+)
+```
+
+Targets that write paths tracked by version control should be
+`deployment = "main"`: a worker writing into its own checkout dirties
+it, which breaks fast-forward-only node synchronisation.
+
+## The fitting window is derived, not nominated
+
+Nobody should have to pick an age range by hand.
+[`growth_auto_window()`](https://for-cast.github.io/landisutils/reference/growth_auto_window.md)
+opens the window at an age floor below which ground-plot programmes do
+not sample, and closes it at the earliest of a quantile of observed plot
+ages, the end of the reference curve, and a fraction of `longevity`.
+
+That last bound is the one that binds in practice. LANDIS-II ramps
+mortality up as a cohort approaches `longevity` and the curve then falls
+to exactly zero, so an open-ended window scores the modelled die-off
+rather than the level the stand holds. The cap is a fraction of
+`longevity` rather than something read off the simulated curve, because
+decline timing depends on the mortality shape, which is itself being
+swept – a candidate-dependent window would score different candidates
+over different ranges and could not rank them fairly.
+
+Bounds come back as whole years, since the model steps annually.
+
+## Put the judgement calls in a file
+
+Several choices in this workflow are judgements, not facts, and they
+should be recorded where a reviewer can see and change them rather than
+buried in code.
+[`read_growth_scoring()`](https://for-cast.github.io/landisutils/reference/read_growth_scoring.md)
+reads a per-species table:
+
+| Column | Meaning |
+|----|----|
+| `age_min`, `age_max` | Explicit window bounds. Blank keeps the derived window. |
+| `age_bin` | Width of the age bins the plot cloud is condensed into. |
+| `plot_quantile` | Quantile within each bin. `0.5` tracks central tendency; higher moves toward the upper envelope. |
+| `plots_warn_below` | Advisory. Below this the fit is flagged sparse, not refused. |
+| `weight_*` | Relative weight of each reference series in the ranking. `0` drops a series from the score while leaving it on the figures. |
+| `level_source` | Which reference’s plateau the recommended maximum biomass follows. |
+
+The weights matter most. Modelled yield curves describe **potential**
+growth for fully stocked, pure, undisturbed stands – which is exactly
+what a single-cohort calibration cell is. Ground plots are **realised**
+stands spanning every stocking level and disturbance history, usually
+with whole-plot volume attributed to a leading species that holds well
+under all of it. Which a species should follow is a decision worth
+recording rather than letting it fall out of whichever reference
+happened to have more rows.
+
+Two behaviours exist to stop the pipeline inventing answers:
+
+- a species with no scorable reference comes back `fitted = FALSE` with
+  no parameters, rather than a ranking over indistinguishable rows
+  returning whichever sorted first;
+- a nominated `level_source` is a **constraint**. If that reference has
+  no level, no recommendation is made, instead of silently substituting
+  another one.
+
+## Promotion is manual, and should stay that way
+
+The calibration reports; it never writes the parameter table. The loop
+is:
+
+1.  edit the sweep grid and the scoring table;
+2.  run the calibration project;
+3.  review the per-species figures and the summary, treating the argmin
+    as a diagnostic – a parameter whose sensitivity boxes overlap is one
+    the data cannot constrain, and copying its “best” value is fitting
+    noise;
+4.  hand-edit the parameter table for the values you accept, and record
+    what justified the change;
+5.  re-run, and check that downstream simulations are actually
+    invalidated. A value can change, flow into the generated configs,
+    and still not reach the outputs if runs are pinned. This is the step
+    that is easy to get wrong.
+
+[`write_growth_review_bundle()`](https://for-cast.github.io/landisutils/reference/write_growth_review_bundle.md)
+writes step 3’s artifacts to a plain directory needing no report render:
+per-species figures with the fitting window shaded and the binned plot
+series drawn over the references, plus a summary table of promotable
+parameters beside the values in use.

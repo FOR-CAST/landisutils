@@ -12,6 +12,8 @@
   Inputs](https://for-cast.github.io/landisutils/articles/Dynamic-Fire-Fuels.md):
 - [Preparing Forest Carbon Succession (ForCS)
   Inputs](https://for-cast.github.io/landisutils/articles/Forest-Carbon-Succession.md):
+- [Calibrating Species Growth
+  Curves](https://for-cast.github.io/landisutils/articles/Growth-Curve-Calibration.md):
 - [Assembling a Multi-Extension
   Scenario](https://for-cast.github.io/landisutils/articles/Multi-Extension-Scenarios.md):
 - [Preparing Social-Climate-Fire

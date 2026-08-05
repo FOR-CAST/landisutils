@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.85</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.86</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -23,6 +23,7 @@
     <li><a class="dropdown-item" href="../articles/Dynamic-Fire-Calibration.html">Calibrating the Dynamic Fire System Extension</a></li>
     <li><a class="dropdown-item" href="../articles/Dynamic-Fire-Fuels.html">Preparing Dynamic Fire and Fuels Inputs</a></li>
     <li><a class="dropdown-item" href="../articles/Forest-Carbon-Succession.html">Preparing Forest Carbon Succession (ForCS) Inputs</a></li>
+    <li><a class="dropdown-item" href="../articles/Growth-Curve-Calibration.html">Calibrating Species Growth Curves</a></li>
     <li><a class="dropdown-item" href="../articles/Multi-Extension-Scenarios.html">Assembling a Multi-Extension Scenario</a></li>
     <li><a class="dropdown-item" href="../articles/Social-Climate-Fire.html">Preparing Social-Climate-Fire Inputs</a></li>
   </ul></li>
@@ -40,6 +41,10 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.86" id="landisutils-0086">landisutils 0.0.86<a class="anchor" aria-label="anchor" href="#landisutils-0086"></a></h2>
+<ul><li>New vignette, <em>Calibrating Species Growth Curves</em>, documenting how to wire a project-side growth calibration on top of the toolkit added in 0.0.85: how the sweep is encoded as one landscape, which parameters map onto the canonical names for ForC Succession and Biomass Succession, what <code>biomass_max_scale</code> means for each, what deliberately stays project-side, and why the calibration belongs in its own <a href="https://docs.ropensci.org/targets/" class="external-link">targets</a> project. It also records the three properties that keep the ranking honest, and the reasoning behind each, so a second implementation does not have to rediscover them.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.85" id="landisutils-0085">landisutils 0.0.85<a class="anchor" aria-label="anchor" href="#landisutils-0085"></a></h2>
 <ul><li>New growth-curve calibration toolkit, extracted from a ForC Succession project so it can be reused. It encodes a whole parameter sweep as one LANDIS-II landscape and scores the resulting curves against reference data, and is succession-agnostic: both ForCS and Biomass Succession key growth and mortality shape per species but maximum ANPP and maximum biomass per (ecoregion, species), which is exactly the asymmetry the encoding exploits. Callers map their extension’s parameter names onto the canonical <code>growth_shp</code> / <code>mort_shp</code> / <code>anpp_max</code> / <code>biomass_max</code>, and pass <code>biomass_max_scale</code> to say how the maximum-biomass parameter relates to the units its output is reported in.</li>
