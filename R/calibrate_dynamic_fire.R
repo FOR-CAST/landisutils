@@ -1212,23 +1212,7 @@ save_observed_fire_targets <- function(
 ## Dynamic Fire weather DB is `initial_weather_database.csv` in some scenarios and
 ## `initial-weather-database.csv` in others -- without hard-coding either convention.
 .calibration_directive_file <- function(dir, config, directive, default) {
-  nm <- default
-  cf <- fs::path(dir, config)
-  if (fs::file_exists(cf)) {
-    hit <- grep(
-      paste0("^[[:space:]]*", directive, "[[:space:]]"),
-      readLines(cf, warn = FALSE),
-      value = TRUE
-    )
-    if (length(hit) > 0L) {
-      nm <- trimws(sub(
-        ">>.*$",
-        "",
-        sub(paste0("^[[:space:]]*", directive, "[[:space:]]+"), "", hit[[1L]])
-      ))
-    }
-  }
-  fs::path(dir, nm)
+  fs::path(dir, landis_directive(fs::path(dir, config), directive, default = default))
 }
 
 ## The species-definitions file the template scenario references (the scenario.txt `Species` directive);

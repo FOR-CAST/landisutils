@@ -82,6 +82,7 @@ Other LANDIS-II execution helpers:
 \code{\link[=landis_version]{landis_version()}},
 \code{\link[=read_landis_resource_logs]{read_landis_resource_logs()}},
 \code{\link[=tar_landis]{tar_landis()}},
+\code{\link[=validate_landis_scenario]{validate_landis_scenario()}},
 \code{\link[=write_landis_scenario_file]{write_landis_scenario_file()}}
 }
 \concept{LANDIS-II execution helpers}

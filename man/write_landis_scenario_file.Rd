@@ -13,7 +13,8 @@ write_landis_scenario_file(
   succession_ext_files,
   disturbance_ext_files = NULL,
   other_ext_files = NULL,
-  output_manifest = character(0)
+  output_manifest = character(0),
+  validate = getOption("landisutils.validate_scenario", TRUE)
 )
 }
 \arguments{
@@ -39,6 +40,13 @@ per-extension init files. Exactly one entry is required.}
 relative to each replicate directory) that the scenario will produce at
 run time. Written to \code{output_manifest.txt} so \code{\link[=tar_landis]{tar_landis()}} can track
 these files alongside the recursive \code{output_dir} scan.}
+
+\item{validate}{Logical. Run \code{\link[=validate_landis_scenario]{validate_landis_scenario()}} on the assembled
+directory before returning. Defaults to
+\code{getOption("landisutils.validate_scenario", TRUE)}. This is the path the
+Dynamic Fire calibration assembles its scenarios through, so it is where
+validation catches a mirrored initial-communities map swapped in from a
+spinup snapshot.}
 }
 \value{
 Character scalar: absolute path to the written \code{scenario.txt}.
@@ -57,7 +65,7 @@ The \code{RandomNumberSeed} line is written in commented-out form so that
 seed (controlled by its \code{base_seed} argument).
 }
 \seealso{
-\code{\link[=scenario]{scenario()}}
+\code{\link[=scenario]{scenario()}}, \code{\link[=validate_landis_scenario]{validate_landis_scenario()}}
 
 Other LANDIS-II execution helpers:
 \code{\link[=host_cpu_info]{host_cpu_info()}},
@@ -75,6 +83,7 @@ Other LANDIS-II execution helpers:
 \code{\link[=landis_target_version]{landis_target_version()}},
 \code{\link[=landis_version]{landis_version()}},
 \code{\link[=read_landis_resource_logs]{read_landis_resource_logs()}},
-\code{\link[=tar_landis]{tar_landis()}}
+\code{\link[=tar_landis]{tar_landis()}},
+\code{\link[=validate_landis_scenario]{validate_landis_scenario()}}
 }
 \concept{LANDIS-II execution helpers}

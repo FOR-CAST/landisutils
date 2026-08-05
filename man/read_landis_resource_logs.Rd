@@ -45,6 +45,7 @@ Other LANDIS-II execution helpers:
 \code{\link[=landis_target_version]{landis_target_version()}},
 \code{\link[=landis_version]{landis_version()}},
 \code{\link[=tar_landis]{tar_landis()}},
+\code{\link[=validate_landis_scenario]{validate_landis_scenario()}},
 \code{\link[=write_landis_scenario_file]{write_landis_scenario_file()}}
 }
 \concept{LANDIS-II execution helpers}

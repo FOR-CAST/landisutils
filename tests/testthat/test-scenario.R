@@ -79,6 +79,10 @@
     extensions = extensions,
     climate_config = cc,
     path = tmp_pth,
+    ## the fixture's input files are deliberately zero-byte stubs: these tests assert what
+    ## scenario() WRITES, not whether the inputs it references are usable. validate_landis_scenario()
+    ## is exercised against real rasters in test-validate_scenario.R.
+    validate = FALSE,
     CellLength = 100,
     DisturbancesRandomOrder = FALSE,
     Duration = 20,

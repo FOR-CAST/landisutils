@@ -760,6 +760,8 @@ test_that(".patch_forcs_for_calibration() errors when expected sections are miss
 
 test_that("write_landis_scenario_file() writes a syntactically clean scenario.txt", {
   dir <- withr::local_tempdir()
+  ## fake inputs (below) are paths only; this test is about the text that gets written
+  withr::local_options(landisutils.validate_scenario = FALSE)
   ## minimum-viable fake inputs (paths only -- the writer doesn't validate file
   ## contents, just relativises and references them)
   species <- fs::path(dir, "species.txt")
@@ -1448,6 +1450,9 @@ test_that("pre-flight: genuinely-unknown weight names still trigger the unrecogn
 ## ---- 9e: override slots on build_calibration_scenario_template -------------
 
 test_that("build_calibration_scenario_template() overrides replace specific template files", {
+  ## the template files below are text stubs named .tif/.csv; this test is about which file lands
+  ## where, not about whether the scenario would run
+  withr::local_options(landisutils.validate_scenario = FALSE)
   template_dir <- withr::local_tempdir()
   template_files <- c(
     "scenario.txt",

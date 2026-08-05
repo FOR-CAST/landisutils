@@ -9,7 +9,8 @@ scenario(
   extensions = NULL,
   climate_config = NULL,
   path = NULL,
-  ...
+  ...,
+  validate = getOption("landisutils.validate_scenario", TRUE)
 )
 }
 \arguments{
@@ -30,6 +31,11 @@ scenario(
 \item \code{RandomNumberSeed} Integer. Seed used to initialize the LANDIS-II random number generator;
 \item \code{SpeciesInputFile} Character. Path to input file;
 }}
+
+\item{validate}{Logical. Run \code{\link[=validate_landis_scenario]{validate_landis_scenario()}} on the assembled
+directory before returning. Defaults to \code{getOption("landisutils.validate_scenario", TRUE)}.
+Set \code{FALSE} when the referenced input files are deliberately stubs (as in
+this package's own tests of config-file generation).}
 }
 \value{
 Character string(s) specifying suitable LANDIS-II input file(s),
