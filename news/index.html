@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.96</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.97</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,6 +41,14 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.97" id="landisutils-0097">landisutils 0.0.97<a class="anchor" aria-label="anchor" href="#landisutils-0097"></a></h2>
+<ul><li>The core-version check now covers the Docker paths, which is where it was missing entirely. <code><a href="../reference/landis_find.html">landis_find()</a></code> has asserted the console’s major version since it gained <code>check_version</code>, but neither <code><a href="../reference/landis_run_docker.html">landis_run_docker()</a></code> nor <code><a href="../reference/landis_pool_start.html">landis_pool_start()</a></code> ever called it – and <code>landisutils.run.method</code> defaults to <code>"docker"</code> on Linux, so on a cluster that runs through containers the assertion existed and never once fired. A whole 45-worker calibration fleet could run against the wrong core generation with nothing to say so. <code><a href="../reference/landis_pool_start.html">landis_pool_start()</a></code> now probes one container per pool (all containers in a pool share an image, so the sub-second cost is paid at pool creation, not per replicate) and tears the pool down if it fails, rather than leaving containers running for a pool nobody will use; <code><a href="../reference/landis_run_docker.html">landis_run_docker()</a></code> probes its image before staging anything.</li>
+<li>New <code><a href="../reference/landis_assert_version.html">landis_assert_version()</a></code> replaces the internal <code>.assert_landis_major()</code>, so the local-console path and both Docker paths enforce the same rule through the same code. <strong>Behaviour change:</strong> a version that cannot be determined now STOPS instead of warning and proceeding. An unreadable probe is not evidence of a usable core – it is indistinguishable from a wrong-generation console that failed to announce itself, which is the failure this guards against. Set <code>options(landisutils.skip_version_check = TRUE)</code> for the cases where that is genuinely wanted; the opt-out is explicit and visible rather than silent.</li>
+<li>New <code><a href="../reference/landis_target_version.html">landis_target_version()</a></code> reads the <code>landisutils.landis.version</code> option, which <code>.onLoad()</code> seeds from a single constant. That constant is the switch to flip when v9 supersedes v8: the runtime guard, <code><a href="../reference/landis_find.html">landis_find()</a></code>’s <code>required_major</code> default, the default image tag and the default console path all derive from it instead of repeating the number, so a bump moves them together rather than leaving a stale <code>v8</code> in whichever one got missed. Flipping it is necessary but not sufficient – the config writers in <code>ext_*.R</code> encode the grammar itself, so treat a bump as the start of that work.</li>
+<li>
+<code><a href="../reference/landis_version.html">landis_version()</a></code> accepts <code>image</code> and <code>container</code> alongside <code>console</code>, so “run the console and read its banner” has one implementation rather than one per execution path.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.96" id="landisutils-0096">landisutils 0.0.96<a class="anchor" aria-label="anchor" href="#landisutils-0096"></a></h2>
 <ul><li>

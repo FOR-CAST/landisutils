@@ -537,6 +537,9 @@
   : Move a completed LANDIS-II replicate from scratch to its final
   location
 
+- [`landis_assert_version()`](https://for-cast.github.io/landisutils/reference/landis_assert_version.md)
+  : Require a specific LANDIS-II core generation before running anything
+
 - [`landis_datatype()`](https://for-cast.github.io/landisutils/reference/landis_datatype.md)
   : Pick a raster pixel type LANDIS-II can read
 
@@ -574,8 +577,11 @@
 - [`landis_run_local()`](https://for-cast.github.io/landisutils/reference/landis_run_local.md)
   : Run a LANDIS-II simulation locally (synchronous)
 
+- [`landis_target_version()`](https://for-cast.github.io/landisutils/reference/landis_target_version.md)
+  : The LANDIS-II core generation this package targets
+
 - [`landis_version()`](https://for-cast.github.io/landisutils/reference/landis_version.md)
-  : Report the version of a local LANDIS-II console
+  : Report the version of a LANDIS-II console
 
 - [`leading_species()`](https://for-cast.github.io/landisutils/reference/leading_species.md)
   : Leading species per cell at each snapshot

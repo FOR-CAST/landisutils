@@ -11,7 +11,7 @@ filesystem search under /opt for a build/Release/ path."><meta property="og:imag
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.96</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.97</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -54,7 +54,7 @@ filesystem search under <code>/opt</code> for a <code>build/Release/</code> path
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">landis_find</span><span class="op">(</span>check_version <span class="op">=</span> <span class="cn">TRUE</span>, required_major <span class="op">=</span> <span class="fl">8L</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">landis_find</span><span class="op">(</span>check_version <span class="op">=</span> <span class="cn">TRUE</span>, required_major <span class="op">=</span> <span class="fu"><a href="landis_target_version.html">landis_target_version</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -63,12 +63,14 @@ filesystem search under <code>/opt</code> for a <code>build/Release/</code> path
 
 <dl><dt id="arg-check-version">check_version<a class="anchor" aria-label="anchor" href="#arg-check-version"></a></dt>
 <dd><p>Logical. When <code>TRUE</code> (default), verify the console's
-major version with <code><a href="landis_version.html">landis_version()</a></code> and stop if it is not
-<code>required_major</code>. A version that cannot be determined only warns.</p></dd>
+major version with <code><a href="landis_assert_version.html">landis_assert_version()</a></code> and stop if it is not
+<code>required_major</code>. A version that cannot be determined also stops – see
+that function for why, and for the opt-out.</p></dd>
 
 
 <dt id="arg-required-major">required_major<a class="anchor" aria-label="anchor" href="#arg-required-major"></a></dt>
-<dd><p>Integer. Required LANDIS-II major version.</p></dd>
+<dd><p>Integer. Required LANDIS-II major version. Defaults to
+<code><a href="landis_target_version.html">landis_target_version()</a></code>, the generation this package is built for.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -84,11 +86,12 @@ found.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="landis_version.html">landis_version()</a></code>, <code><a href="landis_find_docker.html">landis_find_docker()</a></code>, <code><a href="landis_run_local.html">landis_run_local()</a></code>,
-<code><a href="tar_landis.html">tar_landis()</a></code></p>
+    <div class="dont-index"><p><code><a href="landis_assert_version.html">landis_assert_version()</a></code>, <code><a href="landis_version.html">landis_version()</a></code>, <code><a href="landis_find_docker.html">landis_find_docker()</a></code>,
+<code><a href="landis_run_local.html">landis_run_local()</a></code>, <code><a href="tar_landis.html">tar_landis()</a></code></p>
 <p>Other LANDIS-II execution helpers:
 <code><a href="host_cpu_info.html">host_cpu_info()</a></code>,
 <code><a href="landis_archive_rep.html">landis_archive_rep()</a></code>,
+<code><a href="landis_assert_version.html">landis_assert_version()</a></code>,
 <code><a href="landis_find_docker.html">landis_find_docker()</a></code>,
 <code><a href="landis_pool_exec.html">landis_pool_exec()</a></code>,
 <code><a href="landis_pool_restart_one.html">landis_pool_restart_one()</a></code>,
@@ -97,6 +100,7 @@ found.</p>
 <code><a href="landis_replicate.html">landis_replicate()</a></code>,
 <code><a href="landis_run_docker.html">landis_run_docker()</a></code>,
 <code><a href="landis_run_local.html">landis_run_local()</a></code>,
+<code><a href="landis_target_version.html">landis_target_version()</a></code>,
 <code><a href="landis_version.html">landis_version()</a></code>,
 <code><a href="read_landis_resource_logs.html">read_landis_resource_logs()</a></code>,
 <code><a href="tar_landis.html">tar_landis()</a></code>,

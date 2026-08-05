@@ -1,5 +1,55 @@
 # Changelog
 
+## landisutils 0.0.97
+
+- The core-version check now covers the Docker paths, which is where it
+  was missing entirely.
+  [`landis_find()`](https://for-cast.github.io/landisutils/reference/landis_find.md)
+  has asserted the console’s major version since it gained
+  `check_version`, but neither
+  [`landis_run_docker()`](https://for-cast.github.io/landisutils/reference/landis_run_docker.md)
+  nor
+  [`landis_pool_start()`](https://for-cast.github.io/landisutils/reference/landis_pool_start.md)
+  ever called it – and `landisutils.run.method` defaults to `"docker"`
+  on Linux, so on a cluster that runs through containers the assertion
+  existed and never once fired. A whole 45-worker calibration fleet
+  could run against the wrong core generation with nothing to say so.
+  [`landis_pool_start()`](https://for-cast.github.io/landisutils/reference/landis_pool_start.md)
+  now probes one container per pool (all containers in a pool share an
+  image, so the sub-second cost is paid at pool creation, not per
+  replicate) and tears the pool down if it fails, rather than leaving
+  containers running for a pool nobody will use;
+  [`landis_run_docker()`](https://for-cast.github.io/landisutils/reference/landis_run_docker.md)
+  probes its image before staging anything.
+- New
+  [`landis_assert_version()`](https://for-cast.github.io/landisutils/reference/landis_assert_version.md)
+  replaces the internal `.assert_landis_major()`, so the local-console
+  path and both Docker paths enforce the same rule through the same
+  code. **Behaviour change:** a version that cannot be determined now
+  STOPS instead of warning and proceeding. An unreadable probe is not
+  evidence of a usable core – it is indistinguishable from a
+  wrong-generation console that failed to announce itself, which is the
+  failure this guards against. Set
+  `options(landisutils.skip_version_check = TRUE)` for the cases where
+  that is genuinely wanted; the opt-out is explicit and visible rather
+  than silent.
+- New
+  [`landis_target_version()`](https://for-cast.github.io/landisutils/reference/landis_target_version.md)
+  reads the `landisutils.landis.version` option, which `.onLoad()` seeds
+  from a single constant. That constant is the switch to flip when v9
+  supersedes v8: the runtime guard,
+  [`landis_find()`](https://for-cast.github.io/landisutils/reference/landis_find.md)’s
+  `required_major` default, the default image tag and the default
+  console path all derive from it instead of repeating the number, so a
+  bump moves them together rather than leaving a stale `v8` in whichever
+  one got missed. Flipping it is necessary but not sufficient – the
+  config writers in `ext_*.R` encode the grammar itself, so treat a bump
+  as the start of that work.
+- [`landis_version()`](https://for-cast.github.io/landisutils/reference/landis_version.md)
+  accepts `image` and `container` alongside `console`, so “run the
+  console and read its banner” has one implementation rather than one
+  per execution path.
+
 ## landisutils 0.0.96
 
 - [`landis_pool_restart_one()`](https://for-cast.github.io/landisutils/reference/landis_pool_restart_one.md)
