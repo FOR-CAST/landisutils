@@ -77,7 +77,11 @@ plot_growth_calibration <- function(
       data = model,
       ggplot2::aes(x = .data$age, y = .data$aboveground_c_mg_ha, linetype = .data$source),
       colour = "grey35",
-      linewidth = 0.6
+      linewidth = 0.6,
+      ## Round caps turn the short "on" segment into a round dot. Without them a
+      ## dot pattern renders as a short dash, because R scales dash lengths by
+      ## line width -- which is exactly what makes it unreadable in a legend key.
+      lineend = "round"
     ) +
     ggplot2::geom_line(
       data = curve,
@@ -183,7 +187,8 @@ plot_growth_candidate <- function(
       data = model,
       ggplot2::aes(x = .data$age, y = .data$aboveground_c_mg_ha, linetype = .data$source),
       colour = "grey35",
-      linewidth = 0.5
+      linewidth = 0.5,
+      lineend = "round"
     )
 
   if (!is.null(binned) && nrow(binned) > 0L) {

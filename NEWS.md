@@ -1,6 +1,6 @@
-# landisutils 0.0.90
+# landisutils 0.0.91
 
-* The TIPSY reference curve is now drawn dotted rather than dashed. At the line width these figures use, a dashed line is indistinguishable from a solid one in the legend key, which is the one place a reader needs to tell them apart.
+* The TIPSY reference curve is now drawn as round dots rather than dashes. Naming the `"dotted"` linetype is not enough: R scales dash lengths by line width, so at the width these figures use its one-unit "on" segment renders as a visible dash. The curve now uses a tighter pattern with round line ends, which turns each "on" segment into an actual dot. This matters most in the legend key, the one place a reader has to tell the two references apart.
 
 # landisutils 0.0.89
 
