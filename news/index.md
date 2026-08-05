@@ -1,5 +1,15 @@
 # Changelog
 
+## landisutils 0.0.93
+
+- [`plot_growth_candidate()`](https://for-cast.github.io/landisutils/reference/plot_growth_candidate.md)
+  maps point shape to the raw species code, so a reviewer can see which
+  member of a lumped group is setting the curve. Codes routinely lump
+  into one modelled species and the members are not interchangeable: in
+  the network this was built against, black cottonwood carries a median
+  180 Mg C/ha against trembling aspen’s 53, and the highest observations
+  in the pooled cloud were all cottonwood.
+
 ## landisutils 0.0.92
 
 - [`plot_growth_factorial_sensitivity()`](https://for-cast.github.io/landisutils/reference/plot_growth_factorial_sensitivity.md)
