@@ -4,6 +4,7 @@
 #' @family growth calibration helpers
 #' @export
 scale_linetype_growth_reference <- function() {
+  .need("ggplot2", "Building a growth-reference scale")
   ggplot2::scale_linetype_manual(
     values = .growth_reference_linetypes,
     limits = names(.growth_reference_linetypes),
@@ -44,6 +45,7 @@ plot_growth_calibration <- function(
   x_max = 400,
   mature_window = c(100L, Inf)
 ) {
+  .need("ggplot2", "Plotting a growth calibration")
   obs <- dplyr::filter(reference, .data$source == "Ground plots")
   model <- dplyr::filter(reference, .data$source %in% c("SORTIE", "TIPSY"))
 
@@ -148,6 +150,7 @@ plot_growth_candidate <- function(
   mature_window = c(100L, Inf),
   subtitle = NULL
 ) {
+  .need("ggplot2", "Plotting a growth candidate")
   obs <- dplyr::filter(reference, .data$source == "Ground plots")
   model <- dplyr::filter(reference, .data$source %in% c("SORTIE", "TIPSY"))
 
@@ -277,6 +280,7 @@ plot_growth_candidate <- function(
 #' @family growth calibration helpers
 #' @export
 plot_growth_factorial_sensitivity <- function(scores, current) {
+  .need("ggplot2", "Plotting factorial sensitivity")
   params <- c("growth_shp", "mort_shp", "anpp_prop")
   labels <- c(
     growth_shp = "Growth shape",
@@ -377,6 +381,7 @@ write_growth_review_bundle <- function(
   scoring_file = "growth_scoring.csv",
   params_file = "the growth-parameter table"
 ) {
+  .need("ggplot2", "Writing a growth review bundle")
   dir <- fs::dir_create(dir)
   win_for <- function(sp) growth_window_for(windows, sp)
   written <- character(0)

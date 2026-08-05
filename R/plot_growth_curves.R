@@ -31,6 +31,7 @@ plot_species_growth_curves <- function(
   psp_points,
   biomass_label = quote("Biomass" ~ (g ~ m^-2))
 ) {
+  .need("ggplot2", "Plotting growth curves")
   stopifnot(
     all(c("species", "standAge", "BscaledNonLinear") %in% names(landis_curves)),
     all(c("speciesTemp", "standAge", "biomass", "ecoregion") %in% names(psp_points))
