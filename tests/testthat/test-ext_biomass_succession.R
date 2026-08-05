@@ -147,3 +147,25 @@ test_that("prepMinRelativeBiomass -> insertMinRelativeBiomass retains every ecor
   toks <- suppressWarnings(as.integer(strsplit(trimws(hdr), "\\s+")[[1]]))
   testthat::expect_setequal(toks[!is.na(toks)], 1:4)
 })
+
+test_that("prepMinRelativeBiomass handles a single-ecoregion landscape", {
+  ## Regression: apply() over a one-row data.frame drops to a vector, so the ecoregion code was
+  ## recycled across the five shade classes -- the table declared ecoregion 1 five times and had one
+  ## shade row, and LANDIS-II aborted with "The ecoregion 1 appears more than once".
+  df <- data.frame(ecoregionGroup = 1L, X1 = 0.15, X2 = 0.25, X3 = 0.35, X4 = 0.45, X5 = 0.55)
+  out <- prepMinRelativeBiomass(df)
+
+  testthat::expect_equal(nrow(out), 6L) ## the ecoregion header row + 5 shade classes
+  testthat::expect_equal(unname(unlist(out[, -1L])), c("1", "15%", "25%", "35%", "45%", "55%"))
+
+  hdr <- insertMinRelativeBiomass(out)[[4]]
+  toks <- suppressWarnings(as.integer(strsplit(trimws(hdr), "\\s+")[[1]]))
+  testthat::expect_equal(toks[!is.na(toks)], 1L)
+})
+
+test_that("prepMinRelativeBiomass rejects an unexpected schema", {
+  testthat::expect_snapshot(
+    error = TRUE,
+    prepMinRelativeBiomass(data.frame(ecoregion = 1L, shade1 = 0.15))
+  )
+})

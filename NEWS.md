@@ -1,3 +1,7 @@
+# landisutils 0.0.87
+
+* `prepMinRelativeBiomass()` no longer collapses on a landscape with a SINGLE ecoregion. `apply()` over a one-row table dropped its result to a vector, so the ecoregion code was recycled across the five shade classes: the written table declared the same ecoregion five times and carried one shade row, and LANDIS-II aborted loading Biomass Succession with "The ecoregion N appears more than once". Single-ecoregion landscapes are rare in production but are exactly what a growth-curve calibration builds. It also now rejects an unrecognised input schema with a message naming the columns it got, rather than failing later with "object 'out' not found".
+
 # landisutils 0.0.86
 
 * New vignette, *Calibrating Species Growth Curves*, documenting how to wire a project-side growth calibration on top of the toolkit added in 0.0.85: how the sweep is encoded as one landscape, which parameters map onto the canonical names for ForC Succession and Biomass Succession, what `biomass_max_scale` means for each, what deliberately stays project-side, and why the calibration belongs in its own `{targets}` project. It also records the three properties that keep the ranking honest, and the reasoning behind each, so a second implementation does not have to rediscover them.

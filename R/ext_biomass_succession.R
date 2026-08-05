@@ -273,23 +273,34 @@ BiomassSuccession <- R6Class(
 prepMinRelativeBiomass <- function(df = NULL) {
   stopifnot(!is.null(df))
 
-  if (identical(colnames(df), c("ecoregionGroup", "X1", "X2", "X3", "X4", "X5"))) {
-    erg <- as.character(df$ecoregionGroup)
-    mrb <- apply(df[, -1], 2, function(x) {
-      ## values are percents; the `%` symbol is required by LANDIS-II
-      val <- x * 100
-      stopifnot(val >= 0, val <= 100)
-      paste0(val, "%")
-    })
-    out <- cbind(erg, mrb) |> t() |> data.frame()
-    ## Prepend a leading label column. insertMinRelativeBiomass() formats this table via
-    ## .collapseRow(df, i) = df[i, -1], which DROPS the first column (the ShadeClass/label slot, since
-    ## the shade-class prefixes 1..5 are hard-coded in the output). Without a label column here, that
-    ## drop would silently remove the FIRST ECOREGION from the header and every shade row.
-    out <- cbind(rowlabel = rownames(out), out)
+  if (!identical(colnames(df), c("ecoregionGroup", "X1", "X2", "X3", "X4", "X5"))) {
+    stop(
+      "prepMinRelativeBiomass(): `df` must have columns ",
+      "ecoregionGroup, X1, X2, X3, X4, X5 (one row per ecoregion); got: ",
+      paste(colnames(df), collapse = ", "),
+      call. = FALSE
+    )
   }
 
-  return(out)
+  erg <- as.character(df$ecoregionGroup)
+
+  ## NOT apply(): on a SINGLE-ecoregion landscape `df` has one row and apply() drops its result to a
+  ## named vector, so the cbind() below recycles the one ecoregion code across the five shade classes
+  ## instead of binding a column to a matrix. The written table then declares the same ecoregion five
+  ## times and carries a single shade row, and LANDIS-II aborts loading Biomass Succession with
+  ## "The ecoregion N appears more than once". Single-ecoregion landscapes are rare in production but
+  ## are exactly what a growth-curve calibration builds.
+  ## values are percents; the `%` symbol is required by LANDIS-II
+  vals <- as.matrix(df[, -1L, drop = FALSE]) * 100
+  stopifnot(vals >= 0, vals <= 100)
+  mrb <- matrix(paste0(vals, "%"), nrow = nrow(vals), ncol = ncol(vals), dimnames = dimnames(vals))
+
+  out <- cbind(erg, mrb) |> t() |> data.frame()
+  ## Prepend a leading label column. insertMinRelativeBiomass() formats this table via
+  ## .collapseRow(df, i) = df[i, -1], which DROPS the first column (the ShadeClass/label slot, since
+  ## the shade-class prefixes 1..5 are hard-coded in the output). Without a label column here, that
+  ## drop would silently remove the FIRST ECOREGION from the header and every shade row.
+  cbind(rowlabel = rownames(out), out)
 }
 
 #' Specify Biomass Succession Extension `MinRelativeBiomass` Table
