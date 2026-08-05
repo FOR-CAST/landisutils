@@ -21,4 +21,16 @@ grid). This copies the coordinate reference system and extent from a
 template raster (typically the study area's rasterToMatch) onto a LANDIS-II
 output of identical dimensions, making it analysis-ready.
 }
+\details{
+This stamps georeferencing on; it does not resample or reproject. It DOES
+reorient, but only when it can see the file the raster came from: given a
+path, or a \code{SpatRaster} still backed by one, the row order is restored via
+\code{\link[=read_landis_raster]{read_landis_raster()}}. A \code{SpatRaster} already loaded into memory carries no
+record of how it was read, so orientation cannot be checked -- read LANDIS-II
+outputs with \code{\link[=read_landis_raster]{read_landis_raster()}} and derive from there.
+}
+\seealso{
+Other output-reading helpers:
+\code{\link[=read_landis_raster]{read_landis_raster()}}
+}
 \concept{output-reading helpers}

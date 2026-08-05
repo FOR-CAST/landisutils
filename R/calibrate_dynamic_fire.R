@@ -172,8 +172,8 @@ parse_dynamic_fire_logs <- function(rep_dir, pixel_area_ha = 1.0) {
     if (!fs::file_exists(fuel_path)) {
       next
     }
-    sev <- terra::rast(as.character(sev_files[i]))
-    fuel <- terra::rast(as.character(fuel_path))
+    sev <- read_landis_raster(as.character(sev_files[i]))
+    fuel <- read_landis_raster(as.character(fuel_path))
     ## Dynamic Fire severity encoding:
     ##   0  = inactive (non-flammable / off-landscape)
     ##   1  = active but UNBURNED this timestep (still in scope; just didn't burn)

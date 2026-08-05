@@ -315,7 +315,9 @@ read_biomass_output_rasters <- function(
         if (!file.exists(path)) {
           return(NULL)
         }
-        r <- terra::rast(path)
+        ## read_landis_raster(), NOT terra::rast(): LANDIS-II writes these maps south-up, so terra
+        ## would reverse their rows and the `row` reported below would be mirrored.
+        r <- read_landis_raster(path)
         df <- terra::as.data.frame(r, cells = TRUE, na.rm = TRUE)
         if (nrow(df) == 0L) {
           return(NULL)

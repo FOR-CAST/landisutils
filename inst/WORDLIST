@@ -233,6 +233,9 @@ filesystem
 forc
 furrr
 georeferenced
+georeferences
+georeferencing
+geotransform
 ggplot2
 gitanyow
 github
@@ -265,6 +268,7 @@ namespaced
 neighborhood
 normalisation
 normalised
+normalises
 optimisation
 optimise
 optimiser
@@ -294,6 +298,7 @@ regulariser
 reimplementation
 renv
 replicate's
+reproject
 reprojects
 rsync
 rsync'd

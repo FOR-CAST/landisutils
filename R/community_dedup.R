@@ -103,7 +103,11 @@ dedup_community_snapshot <- function(csv, tif, out_csv = csv, out_tif = tif, qui
 
   ## Remap the raster: old code -> new code. Cells outside the active landscape (0 / NA, the LANDIS-II
   ## inactive convention) must survive untouched, so substitute only the codes we actually renumbered.
-  r <- terra::rast(tif)
+  ## read_landis_raster(), NOT terra::rast(): the snapshot is written south-up, so terra reverses its
+  ## rows on read and writing that back would hand LANDIS-II an initial-communities map that is a
+  ## vertical MIRROR of the landscape it was taken from -- vegetation moved relative to the ecoregion,
+  ## fire-region and topography maps it has to line up with.
+  r <- read_landis_raster(tif)
   r2 <- terra::subst(r, from = sig$MapCode, to = sig$.new, others = NA)
 
   ## EMPTY COMMUNITIES. A snapshot legitimately contains active cells whose map code has no CSV rows:
