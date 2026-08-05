@@ -1,6 +1,6 @@
 Package: landisutils
 Title: Utilities for running LANDIS-II simulations
-Version: 0.0.84
+Version: 0.0.85
 Authors@R: 
     person(c("Alex", "M"), "Chubaty", , "achubaty@for-cast.ca", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0001-7146-8135"))
@@ -71,7 +71,7 @@ Remotes:
 Config/testthat/edition: 3
 Config/testthat/parallel: true
 Encoding: UTF-8
-Language: en-US
+Language: en-CA
 LazyData: true
 Roxygen: list(markdown = TRUE)
 Collate:
@@ -123,6 +123,9 @@ Collate:
     'ext_root_rot.R'
     'ext_social_climate_fire.R'
     'forcs_output.R'
+    'growth_calibration.R'
+    'growth_calibration_plot.R'
+    'growth_calibration_score.R'
     'initial_communities.R'
     'landis.R'
     'landis_datatype.R'

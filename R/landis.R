@@ -143,12 +143,7 @@ landis_find <- function(check_version = TRUE, required_major = 8L) {
   landis_console <- Sys.getenv("LANDIS_CONSOLE")
 
   if (!nzchar(landis_console)) {
-    hits <- list.files(
-      "/opt",
-      "Landis[.]Console[.]dll$",
-      full.names = TRUE,
-      recursive = TRUE
-    ) |>
+    hits <- list.files("/opt", "Landis[.]Console[.]dll$", full.names = TRUE, recursive = TRUE) |>
       grep(x = _, pattern = "/build/Release/", value = TRUE)
 
     landis_console <- if (length(hits) == 0L) NA_character_ else hits[[1L]]
@@ -255,10 +250,7 @@ landis_version <- function(console = NULL, timeout = 60, check_version = FALSE) 
     return(NA)
   }
 
-  tryCatch(
-    numeric_version(sub("^LANDIS-II[[:space:]]+", "", hit[[1L]])),
-    error = function(e) NA
-  )
+  tryCatch(numeric_version(sub("^LANDIS-II[[:space:]]+", "", hit[[1L]])), error = function(e) NA)
 }
 
 #' Find the LANDIS-II console path inside a Docker container
