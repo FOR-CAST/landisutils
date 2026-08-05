@@ -1,5 +1,42 @@
 # Changelog
 
+## landisutils 0.0.95
+
+- [`dedup_community_snapshot()`](https://for-cast.github.io/landisutils/reference/dedup_community_snapshot.md)
+  reads the map-code raster through
+  [`read_landis_raster()`](https://for-cast.github.io/landisutils/reference/read_landis_raster.md),
+  so the snapshot it rewrites keeps the row order LANDIS-II wrote. It
+  used
+  [`terra::rast()`](https://rspatial.github.io/terra/reference/rast.html),
+  which reverses the rows of a south-up file, and wrote that back: every
+  initial-communities map built from a spinup snapshot was a vertical
+  MIRROR of the landscape it was taken from, putting the simulated
+  vegetation in the wrong place relative to the ecoregion, fire-region
+  and topography maps it has to line up with. A landscape spun up with
+  an earlier version has to be rebuilt.
+- [`georef_landis_raster()`](https://for-cast.github.io/landisutils/reference/georef_landis_raster.md)
+  restores the written row order before stamping on the template’s CRS
+  and extent, whenever it can see the file the raster came from (a path,
+  or a `SpatRaster` still backed by one). Georeferencing a mirrored
+  raster against rasterToMatch yields a map that is wrong everywhere
+  except in its landscape totals: core-versus-buffer attribution,
+  reporting-polygon summaries and every map figure. A `SpatRaster`
+  already loaded into memory carries no record of how it was read and
+  cannot be checked, so read LANDIS-II outputs with
+  [`read_landis_raster()`](https://for-cast.github.io/landisutils/reference/read_landis_raster.md)
+  and derive from there.
+- New
+  [`read_landis_raster()`](https://for-cast.github.io/landisutils/reference/read_landis_raster.md)
+  reads a LANDIS-II output GeoTIFF in the row order LANDIS-II wrote it.
+  `Landis.RasterIO.Gdal` sets no geotransform at all, which GDAL reports
+  as a south-up raster (origin at (0, 0), positive pixel height), and
+  [`terra::rast()`](https://rspatial.github.io/terra/reference/rast.html)
+  normalises south-up rasters by reversing their rows – so opening a
+  LANDIS-II output directly with terra silently returns a vertical
+  mirror of the simulated landscape. Whether a file is stored south-up
+  is checked per file rather than assumed, so a LANDIS-II release that
+  starts writing a proper geotransform will need no change here.
+
 ## landisutils 0.0.94
 
 - [`growth_best_candidates()`](https://for-cast.github.io/landisutils/reference/growth_best_candidates.md)

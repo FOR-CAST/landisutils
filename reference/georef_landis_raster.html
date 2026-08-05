@@ -13,7 +13,7 @@ output of identical dimensions, making it analysis-ready."><meta property="og:im
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.94</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.95</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -76,6 +76,20 @@ area rasterToMatch (defines the CRS and extent to copy).</p></dd>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>The georeferenced <code><a href="https://rspatial.github.io/terra/reference/SpatRaster-class.html" class="external-link">terra::SpatRaster</a></code>.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
+    <p>This stamps georeferencing on; it does not resample or reproject. It DOES
+reorient, but only when it can see the file the raster came from: given a
+path, or a <code>SpatRaster</code> still backed by one, the row order is restored via
+<code><a href="read_landis_raster.html">read_landis_raster()</a></code>. A <code>SpatRaster</code> already loaded into memory carries no
+record of how it was read, so orientation cannot be checked – read LANDIS-II
+outputs with <code><a href="read_landis_raster.html">read_landis_raster()</a></code> and derive from there.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
+    <div class="dont-index"><p>Other output-reading helpers:
+<code><a href="read_landis_raster.html">read_landis_raster()</a></code></p></div>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

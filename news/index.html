@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.94</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.95</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,6 +41,14 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.95" id="landisutils-0095">landisutils 0.0.95<a class="anchor" aria-label="anchor" href="#landisutils-0095"></a></h2>
+<ul><li>
+<code><a href="../reference/dedup_community_snapshot.html">dedup_community_snapshot()</a></code> reads the map-code raster through <code><a href="../reference/read_landis_raster.html">read_landis_raster()</a></code>, so the snapshot it rewrites keeps the row order LANDIS-II wrote. It used <code><a href="https://rspatial.github.io/terra/reference/rast.html" class="external-link">terra::rast()</a></code>, which reverses the rows of a south-up file, and wrote that back: every initial-communities map built from a spinup snapshot was a vertical MIRROR of the landscape it was taken from, putting the simulated vegetation in the wrong place relative to the ecoregion, fire-region and topography maps it has to line up with. A landscape spun up with an earlier version has to be rebuilt.</li>
+<li>
+<code><a href="../reference/georef_landis_raster.html">georef_landis_raster()</a></code> restores the written row order before stamping on the template’s CRS and extent, whenever it can see the file the raster came from (a path, or a <code>SpatRaster</code> still backed by one). Georeferencing a mirrored raster against rasterToMatch yields a map that is wrong everywhere except in its landscape totals: core-versus-buffer attribution, reporting-polygon summaries and every map figure. A <code>SpatRaster</code> already loaded into memory carries no record of how it was read and cannot be checked, so read LANDIS-II outputs with <code><a href="../reference/read_landis_raster.html">read_landis_raster()</a></code> and derive from there.</li>
+<li>New <code><a href="../reference/read_landis_raster.html">read_landis_raster()</a></code> reads a LANDIS-II output GeoTIFF in the row order LANDIS-II wrote it. <code>Landis.RasterIO.Gdal</code> sets no geotransform at all, which GDAL reports as a south-up raster (origin at (0, 0), positive pixel height), and <code><a href="https://rspatial.github.io/terra/reference/rast.html" class="external-link">terra::rast()</a></code> normalises south-up rasters by reversing their rows – so opening a LANDIS-II output directly with terra silently returns a vertical mirror of the simulated landscape. Whether a file is stored south-up is checked per file rather than assumed, so a LANDIS-II release that starts writing a proper geotransform will need no change here.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.94" id="landisutils-0094">landisutils 0.0.94<a class="anchor" aria-label="anchor" href="#landisutils-0094"></a></h2>
 <ul><li>

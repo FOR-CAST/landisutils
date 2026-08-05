@@ -981,6 +981,9 @@ scenario(
 - [`read_growth_scoring()`](https://for-cast.github.io/landisutils/reference/read_growth_scoring.md)
   : Read the per-species scoring controls
 
+- [`read_landis_raster()`](https://for-cast.github.io/landisutils/reference/read_landis_raster.md)
+  : Read a LANDIS-II output raster in the row order LANDIS-II wrote it
+
 - [`read_landis_resource_logs()`](https://for-cast.github.io/landisutils/reference/read_landis_resource_logs.md)
   :
 

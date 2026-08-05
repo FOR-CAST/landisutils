@@ -30,3 +30,20 @@ georef_landis_raster(r, template)
 
 The georeferenced
 [`terra::SpatRaster`](https://rspatial.github.io/terra/reference/SpatRaster-class.html).
+
+## Details
+
+This stamps georeferencing on; it does not resample or reproject. It
+DOES reorient, but only when it can see the file the raster came from:
+given a path, or a `SpatRaster` still backed by one, the row order is
+restored via
+[`read_landis_raster()`](https://for-cast.github.io/landisutils/reference/read_landis_raster.md).
+A `SpatRaster` already loaded into memory carries no record of how it
+was read, so orientation cannot be checked – read LANDIS-II outputs with
+[`read_landis_raster()`](https://for-cast.github.io/landisutils/reference/read_landis_raster.md)
+and derive from there.
+
+## See also
+
+Other output-reading helpers:
+[`read_landis_raster()`](https://for-cast.github.io/landisutils/reference/read_landis_raster.md)
