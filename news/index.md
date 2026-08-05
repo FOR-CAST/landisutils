@@ -1,5 +1,70 @@
 # Changelog
 
+## landisutils 0.0.85
+
+- New growth-curve calibration toolkit, extracted from a ForC Succession
+  project so it can be reused. It encodes a whole parameter sweep as one
+  LANDIS-II landscape and scores the resulting curves against reference
+  data, and is succession-agnostic: both ForCS and Biomass Succession
+  key growth and mortality shape per species but maximum ANPP and
+  maximum biomass per (ecoregion, species), which is exactly the
+  asymmetry the encoding exploits. Callers map their extension’s
+  parameter names onto the canonical `growth_shp` / `mort_shp` /
+  `anpp_max` / `biomass_max`, and pass `biomass_max_scale` to say how
+  the maximum-biomass parameter relates to the units its output is
+  reported in.
+- [`growth_calibration_design()`](https://for-cast.github.io/landisutils/reference/growth_calibration_design.md)
+  builds the sweep landscape: one pseudo-species per (species, growth
+  shape, mortality shape) and one pseudo-ecoregion per (max ANPP, max
+  biomass), with one cell per pair, so hundreds of parameter
+  combinations run in a single simulation.
+  [`growth_calibration_partition()`](https://for-cast.github.io/landisutils/reference/growth_calibration_partition.md)
+  splits a design too large to hold in memory into batches, always
+  cutting on cell boundaries.
+  [`growth_structure_design()`](https://for-cast.github.io/landisutils/reference/growth_structure_design.md)
+  crosses the sweep with a landscape’s own cohort structures.
+- [`growth_score_fit()`](https://for-cast.github.io/landisutils/reference/growth_score_fit.md)
+  ranks candidates on curve SHAPE alone, comparing each reference series
+  against the simulated curve rescaled to that series’ own plateau.
+  Level is recovered separately and exactly by
+  [`growth_inflation_factor()`](https://for-cast.github.io/landisutils/reference/growth_inflation_factor.md),
+  which exploits the fact that the fraction of its maximum-biomass
+  parameter a cohort actually achieves depends only on the shapes and
+  the ANPP-to-biomass ratio, not on the absolute level. Sweeping level
+  alongside shape instead lets the two trade off against each other, and
+  the ranking settles wherever the reference data happen to be centred.
+- [`growth_reference_curves()`](https://for-cast.github.io/landisutils/reference/growth_reference_curves.md)
+  evaluates every reference series on one common age grid, so a modelled
+  curve contributing hundreds of points and a plot cloud contributing a
+  dozen carry equal weight. Ground-plot observations are condensed
+  non-parametrically by
+  [`growth_bin_observations()`](https://for-cast.github.io/landisutils/reference/growth_bin_observations.md),
+  which bins on age and takes a quantile per bin; fitting an empirical
+  growth equation through the cloud instead would introduce a curve
+  family the succession extension does not use.
+- [`growth_auto_window()`](https://for-cast.github.io/landisutils/reference/growth_auto_window.md)
+  derives the age range to fit over rather than requiring one: it opens
+  at an age floor below which ground-plot programmes do not sample, and
+  closes at the earliest of a quantile of observed plot ages, the end of
+  the reference curve, and a fraction of `longevity` – before
+  LANDIS-II’s senescence ramp drives the curve to zero.
+  [`growth_fitting_windows()`](https://for-cast.github.io/landisutils/reference/growth_fitting_windows.md)
+  applies per-species overrides on top.
+- [`growth_best_candidates()`](https://for-cast.github.io/landisutils/reference/growth_best_candidates.md)
+  reports `fitted = FALSE` for a species with no scorable reference
+  rather than ranking indistinguishable rows and returning whichever
+  sorted first, and treats a nominated level source as a constraint
+  rather than a preference, so an unavailable reference yields no
+  recommendation instead of a silent substitution.
+- [`plot_growth_calibration()`](https://for-cast.github.io/landisutils/reference/plot_growth_calibration.md),
+  [`plot_growth_candidate()`](https://for-cast.github.io/landisutils/reference/plot_growth_candidate.md),
+  [`plot_growth_factorial_sensitivity()`](https://for-cast.github.io/landisutils/reference/plot_growth_factorial_sensitivity.md)
+  and
+  [`write_growth_review_bundle()`](https://for-cast.github.io/landisutils/reference/write_growth_review_bundle.md)
+  produce a standalone review bundle for the manual step between
+  calibrating and promoting parameters. Every drawn series is mapped
+  rather than given a bare colour, so each one earns a legend key.
+
 ## landisutils 0.0.84
 
 - [`landis_find()`](https://for-cast.github.io/landisutils/reference/landis_find.md)

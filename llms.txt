@@ -412,6 +412,9 @@ scenario(
 - [`exitRoadType()`](https://for-cast.github.io/landisutils/reference/exitRoadType.md)
   : Construct an exit road type (where wood leaves the landscape)
 
+- [`extract_landscape_cohort_structures()`](https://for-cast.github.io/landisutils/reference/extract_landscape_cohort_structures.md)
+  : Extract distinct cohort structures from the initial communities
+
 - [`georef_landis_raster()`](https://for-cast.github.io/landisutils/reference/georef_landis_raster.md)
   : Attach CRS and extent from a template to a LANDIS-II raster
 
@@ -435,6 +438,65 @@ scenario(
 - [`get_fwi_daily()`](https://for-cast.github.io/landisutils/reference/get_fwi_daily.md)
   : Fetch a single year of daily BioSIM Fire Weather Index for one
   location batch
+
+- [`growth_add_objective()`](https://for-cast.github.io/landisutils/reference/growth_add_objective.md)
+  : Rank fit statistics
+
+- [`growth_auto_window()`](https://for-cast.github.io/landisutils/reference/growth_auto_window.md)
+  : Derive one species' fitting window from where its references have
+  support
+
+- [`growth_best_candidates()`](https://for-cast.github.io/landisutils/reference/growth_best_candidates.md)
+  : Best candidate per species, or an explicit refusal
+
+- [`growth_bin_observations()`](https://for-cast.github.io/landisutils/reference/growth_bin_observations.md)
+  : Condense a ground-plot cloud into an age-binned series
+
+- [`growth_calibration_design()`](https://for-cast.github.io/landisutils/reference/growth_calibration_design.md)
+  : Build the calibration design table
+
+- [`growth_calibration_partition()`](https://for-cast.github.io/landisutils/reference/growth_calibration_partition.md)
+  : Partition a design into batches that fit in memory
+
+- [`growth_calibration_work_root()`](https://for-cast.github.io/landisutils/reference/growth_calibration_work_root.md)
+  : Resolve a writable, Docker-bind-mountable run root for calibration
+  runs
+
+- [`growth_expand_over_pseudo_species()`](https://for-cast.github.io/landisutils/reference/growth_expand_over_pseudo_species.md)
+  : Expand a per-species parameter table over pseudo-species
+
+- [`growth_factorial_ratio_grid()`](https://for-cast.github.io/landisutils/reference/growth_factorial_ratio_grid.md)
+  : Expand a shape-and-ratio sweep into absolute ForCS parameters
+
+- [`growth_fitting_windows()`](https://for-cast.github.io/landisutils/reference/growth_fitting_windows.md)
+  : Per-species fitting windows
+
+- [`growth_inflation_factor()`](https://for-cast.github.io/landisutils/reference/growth_inflation_factor.md)
+  :
+
+  Recover the `biomass_max` a candidate implies
+
+- [`growth_pseudo_species_name()`](https://for-cast.github.io/landisutils/reference/growth_pseudo_species_name.md)
+  : Name a pseudo-species
+
+- [`growth_reference_curves()`](https://for-cast.github.io/landisutils/reference/growth_reference_curves.md)
+  : Build one species' reference curves on a common age grid
+
+- [`growth_reference_inflection()`](https://for-cast.github.io/landisutils/reference/growth_reference_inflection.md)
+  : Age at which a reference growth curve's increment peaks
+
+- [`growth_score_fit()`](https://for-cast.github.io/landisutils/reference/growth_score_fit.md)
+  : Score a simulated growth curve against its references
+
+- [`growth_scoring_for()`](https://for-cast.github.io/landisutils/reference/growth_scoring_for.md)
+  : Look up one species' scoring controls, with defaults
+
+- [`growth_structure_design()`](https://for-cast.github.io/landisutils/reference/growth_structure_design.md)
+  : Build a design crossing landscape cohort structures with a parameter
+  sweep
+
+- [`growth_window_for()`](https://for-cast.github.io/landisutils/reference/growth_window_for.md)
+  : Look up one species' fitting window
 
 - [`harvestPrescription()`](https://for-cast.github.io/landisutils/reference/harvestPrescription.md)
   : Construct a Biomass Harvest prescription
@@ -715,6 +777,15 @@ scenario(
   Patch a `dynamic-fire.txt` in place with candidate calibration
   parameters
 
+- [`plot_growth_calibration()`](https://for-cast.github.io/landisutils/reference/plot_growth_calibration.md)
+  : Plot a species' growth curve against its references
+
+- [`plot_growth_candidate()`](https://for-cast.github.io/landisutils/reference/plot_growth_candidate.md)
+  : Plot the current parameter set against a candidate, for review
+
+- [`plot_growth_factorial_sensitivity()`](https://for-cast.github.io/landisutils/reference/plot_growth_factorial_sensitivity.md)
+  : Plot factorial sensitivity of fit to each growth parameter
+
 - [`plot_species_biomass()`](https://for-cast.github.io/landisutils/reference/plot_species_biomass.md)
   : Plot species biomass over time (stacked area)
 
@@ -898,6 +969,9 @@ scenario(
 
   Read ForCS `log_Summary.csv` files for one scenario (all replicates)
 
+- [`read_growth_scoring()`](https://for-cast.github.io/landisutils/reference/read_growth_scoring.md)
+  : Read the per-species scoring controls
+
 - [`read_landis_resource_logs()`](https://for-cast.github.io/landisutils/reference/read_landis_resource_logs.md)
   :
 
@@ -919,6 +993,9 @@ scenario(
 - [`save_observed_fire_targets()`](https://for-cast.github.io/landisutils/reference/save_observed_fire_targets.md)
   : Save observed fire-regime targets (NFDB-derived) for calibration
   loss
+
+- [`scale_linetype_growth_reference()`](https://for-cast.github.io/landisutils/reference/scale_linetype_growth_reference.md)
+  : Consistent linetype scale for reference curves
 
 - [`scenario()`](https://for-cast.github.io/landisutils/reference/scenario.md)
   : Create LANDIS-II scenario files
@@ -963,6 +1040,9 @@ scenario(
   :
 
   Write one replicate's ForCS `log_Summary` to a partitioned parquet
+
+- [`write_growth_review_bundle()`](https://for-cast.github.io/landisutils/reference/write_growth_review_bundle.md)
+  : Write a standalone calibration review bundle
 
 - [`write_landis_scenario_file()`](https://for-cast.github.io/landisutils/reference/write_landis_scenario_file.md)
   :
