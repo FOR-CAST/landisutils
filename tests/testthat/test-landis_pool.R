@@ -7,10 +7,18 @@
 ## response: the alternative is pulling a multi-GB LANDIS image to test `docker exec`
 ## argument handling. `landis_assert_version()` has its own coverage in
 ## test-landis_version.R, including against the real image.
-withr::local_options(landisutils.skip_version_check = TRUE, .local_envir = teardown_env())
+## Scoped per TEST, not per file. A file-level `teardown_env()` opt-out is not restored until the
+## whole `test_dir()` run finishes, so it silently disabled the version guard for every test file
+## that ran afterwards -- including test-landis_version.R, whose entire purpose is to prove the
+## guard fires. That produced 13 failures in a serial run (`TESTTHAT_PARALLEL=false`) and none
+## under the parallel config this package uses by default, where each file gets its own process.
+local_skip_version_check <- function(.local_envir = parent.frame()) {
+  withr::local_options(landisutils.skip_version_check = TRUE, .local_envir = .local_envir)
+}
 
 test_that("landis_pool_start + exec + stop round-trips against a busybox image", {
   skip_if_not(.docker_available(), "docker CLI not available")
+  local_skip_version_check()
 
   scratch <- withr::local_tempdir()
   ## Use a tiny image we know is on most hosts; this test exercises pool plumbing,
@@ -72,6 +80,7 @@ test_that("landis_pool_start + exec + stop round-trips against a busybox image",
 
 test_that("landis_pool_exec() surfaces a clear error on non-zero exit", {
   skip_if_not(.docker_available(), "docker CLI not available")
+  local_skip_version_check()
 
   scratch <- withr::local_tempdir()
   pool <- landis_pool_start(
@@ -96,6 +105,7 @@ test_that("landis_pool_exec() surfaces a clear error on non-zero exit", {
 
 test_that("landis_pool_stop() is idempotent", {
   skip_if_not(.docker_available(), "docker CLI not available")
+  local_skip_version_check()
 
   scratch <- withr::local_tempdir()
   pool <- landis_pool_start(
@@ -125,6 +135,7 @@ test_that("sim_r_reimpl() errors with the not-yet-implemented message", {
 
 test_that("landis_pool_restart_one() replaces the container but keeps its name", {
   skip_if_not(.docker_available(), "docker CLI not available")
+  local_skip_version_check()
 
   scratch <- withr::local_tempdir()
   pool <- landis_pool_start(
@@ -161,6 +172,7 @@ test_that("landis_pool_restart_one() replaces the container but keeps its name",
 
 test_that("repeated restarts do not leak containers", {
   skip_if_not(.docker_available(), "docker CLI not available")
+  local_skip_version_check()
 
   scratch <- withr::local_tempdir()
   prefix <- "landispool-leak"
@@ -194,6 +206,7 @@ test_that("repeated restarts do not leak containers", {
 
 test_that("landis_pool_exec(retries=1) retries after a container failure", {
   skip_if_not(.docker_available(), "docker CLI not available")
+  local_skip_version_check()
 
   scratch <- withr::local_tempdir()
   pool <- landis_pool_start(
