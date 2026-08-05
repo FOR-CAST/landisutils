@@ -32,10 +32,22 @@
 #'   - `RandomNumberSeed` Integer. Seed used to initialize the LANDIS-II random number generator;
 #'   - `SpeciesInputFile` Character. Path to input file;
 #'
+#' @param validate Logical. Run [validate_landis_scenario()] on the assembled
+#'   directory before returning. Defaults to `getOption("landisutils.validate_scenario", TRUE)`.
+#'   Set `FALSE` when the referenced input files are deliberately stubs (as in
+#'   this package's own tests of config-file generation).
+#'
 #' @template return_file
 #'
 #' @export
-scenario <- function(name = NULL, extensions = NULL, climate_config = NULL, path = NULL, ...) {
+scenario <- function(
+  name = NULL,
+  extensions = NULL,
+  climate_config = NULL,
+  path = NULL,
+  ...,
+  validate = getOption("landisutils.validate_scenario", TRUE)
+) {
   dots <- list(...)
 
   stopifnot(
@@ -129,6 +141,10 @@ scenario <- function(name = NULL, extensions = NULL, climate_config = NULL, path
   manifest <- file.path(path, "output_manifest.txt")
   writeLines(all_output_files, manifest)
   scenario$add_file("output_manifest.txt")
+
+  if (isTRUE(validate)) {
+    validate_landis_scenario(path, scenario_file = basename(file))
+  }
 
   return(scenario)
 }
@@ -273,11 +289,17 @@ insertRandomNumberSeed <- function(seed) {
 #'   relative to each replicate directory) that the scenario will produce at
 #'   run time. Written to `output_manifest.txt` so [tar_landis()] can track
 #'   these files alongside the recursive `output_dir` scan.
+#' @param validate Logical. Run [validate_landis_scenario()] on the assembled
+#'   directory before returning. Defaults to
+#'   `getOption("landisutils.validate_scenario", TRUE)`. This is the path the
+#'   Dynamic Fire calibration assembles its scenarios through, so it is where
+#'   validation catches a mirrored initial-communities map swapped in from a
+#'   spinup snapshot.
 #'
 #' @returns Character scalar: absolute path to the written `scenario.txt`.
 #'
 #' @family LANDIS-II execution helpers
-#' @seealso [scenario()]
+#' @seealso [scenario()], [validate_landis_scenario()]
 #'
 #' @export
 write_landis_scenario_file <- function(
@@ -289,7 +311,8 @@ write_landis_scenario_file <- function(
   succession_ext_files,
   disturbance_ext_files = NULL,
   other_ext_files = NULL,
-  output_manifest = character(0)
+  output_manifest = character(0),
+  validate = getOption("landisutils.validate_scenario", TRUE)
 ) {
   path <- fs::path_real(path)
   out_file <- fs::path(path, "scenario.txt")
@@ -326,6 +349,10 @@ write_landis_scenario_file <- function(
     ),
     out_file
   )
+
+  if (isTRUE(validate)) {
+    validate_landis_scenario(path, scenario_file = basename(out_file))
+  }
 
   out_file
 }

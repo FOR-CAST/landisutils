@@ -35,6 +35,11 @@ tmp_pth <- withr::local_tempdir("example_MultiExt_")
 `scenario()` validates that input files exist on disk.
 For a demonstration we just `writeLines("")` empty stubs at each path the extensions will reference.
 
+Because those stubs are not usable input, this vignette passes `validate = FALSE` to `scenario()` below.
+A real scenario is checked by `validate_landis_scenario()`, which reads the maps and tables the
+configuration references and reports every problem it finds before LANDIS-II is ever invoked.
+See `vignette("Dynamic-Fire-Calibration")` and `?validate_landis_scenario`.
+
 ```{r stub-files}
 clim_file <- file.path(tmp_pth, "climate.txt")
 init_comm_files <- c(
@@ -340,7 +345,8 @@ scen <- scenario(
   Duration = 10,
   EcoregionsFiles = ecoregion_files,
   RandomNumberSeed = 147,
-  SpeciesInputFile = species_input_file
+  SpeciesInputFile = species_input_file,
+  validate = FALSE ## the inputs above are empty stubs; see "Stub input files"
 )
 
 scen$path

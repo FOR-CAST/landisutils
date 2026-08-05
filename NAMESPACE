@@ -227,6 +227,7 @@ export(suitabilityFile)
 export(tar_landis)
 export(transition_data)
 export(truefalse)
+export(validate_landis_scenario)
 export(windSpeedVulnerability)
 export(writeClimateData)
 export(write_biomass_c_snapshots_parquet)
@@ -238,56 +239,72 @@ import(methods)
 importFrom(R6,R6Class)
 importFrom(callr,r_bg)
 importFrom(cffdrs,grass_fuel_moisture_code)
-importFrom(data.table,":=")
-importFrom(data.table,.BY)
-importFrom(data.table,.EACHI)
-importFrom(data.table,.GRP)
-importFrom(data.table,.I)
-importFrom(data.table,.N)
-importFrom(data.table,.NGRP)
-importFrom(data.table,.SD)
-importFrom(data.table,as.data.table)
-importFrom(data.table,between)
-importFrom(data.table,copy)
-importFrom(data.table,data.table)
-importFrom(data.table,fifelse)
-importFrom(data.table,fwrite)
-importFrom(data.table,rbindlist)
-importFrom(data.table,rowid)
-importFrom(data.table,set)
-importFrom(data.table,setcolorder)
-importFrom(data.table,setkeyv)
-importFrom(data.table,setnames)
-importFrom(dplyr,across)
-importFrom(dplyr,all_of)
-importFrom(dplyr,any_of)
-importFrom(dplyr,arrange)
-importFrom(dplyr,mutate)
-importFrom(dplyr,pull)
-importFrom(fs,dir_create)
-importFrom(fs,path_abs)
-importFrom(fs,path_norm)
-importFrom(fs,path_rel)
-importFrom(fs,path_tidy)
-importFrom(glue,glue)
-importFrom(glue,glue_collapse)
+importFrom(data.table,
+  ":=",
+  .BY,
+  .EACHI,
+  .GRP,
+  .I,
+  .N,
+  .NGRP,
+  .SD,
+  as.data.table,
+  between,
+  copy,
+  data.table,
+  fifelse,
+  fwrite,
+  rbindlist,
+  rowid,
+  set,
+  setcolorder,
+  setkeyv,
+  setnames
+)
+importFrom(dplyr,
+  across,
+  all_of,
+  any_of,
+  arrange,
+  mutate,
+  pull
+)
+importFrom(fs,
+  dir_create,
+  path_abs,
+  path_norm,
+  path_rel,
+  path_tidy
+)
+importFrom(glue,
+  glue,
+  glue_collapse
+)
 importFrom(lifecycle,deprecated)
 importFrom(stats,na.omit)
-importFrom(stringr,fixed)
-importFrom(stringr,str_c)
-importFrom(stringr,str_ends)
-importFrom(terra,"values<-")
-importFrom(terra,names)
-importFrom(terra,nlyr)
-importFrom(terra,rast)
-importFrom(terra,res)
-importFrom(terra,terrain)
-importFrom(terra,values)
-importFrom(terra,writeRaster)
+importFrom(stringr,
+  fixed,
+  str_c,
+  str_ends
+)
+importFrom(terra,
+  "values<-",
+  names,
+  nlyr,
+  rast,
+  res,
+  terrain,
+  values,
+  writeRaster
+)
 importFrom(tibble,tribble)
-importFrom(tidyr,pivot_longer)
-importFrom(tidyr,pivot_wider)
-importFrom(utils,head)
-importFrom(utils,packageVersion)
-importFrom(utils,tail)
-importFrom(utils,write.csv)
+importFrom(tidyr,
+  pivot_longer,
+  pivot_wider
+)
+importFrom(utils,
+  head,
+  packageVersion,
+  tail,
+  write.csv
+)
