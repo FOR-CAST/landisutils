@@ -12,7 +12,8 @@ growth_reference_curves(
   min_plots = 50L,
   n_grid = 60L,
   use_tipsy = FALSE,
-  site = NULL
+  site = NULL,
+  weight = NULL
 )
 }
 \arguments{
@@ -33,6 +34,9 @@ advisory and only sets \code{plots_sparse}. See
 \item{site}{Optional column name identifying the sampling location of a
 ground-plot observation. Passed to \code{\link[=growth_bin_observations]{growth_bin_observations()}}; when given,
 \code{n_plots} counts distinct locations rather than visits.}
+
+\item{weight}{Optional column name holding a per-observation climatic weight.
+Passed to \code{\link[=growth_bin_observations]{growth_bin_observations()}}; see \code{\link[=growth_climatic_weight]{growth_climatic_weight()}}.}
 }
 \value{
 A list with \code{ages}, \code{series}, \code{levels}, \code{n_plots}, \code{n_bins},
@@ -58,6 +62,8 @@ Other growth calibration helpers:
 \code{\link[=growth_calibration_design]{growth_calibration_design()}},
 \code{\link[=growth_calibration_partition]{growth_calibration_partition()}},
 \code{\link[=growth_calibration_work_root]{growth_calibration_work_root()}},
+\code{\link[=growth_climatic_distance]{growth_climatic_distance()}},
+\code{\link[=growth_climatic_weight]{growth_climatic_weight()}},
 \code{\link[=growth_expand_over_pseudo_species]{growth_expand_over_pseudo_species()}},
 \code{\link[=growth_factorial_ratio_grid]{growth_factorial_ratio_grid()}},
 \code{\link[=growth_fitting_windows]{growth_fitting_windows()}},

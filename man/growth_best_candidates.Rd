@@ -42,6 +42,8 @@ Other growth calibration helpers:
 \code{\link[=growth_calibration_design]{growth_calibration_design()}},
 \code{\link[=growth_calibration_partition]{growth_calibration_partition()}},
 \code{\link[=growth_calibration_work_root]{growth_calibration_work_root()}},
+\code{\link[=growth_climatic_distance]{growth_climatic_distance()}},
+\code{\link[=growth_climatic_weight]{growth_climatic_weight()}},
 \code{\link[=growth_expand_over_pseudo_species]{growth_expand_over_pseudo_species()}},
 \code{\link[=growth_factorial_ratio_grid]{growth_factorial_ratio_grid()}},
 \code{\link[=growth_fitting_windows]{growth_fitting_windows()}},

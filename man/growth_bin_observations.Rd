@@ -4,7 +4,13 @@
 \alias{growth_bin_observations}
 \title{Condense a ground-plot cloud into an age-binned series}
 \usage{
-growth_bin_observations(obs, bin = 20L, probs = 0.5, site = NULL)
+growth_bin_observations(
+  obs,
+  bin = 20L,
+  probs = 0.5,
+  site = NULL,
+  weight = NULL
+)
 }
 \arguments{
 \item{obs}{A tibble with \code{age} and \code{aboveground_c_mg_ha}.}
@@ -17,9 +23,15 @@ growth_bin_observations(obs, bin = 20L, probs = 0.5, site = NULL)
 given, repeated visits to one location are averaged within a bin before the
 quantile is taken, so \code{n} counts locations rather than visits. Errors if the
 named column is absent, rather than silently skipping the correction.}
+
+\item{weight}{Optional column name holding a per-observation weight, typically
+from \code{\link[=growth_climatic_weight]{growth_climatic_weight()}}. When given, the within-bin quantile is
+weighted, so plots resembling the modelled landscape carry more of it. \code{n}
+still counts observations; \code{weight} reports the weight behind each bin, so a
+bin resting on many barely-relevant plots is visible as such.}
 }
 \value{
-A tibble with \code{age} (bin mean), \code{value}, and \code{n}.
+A tibble with \code{age} (bin mean), \code{value}, \code{n}, and \code{weight}.
 }
 \description{
 Bins the observations on age and takes one quantile per bin, so every age
@@ -54,6 +66,8 @@ Other growth calibration helpers:
 \code{\link[=growth_calibration_design]{growth_calibration_design()}},
 \code{\link[=growth_calibration_partition]{growth_calibration_partition()}},
 \code{\link[=growth_calibration_work_root]{growth_calibration_work_root()}},
+\code{\link[=growth_climatic_distance]{growth_climatic_distance()}},
+\code{\link[=growth_climatic_weight]{growth_climatic_weight()}},
 \code{\link[=growth_expand_over_pseudo_species]{growth_expand_over_pseudo_species()}},
 \code{\link[=growth_factorial_ratio_grid]{growth_factorial_ratio_grid()}},
 \code{\link[=growth_fitting_windows]{growth_fitting_windows()}},

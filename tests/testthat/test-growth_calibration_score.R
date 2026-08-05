@@ -269,3 +269,59 @@ test_that("a species with no scorable series reports fitted = FALSE, not an argm
   ## the values in use still travel through untouched
   expect_equal(best$current_biomass_max, 30000)
 })
+
+test_that("climatic distance standardises so no variable dominates by unit", {
+  climate <- tibble::tibble(MAT = c(2, 3, 4), MAP = c(700, 1000, 1300))
+  ## MAT sd is 1, MAP sd is 300: without standardising, MAP would swamp MAT
+  d <- growth_climatic_distance(climate, target = c(MAT = 3, MAP = 1000))
+
+  expect_equal(d[[2L]], 0)
+  expect_equal(d[[1L]], d[[3L]])
+})
+
+test_that("a supplied scale overrides the observed spread", {
+  climate <- tibble::tibble(MAT = c(2, 4))
+  d <- growth_climatic_distance(climate, c(MAT = 3), scale = c(MAT = 2))
+
+  expect_equal(d, c(0.5, 0.5))
+})
+
+test_that("climatic weight decays with distance and respects the kernel", {
+  d <- c(0, 0.5, 1, 2)
+
+  expect_equal(growth_climatic_weight(d, bandwidth = 1)[[1L]], 1)
+  expect_true(all(diff(growth_climatic_weight(d, bandwidth = 1)) < 0))
+  ## tricube and uniform are zero past the bandwidth, gaussian never is
+  expect_equal(growth_climatic_weight(d, bandwidth = 1, kernel = "tricube")[[4L]], 0)
+  expect_equal(growth_climatic_weight(d, bandwidth = 1, kernel = "uniform"), c(1, 1, 1, 0))
+  expect_gt(growth_climatic_weight(d, bandwidth = 1)[[4L]], 0)
+})
+
+test_that("weighting the bin moves the quantile toward the similar plots", {
+  ## three plots in one bin; the low value is the climatically closest
+  obs <- tibble::tibble(age = c(1, 2, 3), aboveground_c_mg_ha = c(10, 50, 90), w = c(1, 0.05, 0.05))
+
+  expect_equal(growth_bin_observations(obs, bin = 20)$value, 50)
+  expect_equal(growth_bin_observations(obs, bin = 20, weight = "w")$value, 10)
+})
+
+test_that("equal weights reproduce the unweighted ordering", {
+  obs <- tibble::tibble(age = c(1, 2, 3), aboveground_c_mg_ha = c(10, 50, 90), w = c(1, 1, 1))
+
+  expect_equal(growth_bin_observations(obs, bin = 20, weight = "w")$value, 50)
+  expect_equal(growth_bin_observations(obs, bin = 20, weight = "w")$weight, 3)
+})
+
+test_that("site collapsing and climatic weighting compose", {
+  ## site A visited three times and climatically distant; site B close
+  obs <- tibble::tibble(
+    site = c("A", "A", "A", "B"),
+    age = c(1, 2, 3, 4),
+    aboveground_c_mg_ha = c(90, 90, 90, 10),
+    w = c(0.01, 0.01, 0.01, 1)
+  )
+  out <- growth_bin_observations(obs, bin = 20, site = "site", weight = "w")
+
+  expect_equal(out$n, 2L)
+  expect_equal(out$value, 10)
+})

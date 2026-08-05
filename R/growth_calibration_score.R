@@ -82,6 +82,107 @@ growth_scoring_for <- function(scoring, species) {
   out
 }
 
+#' Score each observation by climatic distance from a target
+#'
+#' Ground plots from a wider area can inform a calibration, but only in
+#' proportion to how much their climate resembles the landscape being modelled.
+#' This scores each observation individually, which is the point: aggregating
+#' plots into map units first and comparing unit means makes the comparison only
+#' as reliable as the thinnest unit, and map units carrying a handful of plots
+#' get estimates too noisy to rank.
+#'
+#' Distance is the root-mean-square deviation across variables after
+#' standardizing each by its spread, so that a variable measured in millimetres
+#' does not swamp one measured in degrees.
+#'
+#' @param climate A data frame with one row per observation and one column per
+#'   climate variable.
+#' @param target Named numeric vector giving the target climate.
+#' @param vars Character. Variables to compare on; defaults to the names of
+#'   `target`.
+#' @param scale Optional named numeric vector of per-variable spreads. Defaults
+#'   to each variable's standard deviation across `climate`.
+#'
+#' @return A numeric vector of distances, one per row of `climate`.
+#' @family growth calibration helpers
+#' @export
+growth_climatic_distance <- function(climate, target, vars = names(target), scale = NULL) {
+  missing <- setdiff(vars, names(climate))
+  if (length(missing)) {
+    stop("`climate` is missing variable(s): ", paste(missing, collapse = ", "), call. = FALSE)
+  }
+  if (!all(vars %in% names(target))) {
+    stop(
+      "`target` is missing variable(s): ",
+      paste(setdiff(vars, names(target)), collapse = ", "),
+      call. = FALSE
+    )
+  }
+  m <- as.matrix(climate[, vars, drop = FALSE])
+  if (is.null(scale)) {
+    scale <- apply(m, 2L, stats::sd, na.rm = TRUE)
+  }
+  scale <- scale[vars]
+  if (any(!is.finite(scale)) || any(scale == 0)) {
+    stop("`scale` must be finite and non-zero for every variable.", call. = FALSE)
+  }
+  z <- sweep(sweep(m, 2L, target[vars], "-"), 2L, scale, "/")
+  sqrt(rowMeans(z^2))
+}
+
+#' Turn climatic distance into a calibration weight
+#'
+#' A weight rather than a cut-off, because any threshold is arbitrary and a plot
+#' just past it is not meaningfully different from one just inside. `bandwidth`
+#' is the distance at which a Gaussian weight falls to about 0.61; it is the one
+#' number to tune, and it can be chosen by cross-validation.
+#'
+#' @param distance Numeric, from [growth_climatic_distance()].
+#' @param bandwidth Numeric. Scale over which similarity decays.
+#' @param kernel One of `"gaussian"` (smooth, never exactly zero),
+#'   `"tricube"` (smooth, zero beyond `bandwidth`) or `"uniform"` (a hard
+#'   cut-off at `bandwidth`).
+#'
+#' @return A numeric vector of weights in `[0, 1]`.
+#' @family growth calibration helpers
+#' @export
+growth_climatic_weight <- function(
+  distance,
+  bandwidth = 0.5,
+  kernel = c("gaussian", "tricube", "uniform")
+) {
+  kernel <- match.arg(kernel)
+  if (
+    !is.numeric(bandwidth) || length(bandwidth) != 1L || !is.finite(bandwidth) || bandwidth <= 0
+  ) {
+    stop("`bandwidth` must be a single positive number.", call. = FALSE)
+  }
+  u <- distance / bandwidth
+  switch(
+    kernel,
+    gaussian = exp(-0.5 * u^2),
+    tricube = ifelse(u < 1, (1 - u^3)^3, 0),
+    uniform = as.numeric(u <= 1)
+  )
+}
+
+## Weighted quantile, "lower" convention: the smallest observed value at which
+## the cumulative weight reaches `probs`. Deliberately not interpolated -- with
+## uneven weights there is no defensible way to interpolate between two
+## observations carrying very different influence.
+.weighted_quantile <- function(x, w, probs) {
+  ok <- !is.na(x) & !is.na(w) & w > 0
+  if (!any(ok)) {
+    return(NA_real_)
+  }
+  x <- x[ok]
+  w <- w[ok]
+  o <- order(x)
+  x <- x[o]
+  cw <- cumsum(w[o]) / sum(w)
+  x[[which(cw >= probs)[[1L]]]]
+}
+
 #' Condense a ground-plot cloud into an age-binned series
 #'
 #' Bins the observations on age and takes one quantile per bin, so every age
@@ -113,37 +214,60 @@ growth_scoring_for <- function(scoring, species) {
 #'   given, repeated visits to one location are averaged within a bin before the
 #'   quantile is taken, so `n` counts locations rather than visits. Errors if the
 #'   named column is absent, rather than silently skipping the correction.
+#' @param weight Optional column name holding a per-observation weight, typically
+#'   from [growth_climatic_weight()]. When given, the within-bin quantile is
+#'   weighted, so plots resembling the modelled landscape carry more of it. `n`
+#'   still counts observations; `weight` reports the weight behind each bin, so a
+#'   bin resting on many barely-relevant plots is visible as such.
 #'
-#' @return A tibble with `age` (bin mean), `value`, and `n`.
+#' @return A tibble with `age` (bin mean), `value`, `n`, and `weight`.
 #' @family growth calibration helpers
 #' @export
-growth_bin_observations <- function(obs, bin = 20L, probs = 0.5, site = NULL) {
-  if (!is.null(site) && !site %in% names(obs)) {
-    stop("`site` column '", site, "' not found in `obs`.", call. = FALSE)
+growth_bin_observations <- function(obs, bin = 20L, probs = 0.5, site = NULL, weight = NULL) {
+  check_col <- function(col, arg) {
+    if (!is.null(col) && !col %in% names(obs)) {
+      stop("`", arg, "` column '", col, "' not found in `obs`.", call. = FALSE)
+    }
   }
+  check_col(site, "site")
+  check_col(weight, "weight")
   d <- dplyr::filter(obs, !is.na(.data$age), !is.na(.data$aboveground_c_mg_ha))
   if (nrow(d) == 0L) {
-    return(tibble::tibble(age = numeric(0), value = numeric(0), n = integer(0)))
+    return(tibble::tibble(
+      age = numeric(0),
+      value = numeric(0),
+      n = integer(0),
+      weight = numeric(0)
+    ))
   }
   d <- dplyr::mutate(d, .bin = floor(.data$age / bin))
+  ## A weight is a property of the location, so it survives the collapse; an
+  ## absent weight is 1, which reduces the weighted quantile to the plain one.
+  d$.w <- if (is.null(weight)) 1 else d[[weight]]
   if (!is.null(site)) {
     ## One value per location per bin, so a plot visited five times counts once.
     d <- dplyr::summarise(
       d,
       age = mean(.data$age),
       aboveground_c_mg_ha = mean(.data$aboveground_c_mg_ha),
+      .w = mean(.data$.w),
       .by = dplyr::all_of(c(".bin", site))
     )
   }
   d |>
     dplyr::summarise(
       age = mean(.data$age),
-      value = stats::quantile(.data$aboveground_c_mg_ha, probs, names = FALSE),
+      value = if (is.null(weight)) {
+        stats::quantile(.data$aboveground_c_mg_ha, probs, names = FALSE)
+      } else {
+        .weighted_quantile(.data$aboveground_c_mg_ha, .data$.w, probs)
+      },
       n = dplyr::n(),
+      weight = sum(.data$.w),
       .by = ".bin"
     ) |>
     dplyr::arrange(.data$age) |>
-    dplyr::select(age, value, n)
+    dplyr::select(age, value, n, weight)
 }
 
 #' Build one species' reference curves on a common age grid
@@ -168,6 +292,8 @@ growth_bin_observations <- function(obs, bin = 20L, probs = 0.5, site = NULL) {
 #' @param site Optional column name identifying the sampling location of a
 #'   ground-plot observation. Passed to [growth_bin_observations()]; when given,
 #'   `n_plots` counts distinct locations rather than visits.
+#' @param weight Optional column name holding a per-observation climatic weight.
+#'   Passed to [growth_bin_observations()]; see [growth_climatic_weight()].
 #'
 #' @return A list with `ages`, `series`, `levels`, `n_plots`, `n_bins`,
 #'   `plots_sparse`.
@@ -181,7 +307,8 @@ growth_reference_curves <- function(
   min_plots = 50L,
   n_grid = 60L,
   use_tipsy = FALSE,
-  site = NULL
+  site = NULL,
+  weight = NULL
 ) {
   ages <- seq(window[[1L]], window[[2L]], length.out = n_grid)
 
@@ -203,7 +330,7 @@ growth_reference_curves <- function(
     stats::approx(d$age, d$value, xout = ages, rule = 1)$y
   }
 
-  obs <- as_series("Ground plots", extra = if (is.null(site)) character(0) else site)
+  obs <- as_series("Ground plots", extra = c(site, weight))
   ## Count locations, not visits, whenever the caller has identified them: a
   ## permanent plot measured five times is one plot's worth of evidence.
   n_plots <- if (!is.null(site) && site %in% names(obs)) {
@@ -221,7 +348,8 @@ growth_reference_curves <- function(
     dplyr::rename(obs, aboveground_c_mg_ha = "value"),
     bin = bin,
     probs = plot_quantile,
-    site = site
+    site = site,
+    weight = weight
   )
 
   raw <- list(sortie = as_series("SORTIE"), tipsy = as_series("TIPSY"), plots = binned)

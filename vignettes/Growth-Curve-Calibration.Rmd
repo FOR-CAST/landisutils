@@ -47,7 +47,7 @@ batches, always cutting on cell boundaries so a mixed cell's cohorts stay
 together. `growth_structure_design()` crosses the sweep with a landscape's own
 cohort structures when single-cohort cells are not representative enough.
 
-## Three properties that keep the ranking honest
+## Four properties that keep the ranking honest
 
 These are worth understanding before wiring anything, because each fixes a way
 the obvious implementation goes wrong.
@@ -74,9 +74,26 @@ anything ecological, so counting every visit as an independent observation
 weights each age bin toward whichever locations were revisited most. Naming the
 location column gives each one a single vote per bin.
 
+**Widen the plot pool by climate, one plot at a time.** Local plots are usually
+too few to constrain every species, and the fix is to admit plots from further
+afield in proportion to how much their climate resembles the modelled landscape.
+Score each plot on its own coordinates:
+
 ```{r}
-growth_reference_curves(reference, window, site = "site_identifier")
+plots$distance <- growth_climatic_distance(plots, target = landscape_climate)
+plots$w <- growth_climatic_weight(plots$distance, bandwidth = 0.5)
+
+growth_reference_curves(reference, window, site = "site_identifier", weight = "w")
 ```
+
+Resist the temptation to aggregate plots into map units (ecoregions, climate
+zones, site types) and compare unit means instead. A unit's climate is only as
+well estimated as the number of plots inside it, and the units with fewest plots
+get the noisiest estimates -- so a ranking of units is least reliable exactly
+where it is used, at the top. In the network this was built against, resampling
+put a 14-plot unit's rank anywhere between 10th and 26th of 137, while a 95-plot
+unit sat within four ranks. Per-plot distances have no such problem, and they
+yield a continuous weight rather than an arbitrary "which units are in" cut.
 
 **Level is derived, not searched.** A cohort never quite reaches its
 maximum-biomass parameter: it approaches the asymptote while mortality is already
