@@ -15,7 +15,7 @@ tested is ForCS's own."><meta property="og:image" content="https://for-cast.gith
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.87</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.88</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -60,7 +60,7 @@ tested is ForCS's own.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">growth_bin_observations</span><span class="op">(</span><span class="va">obs</span>, bin <span class="op">=</span> <span class="fl">20L</span>, probs <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">growth_bin_observations</span><span class="op">(</span><span class="va">obs</span>, bin <span class="op">=</span> <span class="fl">20L</span>, probs <span class="op">=</span> <span class="fl">0.5</span>, site <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -78,6 +78,13 @@ tested is ForCS's own.</p>
 <dt id="arg-probs">probs<a class="anchor" aria-label="anchor" href="#arg-probs"></a></dt>
 <dd><p>Numeric. Quantile to take within each bin.</p></dd>
 
+
+<dt id="arg-site">site<a class="anchor" aria-label="anchor" href="#arg-site"></a></dt>
+<dd><p>Optional column name identifying the sampling location. When
+given, repeated visits to one location are averaged within a bin before the
+quantile is taken, so <code>n</code> counts locations rather than visits. Errors if the
+named column is absent, rather than silently skipping the correction.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -91,6 +98,14 @@ where a fully stocked, single-cohort simulation belongs: the plots span every
 stocking level, site quality and partial-disturbance history, and whole-plot
 volume is attributed to the leading species, which holds a median of 69% of
 the stand here.</p>
+<p>Where observations come from a permanent-plot network, pass <code>site</code> so that
+each location contributes one value per bin. Permanent plots are remeasured
+on a schedule that reflects program history rather than anything ecological
+– in the network this was built against, 78% of locations carry more than one
+visit and some carry thirteen – so treating every visit as an independent
+observation silently weights each bin toward whichever locations happen to
+have been revisited most. That is pseudo-replication, and it biases the
+quantile rather than merely tightening it.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

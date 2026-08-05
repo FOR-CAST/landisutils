@@ -1,5 +1,23 @@
 # Changelog
 
+## landisutils 0.0.88
+
+- [`growth_bin_observations()`](https://for-cast.github.io/landisutils/reference/growth_bin_observations.md)
+  gains `site`, naming the column that identifies a sampling location.
+  Permanent-plot networks remeasure on a schedule that reflects program
+  history rather than anything ecological, so treating every visit as an
+  independent observation weights each age bin toward whichever
+  locations happen to have been revisited most – pseudo-replication that
+  biases the binned quantile rather than merely tightening it. When
+  `site` is given, each location contributes one value per bin and `n`
+  counts locations rather than visits. Naming a column that does not
+  exist is an error, so the correction cannot be silently skipped.
+- [`growth_reference_curves()`](https://for-cast.github.io/landisutils/reference/growth_reference_curves.md)
+  gains a matching `site`, passed through to the binning, and reports
+  `n_plots` as distinct locations when it is supplied – so the
+  `plots_warn_below` advisory is judged on independent evidence rather
+  than on visit count.
+
 ## landisutils 0.0.87
 
 - [`prepMinRelativeBiomass()`](https://for-cast.github.io/landisutils/reference/prepMinRelativeBiomass.md)
@@ -71,7 +89,7 @@
   family the succession extension does not use.
 - [`growth_auto_window()`](https://for-cast.github.io/landisutils/reference/growth_auto_window.md)
   derives the age range to fit over rather than requiring one: it opens
-  at an age floor below which ground-plot programmes do not sample, and
+  at an age floor below which ground-plot programs do not sample, and
   closes at the earliest of a quantile of observed plot ages, the end of
   the reference curve, and a fraction of `longevity` – before
   LANDIS-II’s senescence ramp drives the curve to zero.

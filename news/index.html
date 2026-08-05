@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.87</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.88</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -42,6 +42,13 @@
     </div>
 
     <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.88" id="landisutils-0088">landisutils 0.0.88<a class="anchor" aria-label="anchor" href="#landisutils-0088"></a></h2>
+<ul><li>
+<code><a href="../reference/growth_bin_observations.html">growth_bin_observations()</a></code> gains <code>site</code>, naming the column that identifies a sampling location. Permanent-plot networks remeasure on a schedule that reflects program history rather than anything ecological, so treating every visit as an independent observation weights each age bin toward whichever locations happen to have been revisited most – pseudo-replication that biases the binned quantile rather than merely tightening it. When <code>site</code> is given, each location contributes one value per bin and <code>n</code> counts locations rather than visits. Naming a column that does not exist is an error, so the correction cannot be silently skipped.</li>
+<li>
+<code><a href="../reference/growth_reference_curves.html">growth_reference_curves()</a></code> gains a matching <code>site</code>, passed through to the binning, and reports <code>n_plots</code> as distinct locations when it is supplied – so the <code>plots_warn_below</code> advisory is judged on independent evidence rather than on visit count.</li>
+</ul></div>
+    <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.87" id="landisutils-0087">landisutils 0.0.87<a class="anchor" aria-label="anchor" href="#landisutils-0087"></a></h2>
 <ul><li>
 <code><a href="../reference/prepMinRelativeBiomass.html">prepMinRelativeBiomass()</a></code> no longer collapses on a landscape with a SINGLE ecoregion. <code><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply()</a></code> over a one-row table dropped its result to a vector, so the ecoregion code was recycled across the five shade classes: the written table declared the same ecoregion five times and carried one shade row, and LANDIS-II aborted loading Biomass Succession with “The ecoregion N appears more than once”. Single-ecoregion landscapes are rare in production but are exactly what a growth-curve calibration builds. It also now rejects an unrecognised input schema with a message naming the columns it got, rather than failing later with “object ‘out’ not found”.</li>
@@ -60,7 +67,7 @@
 <li>
 <code><a href="../reference/growth_reference_curves.html">growth_reference_curves()</a></code> evaluates every reference series on one common age grid, so a modelled curve contributing hundreds of points and a plot cloud contributing a dozen carry equal weight. Ground-plot observations are condensed non-parametrically by <code><a href="../reference/growth_bin_observations.html">growth_bin_observations()</a></code>, which bins on age and takes a quantile per bin; fitting an empirical growth equation through the cloud instead would introduce a curve family the succession extension does not use.</li>
 <li>
-<code><a href="../reference/growth_auto_window.html">growth_auto_window()</a></code> derives the age range to fit over rather than requiring one: it opens at an age floor below which ground-plot programmes do not sample, and closes at the earliest of a quantile of observed plot ages, the end of the reference curve, and a fraction of <code>longevity</code> – before LANDIS-II’s senescence ramp drives the curve to zero. <code><a href="../reference/growth_fitting_windows.html">growth_fitting_windows()</a></code> applies per-species overrides on top.</li>
+<code><a href="../reference/growth_auto_window.html">growth_auto_window()</a></code> derives the age range to fit over rather than requiring one: it opens at an age floor below which ground-plot programs do not sample, and closes at the earliest of a quantile of observed plot ages, the end of the reference curve, and a fraction of <code>longevity</code> – before LANDIS-II’s senescence ramp drives the curve to zero. <code><a href="../reference/growth_fitting_windows.html">growth_fitting_windows()</a></code> applies per-species overrides on top.</li>
 <li>
 <code><a href="../reference/growth_best_candidates.html">growth_best_candidates()</a></code> reports <code>fitted = FALSE</code> for a species with no scorable reference rather than ranking indistinguishable rows and returning whichever sorted first, and treats a nominated level source as a constraint rather than a preference, so an unavailable reference yields no recommendation instead of a silent substitution.</li>
 <li>

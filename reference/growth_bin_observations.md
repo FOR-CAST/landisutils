@@ -9,7 +9,7 @@ shape being tested is ForCS's own.
 ## Usage
 
 ``` r
-growth_bin_observations(obs, bin = 20L, probs = 0.5)
+growth_bin_observations(obs, bin = 20L, probs = 0.5, site = NULL)
 ```
 
 ## Arguments
@@ -26,6 +26,14 @@ growth_bin_observations(obs, bin = 20L, probs = 0.5)
 
   Numeric. Quantile to take within each bin.
 
+- site:
+
+  Optional column name identifying the sampling location. When given,
+  repeated visits to one location are averaged within a bin before the
+  quantile is taken, so `n` counts locations rather than visits. Errors
+  if the named column is absent, rather than silently skipping the
+  correction.
+
 ## Value
 
 A tibble with `age` (bin mean), `value`, and `n`.
@@ -38,6 +46,16 @@ arguably where a fully stocked, single-cohort simulation belongs: the
 plots span every stocking level, site quality and partial-disturbance
 history, and whole-plot volume is attributed to the leading species,
 which holds a median of 69% of the stand here.
+
+Where observations come from a permanent-plot network, pass `site` so
+that each location contributes one value per bin. Permanent plots are
+remeasured on a schedule that reflects program history rather than
+anything ecological – in the network this was built against, 78% of
+locations carry more than one visit and some carry thirteen – so
+treating every visit as an independent observation silently weights each
+bin toward whichever locations happen to have been revisited most. That
+is pseudo-replication, and it biases the quantile rather than merely
+tightening it.
 
 ## See also
 

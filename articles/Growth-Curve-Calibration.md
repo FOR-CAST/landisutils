@@ -66,6 +66,18 @@ effective objective an accident of how many rows each series happens to
 have – in practice the species that score worst are simply the ones with
 no modelled reference curve.
 
+If those observations come from a permanent-plot network, pass `site` as
+well. Plots are remeasured on a schedule set by program history rather
+than by anything ecological, so counting every visit as an independent
+observation weights each age bin toward whichever locations were
+revisited most. Naming the location column gives each one a single vote
+per bin.
+
+``` r
+
+growth_reference_curves(reference, window, site = "site_identifier")
+```
+
 **Level is derived, not searched.** A cohort never quite reaches its
 maximum-biomass parameter: it approaches the asymptote while mortality
 is already removing biomass. The fraction it does achieve depends only
@@ -189,8 +201,8 @@ it, which breaks fast-forward-only node synchronisation.
 
 Nobody should have to pick an age range by hand.
 [`growth_auto_window()`](https://for-cast.github.io/landisutils/reference/growth_auto_window.md)
-opens the window at an age floor below which ground-plot programmes do
-not sample, and closes it at the earliest of a quantile of observed plot
+opens the window at an age floor below which ground-plot programs do not
+sample, and closes it at the earliest of a quantile of observed plot
 ages, the end of the reference curve, and a fraction of `longevity`.
 
 That last bound is the one that binds in practice. LANDIS-II ramps

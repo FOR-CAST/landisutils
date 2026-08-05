@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.87</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.88</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -129,6 +129,14 @@ and a plot cloud contributing a dozen count equally. Pooling raw
 observations instead makes the effective objective an accident of how
 many rows each series happens to have – in practice the species that
 score worst are simply the ones with no modelled reference curve.</p>
+<p>If those observations come from a permanent-plot network, pass
+<code>site</code> as well. Plots are remeasured on a schedule set by
+program history rather than by anything ecological, so counting every
+visit as an independent observation weights each age bin toward
+whichever locations were revisited most. Naming the location column
+gives each one a single vote per bin.</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/growth_reference_curves.html">growth_reference_curves</a></span><span class="op">(</span><span class="va">reference</span>, <span class="va">window</span>, site <span class="op">=</span> <span class="st">"site_identifier"</span><span class="op">)</span></span></code></pre></div>
 <p><strong>Level is derived, not searched.</strong> A cohort never quite
 reaches its maximum-biomass parameter: it approaches the asymptote while
 mortality is already removing biomass. The fraction it does achieve
@@ -182,7 +190,7 @@ parameters onto them before calling, and rename back when promoting:</p>
 <p>The one genuinely extension-specific quantity is
 <code>biomass_max_scale</code>: divide the maximum-biomass parameter by
 it to express that parameter in whatever units the curves are in.</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">## ForC Succession: biomass_max is g/m^2 of biomass, the summary log reports</span></span>
 <span><span class="co">## g C/m^2, and curves are conventionally Mg C/ha -- so 200.</span></span>
 <span><span class="fu"><a href="../reference/growth_score_fit.html">growth_score_fit</a></span><span class="op">(</span><span class="va">curve</span>, <span class="va">ref</span>, biomass_max_scale <span class="op">=</span> <span class="fl">200</span><span class="op">)</span></span>
@@ -231,7 +239,7 @@ and the calibration then needs none of the main pipeline’s inputs.</p>
 <code>tar_read()</code>: a report cannot track a target in another store
 as a dependency, and would stop rendering from a clean checkout.</p>
 <p>A minimal chain:</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>  <span class="co">## references -&gt; windows -&gt; curves, computed once per species</span></span>
 <span>  <span class="fu">tar_target</span><span class="op">(</span><span class="va">windows</span>, <span class="fu"><a href="../reference/growth_fitting_windows.html">growth_fitting_windows</a></span><span class="op">(</span><span class="va">references</span>, <span class="va">species_core</span>, <span class="va">scoring</span><span class="op">)</span><span class="op">)</span>,</span>
@@ -275,9 +283,9 @@ dirties it, which breaks fast-forward-only node synchronisation.</p>
 </h2>
 <p>Nobody should have to pick an age range by hand.
 <code><a href="../reference/growth_auto_window.html">growth_auto_window()</a></code> opens the window at an age floor below
-which ground-plot programmes do not sample, and closes it at the
-earliest of a quantile of observed plot ages, the end of the reference
-curve, and a fraction of <code>longevity</code>.</p>
+which ground-plot programs do not sample, and closes it at the earliest
+of a quantile of observed plot ages, the end of the reference curve, and
+a fraction of <code>longevity</code>.</p>
 <p>That last bound is the one that binds in practice. LANDIS-II ramps
 mortality up as a cohort approaches <code>longevity</code> and the curve
 then falls to exactly zero, so an open-ended window scores the modelled

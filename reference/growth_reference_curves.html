@@ -11,7 +11,7 @@ each series' plateau level."><meta property="og:image" content="https://for-cast
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.87</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.88</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -61,7 +61,8 @@ each series' plateau level.</p>
 <span>  plot_quantile <span class="op">=</span> <span class="fl">0.5</span>,</span>
 <span>  min_plots <span class="op">=</span> <span class="fl">50L</span>,</span>
 <span>  n_grid <span class="op">=</span> <span class="fl">60L</span>,</span>
-<span>  use_tipsy <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>  use_tipsy <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  site <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -91,6 +92,12 @@ advisory and only sets <code>plots_sparse</code>. See
 
 <dt id="arg-use-tipsy">use_tipsy<a class="anchor" aria-label="anchor" href="#arg-use-tipsy"></a></dt>
 <dd><p>Logical. Score against TIPSY as well.</p></dd>
+
+
+<dt id="arg-site">site<a class="anchor" aria-label="anchor" href="#arg-site"></a></dt>
+<dd><p>Optional column name identifying the sampling location of a
+ground-plot observation. Passed to <code><a href="growth_bin_observations.html">growth_bin_observations()</a></code>; when given,
+<code>n_plots</code> counts distinct locations rather than visits.</p></dd>
 
 </dl></div>
     <div class="section level2">

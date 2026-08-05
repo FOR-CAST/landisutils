@@ -14,7 +14,8 @@ growth_reference_curves(
   plot_quantile = 0.5,
   min_plots = 50L,
   n_grid = 60L,
-  use_tipsy = FALSE
+  use_tipsy = FALSE,
+  site = NULL
 )
 ```
 
@@ -45,6 +46,13 @@ growth_reference_curves(
 - use_tipsy:
 
   Logical. Score against TIPSY as well.
+
+- site:
+
+  Optional column name identifying the sampling location of a
+  ground-plot observation. Passed to
+  [`growth_bin_observations()`](https://for-cast.github.io/landisutils/reference/growth_bin_observations.md);
+  when given, `n_plots` counts distinct locations rather than visits.
 
 ## Value
 
