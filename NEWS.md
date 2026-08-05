@@ -1,3 +1,7 @@
+# landisutils 0.0.86
+
+* New vignette, *Calibrating Species Growth Curves*, documenting how to wire a project-side growth calibration on top of the toolkit added in 0.0.85: how the sweep is encoded as one landscape, which parameters map onto the canonical names for ForC Succession and Biomass Succession, what `biomass_max_scale` means for each, what deliberately stays project-side, and why the calibration belongs in its own `{targets}` project. It also records the three properties that keep the ranking honest, and the reasoning behind each, so a second implementation does not have to rediscover them.
+
 # landisutils 0.0.85
 
 * New growth-curve calibration toolkit, extracted from a ForC Succession project so it can be reused. It encodes a whole parameter sweep as one LANDIS-II landscape and scores the resulting curves against reference data, and is succession-agnostic: both ForCS and Biomass Succession key growth and mortality shape per species but maximum ANPP and maximum biomass per (ecoregion, species), which is exactly the asymmetry the encoding exploits. Callers map their extension's parameter names onto the canonical `growth_shp` / `mort_shp` / `anpp_max` / `biomass_max`, and pass `biomass_max_scale` to say how the maximum-biomass parameter relates to the units its output is reported in.
