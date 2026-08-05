@@ -1,3 +1,7 @@
+# landisutils 0.0.92
+
+* `plot_growth_factorial_sensitivity()` classifies a candidate against the calibrated value on a RELATIVE tolerance. The absolute `1e-6` it used before failed silently and badly: swept candidates are reconstructed from a rounded ratio, so the candidate that IS the calibrated value can differ from it by about one part in three thousand, which binned it as "lower" or "higher" and removed the reference box the figure is read against. Five of six species were missing that box.
+
 # landisutils 0.0.91
 
 * The TIPSY reference curve is now drawn as round dots rather than dashes. Naming the `"dotted"` linetype is not enough: R scales dash lengths by line width, so at the width these figures use its one-unit "on" segment renders as a visible dash. The curve now uses a tighter pattern with round line ends, which turns each "on" segment into an actual dot. This matters most in the legend key, the one place a reader has to tell the two references apart.

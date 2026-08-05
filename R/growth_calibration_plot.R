@@ -285,9 +285,15 @@ plot_growth_factorial_sensitivity <- function(scores, current) {
     tidyr::pivot_longer(dplyr::all_of(params), names_to = "parameter", values_to = "value") |>
     dplyr::left_join(cur_long, by = c("species", "parameter")) |>
     dplyr::mutate(
+      ## RELATIVE tolerance. An absolute one fails here: the swept candidates are
+      ## reconstructed from a rounded ratio, so a candidate meant to BE the
+      ## calibrated value can differ from it by ~1 part in 3000 -- enough to be
+      ## binned as "lower" or "higher", which silently removes the reference box
+      ## the whole figure is read against. Grid spacing is ~25%, so 0.5% is
+      ## comfortably inside the gap and comfortably outside the noise.
       position = dplyr::case_when(
-        .data$value < .data$calibrated - 1e-6 ~ "lower",
-        .data$value > .data$calibrated + 1e-6 ~ "higher",
+        .data$value < .data$calibrated * (1 - 5e-3) ~ "lower",
+        .data$value > .data$calibrated * (1 + 5e-3) ~ "higher",
         .default = "calibrated"
       ) |>
         factor(levels = c("lower", "calibrated", "higher")),
