@@ -561,6 +561,7 @@ transition_data <- function(label_df, times) {
 #'
 #' @export
 plot_species_biomass <- function(summary_df, colours = NULL, title = NULL) {
+  .need("ggplot2", "Plotting species biomass")
   species_levels <- summary_df |>
     dplyr::group_by(.data$species) |>
     dplyr::summarise(total = sum(.data$mean_biomass), .groups = "drop") |>
@@ -613,6 +614,7 @@ plot_species_biomass <- function(summary_df, colours = NULL, title = NULL) {
 #'
 #' @export
 plot_transitions <- function(lodes_df, colours = NULL, title = NULL) {
+  .need("ggplot2", "Plotting transitions")
   labels <- sort(unique(lodes_df$stratum))
 
   fill_scale <- if (!is.null(colours)) {
