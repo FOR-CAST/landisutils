@@ -285,3 +285,59 @@ test_that("scenario builders validate by default and honour the opt-out", {
   withr::local_options(landisutils.validate_scenario = FALSE)
   expect_no_error(rebuild())
 })
+
+## --- raster formats other than GeoTIFF --------------------------------------
+##
+## LANDIS-II reads maps through GDAL and takes whatever GDAL opens. Restricting this to `.tif` did
+## not merely skip a check: the ecoregions map went unfound, and the resulting complaint failed the
+## whole scenario. That silently cut the integration harness from 9 scenarios to 2 -- with CI green
+## throughout, because the harness dropped unbuildable scenarios and reported success on the rest.
+
+test_that("an ERDAS IMAGINE (.img) scenario validates like a GeoTIFF one", {
+  skip_if_not_installed("terra")
+  dir <- withr::local_tempdir("test_img_")
+  nr <- 4L
+  nc <- 5L
+  mask <- c(rep(TRUE, 12L), rep(FALSE, 8L))
+
+  .landis_write_map(fs::path(dir, "ecoregion.img"), ifelse(mask, 1L, 0L), nr, nc)
+  .landis_write_map(fs::path(dir, "initial-communities.img"), ifelse(mask, 2L, 0L), nr, nc)
+  data.table::fwrite(
+    data.frame(MapCode = 2L, SpeciesName = "abc", CohortAge = 10L, CohortBiomass = 5L),
+    fs::path(dir, "initial-communities.csv")
+  )
+  writeLines(c('LandisData  "Ecoregions"', "  yes 1 eco1 x"), fs::path(dir, "ecoregion.txt"))
+  writeLines(c('LandisData  "Species"', "  abc 100"), fs::path(dir, "species.txt"))
+  writeLines(
+    c(
+      'LandisData  "NECN Succession"',
+      "Timestep 10",
+      "InitialCommunities      initial-communities.csv",
+      "InitialCommunitiesMap   initial-communities.img"
+    ),
+    fs::path(dir, "necn.txt")
+  )
+  write_landis_scenario_file(
+    path = dir,
+    duration = 10L,
+    cell_length = 100L,
+    species_file = fs::path(dir, "species.txt"),
+    ecoregions_files = c(fs::path(dir, "ecoregion.txt"), fs::path(dir, "ecoregion.img")),
+    succession_ext_files = c("NECN Succession" = fs::path(dir, "necn.txt")),
+    validate = FALSE
+  )
+
+  expect_equal(validate_landis_scenario(dir, error = FALSE), character(0))
+})
+
+test_that("an unreadable ecoregions map is reported but does not fail the scenario", {
+  skip_if_not_installed("terra")
+  dir <- local_landis_scenario()
+  ## a map this function cannot open is a gap in its own diagnostics, not proof the scenario is
+  ## bad -- treating it as a failure is what broke the harness
+  writeLines("not a raster", fs::path(dir, "ecoregions.tif"))
+
+  problems <- validate_landis_scenario(dir, error = FALSE)
+  expect_false(any(grepl("no readable ecoregions map", problems)))
+  expect_match(problems, "cannot open map", all = FALSE)
+})

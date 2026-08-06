@@ -53,6 +53,34 @@ landis_directive <- function(file, directive, default = NA_character_) {
   sub('^"(.*)"$', "\\1", trimws(x))
 }
 
+## Extensions treated as maps. LANDIS-II reads rasters through GDAL and accepts whatever GDAL
+## opens, so this is deliberately not just GeoTIFF: the upstream Core8 reference scenarios use
+## ERDAS IMAGINE (`.img`) for ecoregion and ignition maps, and `.gis` appears in others.
+##
+## Getting this list wrong is not a cosmetic problem. When it held only "tif", every scenario whose
+## ecoregion map was an `.img` had no map to find, `EcoregionsMap` resolved to nothing, and the
+## resulting complaint failed the whole scenario -- which silently cut the integration harness from
+## 9 scenarios to 2 while it went on reporting success. Prefer adding an extension here over
+## rejecting a scenario this package simply did not recognise.
+.LANDIS_RASTER_EXTENSIONS <- c(
+  "asc",
+  "bil",
+  "bin",
+  "bip",
+  "bsq",
+  "gis",
+  "grd",
+  "img",
+  "tif",
+  "tiff",
+  "vrt"
+)
+
+#' @keywords internal
+.landis_is_raster <- function(paths) {
+  tolower(tools::file_ext(paths)) %in% .LANDIS_RASTER_EXTENSIONS
+}
+
 ## Map directives whose raster is a CODE map: 0 means inactive, non-zero means an active cell
 ## carrying a category (ecoregion, community, fire region). Only these can be compared against the
 ## ecoregion active mask -- see .landis_check_orientation().
@@ -228,11 +256,16 @@ validate_landis_scenario <- function(
     }
   }
 
-  maps <- refs[grepl("\\.tif$", refs$abs, ignore.case = TRUE) & fs::file_exists(refs$abs), ]
+  maps <- refs[.landis_is_raster(refs$abs) & fs::file_exists(refs$abs), ]
 
   ## --- pixel type --------------------------------------------------------------------------------
   for (i in seq_len(nrow(maps))) {
-    dt <- tryCatch(terra::datatype(terra::rast(maps$abs[[i]])), error = function(e) NA_character_)
+    ## suppressWarnings: an unopenable file makes terra warn before it errors, and the error is
+    ## what we report -- the warning just doubles it up in the log.
+    dt <- suppressWarnings(tryCatch(
+      terra::datatype(terra::rast(maps$abs[[i]])),
+      error = function(e) NA_character_
+    ))
     if (is.na(dt[[1L]])) {
       add(maps$config[[i]], " [", maps$directive[[i]], "]: cannot open map: ", maps$value[[i]])
     } else if (!dt[[1L]] %in% .LANDIS_DATATYPES) {
@@ -257,7 +290,14 @@ validate_landis_scenario <- function(
   ## --- dimensions and orientation, against the ecoregions map ------------------------------------
   eco <- maps[maps$directive == "EcoregionsMap", ]
   if (nrow(eco) == 0L) {
-    add("scenario.txt [EcoregionsMap]: no readable ecoregions map; skipped geometry checks")
+    ## NOT a problem: this is a gap in what this function can see, not evidence that the scenario is
+    ## wrong, and treating it as a failure is what broke the integration harness. Say so and skip
+    ## the checks that need a reference map; the existence and pixel-type checks above still ran.
+    message(
+      "validate_landis_scenario(): no readable ecoregions map in ",
+      path,
+      "; geometry and orientation checks skipped."
+    )
   } else {
     problems <- c(problems, .landis_check_geometry(maps, eco$abs[[1L]], masks))
   }
