@@ -2,6 +2,7 @@
 
 <!-- badges: start -->
 ![](man/figures/lifecycle-experimental.svg)
+[![version](https://img.shields.io/github/r-package/v/FOR-CAST/landisutils?label=version)](https://github.com/FOR-CAST/landisutils/releases)
 [![R-CMD-check](https://github.com/FOR-CAST/landisutils/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/FOR-CAST/landisutils/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
