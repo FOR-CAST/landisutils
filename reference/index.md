@@ -159,9 +159,6 @@
 - [`calibrate_dynamic_fire()`](https://for-cast.github.io/landisutils/reference/calibrate_dynamic_fire.md)
   : DEoptim driver for Dynamic Fire calibration
 
-- [`calibrate_original_fire()`](https://for-cast.github.io/landisutils/reference/calibrate_original_fire.md)
-  : Calibrate Original Fire
-
 - [`calibration_par_names()`](https://for-cast.github.io/landisutils/reference/calibration_par_names.md)
   : Canonical parameter names for the Dynamic Fire calibration vector
 

@@ -1,5 +1,20 @@
 # Changelog
 
+## landisutils 0.0.100
+
+- `calibrate_original_fire()` is no longer exported, and errors with
+  “not yet implemented” if it is reached. It has been a `## TODO` with
+  an empty body since the R6 rework that created it, but it carried an
+  `@export` and a generated man page the whole time – so it appeared in
+  the reference index as public API, took no arguments, and returned
+  `NULL` without complaint. A calibration that silently returns nothing
+  is indistinguishable from one that ran and found nothing, which is the
+  worst way for this particular function to fail. The Original Fire
+  *extension* writer (`OriginalFire`) is implemented and tested; it is
+  only the calibration that does not exist, and it stays tracked in \#2
+  rather than being deleted, since `calibrate_dynamic_fire.R` points at
+  it as the structure a second calibration would follow.
+
 ## landisutils 0.0.99
 
 - `arrow`, `ggplot2`, `ggalluvial` and `cffdrs` moved from `Imports` to

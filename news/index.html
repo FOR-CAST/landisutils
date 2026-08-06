@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.99</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.100</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,6 +41,11 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.100" id="landisutils-00100">landisutils 0.0.100<a class="anchor" aria-label="anchor" href="#landisutils-00100"></a></h2>
+<ul><li>
+<code>calibrate_original_fire()</code> is no longer exported, and errors with “not yet implemented” if it is reached. It has been a <code>## TODO</code> with an empty body since the R6 rework that created it, but it carried an <code>@export</code> and a generated man page the whole time – so it appeared in the reference index as public API, took no arguments, and returned <code>NULL</code> without complaint. A calibration that silently returns nothing is indistinguishable from one that ran and found nothing, which is the worst way for this particular function to fail. The Original Fire <em>extension</em> writer (<code>OriginalFire</code>) is implemented and tested; it is only the calibration that does not exist, and it stays tracked in #2 rather than being deleted, since <code>calibrate_dynamic_fire.R</code> points at it as the structure a second calibration would follow.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.99" id="landisutils-0099">landisutils 0.0.99<a class="anchor" aria-label="anchor" href="#landisutils-0099"></a></h2>
 <ul><li>
