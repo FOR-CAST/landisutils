@@ -127,6 +127,8 @@ landis_directive <- function(file, directive, default = NA_character_) {
   "MapNames",
   "NRDMapNames",
   "OutputMapName",
+  "OutputsOfRoadLog",
+  "OutputsOfRoadNetworkMaps",
   "PctConiferFileName",
   "PctDeadFirFileName",
   "PrescriptionMaps",
@@ -250,6 +252,18 @@ validate_landis_scenario <- function(
     f <- refs$abs[[i]]
     where <- paste0(refs$config[[i]], " [", refs$directive[[i]], "]")
     if (!fs::file_exists(f)) {
+      ## Backstop for output directives not named in .LANDIS_OUTPUT_DIRECTIVES. In a freshly built
+      ## scenario every INPUT has been staged, so its parent directory exists; a referenced path
+      ## whose parent directory does not exist yet is somewhere LANDIS-II will create at run time
+      ## (`output/disturbances/roads/roadNetwork.tif` and the like).
+      ##
+      ## Enumerating directive names alone proved too brittle: a single unlisted one
+      ## (OutputsOfRoadNetworkMaps) failed an entire scenario and took it out of the integration
+      ## harness. Missing a real absent input is the lesser error -- LANDIS-II reports that one
+      ## clearly, which is more than it does for anything else this function checks.
+      if (!fs::dir_exists(fs::path_dir(f))) {
+        next
+      }
       add(where, ": file not found: ", refs$value[[i]])
     } else if (fs::file_size(f) == 0) {
       add(where, ": file is empty: ", refs$value[[i]])

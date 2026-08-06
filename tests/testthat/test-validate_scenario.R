@@ -341,3 +341,37 @@ test_that("an unreadable ecoregions map is reported but does not fail the scenar
   expect_false(any(grepl("no readable ecoregions map", problems)))
   expect_match(problems, "cannot open map", all = FALSE)
 })
+
+test_that("a path under a not-yet-created output directory is not a missing input", {
+  skip_if_not_installed("terra")
+  dir <- local_landis_scenario()
+  ## LANDIS-II creates its output tree at run time. An unlisted output directive
+  ## (OutputsOfRoadNetworkMaps was one) previously failed the whole scenario and dropped it from
+  ## the integration harness; the parent-directory rule is the backstop for the ones not enumerated.
+  writeLines(
+    c(
+      readLines(fs::path(dir, "biomass-succession.txt")),
+      "SomeUnlistedOutputDirective  output/disturbances/roads/roadNetwork.tif"
+    ),
+    fs::path(dir, "biomass-succession.txt")
+  )
+
+  expect_equal(validate_landis_scenario(dir, error = FALSE), character(0))
+})
+
+test_that("a genuinely missing input beside the scenario file is still caught", {
+  skip_if_not_installed("terra")
+  dir <- local_landis_scenario()
+  ## the backstop must not swallow this: the parent directory (the scenario dir) exists
+  writeLines(
+    c(readLines(fs::path(dir, "biomass-succession.txt")), "SomeInput  definitely-absent.csv"),
+    fs::path(dir, "biomass-succession.txt")
+  )
+
+  expect_match(
+    validate_landis_scenario(dir, error = FALSE),
+    "file not found: definitely-absent.csv",
+    all = FALSE,
+    fixed = TRUE
+  )
+})
