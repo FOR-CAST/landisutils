@@ -43,6 +43,7 @@ download_refs <- function(base_url, dest_dir, filenames) {
 }
 
 scenarios <- character(0)
+build_errors <- character(0)
 
 ## ---------------------------------------------------------------------------
 ## Scenario: Biomass Succession (no disturbances, no outputs)
@@ -469,6 +470,14 @@ build_one <- function(scen_name, image_id, image_info, builder, out_dir) {
     message(sprintf("  ERROR building %s on %s: %s", scen_name, image_id, conditionMessage(e)))
     ## Leave the partial scen_dir on disk so the failure can be inspected.
     writeLines(conditionMessage(e), file.path(scen_dir, ".build_error"))
+    ## Record it so the script can fail at the end. A build error used to be swallowed here: it
+    ## became a message, the scenario was dropped from the emitted list, and the harness carried on
+    ## with fewer scenarios while still reporting success. Coverage fell from 9 scenarios to 2
+    ## without turning CI red once, across three merged PRs and a release.
+    build_errors <<- c(
+      build_errors,
+      sprintf("%s on %s: %s", scen_name, image_id, conditionMessage(e))
+    )
     errored <<- TRUE
     NULL
   })
@@ -1800,3 +1809,20 @@ for (image_id in names(IMAGES)) {
 ## ---------------------------------------------------------------------------
 cat(scenarios, sep = "\n")
 cat("\n")
+
+## Fail loudly. Intentional skips (a scenario incompatible with an image) are not errors and do
+## not reach here; genuine build failures do. Exiting non-zero is deliberate: the list above has
+## already been emitted, so the caller can still see what built, but the job goes red instead of
+## quietly testing less than it claims to.
+if (length(build_errors) > 0L) {
+  for (e in build_errors) {
+    cat(sprintf("::error::scenario build failed: %s\n", e), file = stderr())
+  }
+  message(sprintf(
+    "%d of %d scenario(s) failed to build; %d emitted.",
+    length(build_errors),
+    length(build_errors) + length(scenarios),
+    length(scenarios)
+  ))
+  quit(save = "no", status = 1L)
+}
