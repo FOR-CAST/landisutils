@@ -248,6 +248,16 @@ run_msi_installer <- function(msi_path) {
     cli_alert_info("  (dry-run; skipping)")
     return(0L)
   }
+  ## msiexec will not open a package whose path mixes separators, and answers 1619
+  ## (ERROR_INSTALL_PACKAGE_OPEN_FAILED) rather than saying so. The path arrives that way by
+  ## construction: `download_dir` is normalizePath()'d (backslashes) and the filename is joined
+  ## with file.path() (forward slash), giving `D:\a\_temp\landis-installers/LANDIS-II-8.0-setup64.msi`.
+  ## Quoting does not help -- shQuote() already emits the double quotes msiexec wants.
+  ##
+  ## chartr() rather than normalizePath(winslash = "\\"): that only rewrites separators on Windows,
+  ## and only for a path that already exists, so it cannot be exercised anywhere else and would
+  ## silently do nothing if the file were missing. This is unconditional and testable.
+  msi_path <- chartr("/", "\\", msi_path)
   log_path <- paste0(msi_path, ".install.log")
   tryCatch(
     {
@@ -312,9 +322,39 @@ if (!is.null(rate_info)) {
 
 cli_h1("Installing LANDIS-II Core console (MSI)")
 core_msi <- file.path(download_dir, basename(CORE_MSI_PATH))
+
+## The Core MSI was the one download with no integrity check: the extension assets pass an
+## `expected_size` from the contents API, this did not. A truncated or partial download therefore
+## surfaced as msiexec 1619 at install time rather than as a failed download, which is both later
+## and far less legible. Ask the API for the size the same way the extensions do.
+core_owner <- sub("/.*$", "", CORE_MSI_REPO)
+core_repo <- sub("^.*/", "", CORE_MSI_REPO)
+core_size <- tryCatch(
+  gh(
+    "GET /repos/{owner}/{repo}/contents/{path}",
+    owner = core_owner,
+    repo = core_repo,
+    path = CORE_MSI_PATH,
+    ref = CORE_MSI_REF
+  )$size,
+  error = function(e) {
+    cli_alert_warning("could not resolve Core MSI size from the API: {conditionMessage(e)}")
+    NULL
+  }
+)
+
+## A cached MSI is only reusable if it is the right size. `landis-installers` is restored from the
+## Actions cache, so a bad download would otherwise be cached and replayed on every later run.
+if (file.exists(core_msi) && !is.null(core_size)) {
+  cached <- file.size(core_msi)
+  if (!is.na(cached) && cached != core_size) {
+    cli_alert_warning("cached MSI is {cached} bytes, expected {core_size}; re-downloading")
+    file.remove(core_msi)
+  }
+}
 if (!file.exists(core_msi)) {
-  cli_alert_info("downloading {basename(CORE_MSI_PATH)}")
-  if (!download_with_check(CORE_MSI_URL, core_msi)) {
+  cli_alert_info("downloading {basename(CORE_MSI_PATH)}{if (is.null(core_size)) '' else paste0(' (', core_size, ' bytes)')}")
+  if (!download_with_check(CORE_MSI_URL, core_msi, expected_size = core_size)) {
     cli_abort("Core MSI download failed: {CORE_MSI_URL}")
   }
 }

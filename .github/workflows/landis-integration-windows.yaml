@@ -163,3 +163,18 @@ jobs:
           name: landis-scenarios-windows
           path: ${{ runner.temp }}/landis-scenarios
           retention-days: 7
+          if-no-files-found: ignore
+
+      ## The installer writes msiexec/Inno Setup verbose logs beside the downloads. Without this,
+      ## an install failure discards the only thing that explains it: the run that prompted this
+      ## step died on `msiexec exit 1619` with the log sitting unread on the runner, and the
+      ## scenarios directory -- the sole artifact -- did not exist because the build step had been
+      ## skipped, so the job produced no artifacts at all. Logs only, not the ~30 MB of installers.
+      - name: Upload installer logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: landis-installer-logs-windows
+          path: ${{ runner.temp }}/landis-installers/*.log
+          retention-days: 7
+          if-no-files-found: ignore
