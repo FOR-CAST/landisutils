@@ -21,6 +21,21 @@
   tolerates its absence, so a scoring file written before this release
   reads unchanged and no existing calibration is rescored by the series
   merely existing.
+- Three upstream test-input citations pointed at paths that no longer
+  resolve. The Dynamic Fire references moved with an upstream version
+  bump (`testings/Core8-DynamicFire4.0` is now `4.1`), and the
+  Social-Climate-Fire test cited `Core7-SCRAPPLE3.2`, which has never
+  existed – `Testing/` holds 1.0, 2.0, 2.6 and 3.0. Each replacement was
+  confirmed by matching content rather than by picking the nearest
+  surviving directory: the season proportions and the site-mortality
+  coefficients used in those tests appear verbatim in the files now
+  cited. These citations are the provenance for every reference value in
+  the tests they head, so one that resolves to nothing is worse than a
+  broken link – it makes the values unverifiable. Two of the three were
+  also reported by `R CMD check` as invalid URLs in the rendered
+  vignette; the third sits in a test comment, which `R CMD check` does
+  not examine.
+- `Title` is in title case, per `R CMD check --as-cran`.
 
 ## landisutils 0.0.100
 

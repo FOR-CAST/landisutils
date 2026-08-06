@@ -12,7 +12,7 @@ tmp_pth <- withr::local_tempdir("example_DynamicFireFuels_")
 ### Dynamic Fire
 
 All sample values from Dynamic Fire v4.0 test files (for LANDIS-II v8):
-<https://github.com/LANDIS-II-Foundation/Extension-Dynamic-Fire-System/blob/master/testings/Core8-DynamicFire4.0/dynamic-fire_SetUpFire.txt>
+<https://github.com/LANDIS-II-Foundation/Extension-Dynamic-Fire-System/blob/master/testings/Core8-DynamicFire4.1/dynamic-fire_SetUpFire.txt>
 
 ``` r
 
@@ -62,7 +62,7 @@ purrr::walk2(.x = rep("", length(all_files)), .y = all_files, .f = writeLines)
 ### Dynamic Fuels
 
 All sample values from Dynamic Fuels v4.0 test files (for LANDIS-II v8):
-<https://github.com/LANDIS-II-Foundation/Extension-Dynamic-Fire-System/blob/master/testings/Core8-DynamicFire4.0/dynamic-fire_SetUpFuel.txt>
+<https://github.com/LANDIS-II-Foundation/Extension-Dynamic-Fire-System/blob/master/testings/Core8-DynamicFire4.1/dynamic-fire_SetUpFuel.txt>
 
 ``` r
 
