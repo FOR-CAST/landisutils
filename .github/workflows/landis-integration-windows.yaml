@@ -131,6 +131,8 @@ jobs:
           dotnet --info
 
       - name: Build LANDIS-II scenarios
+        id: build
+        continue-on-error: true
         run: |
           $scen_root = Join-Path $env:RUNNER_TEMP "landis-scenarios"
           New-Item -ItemType Directory -Force -Path $scen_root | Out-Null
@@ -194,3 +196,14 @@ jobs:
           path: ${{ runner.temp }}/landis-installers/*.log
           retention-days: 7
           if-no-files-found: ignore
+
+      ## Placed AFTER the run steps on purpose. build_scenarios.R exits non-zero when a scenario
+      ## fails to build, which is what makes a silent loss of coverage visible -- but if the build
+      ## step itself fails, every later step is skipped and the scenarios that DID build never run.
+      ## `continue-on-error` on the build step keeps them running; this gate then fails the job, so
+      ## one run reports both what still works and what stopped building.
+      - name: Fail if any scenario failed to build
+        if: always() && steps.build.outcome == 'failure'
+        run: |
+          echo "::error::one or more scenarios failed to build; see the 'Build LANDIS-II scenarios' step"
+          exit 1
