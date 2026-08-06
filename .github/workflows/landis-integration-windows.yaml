@@ -141,20 +141,36 @@ jobs:
 
       - name: Run LANDIS-II on each scenario
         run: |
+          ## This loop is meant to run every scenario and report all the failures at once, but it
+          ## did not: GitHub sets $ErrorActionPreference = 'stop' for pwsh, and PowerShell 7.4+
+          ## enables $PSNativeCommandUseErrorActionPreference by default, which promotes a non-zero
+          ## exit from a NATIVE command (Rscript) to a terminating error. The first failing scenario
+          ## therefore aborted the step, the remaining ones never ran, and the $fail accumulator was
+          ## dead code. Observed: 1 failure reported out of 8 scenarios staged, 6 never attempted.
+          $ErrorActionPreference = 'Continue'
+          $PSNativeCommandUseErrorActionPreference = $false
+
           $list = Join-Path $env:RUNNER_TEMP "landis-scenarios.list"
-          $fail = 0
+          $failed = @()
+          $ran = 0
           foreach ($scen_path in (Get-Content $list)) {
             if (-not $scen_path) { continue }
             $scen_name = Split-Path -Leaf $scen_path
             Write-Host "::group::LANDIS-II run: $scen_name"
             Rscript inst/integration-tests/run_native.R $scen_path
+            $ran++
             if ($LASTEXITCODE -ne 0) {
               Write-Host "::error::LANDIS-II run failed for scenario '$scen_name' (exit $LASTEXITCODE)"
-              $fail = 1
+              $failed += $scen_name
             }
             Write-Host "::endgroup::"
           }
-          exit $fail
+          Write-Host "Ran $ran scenario(s); $($failed.Count) failed."
+          if ($failed.Count -gt 0) {
+            Write-Host "::error::LANDIS-II failed for $($failed.Count)/$ran scenario(s): $($failed -join ', ')"
+            exit 1
+          }
+          exit 0
 
       - name: Upload scenario directories
         if: always()
