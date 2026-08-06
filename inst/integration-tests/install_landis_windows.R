@@ -285,6 +285,51 @@ run_msi_installer <- function(msi_path) {
 ## Search for `Landis.Console.dll` under the standard Windows install
 ## roots. Restricts the recursion to LANDIS-II-named subtrees so we don't
 ## walk the entire Program Files tree (which is slow on GHA runners).
+## Extensions whose installer is re-run after every other, so that the shared cohort library in the
+## install tree is the build THEY were compiled against. See the re-install block below for why.
+##
+## Only Biomass Succession for now. The upstream list carries four succession backends (Biomass,
+## ForCS, NECN, PnET) and they cannot all win: each re-install overwrites the last. If the scenarios
+## for the other three start failing with the same type mismatch, that is the signal that their
+## installers ship *different* library builds, and the fix becomes re-installing the relevant
+## backend immediately before its own scenarios rather than once at the end.
+REINSTALL_LAST <- c("Extension-Biomass-Succession")
+
+## Report which copy of each shared library is actually present after install. Version plus
+## timestamp: the timestamp is what identifies which installer wrote it, and that is the thing a
+## type-identity mismatch turns on.
+report_shared_libraries <- function() {
+  console <- find_console_dll()
+  if (is.null(console)) {
+    return(invisible(NULL))
+  }
+  root <- dirname(console)
+  libs <- list.files(
+    root,
+    pattern = "^Landis\\.Library\\..*\\.dll$",
+    recursive = TRUE,
+    full.names = TRUE
+  )
+  if (length(libs) == 0L) {
+    cli_alert_warning("no Landis.Library.*.dll found under {root}")
+    return(invisible(NULL))
+  }
+  cli_h1("Shared libraries present after install")
+  info <- file.info(libs)
+  for (i in order(basename(libs))) {
+    cli_alert_info(
+      "{basename(libs[i])}  {format(info$size[i], big.mark = ',')} bytes  {format(info$mtime[i], '%H:%M:%S')}"
+    )
+  }
+  ## Several copies of the same library name means more than one assembly identity is loadable,
+  ## which is the precondition for the "type X is not X" abort.
+  dupes <- names(which(table(basename(libs)) > 1L))
+  if (length(dupes) > 0L) {
+    cli_alert_warning("duplicate library copies present: {paste(dupes, collapse = ', ')}")
+  }
+  invisible(libs)
+}
+
 find_console_dll <- function() {
   roots <- c(
     Sys.getenv("ProgramFiles"),
@@ -353,7 +398,9 @@ if (file.exists(core_msi) && !is.null(core_size)) {
   }
 }
 if (!file.exists(core_msi)) {
-  cli_alert_info("downloading {basename(CORE_MSI_PATH)}{if (is.null(core_size)) '' else paste0(' (', core_size, ' bytes)')}")
+  cli_alert_info(
+    "downloading {basename(CORE_MSI_PATH)}{if (is.null(core_size)) '' else paste0(' (', core_size, ' bytes)')}"
+  )
   if (!download_with_check(CORE_MSI_URL, core_msi, expected_size = core_size)) {
     cli_abort("Core MSI download failed: {CORE_MSI_URL}")
   }
@@ -373,6 +420,7 @@ yaml_text <- paste(readLines(YAML_URL, warn = FALSE), collapse = "\n")
 extensions <- parse_extensions_yaml(yaml_text)
 cli_alert_info("found {nrow(extensions)} extensions")
 
+reinstall_paths <- list()
 n_ok <- 0L
 n_fail <- 0L
 n_skip <- 0L
@@ -410,10 +458,49 @@ for (i in seq_len(nrow(extensions))) {
     cat(sprintf("::warning::installer %s exited %d\n", result$name, status), file = stderr())
     n_fail <- n_fail + 1L
   }
+
+  if (repo %in% REINSTALL_LAST) {
+    reinstall_paths[[repo]] <- dest
+  }
 }
 
 cli_rule()
 cli_alert_info("Done: {n_ok} installed, {n_fail} failed, {n_skip} no-installer")
+
+## ---------------------------------------------------------------------------
+## Re-install the succession extension LAST
+## ---------------------------------------------------------------------------
+##
+## The extension installers each carry their own copy of the shared cohort library
+## (`Landis.Library.UniversalCohorts.dll` and friends) and write it into the same install tree, so
+## whichever runs last decides which build every extension binds against. When a later installer
+## overwrites the copy the succession extension was built against, LANDIS-II aborts at run time with
+##
+##   The data type of site variable "Succession.UniversalCohorts" is
+##   Landis.Library.UniversalCohorts.SiteCohorts, not Landis.Library.UniversalCohorts.SiteCohorts
+##
+## -- the same type name on both sides, because the two are the same type from *different*
+## assemblies. Re-running the succession installer at the end restores its copy and the types match.
+##
+## Deliberately a re-install rather than a reorder: `parse_extensions_yaml()` reflects the upstream
+## extension list, and its order is left exactly as published. This appends one step instead of
+## perturbing that, so the log says plainly what happened and why.
+for (repo in REINSTALL_LAST) {
+  dest <- reinstall_paths[[repo]]
+  if (is.null(dest) || !file.exists(dest)) {
+    cli_alert_warning("cannot re-install {repo} last: installer not found")
+    next
+  }
+  cli_h1("Re-installing {repo} last (shared cohort library must be its build)")
+  status <- run_inno_installer(dest)
+  if (status != 0L) {
+    cat(sprintf("::warning::re-install of %s exited %d\n", repo, status), file = stderr())
+  }
+}
+
+## Which copy of each shared library actually won, so a future mismatch is evidence rather than
+## inference. Version + timestamp; the timestamp is what identifies the installer that wrote it.
+report_shared_libraries()
 
 ## ---------------------------------------------------------------------------
 ## Locate and report Landis.Console.dll for the run step.
