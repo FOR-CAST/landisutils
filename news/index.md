@@ -1,5 +1,27 @@
 # Changelog
 
+## landisutils 0.0.101
+
+- [`growth_reference_curves()`](https://for-cast.github.io/landisutils/reference/growth_reference_curves.md)
+  gains a `vdyp` series alongside `sortie` and `tipsy`, switched on by
+  `use_vdyp` and weighted per species by a new `weight_vdyp` column in
+  `growth_scoring.csv`. VDYP is British Columbia’s Variable Density
+  Yield Projection model, and it needed its own slot rather than
+  borrowing TIPSY’s: TIPSY projects MANAGED stands and VDYP projects
+  unmanaged natural ones, which is exactly why a natural-disturbance
+  model reaches for VDYP. Carrying it as TIPSY made `rmse_tipsy` a VDYP
+  residual, so a reader had no way to tell from the outputs which model
+  produced the number.
+  [`growth_score_fit()`](https://for-cast.github.io/landisutils/reference/growth_score_fit.md)
+  now reports `rmse_vdyp` separately and
+  [`growth_best_candidates()`](https://for-cast.github.io/landisutils/reference/growth_best_candidates.md)
+  carries it through.
+- `weight_vdyp` defaults to 0 and
+  [`read_growth_scoring()`](https://for-cast.github.io/landisutils/reference/read_growth_scoring.md)
+  tolerates its absence, so a scoring file written before this release
+  reads unchanged and no existing calibration is rescored by the series
+  merely existing.
+
 ## landisutils 0.0.100
 
 - `calibrate_original_fire()` is no longer exported, and errors with

@@ -15,6 +15,7 @@ growth_reference_curves(
   min_plots = 50L,
   n_grid = 60L,
   use_tipsy = FALSE,
+  use_vdyp = FALSE,
   site = NULL,
   weight = NULL
 )
@@ -47,6 +48,14 @@ growth_reference_curves(
 - use_tipsy:
 
   Logical. Score against TIPSY as well.
+
+- use_vdyp:
+
+  Logical. Score against VDYP as well. VDYP is the British Columbia
+  Variable Density Yield Projection model, whose curves are natural
+  (unmanaged) stand yields; it is a separate series from TIPSY, which
+  projects MANAGED stands, because a natural-disturbance model wants the
+  former and the distinction must not be lost in the outputs.
 
 - site:
 

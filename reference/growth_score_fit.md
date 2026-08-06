@@ -13,7 +13,7 @@ growth_score_fit(
   curve,
   ref,
   level_source = NA_character_,
-  weights = c(sortie = 1, tipsy = 1, plots = 1),
+  weights = c(sortie = 1, tipsy = 1, vdyp = 1, plots = 1),
   biomass_max_scale = 200
 )
 ```
