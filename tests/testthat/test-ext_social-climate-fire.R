@@ -1,6 +1,15 @@
 testthat::test_that("Social-Climate-Fire inputs are properly created", {
-  ## NOTE: all sample values from SCRAPPLE v3.2 test files (for LANDIS-II v7)
-  ## <https://github.com/LANDIS-II-Foundation/Extension-Social-Climate-Fire/blob/master/Testing/Core7-SCRAPPLE3.2/scrapple.txt>
+  ## NOTE: all sample values from SCRAPPLE v3.0 test files (for LANDIS-II v7)
+  ## <https://github.com/LANDIS-II-Foundation/Extension-Social-Climate-Fire/blob/master/Testing/Core7-SCRAPPLE3.0/scrapple.txt>
+  ##
+  ## The citation formerly named Core7-SCRAPPLE3.2, which does not exist upstream (Testing/ holds
+  ## 1.0, 2.0, 2.6 and 3.0). Corrected to 3.0 by matching content, not by inference: the ignition
+  ## and spread coefficients below (0.0059, 0.00050, -0.000010, -0.0002200) all appear in that file.
+  ##
+  ## TODO: this is a v7 reference, contrary to the Core8 convention the other ext tests follow.
+  ## The v8 equivalent is Testing/Core8-SocialClimateFire4.3/Social-Climate-Fire-Inputs.txt
+  ## (the config was renamed). Re-deriving these values against it is a separate change -- the
+  ## numbers here would move, so it is not a citation edit.
 
   tmp_pth <- withr::local_tempdir("example_SocialClimateFire_")
 
