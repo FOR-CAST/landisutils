@@ -1045,6 +1045,9 @@ scenario(
 - [`transition_data()`](https://for-cast.github.io/landisutils/reference/transition_data.md)
   : Build a transition data frame for alluvial plots
 
+- [`validate_landis_scenario()`](https://for-cast.github.io/landisutils/reference/validate_landis_scenario.md)
+  : Validate a generated LANDIS-II scenario directory before running it
+
 - [`windSpeedVulnerability()`](https://for-cast.github.io/landisutils/reference/windSpeedVulnerability.md)
   : Construct a per-species wind-speed vulnerability curve
 

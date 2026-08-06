@@ -22,7 +22,8 @@ write_landis_scenario_file(
   succession_ext_files,
   disturbance_ext_files = NULL,
   other_ext_files = NULL,
-  output_manifest = character(0)
+  output_manifest = character(0),
+  validate = getOption("landisutils.validate_scenario", TRUE)
 )
 ```
 
@@ -68,6 +69,16 @@ write_landis_scenario_file(
   [`tar_landis()`](https://for-cast.github.io/landisutils/reference/tar_landis.md)
   can track these files alongside the recursive `output_dir` scan.
 
+- validate:
+
+  Logical. Run
+  [`validate_landis_scenario()`](https://for-cast.github.io/landisutils/reference/validate_landis_scenario.md)
+  on the assembled directory before returning. Defaults to
+  `getOption("landisutils.validate_scenario", TRUE)`. This is the path
+  the Dynamic Fire calibration assembles its scenarios through, so it is
+  where validation catches a mirrored initial-communities map swapped in
+  from a spinup snapshot.
+
 ## Value
 
 Character scalar: absolute path to the written `scenario.txt`.
@@ -81,7 +92,8 @@ its `base_seed` argument).
 
 ## See also
 
-[`scenario()`](https://for-cast.github.io/landisutils/reference/scenario.md)
+[`scenario()`](https://for-cast.github.io/landisutils/reference/scenario.md),
+[`validate_landis_scenario()`](https://for-cast.github.io/landisutils/reference/validate_landis_scenario.md)
 
 Other LANDIS-II execution helpers:
 [`host_cpu_info()`](https://for-cast.github.io/landisutils/reference/host_cpu_info.md),
@@ -99,4 +111,5 @@ Other LANDIS-II execution helpers:
 [`landis_target_version()`](https://for-cast.github.io/landisutils/reference/landis_target_version.md),
 [`landis_version()`](https://for-cast.github.io/landisutils/reference/landis_version.md),
 [`read_landis_resource_logs()`](https://for-cast.github.io/landisutils/reference/read_landis_resource_logs.md),
-[`tar_landis()`](https://for-cast.github.io/landisutils/reference/tar_landis.md)
+[`tar_landis()`](https://for-cast.github.io/landisutils/reference/tar_landis.md),
+[`validate_landis_scenario()`](https://for-cast.github.io/landisutils/reference/validate_landis_scenario.md)

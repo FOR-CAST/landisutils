@@ -34,4 +34,5 @@ Other LANDIS-II execution helpers:
 [`landis_version()`](https://for-cast.github.io/landisutils/reference/landis_version.md),
 [`read_landis_resource_logs()`](https://for-cast.github.io/landisutils/reference/read_landis_resource_logs.md),
 [`tar_landis()`](https://for-cast.github.io/landisutils/reference/tar_landis.md),
+[`validate_landis_scenario()`](https://for-cast.github.io/landisutils/reference/validate_landis_scenario.md),
 [`write_landis_scenario_file()`](https://for-cast.github.io/landisutils/reference/write_landis_scenario_file.md)

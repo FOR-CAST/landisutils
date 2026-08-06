@@ -10,7 +10,8 @@ scenario(
   extensions = NULL,
   climate_config = NULL,
   path = NULL,
-  ...
+  ...,
+  validate = getOption("landisutils.validate_scenario", TRUE)
 )
 ```
 
@@ -52,6 +53,15 @@ scenario(
     random number generator;
 
   - `SpeciesInputFile` Character. Path to input file;
+
+- validate:
+
+  Logical. Run
+  [`validate_landis_scenario()`](https://for-cast.github.io/landisutils/reference/validate_landis_scenario.md)
+  on the assembled directory before returning. Defaults to
+  `getOption("landisutils.validate_scenario", TRUE)`. Set `FALSE` when
+  the referenced input files are deliberately stubs (as in this
+  package's own tests of config-file generation).
 
 ## Value
 

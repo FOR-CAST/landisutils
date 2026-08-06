@@ -1,5 +1,79 @@
 # Changelog
 
+## landisutils 0.0.98
+
+- New
+  [`validate_landis_scenario()`](https://for-cast.github.io/landisutils/reference/validate_landis_scenario.md)
+  checks an assembled scenario directory before LANDIS-II ever sees it,
+  and both
+  [`scenario()`](https://for-cast.github.io/landisutils/reference/scenario.md)
+  and
+  [`write_landis_scenario_file()`](https://for-cast.github.io/landisutils/reference/write_landis_scenario_file.md)
+  now call it by default
+  (`options(landisutils.validate_scenario = FALSE)` opts out). LANDIS-II
+  reports bad inputs by dying a few seconds into extension
+  initialisation with a non-zero exit and EMPTY stderr, leaving the real
+  message in `Landis-log.txt` inside a scratch directory; under a
+  calibration warm pool that is multiplied by the pool size and can burn
+  hours before anyone reads a log. The checks are the three defects that
+  actually happened here in one week: a pixel type the GDAL reader
+  rejects (0.0.70), an undeduplicated initial-communities CSV that
+  exhausts the container’s memory inside the parser (0.0.68), and a
+  vertically mirrored map (0.0.95). It validates the DIRECTORY rather
+  than the `LandisExtension` objects deliberately, because the two
+  assembly entry points do not share a code path: the Dynamic Fire
+  calibration goes through
+  [`write_landis_scenario_file()`](https://for-cast.github.io/landisutils/reference/write_landis_scenario_file.md),
+  bulk-copying a template directory and swapping in a spinup snapshot,
+  so no extension object ever describes the file the mirroring defect
+  landed in.
+- The mirrored-map check is what the rest exists for. A map written in
+  the wrong row order has the right dimensions, the right values and the
+  right totals, so nothing rejects it and the run completes with the
+  vegetation displaced relative to the ecoregion, fire-region and
+  topography maps – it cost a 25-generation Dynamic Fire calibration.
+  Orientation metadata cannot find it either, because the mirrored file
+  is written back north-up and only its content is reversed. So the
+  check compares content: per-cell active-mask agreement with the
+  ecoregions map, against the agreement the map’s vertically flipped
+  self would score. Flipping swaps the pair exactly, so a map that
+  agrees better flipped than as stored is mirrored, and no absolute
+  threshold is involved. Measured on two assembled scenarios, initial
+  communities scored 0.9720/0.7605 and 0.9798/0.4945 as-is versus
+  flipped. Continuous maps (slope, aspect, ignition and suppression
+  rasters) are exempt: 0 is a legitimate value on an active cell there,
+  so the mask is not a footprint, and uphill azimuth measured 0.5929
+  both ways – no discrimination to be had. A mirrored topography map
+  remains undetectable this way.
+- The initial-communities check is deliberately not the stricter “every
+  active cell carries a map code” it looks like it should be. Measured
+  on working production scenarios, 10,897 and 95,063 active ecoregion
+  cells carry no initial-communities code – cells with no cohorts, which
+  Biomass Succession handles – so the strict form would reject valid
+  input. What it does check is that every map code present in the raster
+  resolves to CSV rows, allowing the one deliberately row-less
+  empty-community code
+  [`dedup_community_snapshot()`](https://for-cast.github.io/landisutils/reference/dedup_community_snapshot.md)
+  creates.
+- Two per-extension contracts are checked from the written configuration
+  rather than from the objects that produced it, because the calibration
+  patches `dynamic-fire.txt` with candidate parameters after the writer
+  has run: season `ProportionFire` values must be dyadic fractions
+  summing to 1 (the parser sums them in single precision and aborts with
+  “Season Probabilities don’t add to 1.0” otherwise), and the
+  fire-regions map must cover every cell the core considers active (a
+  core-active cell with no fire region aborts with “Unknown map code”).
+  Dynamic Fuels is checked for species coverage: a modelled species
+  absent from every `FuelTypes` row is simply not in the fuels model,
+  silently.
+- All problems are collected and reported together rather than raised
+  one at a time – a scenario with three defects should not cost three
+  build cycles. `validate_landis_scenario(error = FALSE)` returns them
+  instead of stopping, for surveying scenarios without failing.
+- [`landis_directive()`](https://for-cast.github.io/landisutils/reference/landis_directive.md)
+  replaces the calibration-private config-file reader, so “read a
+  directive out of a LANDIS-II config file” has one implementation.
+
 ## landisutils 0.0.97
 
 - The core-version check now covers the Docker paths, which is where it
