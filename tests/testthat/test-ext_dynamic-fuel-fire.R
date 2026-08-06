@@ -2,7 +2,7 @@ testthat::test_that("Dynamic Fuel & Fire inputs are properly created", {
   tmp_pth <- withr::local_tempdir("test_DynamicFireFuels_")
 
   ## NOTE: all sample values from Dynamic Fire v4.0 test files (for LANDIS-II v8)
-  ## <https://github.com/LANDIS-II-Foundation/Extension-Dynamic-Fire-System/blob/master/testings/Core8-DynamicFire4.0/dynamic-fire_SetUpFire.txt>
+  ## <https://github.com/LANDIS-II-Foundation/Extension-Dynamic-Fire-System/blob/master/testings/Core8-DynamicFire4.1/dynamic-fire_SetUpFire.txt>
 
   fire_sizes <- tibble::tribble(
     ~EcoCode , ~EcoName , ~Mu , ~Sigma , ~Max , ~SpFMCLo , ~SpFMCHi , ~SpHiProp , ~SumFMCLo , ~SumFMCHi , ~SumHiProp , ~FallFMCLo , ~FallFMCHi , ~FallHiProp , ~OpenFuelIndex , ~NumFires ,
@@ -67,7 +67,7 @@ testthat::test_that("Dynamic Fuel & Fire inputs are properly created", {
   testthat::expect_contains(ext_dyn_fire$files, basename(iwdb_file))
 
   ## NOTE: all sample values from Dynamic Fuels v4.0 test files (for LANDIS-II v8)
-  ## <https://github.com/LANDIS-II-Foundation/Extension-Dynamic-Fire-System/blob/master/testings/Core8-DynamicFire4.0/dynamic-fire_SetUpFuel.txt>
+  ## <https://github.com/LANDIS-II-Foundation/Extension-Dynamic-Fire-System/blob/master/testings/Core8-DynamicFire4.1/dynamic-fire_SetUpFuel.txt>
 
   spp_fuel_coeffs <- tibble::tribble(
     ~Species   , ~FuelCoefficient ,

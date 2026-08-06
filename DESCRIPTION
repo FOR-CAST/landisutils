@@ -1,5 +1,5 @@
 Package: landisutils
-Title: Utilities for running LANDIS-II simulations
+Title: Utilities for Running LANDIS-II Simulations
 Version: 0.0.101
 Authors@R: 
     person(c("Alex", "M"), "Chubaty", , "achubaty@for-cast.ca", role = c("aut", "cre"),
