@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.98</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.99</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,6 +41,13 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.99" id="landisutils-0099">landisutils 0.0.99<a class="anchor" aria-label="anchor" href="#landisutils-0099"></a></h2>
+<ul><li>
+<code>arrow</code>, <code>ggplot2</code>, <code>ggalluvial</code> and <code>cffdrs</code> moved from <code>Imports</code> to <code>Suggests</code>, cutting the hard-dependency closure from 62 packages (251 MB) to 31 (98 MB). Most consumers of this package write LANDIS-II configuration files, run the model and read its rasters; they never open a parquet dataset, draw a figure, or recompute a Fire Weather Index, and until now installing it made them wait for all three anyway. <code>arrow</code> alone is 99 MB. <code>cffdrs</code> was the worst value for money: 16 packages nothing else here needs – <code>class</code>, <code>classInt</code>, <code>DBI</code>, <code>doParallel</code>, <code>e1071</code>, <code>foreach</code> among them – to support one function, and the <code>@importFrom</code> it carried was dead, naming a binding nothing ever called. Note that <code>stringr</code> and <code>purrr</code> are NOT candidates for the same treatment despite being used in one and four files: <code>tidyr</code> imports both, so moving them would save nothing at all.</li>
+<li>Every entry point that reaches one of those packages now checks for it first and, if it is missing, says what it was trying to do and what to install. Previously the failure was <code>there is no package called 'arrow'</code> raised from wherever the call stack happened to be. Most of the climate functions already guarded <code>arrow</code> this way; the two ForCS parquet helpers and the three biomass-snapshot readers and writers did not.</li>
+<li>A static scan now walks <code>R/</code> for calls into those packages and fails the test suite if the enclosing function does not guard, plus a companion check that none of them has drifted back into <code>Imports</code>. Both failures are otherwise invisible: an unguarded call passes <code>R CMD check</code> and every test on any machine that happens to have the package installed, and surfaces only for a user who does not.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.98" id="landisutils-0098">landisutils 0.0.98<a class="anchor" aria-label="anchor" href="#landisutils-0098"></a></h2>
 <ul><li>New <code><a href="../reference/validate_landis_scenario.html">validate_landis_scenario()</a></code> checks an assembled scenario directory before LANDIS-II ever sees it, and both <code><a href="../reference/scenario.html">scenario()</a></code> and <code><a href="../reference/write_landis_scenario_file.html">write_landis_scenario_file()</a></code> now call it by default (<code>options(landisutils.validate_scenario = FALSE)</code> opts out). LANDIS-II reports bad inputs by dying a few seconds into extension initialisation with a non-zero exit and EMPTY stderr, leaving the real message in <code>Landis-log.txt</code> inside a scratch directory; under a calibration warm pool that is multiplied by the pool size and can burn hours before anyone reads a log. The checks are the three defects that actually happened here in one week: a pixel type the GDAL reader rejects (0.0.70), an undeduplicated initial-communities CSV that exhausts the container’s memory inside the parser (0.0.68), and a vertically mirrored map (0.0.95). It validates the DIRECTORY rather than the <code>LandisExtension</code> objects deliberately, because the two assembly entry points do not share a code path: the Dynamic Fire calibration goes through <code><a href="../reference/write_landis_scenario_file.html">write_landis_scenario_file()</a></code>, bulk-copying a template directory and swapping in a spinup snapshot, so no extension object ever describes the file the mirroring defect landed in.</li>

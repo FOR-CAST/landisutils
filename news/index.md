@@ -1,5 +1,34 @@
 # Changelog
 
+## landisutils 0.0.99
+
+- `arrow`, `ggplot2`, `ggalluvial` and `cffdrs` moved from `Imports` to
+  `Suggests`, cutting the hard-dependency closure from 62 packages (251
+  MB) to 31 (98 MB). Most consumers of this package write LANDIS-II
+  configuration files, run the model and read its rasters; they never
+  open a parquet dataset, draw a figure, or recompute a Fire Weather
+  Index, and until now installing it made them wait for all three
+  anyway. `arrow` alone is 99 MB. `cffdrs` was the worst value for
+  money: 16 packages nothing else here needs – `class`, `classInt`,
+  `DBI`, `doParallel`, `e1071`, `foreach` among them – to support one
+  function, and the `@importFrom` it carried was dead, naming a binding
+  nothing ever called. Note that `stringr` and `purrr` are NOT
+  candidates for the same treatment despite being used in one and four
+  files: `tidyr` imports both, so moving them would save nothing at all.
+- Every entry point that reaches one of those packages now checks for it
+  first and, if it is missing, says what it was trying to do and what to
+  install. Previously the failure was
+  `there is no package called 'arrow'` raised from wherever the call
+  stack happened to be. Most of the climate functions already guarded
+  `arrow` this way; the two ForCS parquet helpers and the three
+  biomass-snapshot readers and writers did not.
+- A static scan now walks `R/` for calls into those packages and fails
+  the test suite if the enclosing function does not guard, plus a
+  companion check that none of them has drifted back into `Imports`.
+  Both failures are otherwise invisible: an unguarded call passes
+  `R CMD check` and every test on any machine that happens to have the
+  package installed, and surfaces only for a user who does not.
+
 ## landisutils 0.0.98
 
 - New
