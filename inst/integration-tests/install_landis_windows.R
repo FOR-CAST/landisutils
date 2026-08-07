@@ -321,6 +321,67 @@ report_shared_libraries <- function() {
     return(invisible(NULL))
   }
 
+  ## Where LANDIS-II actually loads assemblies from. Two scans of the filesystem have now failed to
+  ## locate Landis.Library.UniversalCohorts -- the library the "data type of site variable X is T,
+  ## not T" abort is about -- so stop guessing at install layout and read the registry LANDIS-II
+  ## itself consults.
+  ext_xml <- list.files(
+    dirname(console),
+    pattern = "^extensions\\.xml$",
+    recursive = TRUE,
+    full.names = TRUE,
+    ignore.case = TRUE
+  )
+  if (length(ext_xml) > 0L) {
+    cli_h1("extensions.xml: {ext_xml[[1]]}")
+    xml <- readLines(ext_xml[[1]], warn = FALSE)
+    asm <- unique(trimws(regmatches(xml, regexpr("(?<=<Assembly>)[^<]+", xml, perl = TRUE))))
+    cli_alert_info("{length(asm)} assemblies registered")
+    ## Resolve each registered assembly to a file and report duplicates by size.
+    found <- unlist(lapply(unique(asm), function(a) {
+      list.files(
+        dirname(console),
+        pattern = paste0("^", gsub("([.\\\\+*?\\[^\\]$(){}=!<>|:-])", "\\\\\\1", a), "\\.dll$"),
+        recursive = TRUE,
+        full.names = TRUE,
+        ignore.case = TRUE
+      )
+    }))
+    if (length(found) > 0L) {
+      cli_alert_info("resolved {length(found)} assembly file(s) under {dirname(console)}")
+    }
+  } else {
+    cli_alert_warning("no extensions.xml found under {dirname(console)}")
+  }
+
+  ## Broad sweep: the shared cohort libraries wherever they live on this machine.
+  sweep_roots <- unique(Filter(
+    function(x) nzchar(x) && dir.exists(x),
+    c(Sys.getenv("ProgramFiles"), Sys.getenv("ProgramFiles(x86)"), Sys.getenv("LOCALAPPDATA"))
+  ))
+  cohort <- unlist(lapply(sweep_roots, function(r) {
+    list.files(
+      r,
+      pattern = "^Landis\\.Library\\.(UniversalCohorts|Succession).*\\.dll$",
+      recursive = TRUE,
+      full.names = TRUE,
+      ignore.case = TRUE
+    )
+  }))
+  if (length(cohort) > 0L) {
+    cli_h1("Cohort/succession libraries on this machine")
+    ci <- file.info(cohort)
+    for (i in order(basename(cohort))) {
+      cli_alert_info(
+        "{basename(cohort[i])}  {format(ci$size[i], big.mark = ',')} bytes  {cohort[i]}"
+      )
+    }
+  } else {
+    cli_alert_warning(
+      "no UniversalCohorts/Succession libraries found in: {paste(sweep_roots, collapse = ', ')}"
+    )
+  }
+
   cli_h1("Shared libraries present after install")
   info <- file.info(libs)
   ## Group by library name. More than one copy of a name means more than one assembly identity is
