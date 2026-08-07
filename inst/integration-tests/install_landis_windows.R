@@ -303,29 +303,46 @@ report_shared_libraries <- function() {
   if (is.null(console)) {
     return(invisible(NULL))
   }
-  root <- dirname(console)
+  ## Search the whole LANDIS-II install tree, not dirname(console). Extensions install into sibling
+  ## directories and register themselves in extensions.xml, so scanning only the console's own
+  ## directory finds essentially nothing -- the first version of this reported a single
+  ## Landis.Library.Metadata dll and no UniversalCohorts at all, which is what made the assembly
+  ## mismatch impossible to attribute.
+  root <- dirname(dirname(console))
   libs <- list.files(
     root,
     pattern = "^Landis\\.Library\\..*\\.dll$",
     recursive = TRUE,
-    full.names = TRUE
+    full.names = TRUE,
+    ignore.case = TRUE
   )
   if (length(libs) == 0L) {
     cli_alert_warning("no Landis.Library.*.dll found under {root}")
     return(invisible(NULL))
   }
+
   cli_h1("Shared libraries present after install")
   info <- file.info(libs)
-  for (i in order(basename(libs))) {
-    cli_alert_info(
-      "{basename(libs[i])}  {format(info$size[i], big.mark = ',')} bytes  {format(info$mtime[i], '%H:%M:%S')}"
-    )
-  }
-  ## Several copies of the same library name means more than one assembly identity is loadable,
-  ## which is the precondition for the "type X is not X" abort.
-  dupes <- names(which(table(basename(libs)) > 1L))
-  if (length(dupes) > 0L) {
-    cli_alert_warning("duplicate library copies present: {paste(dupes, collapse = ', ')}")
+  ## Group by library name. More than one copy of a name means more than one assembly identity is
+  ## loadable, and differing SIZES mean they are genuinely different builds -- which is the
+  ## precondition for LANDIS-II aborting with "the data type of site variable X is T, not T".
+  for (nm in sort(unique(basename(libs)))) {
+    idx <- which(basename(libs) == nm)
+    sizes <- unique(info$size[idx])
+    if (length(idx) == 1L) {
+      cli_alert_info("{nm}  {format(info$size[idx], big.mark = ',')} bytes")
+    } else if (length(sizes) == 1L) {
+      cli_alert_info("{nm}  {length(idx)} identical copies  {format(sizes, big.mark = ',')} bytes")
+    } else {
+      cli_alert_danger(
+        "{nm}  {length(idx)} copies with {length(sizes)} DIFFERENT builds -- assembly conflict"
+      )
+      for (i in idx) {
+        cli_alert_warning(
+          "    {format(info$size[i], big.mark = ',')} bytes  {format(info$mtime[i], '%H:%M:%S')}  {sub(root, '', libs[i], fixed = TRUE)}"
+        )
+      }
+    }
   }
   invisible(libs)
 }
