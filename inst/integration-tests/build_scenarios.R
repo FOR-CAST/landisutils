@@ -408,23 +408,56 @@ download_repo_subtree <- function(repo, ref, subtree, dest_dir) {
       stop(sprintf("failed to download %s", url), call. = FALSE)
     }
   }
-  ## tar root is "<repo-basename>-<ref>"; subtree paths inside the tarball
-  ## are "<root>/<subtree>/...".
-  all <- utils::untar(tarball, list = TRUE)
-  prefix <- sprintf("[^/]+/%s/", subtree)
-  matches <- grep(prefix, all, value = TRUE)
-  matches <- matches[!grepl("/$", matches)] ## drop directory entries
-  if (length(matches) == 0L) {
+  ## Extract the WHOLE tarball once per (repo, ref) rather than passing `files=` to untar().
+  ##
+  ## On Windows untar() shells out to tar.exe and passes the file list on the COMMAND LINE, which
+  ## is capped at about 8191 characters. A subtree of any size silently exceeds that and only the
+  ## first few entries are extracted -- untar() does not report it. TestPnET_AllExtension/inputs
+  ## came out as 3 files instead of the full set, and the failure surfaced much later, and far from
+  ## its cause, as add_file() refusing a file that had never been staged. Linux hides this entirely
+  ## because ARG_MAX is ~2 MB.
+  ##
+  ## Extracting everything once also avoids re-running untar() for each scenario that draws on the
+  ## same tarball.
+  extracted <- file.path(cache_dir, sprintf("x-%s-%s", gsub("/", "_", repo), ref))
+  if (!dir.exists(extracted)) {
+    dir.create(extracted, recursive = TRUE, showWarnings = FALSE)
+    utils::untar(tarball, exdir = extracted)
+  }
+
+  ## tar root is "<repo-basename>-<ref>"; the subtree sits at "<root>/<subtree>".
+  src_dir <- NULL
+  for (root in list.dirs(extracted, recursive = FALSE)) {
+    candidate <- file.path(root, subtree)
+    if (dir.exists(candidate)) {
+      src_dir <- candidate
+      break
+    }
+  }
+  if (is.null(src_dir)) {
     stop(sprintf("no files matched subtree '%s' in %s@%s", subtree, repo, ref), call. = FALSE)
   }
-  staging <- tempfile("subtree_")
-  dir.create(staging, recursive = TRUE)
-  on.exit(unlink(staging, recursive = TRUE), add = TRUE)
-  utils::untar(tarball, files = matches, exdir = staging)
+
   ## Flatten: copy every file's basename to dest_dir.
-  src_files <- list.files(staging, recursive = TRUE, full.names = TRUE)
-  for (sf in src_files) {
-    file.copy(sf, file.path(dest_dir, basename(sf)), overwrite = TRUE)
+  src_files <- list.files(src_dir, recursive = TRUE, full.names = TRUE)
+  if (length(src_files) == 0L) {
+    stop(sprintf("subtree '%s' in %s@%s contains no files", subtree, repo, ref), call. = FALSE)
+  }
+  copied <- vapply(
+    src_files,
+    function(sf) file.copy(sf, file.path(dest_dir, basename(sf)), overwrite = TRUE),
+    logical(1)
+  )
+  if (!all(copied)) {
+    stop(
+      sprintf(
+        "failed to stage %d of %d file(s) from subtree '%s'",
+        sum(!copied),
+        length(copied),
+        subtree
+      ),
+      call. = FALSE
+    )
   }
   invisible(length(src_files))
 }
