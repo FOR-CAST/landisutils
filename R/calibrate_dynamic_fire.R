@@ -2779,11 +2779,38 @@ calibrate_dynamic_fire <- function(observed_targets_path, scenario_template, cfg
 ## build, so mtimes change even when nothing simulated does, and a timestamp-based digest would
 ## discard a valid cache on every rebuild.
 .scenario_template_digest <- function(scenario_template) {
-  if (is.null(scenario_template) || !fs::dir_exists(scenario_template)) {
+  if (is.null(scenario_template) || !length(scenario_template)) {
     return(NULL)
   }
-  files <- sort(as.character(fs::dir_ls(scenario_template, type = "file")))
+  ## `scenario_template` is the scenario FILE (".../scenario.txt"), not the directory holding it --
+  ## that is how every caller passes it, and run_calibration_validation() takes `dirname()` of it
+  ## for exactly this reason. Requiring a directory made this return NULL on every real call, so the
+  ## template contributed NOTHING to the eval fingerprint and a rebuilt template's losses were
+  ## served straight from the memoization cache. That is precisely the failure 0.0.75 added this
+  ## function to prevent, and it went unnoticed because a silent NULL is indistinguishable from a
+  ## template that genuinely has not changed. Accept either form, and say so when neither resolves.
+  dir <- if (fs::dir_exists(scenario_template)) {
+    scenario_template
+  } else if (fs::file_exists(scenario_template)) {
+    dirname(scenario_template)
+  } else {
+    warning(
+      "scenario template '",
+      scenario_template,
+      "' is neither a directory nor a file; the evaluation fingerprint cannot see the template, ",
+      "so cached losses will survive a template change.",
+      call. = FALSE
+    )
+    return(NULL)
+  }
+  files <- sort(as.character(fs::dir_ls(dir, type = "file")))
   if (!length(files)) {
+    warning(
+      "scenario template directory '",
+      dir,
+      "' contains no files; the evaluation fingerprint cannot see the template.",
+      call. = FALSE
+    )
     return(NULL)
   }
   digest::digest(

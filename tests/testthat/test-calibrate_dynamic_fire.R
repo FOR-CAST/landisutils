@@ -2112,3 +2112,38 @@ test_that("cfg$retries reaches landis_pool_exec and defaults to fail-fast", {
   ))
   expect_identical(seen$retries, 2L)
 })
+
+test_that(".scenario_template_digest() accepts the scenario FILE, not just its directory", {
+  ## The regression: callers pass ".../scenario.txt", but this required a directory and so
+  ## returned NULL on every real call. The template then contributed nothing to the eval
+  ## fingerprint, and a rebuilt template's losses were replayed from the memoization cache.
+  d <- withr::local_tempdir()
+  writeLines("Duration 30", file.path(d, "scenario.txt"))
+  writeLines("Mu 1.797", file.path(d, "dynamic-fire.txt"))
+
+  by_dir <- .scenario_template_digest(d)
+  by_file <- .scenario_template_digest(file.path(d, "scenario.txt"))
+
+  expect_type(by_dir, "character")
+  expect_identical(by_file, by_dir)
+})
+
+test_that(".scenario_template_digest() changes when any template file changes", {
+  d <- withr::local_tempdir()
+  writeLines("Duration 30", file.path(d, "scenario.txt"))
+  writeLines("Mu 2.541  Sigma 2.598  Max 1050000", file.path(d, "dynamic-fire.txt"))
+  before <- .scenario_template_digest(file.path(d, "scenario.txt"))
+
+  ## Exactly the edit that must invalidate the cache: refitting the fire-size distribution.
+  writeLines("Mu 1.797  Sigma 1.436  Max 2370", file.path(d, "dynamic-fire.txt"))
+  after <- .scenario_template_digest(file.path(d, "scenario.txt"))
+
+  expect_false(identical(before, after))
+})
+
+test_that(".scenario_template_digest() warns instead of silently returning NULL", {
+  ## A fixed literal path, not a tempfile: the path appears in the warning and therefore in the
+  ## snapshot, so it has to be stable across runs and machines.
+  expect_snapshot(x <- .scenario_template_digest("/nonexistent/scenario-template"))
+  expect_null(x)
+})
