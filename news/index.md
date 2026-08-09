@@ -1586,7 +1586,7 @@
 
 - [`landis_run_docker()`](https://for-cast.github.io/landisutils/reference/landis_run_docker.md)
   now launches the `docker run` child via
-  [`processx::process`](https://rdrr.io/pkg/processx/man/process.html)
+  [`processx::process`](http://processx.r-lib.org/reference/process.md)
   instead of
   [`callr::r_bg()`](https://callr.r-lib.org/reference/r_bg.html). The
   old approach forked a **full background R session** purely to shell
