@@ -62,31 +62,43 @@ dry_run <- "--dry-run" %in% args
 })()
 source(file.path(.this_script_dir, "_pins.R"))
 
-## Install the UCLv2 set, not the full release set. The v8 extension collection ships two major
-## versions of the cohort library side by side -- UniversalCohorts v1 and v2, plus Succession v9 and
-## v10 -- under different filenames, so both are installed and nothing overwrites anything. An
-## extension built against v1 cannot agree with one built against v2 on the type of the
+## Which extension generation to install. The v8 collection ships two: extensions built against
+## UniversalCohorts v1 / Succession v9, and those rebuilt against v2 / v10. Both install side by
+## side under different filenames, so nothing overwrites anything -- but an extension compiled
+## against one cannot agree with an extension compiled against the other on the type of the
 ## `Succession.UniversalCohorts` site variable, and LANDIS-II aborts printing the same type name on
-## both sides of "is not".
+## both sides of "is not". Install order has no bearing on it, which is why the workflow runs one
+## leg per generation rather than trying to install both.
 ##
-## `extensions-v8-UCL2-release.yaml` is upstream's own curation of the UCLv2-compatible subset (16
-## extensions against the release list's 25), and build_scenarios.R already uses it for the uclv2
-## image. Taking it here means the set stays correct as upstream rebuilds extensions, rather than
-## being a list this repo has to maintain.
+## `extensions-v8-UCL2-release.yaml` is upstream's own curation of the v2 subset (16 extensions
+## against the release list's 25) and is the default; the workflow sets LANDIS_EXTENSIONS_YAML per
+## leg. Taking upstream's list means the set stays correct as extensions are rebuilt, rather than
+## becoming a list this repo maintains.
+EXTENSIONS_YAML <- Sys.getenv("LANDIS_EXTENSIONS_YAML", unset = "extensions-v8-UCL2-release.yaml")
+
 YAML_URL <- sprintf(
-  "https://raw.githubusercontent.com/%s/%s/extensions-v8-UCL2-release.yaml",
+  "https://raw.githubusercontent.com/%s/%s/%s",
   TDA_REPO,
-  TDA_REF
+  TDA_REF,
+  EXTENSIONS_YAML
 )
 
-## Extensions listed in the UCLv2 YAML that are NOT in fact built against UCLv2, and so cannot be
-## installed alongside the rest. Each entry is a bug upstream; this list is the local stand-in until
-## it is fixed there, and an entry should be deleted as soon as it can be.
+## Extensions listed in a YAML that are NOT in fact built against that generation, and so cannot be
+## installed alongside the rest of it. Each entry is a bug upstream; this is the local stand-in
+## until it is fixed there, and an entry should be deleted as soon as it can be.
 ##
 ## Social Climate Fire (SCRAPPLE): appears in the UCLv2 list but binds the older library, so
-## necn_scrpple aborts with the type mismatch in BOTH image variants while necn_all_extension --
-## same NECN backend, without SCRAPPLE -- runs to completion.
-EXTENSIONS_EXCLUDED <- c("Extension-Social-Climate-Fire")
+## necn_scrpple aborts with the type mismatch in both image variants while necn_all_extension --
+## same NECN backend, without SCRAPPLE -- runs to completion. Keyed BY YAML because the listing is
+## wrong only for UCLv2: on the release list SCRAPPLE belongs, and necn_all_extension__release needs
+## it present to run at all.
+EXTENSIONS_EXCLUDED_BY_YAML <- list(
+  "extensions-v8-UCL2-release.yaml" = c("Extension-Social-Climate-Fire")
+)
+EXTENSIONS_EXCLUDED <- EXTENSIONS_EXCLUDED_BY_YAML[[EXTENSIONS_YAML]]
+if (is.null(EXTENSIONS_EXCLUDED)) {
+  EXTENSIONS_EXCLUDED <- character(0)
+}
 
 download_dir <- {
   i <- match("--download-dir", args)
@@ -556,7 +568,7 @@ if (length(dropped) > 0L) {
     cli_alert_warning("excluding {d} (listed upstream but not built against UCLv2)")
   }
 }
-cli_alert_info("installing {nrow(extensions)} extension(s) from the UCLv2 list")
+cli_alert_info("installing {nrow(extensions)} extension(s) from {EXTENSIONS_YAML}")
 
 ## Export the exclusion so build_scenarios.R (which runs after this step) builds scenarios against
 ## the same set that is actually installed. Without this the two disagree: the UCLv2 YAML lists
