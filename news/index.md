@@ -1,5 +1,30 @@
 # Changelog
 
+## landisutils 0.0.102
+
+- [`run_calibration_validation()`](https://for-cast.github.io/landisutils/reference/run_calibration_validation.md)
+  derives its warm-pool settings from `cfg` instead of hard-coding them.
+  It passed `mem_limit = "8g"` regardless of configuration, so on a
+  397,100-active-cell landscape whose measured ForCS peak is 11.0-11.1
+  GiB, all 20 validation replicates died in `ForC.SiteVars.Initialize`
+  with `System.OutOfMemoryException` about 150 s in – immediately after
+  a 30-generation calibration of that same scenario had completed
+  successfully on its 13 GiB grant. Validation re-runs the scenario the
+  search just tuned, at the same landscape size, so a grant that differs
+  from the calibration’s is wrong by construction. It now also forwards
+  `cfg$image` (previously resolved from a global option that a
+  long-lived crew worker can hold stale, which callers were working
+  around by temporarily overwriting that option) and `cfg$retries`
+  (validation failed after a single attempt while the search that
+  produced the parameters got three).
+- The per-container RAM estimate and grant move into
+  `.cfg_mem_per_worker()` and `.cfg_mem_limit()`, called by both pools.
+  Computing them independently is what let the two drift apart, and the
+  drift was invisible until a landscape grew past the hard-coded figure.
+  Note the no-config default is a 10 GiB grant (an 8 GiB estimate plus
+  25% headroom), which is *below* what a ~400,000-active-cell ForCS
+  landscape needs – configs at that scale must set `mem_per_worker_gb`.
+
 ## landisutils 0.0.101
 
 - [`growth_reference_curves()`](https://for-cast.github.io/landisutils/reference/growth_reference_curves.md)

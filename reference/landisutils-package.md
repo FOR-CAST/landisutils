@@ -1,4 +1,4 @@
-# landisutils: Utilities for running LANDIS-II simulations
+# landisutils: Utilities for Running LANDIS-II Simulations
 
 Tools and utilities for preparing data for and running 'LANDIS-II'
 simulations, and post-processing their outputs.

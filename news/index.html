@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.101</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.102</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,6 +41,12 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.102" id="landisutils-00102">landisutils 0.0.102<a class="anchor" aria-label="anchor" href="#landisutils-00102"></a></h2>
+<ul><li>
+<code><a href="../reference/run_calibration_validation.html">run_calibration_validation()</a></code> derives its warm-pool settings from <code>cfg</code> instead of hard-coding them. It passed <code>mem_limit = "8g"</code> regardless of configuration, so on a 397,100-active-cell landscape whose measured ForCS peak is 11.0-11.1 GiB, all 20 validation replicates died in <code>ForC.SiteVars.Initialize</code> with <code>System.OutOfMemoryException</code> about 150 s in – immediately after a 30-generation calibration of that same scenario had completed successfully on its 13 GiB grant. Validation re-runs the scenario the search just tuned, at the same landscape size, so a grant that differs from the calibration’s is wrong by construction. It now also forwards <code>cfg$image</code> (previously resolved from a global option that a long-lived crew worker can hold stale, which callers were working around by temporarily overwriting that option) and <code>cfg$retries</code> (validation failed after a single attempt while the search that produced the parameters got three).</li>
+<li>The per-container RAM estimate and grant move into <code>.cfg_mem_per_worker()</code> and <code>.cfg_mem_limit()</code>, called by both pools. Computing them independently is what let the two drift apart, and the drift was invisible until a landscape grew past the hard-coded figure. Note the no-config default is a 10 GiB grant (an 8 GiB estimate plus 25% headroom), which is <em>below</em> what a ~400,000-active-cell ForCS landscape needs – configs at that scale must set <code>mem_per_worker_gb</code>.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.101" id="landisutils-00101">landisutils 0.0.101<a class="anchor" aria-label="anchor" href="#landisutils-00101"></a></h2>
 <ul><li>
