@@ -131,6 +131,8 @@ jobs:
           dotnet --info
 
       - name: Build LANDIS-II scenarios
+        id: build
+        continue-on-error: true
         run: |
           $scen_root = Join-Path $env:RUNNER_TEMP "landis-scenarios"
           New-Item -ItemType Directory -Force -Path $scen_root | Out-Null
@@ -141,20 +143,59 @@ jobs:
 
       - name: Run LANDIS-II on each scenario
         run: |
+          ## This loop is meant to run every scenario and report all the failures at once, but it
+          ## did not: GitHub sets $ErrorActionPreference = 'stop' for pwsh, and PowerShell 7.4+
+          ## enables $PSNativeCommandUseErrorActionPreference by default, which promotes a non-zero
+          ## exit from a NATIVE command (Rscript) to a terminating error. The first failing scenario
+          ## therefore aborted the step, the remaining ones never ran, and the $fail accumulator was
+          ## dead code. Observed: 1 failure reported out of 8 scenarios staged, 6 never attempted.
+          $ErrorActionPreference = 'Continue'
+          $PSNativeCommandUseErrorActionPreference = $false
+
           $list = Join-Path $env:RUNNER_TEMP "landis-scenarios.list"
-          $fail = 0
+          $failed = @()
+          $skipped = @()
+          $ran = 0
           foreach ($scen_path in (Get-Content $list)) {
             if (-not $scen_path) { continue }
             $scen_name = Split-Path -Leaf $scen_path
+
+            ## This runner installs only the UCLv2 extension set (see install_landis_windows.R:
+            ## the v8 collection ships UniversalCohorts v1 and v2 side by side and they cannot be
+            ## mixed). Scenarios built for the release image reference extensions that are not
+            ## installed here, and would fail on "No extension with the name ..." rather than on
+            ## anything this package controls. `biomass_succession` is image-agnostic and uses only
+            ## the succession extension, so it runs.
+            if ($scen_name -ne "biomass_succession" -and $scen_name -notlike "*__uclv2") {
+              Write-Host "skip (built for the release image): $scen_name"
+              $skipped += $scen_name
+              continue
+            }
+            ## SCRAPPLE is in EXTENSIONS_EXCLUDED: listed in the UCLv2 YAML upstream but built
+            ## against the older library. Remove this once that is fixed upstream.
+            if ($scen_name -like "*scrpple*") {
+              Write-Host "skip (SCRAPPLE excluded; not built against UCLv2): $scen_name"
+              $skipped += $scen_name
+              continue
+            }
             Write-Host "::group::LANDIS-II run: $scen_name"
             Rscript inst/integration-tests/run_native.R $scen_path
+            $ran++
             if ($LASTEXITCODE -ne 0) {
               Write-Host "::error::LANDIS-II run failed for scenario '$scen_name' (exit $LASTEXITCODE)"
-              $fail = 1
+              $failed += $scen_name
             }
             Write-Host "::endgroup::"
           }
-          exit $fail
+          Write-Host "Ran $ran scenario(s); $($failed.Count) failed; $($skipped.Count) skipped."
+          if ($skipped.Count -gt 0) {
+            Write-Host "Skipped: $($skipped -join ', ')"
+          }
+          if ($failed.Count -gt 0) {
+            Write-Host "::error::LANDIS-II failed for $($failed.Count)/$ran scenario(s): $($failed -join ', ')"
+            exit 1
+          }
+          exit 0
 
       - name: Upload scenario directories
         if: always()
@@ -163,3 +204,29 @@ jobs:
           name: landis-scenarios-windows
           path: ${{ runner.temp }}/landis-scenarios
           retention-days: 7
+          if-no-files-found: ignore
+
+      ## The installer writes msiexec/Inno Setup verbose logs beside the downloads. Without this,
+      ## an install failure discards the only thing that explains it: the run that prompted this
+      ## step died on `msiexec exit 1619` with the log sitting unread on the runner, and the
+      ## scenarios directory -- the sole artifact -- did not exist because the build step had been
+      ## skipped, so the job produced no artifacts at all. Logs only, not the ~30 MB of installers.
+      - name: Upload installer logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: landis-installer-logs-windows
+          path: ${{ runner.temp }}/landis-installers/*.log
+          retention-days: 7
+          if-no-files-found: ignore
+
+      ## Placed AFTER the run steps on purpose. build_scenarios.R exits non-zero when a scenario
+      ## fails to build, which is what makes a silent loss of coverage visible -- but if the build
+      ## step itself fails, every later step is skipped and the scenarios that DID build never run.
+      ## `continue-on-error` on the build step keeps them running; this gate then fails the job, so
+      ## one run reports both what still works and what stopped building.
+      - name: Fail if any scenario failed to build
+        if: always() && steps.build.outcome == 'failure'
+        run: |
+          echo "::error::one or more scenarios failed to build; see the 'Build LANDIS-II scenarios' step"
+          exit 1
