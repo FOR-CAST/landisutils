@@ -43,6 +43,7 @@ download_refs <- function(base_url, dest_dir, filenames) {
 }
 
 scenarios <- character(0)
+build_errors <- character(0)
 
 ## ---------------------------------------------------------------------------
 ## Scenario: Biomass Succession (no disturbances, no outputs)
@@ -350,7 +351,24 @@ fetch_image_extensions <- function(yaml_filename) {
   }
   lines <- readLines(tmp, warn = FALSE)
   active <- grep("^-\\s+repo:\\s+", lines, value = TRUE)
-  trimws(sub("^-\\s+repo:\\s+", "", active))
+  repos <- trimws(sub("^-\\s+repo:\\s+", "", active))
+
+  ## Drop extensions the caller could not install. The native Windows runner installs the UCLv2 set
+  ## minus anything not actually built against it (see EXTENSIONS_EXCLUDED in
+  ## install_landis_windows.R, which exports this), so a scenario must not be built referencing an
+  ## extension that will not be present -- LANDIS-II would abort with `No extension with the name
+  ## ...`, which says nothing about the inputs this package writes. Empty for the docker jobs, whose
+  ## images carry the full published set.
+  excluded <- Sys.getenv("LANDIS_EXCLUDE_EXTENSIONS", unset = "")
+  if (nzchar(excluded)) {
+    drop <- trimws(strsplit(excluded, ",")[[1]])
+    hit <- intersect(repos, drop)
+    if (length(hit) > 0L) {
+      message(sprintf("  excluding from %s: %s", yaml_filename, paste(hit, collapse = ", ")))
+      repos <- setdiff(repos, drop)
+    }
+  }
+  repos
 }
 
 ##' Translate a vector of upstream repo names into R6 class names via
@@ -407,23 +425,56 @@ download_repo_subtree <- function(repo, ref, subtree, dest_dir) {
       stop(sprintf("failed to download %s", url), call. = FALSE)
     }
   }
-  ## tar root is "<repo-basename>-<ref>"; subtree paths inside the tarball
-  ## are "<root>/<subtree>/...".
-  all <- utils::untar(tarball, list = TRUE)
-  prefix <- sprintf("[^/]+/%s/", subtree)
-  matches <- grep(prefix, all, value = TRUE)
-  matches <- matches[!grepl("/$", matches)] ## drop directory entries
-  if (length(matches) == 0L) {
+  ## Extract the WHOLE tarball once per (repo, ref) rather than passing `files=` to untar().
+  ##
+  ## On Windows untar() shells out to tar.exe and passes the file list on the COMMAND LINE, which
+  ## is capped at about 8191 characters. A subtree of any size silently exceeds that and only the
+  ## first few entries are extracted -- untar() does not report it. TestPnET_AllExtension/inputs
+  ## came out as 3 files instead of the full set, and the failure surfaced much later, and far from
+  ## its cause, as add_file() refusing a file that had never been staged. Linux hides this entirely
+  ## because ARG_MAX is ~2 MB.
+  ##
+  ## Extracting everything once also avoids re-running untar() for each scenario that draws on the
+  ## same tarball.
+  extracted <- file.path(cache_dir, sprintf("x-%s-%s", gsub("/", "_", repo), ref))
+  if (!dir.exists(extracted)) {
+    dir.create(extracted, recursive = TRUE, showWarnings = FALSE)
+    utils::untar(tarball, exdir = extracted)
+  }
+
+  ## tar root is "<repo-basename>-<ref>"; the subtree sits at "<root>/<subtree>".
+  src_dir <- NULL
+  for (root in list.dirs(extracted, recursive = FALSE)) {
+    candidate <- file.path(root, subtree)
+    if (dir.exists(candidate)) {
+      src_dir <- candidate
+      break
+    }
+  }
+  if (is.null(src_dir)) {
     stop(sprintf("no files matched subtree '%s' in %s@%s", subtree, repo, ref), call. = FALSE)
   }
-  staging <- tempfile("subtree_")
-  dir.create(staging, recursive = TRUE)
-  on.exit(unlink(staging, recursive = TRUE), add = TRUE)
-  utils::untar(tarball, files = matches, exdir = staging)
+
   ## Flatten: copy every file's basename to dest_dir.
-  src_files <- list.files(staging, recursive = TRUE, full.names = TRUE)
-  for (sf in src_files) {
-    file.copy(sf, file.path(dest_dir, basename(sf)), overwrite = TRUE)
+  src_files <- list.files(src_dir, recursive = TRUE, full.names = TRUE)
+  if (length(src_files) == 0L) {
+    stop(sprintf("subtree '%s' in %s@%s contains no files", subtree, repo, ref), call. = FALSE)
+  }
+  copied <- vapply(
+    src_files,
+    function(sf) file.copy(sf, file.path(dest_dir, basename(sf)), overwrite = TRUE),
+    logical(1)
+  )
+  if (!all(copied)) {
+    stop(
+      sprintf(
+        "failed to stage %d of %d file(s) from subtree '%s'",
+        sum(!copied),
+        length(copied),
+        subtree
+      ),
+      call. = FALSE
+    )
   }
   invisible(length(src_files))
 }
@@ -469,6 +520,14 @@ build_one <- function(scen_name, image_id, image_info, builder, out_dir) {
     message(sprintf("  ERROR building %s on %s: %s", scen_name, image_id, conditionMessage(e)))
     ## Leave the partial scen_dir on disk so the failure can be inspected.
     writeLines(conditionMessage(e), file.path(scen_dir, ".build_error"))
+    ## Record it so the script can fail at the end. A build error used to be swallowed here: it
+    ## became a message, the scenario was dropped from the emitted list, and the harness carried on
+    ## with fewer scenarios while still reporting success. Coverage fell from 9 scenarios to 2
+    ## without turning CI red once, across three merged PRs and a release.
+    build_errors <<- c(
+      build_errors,
+      sprintf("%s on %s: %s", scen_name, image_id, conditionMessage(e))
+    )
     errored <<- TRUE
     NULL
   })
@@ -1800,3 +1859,20 @@ for (image_id in names(IMAGES)) {
 ## ---------------------------------------------------------------------------
 cat(scenarios, sep = "\n")
 cat("\n")
+
+## Fail loudly. Intentional skips (a scenario incompatible with an image) are not errors and do
+## not reach here; genuine build failures do. Exiting non-zero is deliberate: the list above has
+## already been emitted, so the caller can still see what built, but the job goes red instead of
+## quietly testing less than it claims to.
+if (length(build_errors) > 0L) {
+  for (e in build_errors) {
+    cat(sprintf("::error::scenario build failed: %s\n", e), file = stderr())
+  }
+  message(sprintf(
+    "%d of %d scenario(s) failed to build; %d emitted.",
+    length(build_errors),
+    length(build_errors) + length(scenarios),
+    length(scenarios)
+  ))
+  quit(save = "no", status = 1L)
+}
