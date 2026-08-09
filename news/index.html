@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.103</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.104</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,6 +41,11 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.104" id="landisutils-00104">landisutils 0.0.104<a class="anchor" aria-label="anchor" href="#landisutils-00104"></a></h2>
+<ul><li>
+<code><a href="../reference/calibrate_dynamic_fire.html">calibrate_dynamic_fire()</a></code>’s evaluation fingerprint actually includes the scenario template now. The digest helper added in 0.0.75 required its argument to be a directory, but every caller passes the scenario FILE (<code>.../scenario.txt</code>) – <code><a href="../reference/run_calibration_validation.html">run_calibration_validation()</a></code> takes <code><a href="https://rdrr.io/r/base/basename.html" class="external-link">dirname()</a></code> of the same value for precisely that reason – so it returned <code>NULL</code> on every real call and the template contributed nothing to the fingerprint. The failure it was written to prevent therefore persisted silently: a calibration relaunched after refitting the fire-size distribution reproduced the previous run’s fingerprint exactly, replayed five generations of cached losses in ten minutes, and would have reported the old optimum as if it were new. A silent <code>NULL</code> is indistinguishable from a template that genuinely has not changed, so the helper now accepts either a directory or a file inside one, and warns rather than returning <code>NULL</code> quietly when neither resolves.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.103" id="landisutils-00103">landisutils 0.0.103<a class="anchor" aria-label="anchor" href="#landisutils-00103"></a></h2>
 <ul><li>Tearing down a multi-node calibration no longer orphans every container when one worker is unreachable. The teardown issued a single cluster-wide <code>clusterCall()</code>, which is all-or-nothing – it dispatches to every node and waits for every reply, so one unresponsive worker errored the whole call, and a <code>try(silent = TRUE)</code> around it discarded the error. Observed twice on a 45-worker fleet, once after a deliberate stop and once after a clean completion; losing all 45 rather than a subset is the signature of the single call failing wholesale, and nothing in the run’s output said so. Each worker’s pool is now stopped independently, and any that cannot be reached produce a warning naming them, so stragglers are visible instead of silently consuming a node.</li>

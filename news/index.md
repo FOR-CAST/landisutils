@@ -1,5 +1,25 @@
 # Changelog
 
+## landisutils 0.0.104
+
+- [`calibrate_dynamic_fire()`](https://for-cast.github.io/landisutils/reference/calibrate_dynamic_fire.md)’s
+  evaluation fingerprint actually includes the scenario template now.
+  The digest helper added in 0.0.75 required its argument to be a
+  directory, but every caller passes the scenario FILE
+  (`.../scenario.txt`) –
+  [`run_calibration_validation()`](https://for-cast.github.io/landisutils/reference/run_calibration_validation.md)
+  takes [`dirname()`](https://rdrr.io/r/base/basename.html) of the same
+  value for precisely that reason – so it returned `NULL` on every real
+  call and the template contributed nothing to the fingerprint. The
+  failure it was written to prevent therefore persisted silently: a
+  calibration relaunched after refitting the fire-size distribution
+  reproduced the previous run’s fingerprint exactly, replayed five
+  generations of cached losses in ten minutes, and would have reported
+  the old optimum as if it were new. A silent `NULL` is
+  indistinguishable from a template that genuinely has not changed, so
+  the helper now accepts either a directory or a file inside one, and
+  warns rather than returning `NULL` quietly when neither resolves.
+
 ## landisutils 0.0.103
 
 - Tearing down a multi-node calibration no longer orphans every
