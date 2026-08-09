@@ -62,11 +62,31 @@ dry_run <- "--dry-run" %in% args
 })()
 source(file.path(.this_script_dir, "_pins.R"))
 
+## Install the UCLv2 set, not the full release set. The v8 extension collection ships two major
+## versions of the cohort library side by side -- UniversalCohorts v1 and v2, plus Succession v9 and
+## v10 -- under different filenames, so both are installed and nothing overwrites anything. An
+## extension built against v1 cannot agree with one built against v2 on the type of the
+## `Succession.UniversalCohorts` site variable, and LANDIS-II aborts printing the same type name on
+## both sides of "is not".
+##
+## `extensions-v8-UCL2-release.yaml` is upstream's own curation of the UCLv2-compatible subset (16
+## extensions against the release list's 25), and build_scenarios.R already uses it for the uclv2
+## image. Taking it here means the set stays correct as upstream rebuilds extensions, rather than
+## being a list this repo has to maintain.
 YAML_URL <- sprintf(
-  "https://raw.githubusercontent.com/%s/%s/extensions-v8-release.yaml",
+  "https://raw.githubusercontent.com/%s/%s/extensions-v8-UCL2-release.yaml",
   TDA_REPO,
   TDA_REF
 )
+
+## Extensions listed in the UCLv2 YAML that are NOT in fact built against UCLv2, and so cannot be
+## installed alongside the rest. Each entry is a bug upstream; this list is the local stand-in until
+## it is fixed there, and an entry should be deleted as soon as it can be.
+##
+## Social Climate Fire (SCRAPPLE): appears in the UCLv2 list but binds the older library, so
+## necn_scrpple aborts with the type mismatch in BOTH image variants while necn_all_extension --
+## same NECN backend, without SCRAPPLE -- runs to completion.
+EXTENSIONS_EXCLUDED <- c("Extension-Social-Climate-Fire")
 
 download_dir <- {
   i <- match("--download-dir", args)
@@ -248,6 +268,16 @@ run_msi_installer <- function(msi_path) {
     cli_alert_info("  (dry-run; skipping)")
     return(0L)
   }
+  ## msiexec will not open a package whose path mixes separators, and answers 1619
+  ## (ERROR_INSTALL_PACKAGE_OPEN_FAILED) rather than saying so. The path arrives that way by
+  ## construction: `download_dir` is normalizePath()'d (backslashes) and the filename is joined
+  ## with file.path() (forward slash), giving `D:\a\_temp\landis-installers/LANDIS-II-8.0-setup64.msi`.
+  ## Quoting does not help -- shQuote() already emits the double quotes msiexec wants.
+  ##
+  ## chartr() rather than normalizePath(winslash = "\\"): that only rewrites separators on Windows,
+  ## and only for a path that already exists, so it cannot be exercised anywhere else and would
+  ## silently do nothing if the file were missing. This is unconditional and testable.
+  msi_path <- chartr("/", "\\", msi_path)
   log_path <- paste0(msi_path, ".install.log")
   tryCatch(
     {
@@ -275,6 +305,160 @@ run_msi_installer <- function(msi_path) {
 ## Search for `Landis.Console.dll` under the standard Windows install
 ## roots. Restricts the recursion to LANDIS-II-named subtrees so we don't
 ## walk the entire Program Files tree (which is slow on GHA runners).
+## Report which copy of each shared library is actually present after install. Version plus
+## timestamp: the timestamp is what identifies which installer wrote it, and that is the thing a
+## type-identity mismatch turns on.
+report_shared_libraries <- function() {
+  console <- find_console_dll()
+  if (is.null(console)) {
+    return(invisible(NULL))
+  }
+  ## Search the whole LANDIS-II install tree, not dirname(console). Extensions install into sibling
+  ## directories and register themselves in extensions.xml, so scanning only the console's own
+  ## directory finds essentially nothing -- the first version of this reported a single
+  ## Landis.Library.Metadata dll and no UniversalCohorts at all, which is what made the assembly
+  ## mismatch impossible to attribute.
+  root <- dirname(dirname(console))
+  libs <- list.files(
+    root,
+    pattern = "^Landis\\.Library\\..*\\.dll$",
+    recursive = TRUE,
+    full.names = TRUE,
+    ignore.case = TRUE
+  )
+  if (length(libs) == 0L) {
+    cli_alert_warning("no Landis.Library.*.dll found under {root}")
+    return(invisible(NULL))
+  }
+
+  ## Where LANDIS-II actually loads assemblies from. Two scans of the filesystem have now failed to
+  ## locate Landis.Library.UniversalCohorts -- the library the "data type of site variable X is T,
+  ## not T" abort is about -- so stop guessing at install layout and read the registry LANDIS-II
+  ## itself consults.
+  ext_xml <- list.files(
+    dirname(console),
+    pattern = "^extensions\\.xml$",
+    recursive = TRUE,
+    full.names = TRUE,
+    ignore.case = TRUE
+  )
+  if (length(ext_xml) > 0L) {
+    cli_h1("extensions.xml: {ext_xml[[1]]}")
+    xml <- readLines(ext_xml[[1]], warn = FALSE)
+    asm <- unique(trimws(regmatches(xml, regexpr("(?<=<Assembly>)[^<]+", xml, perl = TRUE))))
+    cli_alert_info("{length(asm)} assemblies registered")
+    ## Resolve each registered assembly to a file and report duplicates by size.
+    found <- unlist(lapply(unique(asm), function(a) {
+      list.files(
+        dirname(console),
+        pattern = paste0("^", gsub("([.\\\\+*?\\[^\\]$(){}=!<>|:-])", "\\\\\\1", a), "\\.dll$"),
+        recursive = TRUE,
+        full.names = TRUE,
+        ignore.case = TRUE
+      )
+    }))
+    if (length(found) > 0L) {
+      cli_alert_info("resolved {length(found)} assembly file(s) under {dirname(console)}")
+    }
+  } else {
+    cli_alert_warning("no extensions.xml found under {dirname(console)}")
+  }
+
+  ## Broad sweep: the shared cohort libraries wherever they live on this machine.
+  sweep_roots <- unique(Filter(
+    function(x) nzchar(x) && dir.exists(x),
+    c(Sys.getenv("ProgramFiles"), Sys.getenv("ProgramFiles(x86)"), Sys.getenv("LOCALAPPDATA"))
+  ))
+  cohort <- unlist(lapply(sweep_roots, function(r) {
+    list.files(
+      r,
+      pattern = "^Landis\\.Library\\.(UniversalCohorts|Succession).*\\.dll$",
+      recursive = TRUE,
+      full.names = TRUE,
+      ignore.case = TRUE
+    )
+  }))
+  if (length(cohort) > 0L) {
+    cli_h1("Cohort/succession libraries on this machine")
+    ci <- file.info(cohort)
+    for (i in order(basename(cohort))) {
+      cli_alert_info(
+        "{basename(cohort[i])}  {format(ci$size[i], big.mark = ',')} bytes  {cohort[i]}"
+      )
+    }
+  } else {
+    cli_alert_warning(
+      "no UniversalCohorts/Succession libraries found in: {paste(sweep_roots, collapse = ', ')}"
+    )
+  }
+
+  cli_h1("Shared libraries present after install")
+  info <- file.info(libs)
+  ## Group by library name. More than one copy of a name means more than one assembly identity is
+  ## loadable, and differing SIZES mean they are genuinely different builds -- which is the
+  ## precondition for LANDIS-II aborting with "the data type of site variable X is T, not T".
+  for (nm in sort(unique(basename(libs)))) {
+    idx <- which(basename(libs) == nm)
+    sizes <- unique(info$size[idx])
+    if (length(idx) == 1L) {
+      cli_alert_info("{nm}  {format(info$size[idx], big.mark = ',')} bytes")
+    } else if (length(sizes) == 1L) {
+      cli_alert_info("{nm}  {length(idx)} identical copies  {format(sizes, big.mark = ',')} bytes")
+    } else {
+      cli_alert_danger(
+        "{nm}  {length(idx)} copies with {length(sizes)} DIFFERENT builds -- assembly conflict"
+      )
+      for (i in idx) {
+        cli_alert_warning(
+          "    {format(info$size[i], big.mark = ',')} bytes  {format(info$mtime[i], '%H:%M:%S')}  {sub(root, '', libs[i], fixed = TRUE)}"
+        )
+      }
+    }
+  }
+  invisible(libs)
+}
+
+## The library versions an extension is built against decide whether it can share a landscape with
+## the others. Two major versions of the cohort library ship in the v8 extension set --
+## UniversalCohorts v1 and v2 (and Succession v9 and v10) -- installed side by side under different
+## filenames, so nothing overwrites anything and install order is irrelevant. An extension compiled
+## against v1 and one compiled against v2 cannot agree on the type of the `Succession.UniversalCohorts`
+## site variable, and LANDIS-II aborts with the same type name printed on both sides of "is not".
+##
+## These two functions record which installer drops which library, and which library each extension
+## binary actually references, so the whitelist is built from evidence rather than assumption.
+.LANDIS_SPLIT_LIBS <- c(
+  "Landis.Library.UniversalCohorts-v1",
+  "Landis.Library.UniversalCohorts-v2",
+  "Landis.Library.Succession-v9",
+  "Landis.Library.Succession-v10"
+)
+
+## Files (name -> size) currently in the extensions directory.
+snapshot_ext_dir <- function(ext_dir) {
+  if (!dir.exists(ext_dir)) {
+    return(setNames(numeric(0), character(0)))
+  }
+  f <- list.files(ext_dir, full.names = TRUE)
+  stats::setNames(file.info(f)$size, basename(f))
+}
+
+## Which of .LANDIS_SPLIT_LIBS a .NET assembly references. Assembly references are stored as plain
+## strings in the metadata, so a byte scan is enough and needs no .NET tooling on the runner.
+assembly_refs <- function(dll) {
+  raw <- tryCatch(readBin(dll, "raw", file.size(dll)), error = function(e) raw(0))
+  if (length(raw) == 0L) {
+    return(character(0))
+  }
+  txt <- rawToChar(raw[raw != as.raw(0)])
+  Encoding(txt) <- "bytes"
+  .LANDIS_SPLIT_LIBS[vapply(
+    .LANDIS_SPLIT_LIBS,
+    function(p) grepl(p, txt, fixed = TRUE, useBytes = TRUE),
+    logical(1)
+  )]
+}
+
 find_console_dll <- function() {
   roots <- c(
     Sys.getenv("ProgramFiles"),
@@ -312,9 +496,41 @@ if (!is.null(rate_info)) {
 
 cli_h1("Installing LANDIS-II Core console (MSI)")
 core_msi <- file.path(download_dir, basename(CORE_MSI_PATH))
+
+## The Core MSI was the one download with no integrity check: the extension assets pass an
+## `expected_size` from the contents API, this did not. A truncated or partial download therefore
+## surfaced as msiexec 1619 at install time rather than as a failed download, which is both later
+## and far less legible. Ask the API for the size the same way the extensions do.
+core_owner <- sub("/.*$", "", CORE_MSI_REPO)
+core_repo <- sub("^.*/", "", CORE_MSI_REPO)
+core_size <- tryCatch(
+  gh(
+    "GET /repos/{owner}/{repo}/contents/{path}",
+    owner = core_owner,
+    repo = core_repo,
+    path = CORE_MSI_PATH,
+    ref = CORE_MSI_REF
+  )$size,
+  error = function(e) {
+    cli_alert_warning("could not resolve Core MSI size from the API: {conditionMessage(e)}")
+    NULL
+  }
+)
+
+## A cached MSI is only reusable if it is the right size. `landis-installers` is restored from the
+## Actions cache, so a bad download would otherwise be cached and replayed on every later run.
+if (file.exists(core_msi) && !is.null(core_size)) {
+  cached <- file.size(core_msi)
+  if (!is.na(cached) && cached != core_size) {
+    cli_alert_warning("cached MSI is {cached} bytes, expected {core_size}; re-downloading")
+    file.remove(core_msi)
+  }
+}
 if (!file.exists(core_msi)) {
-  cli_alert_info("downloading {basename(CORE_MSI_PATH)}")
-  if (!download_with_check(CORE_MSI_URL, core_msi)) {
+  cli_alert_info(
+    "downloading {basename(CORE_MSI_PATH)}{if (is.null(core_size)) '' else paste0(' (', core_size, ' bytes)')}"
+  )
+  if (!download_with_check(CORE_MSI_URL, core_msi, expected_size = core_size)) {
     cli_abort("Core MSI download failed: {CORE_MSI_URL}")
   }
 }
@@ -331,8 +547,41 @@ cli_alert_success("Core console installed")
 cli_h1("Fetching extension list from Tool-Docker-Apptainer")
 yaml_text <- paste(readLines(YAML_URL, warn = FALSE), collapse = "\n")
 extensions <- parse_extensions_yaml(yaml_text)
-cli_alert_info("found {nrow(extensions)} extensions")
 
+## Filter AFTER parsing: parse_extensions_yaml() stays a faithful reading of the upstream file.
+dropped <- intersect(extensions$repo, EXTENSIONS_EXCLUDED)
+if (length(dropped) > 0L) {
+  extensions <- extensions[!extensions$repo %in% EXTENSIONS_EXCLUDED, , drop = FALSE]
+  for (d in dropped) {
+    cli_alert_warning("excluding {d} (listed upstream but not built against UCLv2)")
+  }
+}
+cli_alert_info("installing {nrow(extensions)} extension(s) from the UCLv2 list")
+
+## Export the exclusion so build_scenarios.R (which runs after this step) builds scenarios against
+## the same set that is actually installed. Without this the two disagree: the UCLv2 YAML lists
+## Social Climate Fire, so necn_all_extension__uclv2 was built referencing it and then aborted at
+## run time with `No extension with the name "Social Climate Fire"` -- a mismatch of our own making
+## rather than anything upstream.
+github_env_excl <- Sys.getenv("GITHUB_ENV", unset = "")
+if (nzchar(github_env_excl) && length(EXTENSIONS_EXCLUDED) > 0L) {
+  cat(
+    sprintf("LANDIS_EXCLUDE_EXTENSIONS=%s\n", paste(EXTENSIONS_EXCLUDED, collapse = ",")),
+    file = github_env_excl,
+    append = TRUE
+  )
+  cli_alert_info("exported LANDIS_EXCLUDE_EXTENSIONS to GITHUB_ENV")
+}
+
+installer_libs <- list()
+## The Core MSI has been installed by this point, so the console (and thus the extensions dir
+## beside it) can be located. NULL-safe: the diff below simply records nothing if it is missing.
+.console_now <- find_console_dll()
+ext_dir <- if (is.null(.console_now)) {
+  ""
+} else {
+  file.path(dirname(dirname(.console_now)), "extensions")
+}
 n_ok <- 0L
 n_fail <- 0L
 n_skip <- 0L
@@ -363,6 +612,7 @@ for (i in seq_len(nrow(extensions))) {
     }
   }
 
+  before <- snapshot_ext_dir(ext_dir)
   status <- run_inno_installer(dest)
   if (status == 0L) {
     n_ok <- n_ok + 1L
@@ -370,10 +620,72 @@ for (i in seq_len(nrow(extensions))) {
     cat(sprintf("::warning::installer %s exited %d\n", result$name, status), file = stderr())
     n_fail <- n_fail + 1L
   }
+  after <- snapshot_ext_dir(ext_dir)
+  changed <- names(after)[
+    !(names(after) %in% names(before)) |
+      (names(after) %in% names(before) & after[names(after)] != before[names(after)])
+  ]
+  libs_dropped <- grep("^Landis\\.Library\\.", changed, value = TRUE)
+  if (length(libs_dropped) > 0L) {
+    installer_libs[[repo]] <- libs_dropped
+  }
 }
 
 cli_rule()
 cli_alert_info("Done: {n_ok} installed, {n_fail} failed, {n_skip} no-installer")
+
+## Which installer dropped which cohort/succession library, and which version each extension
+## binary binds to. Together these say exactly which extensions belong in a UCLv2 + Succession-v10
+## whitelist and which have not been rebuilt against them.
+report_library_split <- function() {
+  if (length(installer_libs) > 0L) {
+    cli_h1("Cohort/succession libraries by installer")
+    for (repo in names(installer_libs)) {
+      split_libs <- grep(
+        paste(.LANDIS_SPLIT_LIBS, collapse = "|"),
+        installer_libs[[repo]],
+        value = TRUE
+      )
+      if (length(split_libs) > 0L) {
+        ## Precompute: cli PARSES the contents of `{}`, so a regex with escapes inside an
+        ## interpolation is a parse error at runtime rather than a string.
+        libs_txt <- paste(sub("[.]dll$", "", split_libs), collapse = ", ")
+        cli_alert_info("{repo}: {libs_txt}")
+      }
+    }
+  }
+
+  if (!nzchar(ext_dir) || !dir.exists(ext_dir)) {
+    return(invisible(NULL))
+  }
+  dlls <- list.files(ext_dir, pattern = "\\.dll$", full.names = TRUE)
+  dlls <- dlls[!grepl("^Landis\\.Library\\.", basename(dlls))]
+  if (length(dlls) == 0L) {
+    return(invisible(NULL))
+  }
+  cli_h1("Which cohort library each extension binds to")
+  v2 <- character(0)
+  v1 <- character(0)
+  for (d in sort(dlls)) {
+    refs <- assembly_refs(d)
+    if (length(refs) == 0L) {
+      next
+    }
+    tag <- paste(sub("Landis\\.Library\\.", "", refs), collapse = ", ")
+    if (any(grepl("UniversalCohorts-v2|Succession-v10", refs))) {
+      v2 <- c(v2, basename(d))
+      cli_alert_success("{basename(d)}  -> {tag}")
+    } else {
+      v1 <- c(v1, basename(d))
+      cli_alert_danger("{basename(d)}  -> {tag}")
+    }
+  }
+  cli_alert_info("UCLv2/Succession-v10: {length(v2)} extension(s); older: {length(v1)}")
+  invisible(list(v2 = v2, v1 = v1))
+}
+report_library_split()
+
+report_shared_libraries()
 
 ## ---------------------------------------------------------------------------
 ## Locate and report Landis.Console.dll for the run step.
