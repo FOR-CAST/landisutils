@@ -460,7 +460,36 @@
   if (is.null(mc)) {
     return(invisible(NULL))
   }
-  try(parallel::clusterCall(mc$cl, .worker_pool_stop), silent = TRUE)
+  n <- length(mc$cl)
+
+  ## Stop each worker's pool INDEPENDENTLY. A single `clusterCall()` over the whole cluster is
+  ## all-or-nothing: it dispatches to every node and waits for every reply, so one unresponsive
+  ## worker errors the entire call -- and wrapped in `try(silent = TRUE)` that left EVERY
+  ## container running with nothing reported. Observed twice on a 45-worker fleet, once after a
+  ## deliberate stop and once after a clean completion; losing all 45 rather than a subset is the
+  ## signature of the single call failing wholesale.
+  failed <- integer(0)
+  for (i in seq_len(n)) {
+    res <- tryCatch(parallel::clusterCall(mc$cl[i], .worker_pool_stop), error = function(e) e)
+    if (inherits(res, "error")) {
+      failed <- c(failed, i)
+    }
+  }
+  if (length(failed)) {
+    warning(
+      sprintf(
+        paste0(
+          "%d of %d calibration worker pool(s) could not be torn down; their containers are ",
+          "still running and must be removed by hand (docker ps --filter name=landis-). ",
+          "Unreachable worker index(es): %s."
+        ),
+        length(failed),
+        n,
+        paste(failed, collapse = ", ")
+      ),
+      call. = FALSE
+    )
+  }
   try(parallel::stopCluster(mc$cl), silent = TRUE)
-  invisible(NULL)
+  invisible(list(stopped = n - length(failed), failed = length(failed)))
 }

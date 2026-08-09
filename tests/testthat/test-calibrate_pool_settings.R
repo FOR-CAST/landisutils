@@ -52,3 +52,50 @@ test_that("run_calibration_validation() passes cfg-derived pool settings, not li
   ## retries reaches sim_landis() from cfg
   expect_match(paste(src, collapse = " "), "retries\\s*=\\s*as\\.integer\\(cfg\\$retries")
 })
+
+## The block schedule the checkpointed DEoptim loop walks. Mirrors the `k <- ...` computation in
+## .run_deoptim_checkpointed(); kept here so the boundaries can be asserted without running a
+## multi-hour search.
+.block_schedule <- function(itermax, steptol, K) {
+  gens <- 0L
+  out <- integer(0)
+  repeat {
+    k <- min(K, itermax - gens)
+    if (k <= 0L) {
+      break
+    }
+    if (gens + k > steptol) {
+      k <- max(1L, min(k, steptol + 1L - gens))
+    }
+    gens <- gens + k
+    out <- c(out, gens)
+  }
+  out
+}
+
+test_that("the block schedule checks convergence every generation past steptol", {
+  ## Regression: with checkpoint_every = 5 and steptol = 25 the boundaries were 5,10,...,25,30,
+  ## so the earliest CHECKABLE generation (26) was skipped and a converged run went to 30.
+  b <- .block_schedule(itermax = 100L, steptol = 25L, K = 5L)
+  expect_identical(b[1:6], c(5L, 10L, 15L, 20L, 25L, 26L))
+  expect_identical(b[6:9], 26:29)
+})
+
+test_that("the block schedule never exceeds itermax", {
+  ## The shrink has a max(1L, ...) floor, so an exhausted budget must be caught before it applies.
+  for (itermax in c(1L, 5L, 26L, 30L, 100L)) {
+    for (K in c(1L, 5L, 10L)) {
+      b <- .block_schedule(itermax, steptol = 25L, K = K)
+      expect_identical(max(b), itermax)
+      expect_identical(b, sort(unique(b)))
+    }
+  }
+})
+
+test_that("a budget no longer than steptol yields no checkable generation", {
+  ## itermax <= steptol can never satisfy the length(history) > steptol test; the loop must still
+  ## terminate rather than spin.
+  b <- .block_schedule(itermax = 25L, steptol = 25L, K = 5L)
+  expect_identical(max(b), 25L)
+  expect_length(b, 5L)
+})

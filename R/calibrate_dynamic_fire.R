@@ -2246,9 +2246,10 @@ sim_mock <- function(
 #'       to improve by more than `reltol` for `steptol` consecutive generations.
 #'       Defaults: `reltol = 1e-3` (0.1% relative improvement) and
 #'       `steptol = 25` generations. Pass `steptol = itermax` (or any value `>=
-#'       itermax`) to disable early stopping and always run the full schedule.
-#'       Pass `cfg$steptol = NULL` to fall back to the upstream DEoptim default
-#'       (`steptol = itermax`).}
+#'       itermax`) to disable early stopping and always run the full schedule;
+#'       a run configured that way says so in a startup message. Omitting
+#'       `steptol` (or setting it to `NULL`) gives the 25-generation default, not
+#'       DEoptim's own `steptol = itermax`.}
 #'     \item{n_reps, sim_years, weights, base_seed}{Per-trial settings.}
 #'     \item{n_cores, parallel}{Parallelism settings.}
 #'     \item{simulator}{`"landis"` (default), `"r_reimpl"`, or `"mock"`.}
@@ -2583,11 +2584,10 @@ calibrate_dynamic_fire <- function(observed_targets_path, scenario_template, cfg
     trace = isTRUE(cfg$trace %||% TRUE),
     storepopfrom = 1L,
     storepopfreq = 5L,
-    ## Early-stopping (DEoptim halts when bestvalit fails to improve by more
-    ## than `reltol` for `steptol` consecutive generations). Caller can disable
-    ## by setting cfg$steptol >= cfg$itermax or by passing cfg$steptol = NULL
-    ## (the latter falls through to DEoptim's upstream default of steptol =
-    ## itermax, i.e. never stop early).
+    ## Early-stopping (the OUTER block loop halts when bestvalit fails to improve by more than
+    ## `reltol` over `steptol` generations; DEoptim's own in-block check is disabled). Disable it
+    ## by setting cfg$steptol >= cfg$itermax. Note `cfg$steptol = NULL` does NOT fall through to
+    ## DEoptim's upstream default -- `%||%` treats NULL as absent, so it yields the 25 below.
     reltol = as.numeric(cfg$reltol %||% 1e-3),
     steptol = as.integer(cfg$steptol %||% 25L)
   )
@@ -2971,6 +2971,17 @@ calibrate_dynamic_fire <- function(observed_targets_path, scenario_template, cfg
   )
   ckpt_path <- fs::path(out_dir, "checkpoint.rds")
 
+  ## `.deoptim_converged()` needs a history LONGER than `steptol`, so a run whose whole budget is
+  ## no longer than `steptol` can never satisfy it and will always run to `itermax` -- which looks
+  ## exactly like early stopping being broken. Setting `steptol >= itermax` is the documented way
+  ## to DISABLE early stopping, so this is only worth saying out loud, not correcting.
+  if (itermax_total <= steptol) {
+    message(glue::glue(
+      "calibrate_dynamic_fire: early stopping is disabled (steptol = {steptol} >= ",
+      "itermax = {itermax_total}); the search will run all {itermax_total} generation(s)."
+    ))
+  }
+
   pop <- NULL
   gens_done <- 0L
   best_hist <- numeric(0)
@@ -3008,8 +3019,22 @@ calibrate_dynamic_fire <- function(observed_targets_path, scenario_template, cfg
   res <- NULL
   repeat {
     k <- min(K, itermax_total - gens_done)
+    ## Budget check FIRST: the shrink below has a `max(1L, ...)` floor, so applying it to an
+    ## exhausted budget would resurrect a 1-generation block and run past `itermax` forever.
     if (k <= 0L) {
       break
+    }
+    ## The convergence test below can only be applied at a block boundary, and it needs a history
+    ## longer than `steptol` before it says anything. A full-size block therefore overshoots the
+    ## earliest generation that satisfies it: at checkpoint_every = 5 and steptol = 25 the first
+    ## checkable generation is 26, but boundaries fall on 25 and 30, so a run that had converged by
+    ## 26 kept going to 30 -- four wasted generations, and more as checkpoint_every grows. Shrink
+    ## the block to land exactly on generation `steptol + 1`, then advance one generation at a time
+    ## so the test is applied every generation. The extra cost is one small checkpoint write per
+    ## generation, against a generation that takes hours. `k` only ever shrinks, so the itermax
+    ## budget established above still holds.
+    if (gens_done + k > steptol) {
+      k <- max(1L, min(k, steptol + 1L - gens_done))
     }
     blk_args <- control_args
     blk_args$itermax <- as.integer(k)

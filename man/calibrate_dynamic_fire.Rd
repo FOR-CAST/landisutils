@@ -21,9 +21,10 @@ calibrate_dynamic_fire(observed_targets_path, scenario_template, cfg, out_dir)
 DEoptim halts before \code{itermax} if the best-of-population objective fails
 to improve by more than \code{reltol} for \code{steptol} consecutive generations.
 Defaults: \code{reltol = 1e-3} (0.1\% relative improvement) and
-\code{steptol = 25} generations. Pass \code{steptol = itermax} (or any value \verb{>= itermax}) to disable early stopping and always run the full schedule.
-Pass \code{cfg$steptol = NULL} to fall back to the upstream DEoptim default
-(\code{steptol = itermax}).}
+\code{steptol = 25} generations. Pass \code{steptol = itermax} (or any value \verb{>= itermax}) to disable early stopping and always run the full schedule;
+a run configured that way says so in a startup message. Omitting
+\code{steptol} (or setting it to \code{NULL}) gives the 25-generation default, not
+DEoptim's own \code{steptol = itermax}.}
 \item{n_reps, sim_years, weights, base_seed}{Per-trial settings.}
 \item{n_cores, parallel}{Parallelism settings.}
 \item{simulator}{\code{"landis"} (default), \code{"r_reimpl"}, or \code{"mock"}.}
