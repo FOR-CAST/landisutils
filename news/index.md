@@ -1,5 +1,43 @@
 # Changelog
 
+## landisutils 0.0.103
+
+- Tearing down a multi-node calibration no longer orphans every
+  container when one worker is unreachable. The teardown issued a single
+  cluster-wide `clusterCall()`, which is all-or-nothing – it dispatches
+  to every node and waits for every reply, so one unresponsive worker
+  errored the whole call, and a `try(silent = TRUE)` around it discarded
+  the error. Observed twice on a 45-worker fleet, once after a
+  deliberate stop and once after a clean completion; losing all 45
+  rather than a subset is the signature of the single call failing
+  wholesale, and nothing in the run’s output said so. Each worker’s pool
+  is now stopped independently, and any that cannot be reached produce a
+  warning naming them, so stragglers are visible instead of silently
+  consuming a node.
+- [`calibrate_dynamic_fire()`](https://for-cast.github.io/landisutils/reference/calibrate_dynamic_fire.md)
+  applies its early-stopping test every generation once the history is
+  long enough to evaluate it, instead of only at `checkpoint_every`
+  boundaries. The test needs a history longer than `steptol`, so at
+  `checkpoint_every = 5` and `steptol = 25` the earliest checkable
+  generation is 26 while the boundaries fell on 25 and 30 – a search
+  that had converged by 26 ran four more generations, about eleven hours
+  at this landscape’s generation time, and the overshoot grows with
+  `checkpoint_every`. Blocks now shrink to land exactly on `steptol + 1`
+  and advance singly thereafter, costing one small checkpoint write per
+  generation.
+- [`calibrate_dynamic_fire()`](https://for-cast.github.io/landisutils/reference/calibrate_dynamic_fire.md)
+  reports at startup when `steptol >= itermax`, which makes early
+  stopping unreachable rather than merely unlikely: the convergence test
+  can never see a history longer than the whole budget, so the search
+  always runs to `itermax`. That is the documented way to disable early
+  stopping, so the behaviour is unchanged – but it is indistinguishable
+  from a broken stopping rule unless it is stated.
+- [`calibrate_dynamic_fire()`](https://for-cast.github.io/landisutils/reference/calibrate_dynamic_fire.md)’s
+  documentation no longer claims that `cfg$steptol = NULL` falls through
+  to DEoptim’s own `steptol = itermax`. It does not: `NULL` is treated
+  as absent and yields the 25-generation default, which is the opposite
+  of disabling early stopping.
+
 ## landisutils 0.0.102
 
 - [`run_calibration_validation()`](https://for-cast.github.io/landisutils/reference/run_calibration_validation.md)
@@ -1548,7 +1586,7 @@
 
 - [`landis_run_docker()`](https://for-cast.github.io/landisutils/reference/landis_run_docker.md)
   now launches the `docker run` child via
-  [`processx::process`](http://processx.r-lib.org/reference/process.md)
+  [`processx::process`](https://rdrr.io/pkg/processx/man/process.html)
   instead of
   [`callr::r_bg()`](https://callr.r-lib.org/reference/r_bg.html). The
   old approach forked a **full background R session** purely to shell

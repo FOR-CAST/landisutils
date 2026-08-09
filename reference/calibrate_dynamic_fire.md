@@ -47,8 +47,9 @@ calibrate_dynamic_fire(observed_targets_path, scenario_template, cfg, out_dir)
       generations. Defaults: `reltol = 1e-3` (0.1% relative improvement)
       and `steptol = 25` generations. Pass `steptol = itermax` (or any
       value `>= itermax`) to disable early stopping and always run the
-      full schedule. Pass `cfg$steptol = NULL` to fall back to the
-      upstream DEoptim default (`steptol = itermax`).
+      full schedule; a run configured that way says so in a startup
+      message. Omitting `steptol` (or setting it to `NULL`) gives the
+      25-generation default, not DEoptim's own `steptol = itermax`.
 
   n_reps, sim_years, weights, base_seed
 

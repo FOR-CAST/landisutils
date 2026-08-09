@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.102</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.103</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,6 +41,16 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.103" id="landisutils-00103">landisutils 0.0.103<a class="anchor" aria-label="anchor" href="#landisutils-00103"></a></h2>
+<ul><li>Tearing down a multi-node calibration no longer orphans every container when one worker is unreachable. The teardown issued a single cluster-wide <code>clusterCall()</code>, which is all-or-nothing – it dispatches to every node and waits for every reply, so one unresponsive worker errored the whole call, and a <code>try(silent = TRUE)</code> around it discarded the error. Observed twice on a 45-worker fleet, once after a deliberate stop and once after a clean completion; losing all 45 rather than a subset is the signature of the single call failing wholesale, and nothing in the run’s output said so. Each worker’s pool is now stopped independently, and any that cannot be reached produce a warning naming them, so stragglers are visible instead of silently consuming a node.</li>
+<li>
+<code><a href="../reference/calibrate_dynamic_fire.html">calibrate_dynamic_fire()</a></code> applies its early-stopping test every generation once the history is long enough to evaluate it, instead of only at <code>checkpoint_every</code> boundaries. The test needs a history longer than <code>steptol</code>, so at <code>checkpoint_every = 5</code> and <code>steptol = 25</code> the earliest checkable generation is 26 while the boundaries fell on 25 and 30 – a search that had converged by 26 ran four more generations, about eleven hours at this landscape’s generation time, and the overshoot grows with <code>checkpoint_every</code>. Blocks now shrink to land exactly on <code>steptol + 1</code> and advance singly thereafter, costing one small checkpoint write per generation.</li>
+<li>
+<code><a href="../reference/calibrate_dynamic_fire.html">calibrate_dynamic_fire()</a></code> reports at startup when <code>steptol &gt;= itermax</code>, which makes early stopping unreachable rather than merely unlikely: the convergence test can never see a history longer than the whole budget, so the search always runs to <code>itermax</code>. That is the documented way to disable early stopping, so the behaviour is unchanged – but it is indistinguishable from a broken stopping rule unless it is stated.</li>
+<li>
+<code><a href="../reference/calibrate_dynamic_fire.html">calibrate_dynamic_fire()</a></code>’s documentation no longer claims that <code>cfg$steptol = NULL</code> falls through to DEoptim’s own <code>steptol = itermax</code>. It does not: <code>NULL</code> is treated as absent and yields the 25-generation default, which is the opposite of disabling early stopping.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.102" id="landisutils-00102">landisutils 0.0.102<a class="anchor" aria-label="anchor" href="#landisutils-00102"></a></h2>
 <ul><li>
@@ -456,7 +466,7 @@
 <h3 id="landis_run_docker-no-longer-spawns-a-nested-r-session-0-0-34">
 <code>landis_run_docker()</code> no longer spawns a nested R session<a class="anchor" aria-label="anchor" href="#landis_run_docker-no-longer-spawns-a-nested-r-session-0-0-34"></a></h3>
 <ul><li>
-<code><a href="../reference/landis_run_docker.html">landis_run_docker()</a></code> now launches the <code>docker run</code> child via <code><a href="http://processx.r-lib.org/reference/process.html" class="external-link">processx::process</a></code> instead of <code><a href="https://callr.r-lib.org/reference/r_bg.html" class="external-link">callr::r_bg()</a></code>. The old approach forked a <strong>full background R session</strong> purely to shell out to <code>docker</code>; when that ran on a <a href="https://wlandau.github.io/crew/" class="external-link">crew</a>/<a href="https://mirai.r-lib.org" class="external-link">mirai</a> worker, the nested R process could be orphaned or crash its parent worker (<code>could not start R ... crashed or was killed</code>), which aborted <code>tar_make()</code> and SIGKILLed in-flight LANDIS containers (exit 137, mid-run). <code>processx</code> simply <code>exec()</code>s the docker CLI — the same lightweight child as the existing <code>docker stats</code> polls — eliminating that interaction. Behaviour is otherwise unchanged: <code>docker run</code> stays in the foreground (so the exit status is the container’s), <code>--rm</code> still auto-removes, the post-completion watchdog and resource logging are identical, and the container exit code is read via <code>processx</code>’s <code>get_exit_status()</code>.</li>
+<code><a href="../reference/landis_run_docker.html">landis_run_docker()</a></code> now launches the <code>docker run</code> child via <code><a href="https://rdrr.io/pkg/processx/man/process.html" class="external-link">processx::process</a></code> instead of <code><a href="https://callr.r-lib.org/reference/r_bg.html" class="external-link">callr::r_bg()</a></code>. The old approach forked a <strong>full background R session</strong> purely to shell out to <code>docker</code>; when that ran on a <a href="https://wlandau.github.io/crew/" class="external-link">crew</a>/<a href="https://mirai.r-lib.org" class="external-link">mirai</a> worker, the nested R process could be orphaned or crash its parent worker (<code>could not start R ... crashed or was killed</code>), which aborted <code>tar_make()</code> and SIGKILLed in-flight LANDIS containers (exit 137, mid-run). <code>processx</code> simply <code>exec()</code>s the docker CLI — the same lightweight child as the existing <code>docker stats</code> polls — eliminating that interaction. Behaviour is otherwise unchanged: <code>docker run</code> stays in the foreground (so the exit status is the container’s), <code>--rm</code> still auto-removes, the post-completion watchdog and resource logging are identical, and the container exit code is read via <code>processx</code>’s <code>get_exit_status()</code>.</li>
 </ul></div>
 </div>
     <div class="section level2">
