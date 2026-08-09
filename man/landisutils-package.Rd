@@ -4,7 +4,7 @@
 \name{landisutils-package}
 \alias{landisutils}
 \alias{landisutils-package}
-\title{landisutils: Utilities for running LANDIS-II simulations}
+\title{landisutils: Utilities for Running LANDIS-II Simulations}
 \description{
 \if{html}{\figure{logo.png}{options: style='float: right' alt='logo' width='120'}}
 

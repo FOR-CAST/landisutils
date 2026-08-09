@@ -2150,6 +2150,24 @@ sim_mock <- function(
 
 ## Internal: cap a requested warm-pool size `n` by the RAM budget. Each container holds a full LANDIS
 ## landscape in memory, so `n` containers can exceed host RAM and OOM. Returns
+## Per-container RAM ESTIMATE implied by `cfg`, in GiB.
+##
+## Kept beside .cfg_mem_limit() and used by BOTH the calibration pool and the validation pool.
+## They used to compute this independently, and validation's copy was a bare `mem_limit = "8g"`
+## that ignored `cfg` entirely: on a 397k-active-cell landscape whose measured ForCS peak is
+## 11.0-11.1 GiB, every validation replicate died in `ForC.SiteVars.Initialize` with
+## System.OutOfMemoryException about 150 s in, while the calibration that produced the very
+## parameters being validated ran fine on its 13 GiB grant. One source, so they cannot drift again.
+.cfg_mem_per_worker <- function(cfg) {
+  as.numeric(cfg$mem_per_worker_gb %||% .mem_limit_to_gb(cfg$mem_limit %||% "8g"))
+}
+
+## Per-container `--memory` GRANT implied by `cfg`. 1.25x the estimate as headroom, floored at 8g
+## so existing small-area configs are unchanged.
+.cfg_mem_limit <- function(cfg) {
+  cfg$mem_limit %||% sprintf("%dg", max(8L, ceiling(.cfg_mem_per_worker(cfg) * 1.25)))
+}
+
 ## min(n, floor(avail_gb * mem_fraction / mem_per_worker_gb)), or `n` unchanged when RAM or the
 ## per-worker estimate is unknown (so capping is opt-in via cfg$mem_per_worker_gb).
 .ram_pool_cap <- function(
@@ -2374,14 +2392,14 @@ calibrate_dynamic_fire <- function(observed_targets_path, scenario_template, cfg
   ## the RAM budget; opt-in via cfg$mem_per_worker_gb (else falls back to the mem_limit cap, so existing
   ## small-area configs are unchanged). cfg$mem_fraction (default 0.85) reserves RAM for the OS + the
   ## FORK workers + the main R process.
-  mem_per_worker <- as.numeric(cfg$mem_per_worker_gb %||% .mem_limit_to_gb(cfg$mem_limit %||% "8g"))
+  mem_per_worker <- .cfg_mem_per_worker(cfg)
   avail_gb <- .available_ram_gb()
   ## Cap against what each container is ALLOWED to consume, not the estimate that allowance is derived
   ## from. `mem_limit` grants 1.25x the estimate as headroom, so capping on the estimate over-subscribes
   ## the host by that same 25%: at 30.3 GiB/worker the cap admitted 27 containers, each granted 38 GiB
   ## -- 1026 GiB on a 1007 GiB node. A container is entitled to use its full --memory, so the invariant
   ## that must hold is `n * mem_limit <= mem_fraction * avail`, and only capping on the limit gives it.
-  mem_limit <- cfg$mem_limit %||% sprintf("%dg", max(8L, ceiling(mem_per_worker * 1.25)))
+  mem_limit <- .cfg_mem_limit(cfg)
   mem_per_container <- .mem_limit_to_gb(mem_limit)
   capped_cores <- .ram_pool_cap(n_cores, mem_per_container, cfg$mem_fraction %||% 0.85, avail_gb)
   if (capped_cores < n_cores) {
@@ -3139,11 +3157,18 @@ run_calibration_validation <- function(
   )
   fs::dir_create(scratch_root)
 
+  ## Take the pool settings from `cfg`, exactly as the calibration pool does. Validation runs the
+  ## SAME scenario at the SAME landscape size as the search that produced `best_params`, so a
+  ## grant that differs from the calibration's is wrong by construction: a hardcoded "8g" here
+  ## OOM'd all 20 replicates in `ForC.SiteVars.Initialize` on a landscape whose calibration had
+  ## just completed 30 generations on 13 GiB. `image` matters for the same reason -- it was
+  ## previously resolved from a global option that a long-lived crew worker can hold stale.
   pool <- landis_pool_start(
     n = as.integer(n_reps),
+    image = cfg$image,
     scratch_root = scratch_root,
-    cpu_limit = 2, ## LANDIS-II is single-threaded (~1 core/container); 2 packs more reps per node
-    mem_limit = "8g",
+    cpu_limit = cfg$cpu_limit %||% 2, ## LANDIS-II is single-threaded (~1 core/container)
+    mem_limit = .cfg_mem_limit(cfg),
     name_prefix = "landis-validate"
   )
   on.exit(landis_pool_stop(pool), add = TRUE)
@@ -3170,7 +3195,10 @@ run_calibration_validation <- function(
       base_seed = as.integer(base_seed) + i,
       pool = pool,
       pool_idx = i,
-      method = "docker"
+      method = "docker",
+      ## Same rationale as the search: one transient container fault should not
+      ## discard the whole validation. `cfg$retries` is what the calibration used.
+      retries = as.integer(cfg$retries %||% 0L)
     )
   }
   reps <- if (n_reps_i > 1L) {
