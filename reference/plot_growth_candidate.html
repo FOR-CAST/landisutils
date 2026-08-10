@@ -13,7 +13,7 @@ the objective responds to."><meta property="og:image" content="https://for-cast.
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.105</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.106</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -123,17 +123,21 @@ fitted line and confidence band. Display only; nothing is scored against it.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>The age-binned plot series is drawn as well, in orange. That series – not the
+    <p>The age-binned plot series is drawn as well, in blue. That series – not the
 scatter behind it – is what the ground-plot term of the score is computed
 against, so a candidate that looks wrong against the cloud but right against
 the binned points is behaving exactly as scored.</p>
 <p>Each binned point is sized by the number of plots behind it, because they
 routinely differ by more than an order of magnitude and an equal-sized point
 hides that completely. A bin holding a single plot is not a median of
-anything, and the sharp reversals in the orange series are usually those bins.</p>
+anything, and the sharp reversals in the series are usually those bins.</p>
+<p>The points are NOT joined by line segments. Connecting them asserts a
+trajectory across ages where nothing was measured, and most of the movement
+that line described came from the one-plot bins.</p>
 <p>Passing <code>smooth</code> overlays a fit through the whole cloud with a confidence
 band, for comparison only – see <code><a href="growth_smooth_observations.html">growth_smooth_observations()</a></code>. It is not
-scored, and the legend says so.</p>
+scored, and the legend says so. It shares the binned points' colour because
+it summarizes the same observations; glyph, not hue, is what tells them apart.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
