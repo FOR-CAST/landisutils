@@ -64,11 +64,19 @@ jobs:
     if: needs.gate.outputs.run == 'true'
     runs-on: windows-latest
 
-    ## One leg per extension generation. The v8 collection ships UniversalCohorts v1 and v2 (and
+    ## One leg per upstream extension LIST. The v8 collection ships UniversalCohorts v1 and v2 (and
     ## Succession v9 and v10) side by side, and an extension built against one cannot share a
     ## landscape with an extension built against the other, so the two sets cannot be installed on
-    ## a single machine and still produce meaningful runs. fail-fast is off: a break in one
-    ## generation says nothing about the other.
+    ## a single machine and still produce meaningful runs. fail-fast is off: a break in one leg says
+    ## nothing about the other.
+    ##
+    ## `image:` names the YAML, NOT the artifact under test. Each leg installs the newest PUBLISHED
+    ## Windows installer for every repo in its list, ignoring the `commit:` the YAML pins -- so
+    ## neither leg reproduces the docker image it is named after (see the header of
+    ## install_landis_windows.R). `extensions-v8-release.yaml` in particular is the UCLv1 source
+    ## set, yet most of its repos now publish a v2 installer, so that leg installs a MIX. Which
+    ## extensions are actually usable is therefore measured after installation, never assumed from
+    ## the list's name.
     strategy:
       fail-fast: false
       matrix:

@@ -17,10 +17,24 @@
 ##   all of them: `/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP-`. Each
 ##   installer registers its DLL in `extensions.xml`.
 ##
-## The extension list is fetched from
-## `Tool-Docker-Apptainer/extensions-v8-release.yaml` at the same SHA
-## `build_scenarios.R` uses, so the (release) docker workflow and the
-## native Windows workflow exercise the same set of extensions.
+## IMPORTANT -- what this does and does NOT reproduce.
+##
+## A Tool-Docker-Apptainer YAML supplies the list of extension REPOS, and this
+## script installs each repo's newest PUBLISHED Windows installer. It does not
+## read the `commit:` each entry pins. The docker images build that pinned
+## source; this installs whatever binary the maintainer last uploaded. The two
+## are routinely different generations, so the Windows legs reproduce NEITHER
+## docker image -- they test the third thing, which is what a Windows user
+## actually gets from the LANDIS-II site today.
+##
+## That distinction is load-bearing, and mistaking it is what produced a wrong
+## exclusion once already. `extensions-v8-release.yaml` is the UCLv1 set: its
+## pinned succession sources build against UniversalCohorts-v1/Succession-v9,
+## and it deliberately sources Output-Biomass-By-Age from a fork because that
+## fork holds the only v1 source whose `.csproj` has a working HintPath. But the
+## newest published installer for most of those same repos is now v2. Installing
+## "the release list" on Windows therefore yields a MIX, and the v1 stragglers in
+## it have to be found by measurement rather than assumed from the list's name.
 ##
 ## Usage:
 ##   Rscript install_landis_windows.R [--dry-run] [--download-dir <path>]
