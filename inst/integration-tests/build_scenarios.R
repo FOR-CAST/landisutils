@@ -353,12 +353,13 @@ fetch_image_extensions <- function(yaml_filename) {
   active <- grep("^-\\s+repo:\\s+", lines, value = TRUE)
   repos <- trimws(sub("^-\\s+repo:\\s+", "", active))
 
-  ## Drop extensions the caller could not install. The native Windows runner installs the UCLv2 set
-  ## minus anything not actually built against it (see EXTENSIONS_EXCLUDED in
-  ## install_landis_windows.R, which exports this), so a scenario must not be built referencing an
-  ## extension that will not be present -- LANDIS-II would abort with `No extension with the name
-  ## ...`, which says nothing about the inputs this package writes. Empty for the docker jobs, whose
-  ## images carry the full published set.
+  ## Drop extensions the caller cannot use. On the native Windows runner every extension the YAML
+  ## lists is installed, and `install_landis_windows.R` then reads which cohort-library generation
+  ## each binary actually binds and exports the mismatches here. A scenario must not be built
+  ## referencing them: mixing generations aborts with the `Succession.UniversalCohorts` type
+  ## mismatch, and referencing an absent extension aborts with `No extension with the name ...`.
+  ## Neither says anything about the inputs this package writes. Empty for the docker jobs, whose
+  ## images each carry one mutually-consistent set.
   excluded <- Sys.getenv("LANDIS_EXCLUDE_EXTENSIONS", unset = "")
   if (nzchar(excluded)) {
     drop <- trimws(strsplit(excluded, ",")[[1]])

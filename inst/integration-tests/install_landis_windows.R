@@ -83,22 +83,27 @@ YAML_URL <- sprintf(
   EXTENSIONS_YAML
 )
 
-## Extensions listed in a YAML that are NOT in fact built against that generation, and so cannot be
-## installed alongside the rest of it. Each entry is a bug upstream; this is the local stand-in
-## until it is fixed there, and an entry should be deleted as soon as it can be.
+## Which cohort-library generation this leg is assembling a runnable set for. Extensions binding
+## anything else are excluded from the SCENARIOS after installation -- see the measured exclusion
+## below. `2` is the only sensible default: every succession extension with a current build targets
+## UniversalCohorts-v2, so a v1 binder is by definition the one that cannot join the landscape.
+TARGET_COHORT_GENERATION <- as.integer(Sys.getenv("LANDIS_TARGET_COHORT_GENERATION", unset = "2"))
+
+## NOTE: there is deliberately no hand-maintained exclusion list here any more.
 ##
-## Social Climate Fire (SCRAPPLE): appears in the UCLv2 list but binds the older library, so
-## necn_scrpple aborts with the type mismatch in both image variants while necn_all_extension --
-## same NECN backend, without SCRAPPLE -- runs to completion. Keyed BY YAML because the listing is
-## wrong only for UCLv2: on the release list SCRAPPLE belongs, and necn_all_extension__release needs
-## it present to run at all.
-EXTENSIONS_EXCLUDED_BY_YAML <- list(
-  "extensions-v8-UCL2-release.yaml" = c("Extension-Social-Climate-Fire")
-)
-EXTENSIONS_EXCLUDED <- EXTENSIONS_EXCLUDED_BY_YAML[[EXTENSIONS_YAML]]
-if (is.null(EXTENSIONS_EXCLUDED)) {
-  EXTENSIONS_EXCLUDED <- character(0)
-}
+## There used to be one, keyed by YAML, holding `Extension-Social-Climate-Fire` on the grounds that
+## SCRAPPLE binds the older library. That was wrong, and wrong in a way a list of names cannot
+## catch: SCRAPPLE binds UniversalCohorts-v2 in both the jameslamping and LANDIS-II-Foundation
+## repos, loads cleanly, and writes its output rasters. The abort blamed on it actually fired three
+## extensions later, when Output Biomass-by-Age loaded -- `extensions-v8-release.yaml` sources that
+## one from a fork whose `deploy/` only ever carried the v1 4.0 binary, while upstream has published
+## a v2 4.1. Excluding SCRAPPLE removed a scenario from the matrix and left the real defect in it.
+##
+## So the exclusion is now MEASURED rather than declared: install everything the YAML lists, read
+## the generation each extension binary actually binds (`assembly_refs()`), and exclude the ones
+## that disagree with TARGET_COHORT_GENERATION. That is self-correcting -- an extension rejoins the
+## matrix the moment upstream publishes a rebuilt installer, with no edit here.
+EXTENSIONS_EXCLUDED <- character(0)
 
 download_dir <- {
   i <- match("--download-dir", args)
@@ -213,14 +218,27 @@ find_release_installer <- function(org, repo) {
   if (is.null(releases) || length(releases) == 0) {
     return(NULL)
   }
+  ## Collect across ALL releases and version-sort, rather than taking the first V8 asset of the
+  ## newest release. Those coincide today only because each maintainer's newest release happens to
+  ## carry their highest version; a hotfix re-released against an older line, or a prerelease at the
+  ## top of the list, would otherwise silently downgrade the installed extension. Same ordering as
+  ## the `deploy/` path, so both sources answer "latest" the same way.
+  assets <- list()
   for (release in releases) {
     for (asset in release$assets) {
       if (startsWith(asset$name, "LANDIS-II-V8") && endsWith(asset$name, "-setup.exe")) {
-        return(list(name = asset$name, url = asset$browser_download_url, size = asset$size))
+        assets <- c(
+          assets,
+          list(list(
+            name = asset$name,
+            download_url = asset$browser_download_url,
+            size = asset$size
+          ))
+        )
       }
     }
   }
-  NULL
+  latest_v8_installer(assets)
 }
 
 download_with_check <- function(url, dest, expected_size = NULL) {
@@ -560,32 +578,16 @@ cli_h1("Fetching extension list from Tool-Docker-Apptainer")
 yaml_text <- paste(readLines(YAML_URL, warn = FALSE), collapse = "\n")
 extensions <- parse_extensions_yaml(yaml_text)
 
-## Filter AFTER parsing: parse_extensions_yaml() stays a faithful reading of the upstream file.
-dropped <- intersect(extensions$repo, EXTENSIONS_EXCLUDED)
-if (length(dropped) > 0L) {
-  extensions <- extensions[!extensions$repo %in% EXTENSIONS_EXCLUDED, , drop = FALSE]
-  for (d in dropped) {
-    cli_alert_warning("excluding {d} (listed upstream but not built against UCLv2)")
-  }
-}
 cli_alert_info("installing {nrow(extensions)} extension(s) from {EXTENSIONS_YAML}")
 
-## Export the exclusion so build_scenarios.R (which runs after this step) builds scenarios against
-## the same set that is actually installed. Without this the two disagree: the UCLv2 YAML lists
-## Social Climate Fire, so necn_all_extension__uclv2 was built referencing it and then aborted at
-## run time with `No extension with the name "Social Climate Fire"` -- a mismatch of our own making
-## rather than anything upstream.
-github_env_excl <- Sys.getenv("GITHUB_ENV", unset = "")
-if (nzchar(github_env_excl) && length(EXTENSIONS_EXCLUDED) > 0L) {
-  cat(
-    sprintf("LANDIS_EXCLUDE_EXTENSIONS=%s\n", paste(EXTENSIONS_EXCLUDED, collapse = ",")),
-    file = github_env_excl,
-    append = TRUE
-  )
-  cli_alert_info("exported LANDIS_EXCLUDE_EXTENSIONS to GITHUB_ENV")
-}
+## Everything the YAML lists gets INSTALLED, including binaries from the wrong generation. That is
+## safe: an extension the console never loads is inert on disk, and installing it is what lets us
+## read which library it binds. The exclusion is applied to the SCENARIOS afterwards, once measured.
 
 installer_libs <- list()
+## Extension DLLs each installer drops, so a measured generation can be attributed back to the repo
+## that supplied it -- which is what `LANDIS_EXCLUDE_EXTENSIONS` (a list of repo names) needs.
+installer_exts <- list()
 ## The Core MSI has been installed by this point, so the console (and thus the extensions dir
 ## beside it) can be located. NULL-safe: the diff below simply records nothing if it is missing.
 .console_now <- find_console_dll()
@@ -641,6 +643,10 @@ for (i in seq_len(nrow(extensions))) {
   if (length(libs_dropped) > 0L) {
     installer_libs[[repo]] <- libs_dropped
   }
+  exts_dropped <- grep("^Landis\\.Extension\\..*\\.dll$", changed, value = TRUE)
+  if (length(exts_dropped) > 0L) {
+    installer_exts[[repo]] <- exts_dropped
+  }
 }
 
 cli_rule()
@@ -680,6 +686,9 @@ report_library_split <- function() {
   v1 <- character(0)
   for (d in sort(dlls)) {
     refs <- assembly_refs(d)
+    ## No reference to either generation: the extension does not touch the cohort library at all
+    ## (several outputs are like this). It cannot conflict, so it is deliberately in NEITHER bucket
+    ## and is never excluded.
     if (length(refs) == 0L) {
       next
     }
@@ -695,7 +704,71 @@ report_library_split <- function() {
   cli_alert_info("UCLv2/Succession-v10: {length(v2)} extension(s); older: {length(v1)}")
   invisible(list(v2 = v2, v1 = v1))
 }
-report_library_split()
+measured <- report_library_split()
+
+## ---------------------------------------------------------------------------
+## Measured exclusion: which repos supplied an extension of the wrong generation
+## ---------------------------------------------------------------------------
+
+## Translate the measured per-DLL generation back into the repo names build_scenarios.R filters on.
+## Attribution comes from the before/after diff of the extensions directory taken around each
+## installer, so it reflects what this run actually installed rather than a static table.
+wrong_gen_dlls <- if (is.null(measured)) {
+  character(0)
+} else if (TARGET_COHORT_GENERATION == 2L) {
+  measured$v1
+} else {
+  measured$v2
+}
+
+## Precomputed, not inlined into the cli string below: cli PARSES the contents of `{}`, so keeping
+## expressions out of interpolations avoids a class of runtime parse error that only fires on the
+## Windows runner.
+wrong_gen <- if (TARGET_COHORT_GENERATION == 2L) 1L else 2L
+
+if (length(wrong_gen_dlls) > 0L && length(installer_exts) > 0L) {
+  hit <- vapply(installer_exts, function(dlls) any(dlls %in% wrong_gen_dlls), logical(1))
+  EXTENSIONS_EXCLUDED <- names(installer_exts)[hit]
+
+  ## A wrong-generation DLL nobody claims would be silently kept in every scenario, which is the
+  ## failure mode this whole mechanism exists to prevent. Say so rather than under-reporting.
+  attributed <- unlist(installer_exts[hit], use.names = FALSE)
+  orphaned <- setdiff(wrong_gen_dlls, attributed)
+  if (length(orphaned) > 0L) {
+    orphan_txt <- paste(orphaned, collapse = ", ")
+    cat(
+      sprintf(
+        "::warning::%d wrong-generation extension DLL(s) could not be attributed to an installer and are NOT excluded: %s\n",
+        length(orphaned),
+        orphan_txt
+      ),
+      file = stderr()
+    )
+  }
+}
+
+cli_h1("Extensions excluded from scenarios (measured)")
+if (length(EXTENSIONS_EXCLUDED) > 0L) {
+  for (d in EXTENSIONS_EXCLUDED) {
+    cli_alert_warning("{d}: binds UniversalCohorts-v{wrong_gen}")
+  }
+} else {
+  cli_alert_success("none -- every installed extension binds v{TARGET_COHORT_GENERATION}")
+}
+
+## Export so build_scenarios.R (a later workflow step, hence a separate process) builds scenarios
+## against the set that can actually share a landscape. Without it the two disagree and LANDIS-II
+## aborts at run time -- either with the cohort type mismatch, or with `No extension with the name
+## ...` if a scenario references something that was never installed.
+github_env_excl <- Sys.getenv("GITHUB_ENV", unset = "")
+if (nzchar(github_env_excl) && length(EXTENSIONS_EXCLUDED) > 0L) {
+  cat(
+    sprintf("LANDIS_EXCLUDE_EXTENSIONS=%s\n", paste(EXTENSIONS_EXCLUDED, collapse = ",")),
+    file = github_env_excl,
+    append = TRUE
+  )
+  cli_alert_info("exported LANDIS_EXCLUDE_EXTENSIONS to GITHUB_ENV")
+}
 
 report_shared_libraries()
 
