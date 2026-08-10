@@ -1064,7 +1064,12 @@ growth_best_candidates <- function(
 ## on every figure. Without `drop = FALSE` ggplot assigns linetypes from the
 ## levels PRESENT, so a panel with only TIPSY would draw it solid -- exactly the
 ## key that means SORTIE everywhere else.
-.growth_reference_linetypes <- c(SORTIE = "solid", TIPSY = "14")
+## Every modelled source needs an entry here, not just a linetype anyone likes: the scale is built
+## with `limits = names(...)` and `na.translate = FALSE`, so a source missing from this vector is
+## DROPPED FROM THE PLOT rather than drawn in some default style. That is how the VDYP series came
+## to be scored, filtered in, and still invisible -- the only symptom was a
+## "Removed N rows containing missing values (geom_line)" warning.
+.growth_reference_linetypes <- c(SORTIE = "solid", TIPSY = "14", VDYP = "22")
 
 ## Shared by every summary of the ground-plot cloud -- the age-binned points and
 ## the fitted curve alike. One colour, because they are one set of observations
