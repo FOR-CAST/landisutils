@@ -11,7 +11,9 @@
   they summarize the same observations two ways; glyph tells them apart.
   Drawing them in different hues implied two independent series.
 - The review panels are taller and their legend box tighter, so four
-  stacked guides no longer take half the figure.
+  stacked guides no longer take half the figure. Guide order is now
+  fixed rather than left to scale-construction order, which had the six
+  panels of a species set arranging their legends six different ways.
 
 ## landisutils 0.0.105
 
