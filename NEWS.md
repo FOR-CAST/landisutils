@@ -1,3 +1,7 @@
+# landisutils 0.0.109
+
+* The `vdyp` reference series added in 0.0.101 was only wired into scoring. `plot_growth_calibration()` and the review-bundle plots filtered the modelled curve on `c("SORTIE", "TIPSY")`, so a VDYP-labelled curve was scored but drawn nowhere -- the failure mode was a missing line on a figure, with nothing raised. `growth_reference_inflection()` and `growth_auto_window()` defaulted `sources` the same way: the former silently returned its `default` instead of the computed inflection (100 rather than 12 on the test fixture), and the latter skipped the `min(upper, max(model_ages))` tightening, widening the fitting window from 150 to 212 where the modelled curve ends before the plots do. All four now include `"VDYP"`.
+
 # landisutils 0.0.108
 
 * `calibrate_dynamic_fire()` verifies that every worker actually holds a RUNNING container before handing the fleet to DEoptim, restarting what it can and aborting -- naming the hosts and counts -- on what it cannot. `clusterCall()` reports only hard errors, so a container that started and then died left the worker silently container-less; because a failed trial is scored as a penalty rather than an error, the search then ran on with a large slice of its population frozen. A 90-worker fleet was observed coming up with 56 and running that way for 2.6 days with nothing logged. Pool containers run with `--rm`, so a dead one is removed rather than left in `exited` and is invisible to any after-the-fact check -- the probe asks the daemon whether the name still resolves to a running container.

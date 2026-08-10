@@ -19,7 +19,7 @@ growth_reference_curves(
 }
 \arguments{
 \item{reference}{A data frame of reference observations, with columns
-\code{source} (\code{"SORTIE"}, \code{"TIPSY"} or \code{"Ground plots"}), \code{age} and
+\code{source} (\code{"SORTIE"}, \code{"TIPSY"}, \code{"VDYP"} or \code{"Ground plots"}), \code{age} and
 \code{aboveground_c_mg_ha}.}
 
 \item{window}{Numeric length-2. The fitting window.}

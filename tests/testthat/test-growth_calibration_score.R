@@ -585,3 +585,29 @@ test_that("a scoring file written before weight_vdyp still reads", {
   expect_true(is.na(scoring$weight_vdyp))
   expect_equal(growth_scoring_for(scoring, "Pinu_con")$weight_vdyp, 0)
 })
+
+test_that("the fitting window and inflection see a VDYP curve", {
+  ## Both default to the MODELLED sources, and omitting VDYP there does not error -- it falls
+  ## back silently, so only a comparison against a known-equivalent series catches it.
+  ## The fixtures are chosen to DISCRIMINATE, which took two attempts:
+  ##   - the window only tightens via min(upper, max(model_ages)), so a modelled curve running
+  ##     PAST the plots never binds and a long curve tests nothing. This one stops at 150 while
+  ##     the plots reach 215.
+  ##   - inflection needs no such care: without VDYP in `sources` it returns the `default`.
+  base_ages <- 1:150
+  short <- dplyr::bind_rows(
+    reference(),
+    tibble::tibble(
+      source = "VDYP",
+      age = base_ages,
+      aboveground_c_mg_ha = 240 * (1 - exp(-0.01 * base_ages))
+    )
+  )
+  as_tipsy <- dplyr::mutate(short, source = ifelse(.data$source == "VDYP", "TIPSY", .data$source))
+
+  expect_equal(
+    growth_auto_window(short, longevity = 700),
+    growth_auto_window(as_tipsy, longevity = 700)
+  )
+  expect_equal(growth_reference_inflection(short), growth_reference_inflection(as_tipsy))
+})
