@@ -19,7 +19,8 @@ sim_landis(
   method = NULL,
   pixel_area_ha = 1,
   keep_scratch = FALSE,
-  retries = 0L
+  retries = 0L,
+  trial_timeout_sec = NULL
 )
 ```
 
@@ -95,6 +96,20 @@ sim_landis(
   production run makes tens of thousands of container executions, so a
   rare transient becomes near-certain. Only the pooled path honours
   this; a genuine input fault fails on every attempt regardless.
+
+- trial_timeout_sec:
+
+  Numeric or NULL. Wall-clock ceiling for one simulator execution,
+  passed to
+  [`landis_pool_exec()`](https://for-cast.github.io/landisutils/reference/landis_pool_exec.md).
+  NULL (the default) waits indefinitely. `retries` only helps when the
+  simulator *exits*; a process that wedges instead never returns, and
+  the coordinator – parked in a blocking read on that worker's socket –
+  waits with it, so the whole generation stalls behind one container
+  with nothing logged. Set this to a generous multiple of a healthy
+  trial's runtime (it is a deadlock breaker, not a scheduler) so a
+  wedged trial is killed, retried and, if it keeps wedging, surfaced as
+  an error the search can act on. Only the pooled path honours it.
 
 ## Value
 

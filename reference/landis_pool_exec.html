@@ -15,7 +15,7 @@ isolates output files."><meta property="og:image" content="https://for-cast.gith
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.107</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.108</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -100,7 +100,13 @@ under <code>/scratch/</code>). Must correspond to a host path under <code>pool$s
 
 
 <dt id="arg-timeout-sec">timeout_sec<a class="anchor" aria-label="anchor" href="#arg-timeout-sec"></a></dt>
-<dd><p>Numeric or NULL. Maximum wait time. NULL = no timeout.</p></dd>
+<dd><p>Numeric or NULL. Maximum wall-clock wait for a single
+attempt. NULL (the default) means no timeout, which is the right choice for
+an interactive one-off but a hazard for an unattended search: a <code>docker exec</code> that wedges rather than exiting blocks the calling worker forever, and
+because the coordinator is parked in a blocking socket read it cannot notice.
+A timed-out attempt is treated exactly like a non-zero exit – it consumes a
+retry, restarts the container, and tries again – so setting this converts an
+indefinite hang into a bounded, self-healing failure.</p></dd>
 
 
 <dt id="arg-stdout-log-stderr-log">stdout_log, stderr_log<a class="anchor" aria-label="anchor" href="#arg-stdout-log-stderr-log"></a></dt>

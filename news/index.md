@@ -1,5 +1,41 @@
 # Changelog
 
+## landisutils 0.0.108
+
+- [`calibrate_dynamic_fire()`](https://for-cast.github.io/landisutils/reference/calibrate_dynamic_fire.md)
+  verifies that every worker actually holds a RUNNING container before
+  handing the fleet to DEoptim, restarting what it can and aborting –
+  naming the hosts and counts – on what it cannot. `clusterCall()`
+  reports only hard errors, so a container that started and then died
+  left the worker silently container-less; because a failed trial is
+  scored as a penalty rather than an error, the search then ran on with
+  a large slice of its population frozen. A 90-worker fleet was observed
+  coming up with 56 and running that way for 2.6 days with nothing
+  logged. Pool containers run with `--rm`, so a dead one is removed
+  rather than left in `exited` and is invisible to any after-the-fact
+  check – the probe asks the daemon whether the name still resolves to a
+  running container.
+- [`landis_pool_exec()`](https://for-cast.github.io/landisutils/reference/landis_pool_exec.md)
+  gains a working `timeout_sec`, and
+  [`sim_landis()`](https://for-cast.github.io/landisutils/reference/sim_landis.md)
+  /
+  [`calibrate_dynamic_fire()`](https://for-cast.github.io/landisutils/reference/calibrate_dynamic_fire.md)
+  gain `trial_timeout_sec` to reach it. `retries` only rescues a
+  simulator that EXITS; one that wedges never returns, and the
+  coordinator – parked in a blocking read on that worker’s socket –
+  waits with it. One search hung ~16 h before its supervisor noticed. A
+  timed-out attempt now consumes a retry and restarts the container, so
+  an indefinite hang becomes a bounded, self-healing failure.
+- [`landis_pool_exec()`](https://for-cast.github.io/landisutils/reference/landis_pool_exec.md)
+  catches the timeout raised by processx, which is signalled as a
+  condition rather than a non-zero exit status and so was not covered by
+  `error_on_status = FALSE`. Left to propagate it would unwind
+  `parApply` and DEoptim and discard every generation since the last
+  checkpoint – strictly worse than the hang it is meant to cure.
+- `trial_timeout_sec` is deliberately excluded from both the population
+  and loss-config fingerprints, so it can be set on an in-flight search
+  without invalidating its checkpoint.
+
 ## landisutils 0.0.107
 
 - [`growth_smooth_observations()`](https://for-cast.github.io/landisutils/reference/growth_smooth_observations.md)

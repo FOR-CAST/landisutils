@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.107</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.108</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,6 +41,17 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.108" id="landisutils-00108">landisutils 0.0.108<a class="anchor" aria-label="anchor" href="#landisutils-00108"></a></h2>
+<ul><li>
+<code><a href="../reference/calibrate_dynamic_fire.html">calibrate_dynamic_fire()</a></code> verifies that every worker actually holds a RUNNING container before handing the fleet to DEoptim, restarting what it can and aborting – naming the hosts and counts – on what it cannot. <code>clusterCall()</code> reports only hard errors, so a container that started and then died left the worker silently container-less; because a failed trial is scored as a penalty rather than an error, the search then ran on with a large slice of its population frozen. A 90-worker fleet was observed coming up with 56 and running that way for 2.6 days with nothing logged. Pool containers run with <code>--rm</code>, so a dead one is removed rather than left in <code>exited</code> and is invisible to any after-the-fact check – the probe asks the daemon whether the name still resolves to a running container.</li>
+<li>
+<code><a href="../reference/landis_pool_exec.html">landis_pool_exec()</a></code> gains a working <code>timeout_sec</code>, and <code><a href="../reference/sim_landis.html">sim_landis()</a></code> / <code><a href="../reference/calibrate_dynamic_fire.html">calibrate_dynamic_fire()</a></code> gain <code>trial_timeout_sec</code> to reach it. <code>retries</code> only rescues a simulator that EXITS; one that wedges never returns, and the coordinator – parked in a blocking read on that worker’s socket – waits with it. One search hung ~16 h before its supervisor noticed. A timed-out attempt now consumes a retry and restarts the container, so an indefinite hang becomes a bounded, self-healing failure.</li>
+<li>
+<code><a href="../reference/landis_pool_exec.html">landis_pool_exec()</a></code> catches the timeout raised by processx, which is signalled as a condition rather than a non-zero exit status and so was not covered by <code>error_on_status = FALSE</code>. Left to propagate it would unwind <code>parApply</code> and DEoptim and discard every generation since the last checkpoint – strictly worse than the hang it is meant to cure.</li>
+<li>
+<code>trial_timeout_sec</code> is deliberately excluded from both the population and loss-config fingerprints, so it can be set on an in-flight search without invalidating its checkpoint.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.107" id="landisutils-00107">landisutils 0.0.107<a class="anchor" aria-label="anchor" href="#landisutils-00107"></a></h2>
 <ul><li>

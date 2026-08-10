@@ -50,7 +50,15 @@ landis_pool_exec(
 
 - timeout_sec:
 
-  Numeric or NULL. Maximum wait time. NULL = no timeout.
+  Numeric or NULL. Maximum wall-clock wait for a single attempt. NULL
+  (the default) means no timeout, which is the right choice for an
+  interactive one-off but a hazard for an unattended search: a
+  `docker exec` that wedges rather than exiting blocks the calling
+  worker forever, and because the coordinator is parked in a blocking
+  socket read it cannot notice. A timed-out attempt is treated exactly
+  like a non-zero exit – it consumes a retry, restarts the container,
+  and tries again – so setting this converts an indefinite hang into a
+  bounded, self-healing failure.
 
 - stdout_log, stderr_log:
 

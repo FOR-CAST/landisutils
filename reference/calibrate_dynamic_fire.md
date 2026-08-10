@@ -111,6 +111,17 @@ calibrate_dynamic_fire(observed_targets_path, scenario_template, cfg, out_dir)
       regardless of either; `"never"` ignores any checkpoint and starts
       from an empty memoization cache (a clean slate).
 
+  trial_timeout_sec
+
+  :   Optional numeric. Wall-clock ceiling on ONE simulator execution
+      (see
+      [`sim_landis()`](https://for-cast.github.io/landisutils/reference/sim_landis.md)).
+      `retries` only rescues a simulator that exits; one that wedges
+      never returns, and the whole generation waits behind it.
+      Recommended for any unattended search. Deliberately excluded from
+      both fingerprints, so it can be added to or changed on an
+      in-flight search without invalidating its checkpoint.
+
 - out_dir:
 
   Character. Where to write the DEoptim trace + scratch sub-directory.
