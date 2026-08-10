@@ -56,6 +56,12 @@ iff BOTH its population fingerprint (par names + bounds + NP) AND its
 loss-config fingerprint (weights + sim settings + observed + image)
 match; \code{"force"} resumes regardless of either; \code{"never"} ignores any
 checkpoint and starts from an empty memoization cache (a clean slate).}
+\item{trial_timeout_sec}{Optional numeric. Wall-clock ceiling on ONE
+simulator execution (see \code{\link[=sim_landis]{sim_landis()}}). \code{retries} only rescues a
+simulator that exits; one that wedges never returns, and the whole
+generation waits behind it. Recommended for any unattended search.
+Deliberately excluded from both fingerprints, so it can be added to or
+changed on an in-flight search without invalidating its checkpoint.}
 }}
 
 \item{out_dir}{Character. Where to write the DEoptim trace + scratch

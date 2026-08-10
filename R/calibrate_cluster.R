@@ -50,6 +50,50 @@
   invisible(NULL)
 }
 
+## Report whether THIS worker's container is actually running. Runs ON the worker.
+##
+## Pool containers are started with `--rm`, so one that dies is REMOVED rather than left behind in
+## "exited" -- `docker ps -a` shows nothing at all. That makes a dead container invisible to every
+## after-the-fact check, while the worker's `.worker_pool` object happily goes on naming it. The only
+## honest test is to ask the daemon whether the name still resolves to a RUNNING container.
+.worker_pool_probe <- function() {
+  host <- as.character(Sys.info()[["nodename"]])
+  p <- get0(".worker_pool", envir = .worker_pool_env, ifnotfound = NULL)
+  if (is.null(p) || !length(p$names)) {
+    return(list(host = host, container = NA_character_, running = FALSE))
+  }
+  nm <- p$names[[1L]]
+  ## shQuote the format string for the same reason .verify_node_images() does: system2() does not
+  ## quote, so an unquoted "{{.State.Running}}" would split into shell words.
+  st <- suppressWarnings(system2(
+    "docker",
+    c("inspect", "--format", shQuote("{{.State.Running}}"), shQuote(nm)),
+    stdout = TRUE,
+    stderr = FALSE
+  ))
+  list(
+    host = host,
+    container = nm,
+    running = length(st) > 0L && identical(trimws(st[[1L]]), "true")
+  )
+}
+
+## Replace THIS worker's container in place. Runs ON the worker. Returns TRUE if the restart call
+## itself succeeded; the caller re-probes rather than trusting this.
+.worker_pool_heal <- function() {
+  p <- get0(".worker_pool", envir = .worker_pool_env, ifnotfound = NULL)
+  if (is.null(p)) {
+    return(FALSE)
+  }
+  tryCatch(
+    {
+      landis_pool_restart_one(p, 1L)
+      TRUE
+    },
+    error = function(e) FALSE
+  )
+}
+
 ## Resolve which pool + index this evaluation should run in. A worker-local pool always wins; the
 ## shared pool + env-var index is the single-node fallback.
 .resolve_pool <- function(pool) {
@@ -262,6 +306,87 @@
 ##     because it is invisible in the output.
 ##
 ## Returns the common digest invisibly.
+## Confirm every worker actually holds a RUNNING container, healing what can be healed and aborting
+## loudly on what cannot.
+##
+## `clusterCall(cl, .worker_pool_start)` reports only hard errors: a container that starts and then
+## dies -- OOM, a daemon under load, resources still held by an earlier run's leftovers -- leaves the
+## call "successful" and the worker container-less. Every evaluation dispatched to such a worker then
+## fails, and because DEoptim scores a failed trial as a penalty rather than an error, the search
+## keeps running while a large slice of its population is frozen. Observed on a 90-worker fleet that
+## silently came up with 56: half of every generation was wasted for 2.6 days with nothing logged.
+##
+## Aborting is the point. A fleet that is short of workers is cheap to fix by relaunching and
+## ruinously expensive to discover 40 generations later.
+.verify_worker_pools <- function(cl, heal = TRUE) {
+  ## Probe workers ONE AT A TIME. A cluster-wide clusterCall() is all-or-nothing, so a single
+  ## unresponsive worker errors the whole call and hides the state of all the others -- the failure
+  ## mode .stop_calibration_cluster() documents having been bitten by twice.
+  probe_all <- function() {
+    lapply(seq_along(cl), function(i) {
+      res <- tryCatch(parallel::clusterCall(cl[i], .worker_pool_probe)[[1L]], error = function(e) {
+        NULL
+      })
+      if (is.null(res)) {
+        list(host = NA_character_, container = NA_character_, running = FALSE)
+      } else {
+        res
+      }
+    })
+  }
+  is_bad <- function(info) which(!vapply(info, function(x) isTRUE(x$running), logical(1)))
+
+  info <- probe_all()
+  bad <- is_bad(info)
+
+  if (length(bad) && isTRUE(heal)) {
+    message(glue::glue(
+      "calibrate_dynamic_fire: {length(bad)} of {length(cl)} worker container(s) not running ",
+      "after pool start; attempting to restart them."
+    ))
+    for (i in bad) {
+      tryCatch(parallel::clusterCall(cl[i], .worker_pool_heal), error = function(e) NULL)
+    }
+    info <- probe_all()
+    bad <- is_bad(info)
+  }
+
+  hosts <- vapply(
+    info,
+    function(x) {
+      h <- x$host
+      if (is.null(h) || is.na(h)) NA_character_ else as.character(h)
+    },
+    character(1)
+  )
+
+  if (length(bad)) {
+    tally <- table(hosts[bad], useNA = "ifany")
+    stop(
+      sprintf(
+        paste0(
+          "%d of %d calibration worker(s) have no running container and could not be restarted ",
+          "(by host: %s). The fleet would run degraded -- every trial dispatched to these workers ",
+          "fails and is scored as a penalty, freezing that slice of the population. Free the host ",
+          "(check for leftover containers from an earlier run: docker ps --filter name=landis-cal-) ",
+          "or lower cfg$nodes / cfg$mem_fraction, then relaunch."
+        ),
+        length(bad),
+        length(cl),
+        paste(sprintf("%s=%d", names(tally), as.integer(tally)), collapse = ", ")
+      ),
+      call. = FALSE
+    )
+  }
+
+  ok <- table(hosts)
+  message(glue::glue(
+    "calibrate_dynamic_fire: all {length(cl)} worker container(s) running ",
+    "({paste(sprintf('%s=%d', names(ok), as.integer(ok)), collapse = ', ')})."
+  ))
+  invisible(info)
+}
+
 .verify_node_images <- function(cl, image) {
   if (is.null(image) || !nzchar(image)) {
     return(invisible(NA_character_))
@@ -448,6 +573,10 @@
       pull = pull,
       name_prefix = name_prefix
     )
+    ## clusterCall() above surfaces only hard errors. Containers that started and then died are
+    ## invisible to it (and, under `--rm`, to `docker ps -a` too), so verify the fleet is at full
+    ## strength before handing it to DEoptim.
+    .verify_worker_pools(cl)
   }
   ok <- TRUE
 

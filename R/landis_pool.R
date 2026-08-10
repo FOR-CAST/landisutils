@@ -271,7 +271,14 @@ landis_pool_start <- function(
 #'   under `/scratch/`). Must correspond to a host path under `pool$scratch_root`.
 #' @param command Character. Executable to run in the container (e.g., "dotnet").
 #' @param args Character vector. Arguments passed to `command`.
-#' @param timeout_sec Numeric or NULL. Maximum wait time. NULL = no timeout.
+#' @param timeout_sec Numeric or NULL. Maximum wall-clock wait for a single
+#'   attempt. NULL (the default) means no timeout, which is the right choice for
+#'   an interactive one-off but a hazard for an unattended search: a `docker
+#'   exec` that wedges rather than exiting blocks the calling worker forever, and
+#'   because the coordinator is parked in a blocking socket read it cannot notice.
+#'   A timed-out attempt is treated exactly like a non-zero exit -- it consumes a
+#'   retry, restarts the container, and tries again -- so setting this converts an
+#'   indefinite hang into a bounded, self-healing failure.
 #' @param stdout_log,stderr_log Character or NULL. Paths to write captured output.
 #' @param extra_env Named character. Extra environment variables to set via
 #'   `--env`. Default sets `HOME=/tmp` and `DOTNET_BUNDLE_EXTRACT_BASE_DIR` to
@@ -332,18 +339,31 @@ landis_pool_exec <- function(
   max_attempts <- 1L + as.integer(retries)
   last_status <- NA_integer_
   last_stderr <- ""
+  last_timed_out <- FALSE
   while (attempts < max_attempts) {
     attempts <- attempts + 1L
     container <- pool$names[as.integer(idx)]
     exec_args <- c("exec", "--workdir", workdir, env_args, container, command, args)
 
     t_start <- proc.time()
-    res <- processx::run(
-      "docker",
-      exec_args,
-      timeout = if (is.null(timeout_sec)) Inf else as.numeric(timeout_sec),
-      error_on_status = FALSE,
-      echo = FALSE
+    timed_out <- FALSE
+    res <- tryCatch(
+      processx::run(
+        "docker",
+        exec_args,
+        timeout = if (is.null(timeout_sec)) Inf else as.numeric(timeout_sec),
+        error_on_status = FALSE,
+        echo = FALSE
+      ),
+      ## processx signals a timeout as a CONDITION, not a non-zero status, so `error_on_status =
+      ## FALSE` does not cover it. Left to propagate, that error unwinds the worker, parApply and
+      ## DEoptim, discarding every generation since the last checkpoint -- strictly worse than the
+      ## hang it is meant to cure. Converting it into a failed attempt hands it to the same
+      ## restart-and-retry path that already handles a crashed container.
+      system_command_timeout_error = function(e) {
+        timed_out <<- TRUE
+        list(status = NA_integer_, stdout = e$stdout %||% "", stderr = e$stderr %||% "")
+      }
     )
     elapsed_sec <- (proc.time() - t_start)[["elapsed"]]
 
@@ -356,7 +376,7 @@ landis_pool_exec <- function(
       writeLines(res$stderr, stderr_log)
     }
 
-    if (res$status == 0L) {
+    if (!timed_out && res$status == 0L) {
       return(invisible(list(
         status = res$status,
         elapsed_sec = elapsed_sec,
@@ -366,13 +386,17 @@ landis_pool_exec <- function(
     }
     last_status <- res$status
     last_stderr <- res$stderr
+    last_timed_out <- timed_out
 
     if (attempts < max_attempts) {
       message(sprintf(
-        "landis_pool_exec: container %s failed (status %d, %.1fs); restarting and retrying (%d / %d).",
+        "landis_pool_exec: container %s %s; restarting and retrying (%d / %d).",
         container,
-        res$status,
-        elapsed_sec,
+        if (timed_out) {
+          sprintf("timed out after %gs (elapsed %.1fs)", as.numeric(timeout_sec), elapsed_sec)
+        } else {
+          sprintf("failed (status %d, %.1fs)", res$status, elapsed_sec)
+        },
         attempts,
         max_attempts - 1L
       ))
@@ -381,12 +405,14 @@ landis_pool_exec <- function(
   }
 
   stop(
-    "landis_pool_exec: command failed in container ",
+    "landis_pool_exec: command ",
+    if (last_timed_out) "timed out" else "failed",
+    " in container ",
     pool$names[as.integer(idx)],
     " after ",
     attempts,
     " attempt(s) (last status ",
-    last_status,
+    if (last_timed_out) paste0("timeout at ", as.numeric(timeout_sec), "s") else last_status,
     ", elapsed ",
     round(elapsed_sec, 1),
     "s)\n",

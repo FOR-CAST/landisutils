@@ -233,3 +233,83 @@ test_that("landis_pool_exec(retries=1) retries after a container failure", {
   expect_equal(res$attempts, 2L) ## 1 failed + 1 successful retry
   expect_equal(readLines(fs::path(scratch, "marker.txt")), "retried")
 })
+
+test_that("landis_pool_exec() converts a timeout into a retry, then a clear error", {
+  ## The regression: the calibration called landis_pool_exec() with no `timeout_sec`, so processx
+  ## waited forever on a `docker exec` that wedged instead of exiting. The coordinator, parked in a
+  ## blocking read on that worker's socket, waited with it -- one run hung ~16 h before anything
+  ## noticed. `retries` was no help: it only fires when the simulator EXITS.
+  ##
+  ## The second half matters as much as the first: processx signals a timeout as a CONDITION, not a
+  ## non-zero status, so `error_on_status = FALSE` does not cover it. Letting it propagate would
+  ## unwind parApply and DEoptim and discard every generation since the last checkpoint -- strictly
+  ## worse than the hang it is meant to cure.
+  pool <- structure(
+    list(
+      names = "landis-cal-fake",
+      image = "busybox",
+      scratch_root = tempdir(),
+      n = 1L,
+      user_args = NULL,
+      cpu_args = NULL,
+      mem_args = NULL
+    ),
+    class = "landis_pool"
+  )
+  attempts <- 0L
+  local_mocked_bindings(landis_pool_restart_one = function(pool, idx) invisible(pool))
+  local_mocked_bindings(
+    run = function(command, args, timeout = Inf, ...) {
+      attempts <<- attempts + 1L
+      stop(structure(
+        class = c("system_command_timeout_error", "system_command_error", "error", "condition"),
+        list(message = "process timed out", call = NULL, stdout = "", stderr = "")
+      ))
+    },
+    .package = "processx"
+  )
+
+  expect_error(
+    suppressMessages(landis_pool_exec(
+      pool,
+      idx = 1L,
+      workdir = "/scratch",
+      command = "true",
+      timeout_sec = 1,
+      retries = 1L
+    )),
+    "timed out"
+  )
+  ## 1 initial attempt + 1 retry: a timeout must CONSUME the retry budget, not bypass it.
+  expect_equal(attempts, 2L)
+})
+
+test_that("landis_pool_exec() passes timeout_sec through to processx", {
+  pool <- structure(
+    list(
+      names = "landis-cal-fake",
+      image = "busybox",
+      scratch_root = tempdir(),
+      n = 1L,
+      user_args = NULL,
+      cpu_args = NULL,
+      mem_args = NULL
+    ),
+    class = "landis_pool"
+  )
+  seen <- NULL
+  local_mocked_bindings(
+    run = function(command, args, timeout = Inf, ...) {
+      seen <<- timeout
+      list(status = 0L, stdout = "", stderr = "")
+    },
+    .package = "processx"
+  )
+
+  landis_pool_exec(pool, idx = 1L, workdir = "/scratch", command = "true", timeout_sec = 42)
+  expect_equal(seen, 42)
+
+  ## NULL must remain wait-forever, so the single-node and interactive paths are unchanged.
+  landis_pool_exec(pool, idx = 1L, workdir = "/scratch", command = "true", timeout_sec = NULL)
+  expect_equal(seen, Inf)
+})

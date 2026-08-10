@@ -1710,6 +1710,16 @@ run_calibration_spinup <- function(
 #'   calibration, and a production run makes tens of thousands of container
 #'   executions, so a rare transient becomes near-certain. Only the pooled path
 #'   honours this; a genuine input fault fails on every attempt regardless.
+#' @param trial_timeout_sec Numeric or NULL. Wall-clock ceiling for one
+#'   simulator execution, passed to [landis_pool_exec()]. NULL (the default)
+#'   waits indefinitely. `retries` only helps when the simulator *exits*; a
+#'   process that wedges instead never returns, and the coordinator -- parked in
+#'   a blocking read on that worker's socket -- waits with it, so the whole
+#'   generation stalls behind one container with nothing logged. Set this to a
+#'   generous multiple of a healthy trial's runtime (it is a deadlock breaker,
+#'   not a scheduler) so a wedged trial is killed, retried and, if it keeps
+#'   wedging, surfaced as an error the search can act on. Only the pooled path
+#'   honours it.
 #'
 #' @returns The output of [parse_dynamic_fire_logs()] for the trial's `rep01/`.
 #'
@@ -1727,7 +1737,8 @@ sim_landis <- function(
   method = NULL,
   pixel_area_ha = 1.0,
   keep_scratch = FALSE,
-  retries = 0L
+  retries = 0L,
+  trial_timeout_sec = NULL
 ) {
   if (is.null(names(par_vec)) && !is.null(par_names)) {
     names(par_vec) <- par_names
@@ -1819,7 +1830,8 @@ sim_landis <- function(
       ## Retrying costs nothing diagnostically: a genuine input fault (unreadable pixel type, unknown
       ## map code, a grant below the landscape's peak RSS) fails identically on every attempt and
       ## still surfaces, only later by the duration of the retries.
-      retries = retries
+      retries = retries,
+      timeout_sec = trial_timeout_sec
     )
   } else {
     method <- method %||%
@@ -2281,6 +2293,12 @@ sim_mock <- function(
 #'       loss-config fingerprint (weights + sim settings + observed + image)
 #'       match; `"force"` resumes regardless of either; `"never"` ignores any
 #'       checkpoint and starts from an empty memoization cache (a clean slate).}
+#'     \item{trial_timeout_sec}{Optional numeric. Wall-clock ceiling on ONE
+#'       simulator execution (see [sim_landis()]). `retries` only rescues a
+#'       simulator that exits; one that wedges never returns, and the whole
+#'       generation waits behind it. Recommended for any unattended search.
+#'       Deliberately excluded from both fingerprints, so it can be added to or
+#'       changed on an in-flight search without invalidating its checkpoint.}
 #'   }
 #' @param out_dir Character. Where to write the DEoptim trace + scratch
 #'   sub-directory. Created if missing.
@@ -2556,7 +2574,10 @@ calibrate_dynamic_fire <- function(observed_targets_path, scenario_template, cfg
         method = method,
         ## Retry a failed simulator exec rather than aborting the search; see sim_landis()'s
         ## `retries` docs. `sim_mock` ignores extra arguments via its `...`.
-        retries = as.integer(cfg$retries %||% 0L)
+        retries = as.integer(cfg$retries %||% 0L),
+        ## Bound a single execution so a wedged container cannot stall the generation behind it;
+        ## see sim_landis()'s `trial_timeout_sec` docs. NULL keeps the historical wait-forever.
+        trial_timeout_sec = cfg$trial_timeout_sec
       )
     })
     .loss <- loss_from_stats(reps, observed, weights)
