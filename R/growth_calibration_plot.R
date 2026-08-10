@@ -123,13 +123,25 @@ plot_growth_calibration <- function(
 #' against, so a candidate that looks wrong against the cloud but right against
 #' the binned points is behaving exactly as scored.
 #'
+#' Each binned point is sized by the number of plots behind it, because they
+#' routinely differ by more than an order of magnitude and an equal-sized point
+#' hides that completely. A bin holding a single plot is not a median of
+#' anything, and the sharp reversals in the orange series are usually those bins.
+#'
+#' Passing `smooth` overlays a fit through the whole cloud with a confidence
+#' band, for comparison only -- see [growth_smooth_observations()]. It is not
+#' scored, and the legend says so.
+#'
 #' @param species Character. Modelled species code.
 #' @param current_curve,candidate_curve Tibbles with `age` and
 #'   `aboveground_c_mg_ha`. `candidate_curve` may be `NULL`.
 #' @param reference A data frame of reference observations, with columns
 #'   `source` (`"SORTIE"`, `"TIPSY"` or `"Ground plots"`), `age` and
 #'   `aboveground_c_mg_ha`.
-#' @param binned Optional tibble from [growth_bin_observations()].
+#' @param binned Optional tibble from [growth_bin_observations()]. An `n` column,
+#'   when present, sizes the points.
+#' @param smooth Optional tibble from [growth_smooth_observations()], drawn as a
+#'   fitted line and confidence band. Display only; nothing is scored against it.
 #' @param current_label,candidate_label Character legend labels.
 #' @param x_max Numeric. Upper age limit.
 #' @param mature_window Numeric length-2. Fitting window to shade.
@@ -144,6 +156,7 @@ plot_growth_candidate <- function(
   candidate_curve,
   reference,
   binned = NULL,
+  smooth = NULL,
   current_label = "current parameters",
   candidate_label = "best candidate",
   x_max = 400,
@@ -165,10 +178,25 @@ plot_growth_candidate <- function(
   ## guess.
   plots_label <- "ground plots"
   binned_label <- "ground plots, age-binned (scored)"
+  smooth_label <- "ground plots, GAM fit (not scored)"
+  has_smooth <- !is.null(smooth) && nrow(smooth) > 0L
   pal <- stats::setNames(
     c("black", "firebrick", "grey60", "darkorange3"),
     c(current_label, candidate_label, plots_label, binned_label)
   )
+  if (has_smooth) {
+    pal <- c(pal, stats::setNames("steelblue4", smooth_label))
+  }
+
+  ## Behind everything, so the band reads as context rather than as a series.
+  ribbon <- if (has_smooth) {
+    ggplot2::geom_ribbon(
+      data = smooth,
+      ggplot2::aes(x = .data$age, ymin = .data$lo, ymax = .data$hi),
+      fill = "steelblue4",
+      alpha = 0.16
+    )
+  }
 
   p <- ggplot2::ggplot() +
     ggplot2::annotate(
@@ -180,6 +208,7 @@ plot_growth_candidate <- function(
       fill = "goldenrod2",
       alpha = 0.13
     ) +
+    ribbon +
     ## Shape carries the RAW species code, not the modelled one. Several codes
     ## commonly lump into one modelled species, and the members are not
     ## interchangeable -- in the network this was built against, black cottonwood
@@ -212,12 +241,39 @@ plot_growth_candidate <- function(
         ggplot2::aes(x = .data$age, y = .data$value, colour = binned_label),
         linewidth = 0.6,
         alpha = 0.9
-      ) +
-      ggplot2::geom_point(
-        data = binned,
-        ggplot2::aes(x = .data$age, y = .data$value, colour = binned_label),
-        size = 2.1,
-        shape = 18
+      )
+    ## Area proportional to the plot count, with a visible floor: a one-plot bin
+    ## must still be findable on the page, since knowing where those bins ARE is
+    ## the point. Integer breaks because a fractional plot is not a thing.
+    p <- if ("n" %in% names(binned)) {
+      p +
+        ggplot2::geom_point(
+          data = binned,
+          ggplot2::aes(x = .data$age, y = .data$value, colour = binned_label, size = .data$n),
+          shape = 18
+        ) +
+        ggplot2::scale_size(
+          range = c(1.1, 4.6),
+          transform = "sqrt",
+          breaks = .growth_bin_size_breaks(binned$n)
+        )
+    } else {
+      p +
+        ggplot2::geom_point(
+          data = binned,
+          ggplot2::aes(x = .data$age, y = .data$value, colour = binned_label),
+          size = 2.1,
+          shape = 18
+        )
+    }
+  }
+
+  if (has_smooth) {
+    p <- p +
+      ggplot2::geom_line(
+        data = smooth,
+        ggplot2::aes(x = .data$age, y = .data$value, colour = smooth_label),
+        linewidth = 0.7
       )
   }
 
@@ -235,10 +291,10 @@ plot_growth_candidate <- function(
       colour = ggplot2::guide_legend(
         nrow = 2L,
         override.aes = list(
-          linetype = c("solid", "solid", "blank", "solid"),
-          shape = c(NA, NA, 16, 18),
-          linewidth = c(1, 1, 0, 0.6),
-          size = c(0, 0, 1.3, 2.1)
+          linetype = c("solid", "solid", "blank", "solid", if (has_smooth) "solid"),
+          shape = c(NA, NA, 16, 18, if (has_smooth) NA),
+          linewidth = c(1, 1, 0, 0.6, if (has_smooth) 0.7),
+          size = c(0, 0, 1.3, 2.1, if (has_smooth) 0)
         )
       )
     ) +
@@ -247,6 +303,7 @@ plot_growth_candidate <- function(
       x = "Stand age (years)",
       y = expression("Aboveground live carbon" ~ (Mg ~ C ~ ha^-1)),
       colour = NULL,
+      size = "plots in bin",
       shape = "Leading species",
       linetype = "Reference curve",
       title = species,
@@ -365,6 +422,13 @@ plot_growth_factorial_sensitivity <- function(scores, current) {
 #' @param scoring_file,params_file Character. Paths named in the bundle's
 #'   `README.txt`, so a reviewer is pointed at the files this project actually
 #'   keeps them in.
+#' @param smooth_plots Logical. Overlay a spline through the ground-plot cloud
+#'   on each panel, for comparison against the binned series. Display only;
+#'   nothing is scored against it. See [growth_smooth_observations()].
+#' @param smooth_bin,smooth_site Passed to [growth_smooth_observations()].
+#'   `smooth_bin` may be a single width or a vector named by species. Set
+#'   `smooth_site` to the location column wherever the plots are a permanent
+#'   network, so the fit and the binned series rest on the same evidence.
 #'
 #' @return Character vector of the written file paths.
 #' @family growth calibration helpers
@@ -379,7 +443,10 @@ write_growth_review_bundle <- function(
   best,
   windows,
   scoring_file = "growth_scoring.csv",
-  params_file = "the growth-parameter table"
+  params_file = "the growth-parameter table",
+  smooth_plots = TRUE,
+  smooth_bin = 20L,
+  smooth_site = NULL
 ) {
   .need("ggplot2", "Writing a growth review bundle")
   dir <- fs::dir_create(dir)
@@ -441,12 +508,34 @@ write_growth_review_bundle <- function(
       NULL
     }
 
+    ## Display only. Failing to fit is not an error here -- several species have
+    ## too few plots to smooth, which is itself worth seeing on the panel.
+    smooth <- if (isTRUE(smooth_plots)) {
+      ## Named vector -> per-species bin, so a species whose `age_bin` differs
+      ## from the rest is not smoothed at somebody else's width.
+      bw <- if (!is.null(names(smooth_bin)) && sp %in% names(smooth_bin)) {
+        smooth_bin[[sp]]
+      } else {
+        smooth_bin[[1L]]
+      }
+      out <- try(
+        growth_smooth_observations(
+          dplyr::filter(references[[sp]], .data$source == "Ground plots"),
+          bin = bw,
+          site = smooth_site
+        ),
+        silent = TRUE
+      )
+      if (inherits(out, "try-error")) NULL else out
+    }
+
     p <- plot_growth_candidate(
       species = sp,
       current_curve = cur,
       candidate_curve = cand,
       reference = references[[sp]],
       binned = if (is.null(reference_curves)) NULL else reference_curves[[sp]]$binned,
+      smooth = smooth,
       mature_window = win,
       subtitle = sub
     )
@@ -471,6 +560,15 @@ write_growth_review_bundle <- function(
       "                       scatter -- is what the score is computed against,",
       "                       so every age band counts once however many plots",
       "                       landed in it.",
+      "                       Each orange point is SIZED by how many plots are",
+      "                       behind it. The counts differ by more than an order",
+      "                       of magnitude, and the sharp reversals in the orange",
+      "                       series are usually its smallest points: a bin",
+      "                       holding one plot is not a median of anything.",
+      "                       The BLUE line and band are a spline through the",
+      "                       whole cloud, drawn for comparison ONLY -- nothing",
+      "                       is scored against it. Where the band is wide, the",
+      "                       binned points nearby are not evidence of much.",
       "                       The shaded band is the fitting window. It is DERIVED:",
       "                       it opens at age 20, below which the plot programmes",
       "                       do not sample, and closes at the earliest of the 95th",

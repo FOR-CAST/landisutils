@@ -10,6 +10,7 @@ plot_growth_candidate(
   candidate_curve,
   reference,
   binned = NULL,
+  smooth = NULL,
   current_label = "current parameters",
   candidate_label = "best candidate",
   x_max = 400,
@@ -27,7 +28,11 @@ plot_growth_candidate(
 \code{source} (\code{"SORTIE"}, \code{"TIPSY"} or \code{"Ground plots"}), \code{age} and
 \code{aboveground_c_mg_ha}.}
 
-\item{binned}{Optional tibble from \code{\link[=growth_bin_observations]{growth_bin_observations()}}.}
+\item{binned}{Optional tibble from \code{\link[=growth_bin_observations]{growth_bin_observations()}}. An \code{n} column,
+when present, sizes the points.}
+
+\item{smooth}{Optional tibble from \code{\link[=growth_smooth_observations]{growth_smooth_observations()}}, drawn as a
+fitted line and confidence band. Display only; nothing is scored against it.}
 
 \item{current_label, candidate_label}{Character legend labels.}
 
@@ -51,6 +56,15 @@ The age-binned plot series is drawn as well, in orange. That series -- not the
 scatter behind it -- is what the ground-plot term of the score is computed
 against, so a candidate that looks wrong against the cloud but right against
 the binned points is behaving exactly as scored.
+
+Each binned point is sized by the number of plots behind it, because they
+routinely differ by more than an order of magnitude and an equal-sized point
+hides that completely. A bin holding a single plot is not a median of
+anything, and the sharp reversals in the orange series are usually those bins.
+
+Passing \code{smooth} overlays a fit through the whole cloud with a confidence
+band, for comparison only -- see \code{\link[=growth_smooth_observations]{growth_smooth_observations()}}. It is not
+scored, and the legend says so.
 }
 \seealso{
 Other growth calibration helpers:
@@ -74,6 +88,7 @@ Other growth calibration helpers:
 \code{\link[=growth_reference_inflection]{growth_reference_inflection()}},
 \code{\link[=growth_score_fit]{growth_score_fit()}},
 \code{\link[=growth_scoring_for]{growth_scoring_for()}},
+\code{\link[=growth_smooth_observations]{growth_smooth_observations()}},
 \code{\link[=growth_structure_design]{growth_structure_design()}},
 \code{\link[=growth_window_for]{growth_window_for()}},
 \code{\link[=plot_growth_calibration]{plot_growth_calibration()}},

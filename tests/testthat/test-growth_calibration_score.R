@@ -68,6 +68,60 @@ test_that("a location visited across two bins contributes to each", {
   expect_equal(out$value, c(10, 80))
 })
 
+test_that("smoothing a plot cloud returns a monotone-in-support band, clamped at zero", {
+  skip_if_not_installed("mgcv")
+  set.seed(1)
+  obs <- tibble::tibble(
+    age = rep(seq(10, 200, by = 10), each = 4),
+    aboveground_c_mg_ha = 200 *
+      (1 - exp(-0.02 * rep(seq(10, 200, by = 10), each = 4))) +
+      stats::rnorm(80, sd = 8)
+  )
+  out <- growth_smooth_observations(obs, n_grid = 50)
+
+  expect_named(out, c("age", "value", "lo", "hi"))
+  expect_equal(nrow(out), 50L)
+  ## Never extrapolated beyond the observations.
+  expect_equal(range(out$age), c(10, 200))
+  expect_true(all(out$lo >= 0))
+  expect_true(all(out$hi >= out$value & out$value >= out$lo))
+})
+
+test_that("smoothing declines to fit when there is nothing to smooth", {
+  skip_if_not_installed("mgcv")
+  obs <- tibble::tibble(age = c(10, 20, 30), aboveground_c_mg_ha = c(5, 40, 90))
+
+  expect_equal(nrow(growth_smooth_observations(obs)), 0L)
+  expect_equal(nrow(growth_smooth_observations(obs[0, ])), 0L)
+})
+
+test_that("smoothing collapses repeat visits like the binner does", {
+  skip_if_not_installed("mgcv")
+  ## Site A is visited ten times in one bin and would otherwise drag the fit.
+  obs <- tibble::tibble(
+    site = c(rep("A", 10), LETTERS[2:20]),
+    age = c(rep(15, 10), seq(25, 205, by = 10)),
+    aboveground_c_mg_ha = c(rep(5, 10), seq(30, 210, by = 10))
+  )
+  visits <- growth_smooth_observations(obs, n_grid = 20)
+  sites <- growth_smooth_observations(obs, n_grid = 20, site = "site")
+
+  expect_false(isTRUE(all.equal(visits$value, sites$value)))
+})
+
+test_that("smoothing errors on a missing site column rather than silently skipping", {
+  skip_if_not_installed("mgcv")
+  obs <- tibble::tibble(age = seq(10, 200, by = 10), aboveground_c_mg_ha = seq(10, 200, by = 10))
+
+  expect_snapshot(error = TRUE, growth_smooth_observations(obs, site = "nope"))
+})
+
+test_that("bin-size legend breaks always show a single-plot bin and the maximum", {
+  expect_equal(landisutils:::.growth_bin_size_breaks(c(1L, 4L, 30L))[[1L]], 1L)
+  expect_equal(max(landisutils:::.growth_bin_size_breaks(c(1L, 4L, 30L))), 30L)
+  expect_equal(landisutils:::.growth_bin_size_breaks(integer(0)), 1L)
+})
+
 test_that("a missing site column is an error, not a silent skip", {
   obs <- tibble::tibble(age = 1:3, aboveground_c_mg_ha = c(10, 20, 30))
 

@@ -1,3 +1,11 @@
+# smoothing errors on a missing site column rather than silently skipping
+
+    Code
+      growth_smooth_observations(obs, site = "nope")
+    Condition
+      Error:
+      ! `site` column 'nope' not found in `obs`.
+
 # a missing site column is an error, not a silent skip
 
     Code

@@ -38,6 +38,7 @@ Other growth calibration helpers:
 \code{\link[=growth_reference_curves]{growth_reference_curves()}},
 \code{\link[=growth_reference_inflection]{growth_reference_inflection()}},
 \code{\link[=growth_score_fit]{growth_score_fit()}},
+\code{\link[=growth_smooth_observations]{growth_smooth_observations()}},
 \code{\link[=growth_structure_design]{growth_structure_design()}},
 \code{\link[=growth_window_for]{growth_window_for()}},
 \code{\link[=plot_growth_calibration]{plot_growth_calibration()}},

@@ -280,6 +280,104 @@ growth_bin_observations <- function(obs, bin = 20L, probs = 0.5, site = NULL, we
     dplyr::select(age, value, n, weight)
 }
 
+#' Smooth a ground-plot cloud for display
+#'
+#' Fits a thin-plate spline through the observations and returns it on a dense
+#' age grid with a pointwise confidence band. This is a VISUAL AID ONLY: nothing
+#' in the scoring path consumes it, and [growth_reference_curves()] continues to
+#' build the scored ground-plot reference by binning. Keeping the two separate is
+#' deliberate -- swapping the scored reference changes every `biomass_max_est`
+#' that rests on plots, which is a calibration decision rather than a plotting
+#' one.
+#'
+#' What it is for is judging the binned series. A bin holding one plot is drawn
+#' at the same visual weight as a bin holding thirty, and the straight lines
+#' between bins imply a trajectory the plots may not support; a fit over the
+#' whole cloud shows how much of that movement is real. Where the band is wide,
+#' the binned points nearby are not evidence of anything.
+#'
+#' Observations are collapsed by location and bin first, exactly as
+#' [growth_bin_observations()] does, so the fit and the binned series rest on the
+#' same evidence and any difference between them is the summarizing method rather
+#' than the sample.
+#'
+#' The fit is on the IDENTITY scale. A log link is the obvious response to
+#' right-skewed biomass, but with a handful of plots at the old end it
+#' extrapolates violently -- in the network this was built against it lifted one
+#' species' curve to 347 Mg C/ha against a binned maximum of 238 -- so the
+#' skew is left to the confidence band to express. The band is clamped at zero,
+#' since negative aboveground carbon is not a state a stand can be in.
+#'
+#' No prediction is returned outside the observed age range: a spline given no
+#' data has nothing to say, and a curve drawn past the last plot invites the
+#' reader to believe otherwise.
+#'
+#' @param obs A tibble with `age` and `aboveground_c_mg_ha`.
+#' @param bin,site As in [growth_bin_observations()]; used only to collapse
+#'   repeated visits, not to summarize.
+#' @param k Integer. Spline basis dimension. `NULL` derives one from the number
+#'   of occupied bins, capped at 5, which keeps the fit from chasing individual
+#'   plots.
+#' @param n_grid Integer. Number of ages at which to evaluate the fit.
+#' @param level Numeric. Confidence level for the band.
+#'
+#' @return A tibble with `age`, `value`, `lo`, `hi`, and a `k` attribute; zero
+#'   rows when there are too few distinct observations to fit.
+#' @family growth calibration helpers
+#' @export
+growth_smooth_observations <- function(
+  obs,
+  bin = 20L,
+  site = NULL,
+  k = NULL,
+  n_grid = 200L,
+  level = 0.95
+) {
+  .need("mgcv", "Smoothing a ground-plot cloud")
+  if (!is.null(site) && !site %in% names(obs)) {
+    stop("`site` column '", site, "' not found in `obs`.", call. = FALSE)
+  }
+  empty <- tibble::tibble(age = numeric(0), value = numeric(0), lo = numeric(0), hi = numeric(0))
+  d <- dplyr::filter(obs, !is.na(.data$age), !is.na(.data$aboveground_c_mg_ha))
+  if (nrow(d) == 0L) {
+    return(empty)
+  }
+  d <- dplyr::mutate(d, .bin = floor(.data$age / bin))
+  if (!is.null(site)) {
+    d <- dplyr::summarise(
+      d,
+      age = mean(.data$age),
+      aboveground_c_mg_ha = mean(.data$aboveground_c_mg_ha),
+      .by = dplyr::all_of(c(".bin", site))
+    )
+  }
+  ## A spline needs more distinct ages than basis functions; below that there is
+  ## nothing to smooth and the honest answer is to draw nothing.
+  n_bins <- dplyr::n_distinct(d$.bin)
+  kk <- k %||% max(3L, min(5L, as.integer(floor(n_bins / 2))))
+  if (dplyr::n_distinct(d$age) <= kk) {
+    return(empty)
+  }
+  fit <- try(
+    mgcv::gam(aboveground_c_mg_ha ~ s(age, k = kk), data = d, method = "REML"),
+    silent = TRUE
+  )
+  if (inherits(fit, "try-error")) {
+    return(empty)
+  }
+  grid <- data.frame(age = seq(min(d$age), max(d$age), length.out = n_grid))
+  pred <- stats::predict(fit, grid, se.fit = TRUE)
+  z <- stats::qnorm(1 - (1 - level) / 2)
+  out <- tibble::tibble(
+    age = grid$age,
+    value = as.numeric(pred$fit),
+    lo = pmax(0, as.numeric(pred$fit) - z * as.numeric(pred$se.fit)),
+    hi = as.numeric(pred$fit) + z * as.numeric(pred$se.fit)
+  )
+  attr(out, "k") <- kk
+  out
+}
+
 #' Build one species' reference curves on a common age grid
 #'
 #' Everything the scorer needs, computed once per species rather than once per
@@ -963,6 +1061,20 @@ growth_best_candidates <- function(
 ## levels PRESENT, so a panel with only TIPSY would draw it solid -- exactly the
 ## key that means SORTIE everywhere else.
 .growth_reference_linetypes <- c(SORTIE = "solid", TIPSY = "14")
+
+## Legend breaks for the plots-per-bin size scale. Always show 1, because
+## "this point is a single plot" is the thing the scale exists to communicate,
+## and always show the maximum, so the reader can judge the span.
+.growth_bin_size_breaks <- function(n) {
+  n <- n[!is.na(n)]
+  if (length(n) == 0L) {
+    return(1L)
+  }
+  hi <- max(n)
+  breaks <- unique(c(1L, pretty(c(1L, hi), n = 3L), hi))
+  breaks <- breaks[breaks >= 1 & breaks <= hi]
+  as.integer(sort(unique(round(breaks))))
+}
 
 #' Age at which a reference growth curve's increment peaks
 #'

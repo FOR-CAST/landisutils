@@ -14,7 +14,10 @@ write_growth_review_bundle(
   best,
   windows,
   scoring_file = "growth_scoring.csv",
-  params_file = "the growth-parameter table"
+  params_file = "the growth-parameter table",
+  smooth_plots = TRUE,
+  smooth_bin = 20L,
+  smooth_site = NULL
 )
 }
 \arguments{
@@ -38,6 +41,15 @@ species, supplying the age-binned ground-plot series.}
 \item{scoring_file, params_file}{Character. Paths named in the bundle's
 \code{README.txt}, so a reviewer is pointed at the files this project actually
 keeps them in.}
+
+\item{smooth_plots}{Logical. Overlay a spline through the ground-plot cloud
+on each panel, for comparison against the binned series. Display only;
+nothing is scored against it. See \code{\link[=growth_smooth_observations]{growth_smooth_observations()}}.}
+
+\item{smooth_bin, smooth_site}{Passed to \code{\link[=growth_smooth_observations]{growth_smooth_observations()}}.
+\code{smooth_bin} may be a single width or a vector named by species. Set
+\code{smooth_site} to the location column wherever the plots are a permanent
+network, so the fit and the binned series rest on the same evidence.}
 }
 \value{
 Character vector of the written file paths.
@@ -68,6 +80,7 @@ Other growth calibration helpers:
 \code{\link[=growth_reference_inflection]{growth_reference_inflection()}},
 \code{\link[=growth_score_fit]{growth_score_fit()}},
 \code{\link[=growth_scoring_for]{growth_scoring_for()}},
+\code{\link[=growth_smooth_observations]{growth_smooth_observations()}},
 \code{\link[=growth_structure_design]{growth_structure_design()}},
 \code{\link[=growth_window_for]{growth_window_for()}},
 \code{\link[=plot_growth_calibration]{plot_growth_calibration()}},
