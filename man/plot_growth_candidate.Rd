@@ -52,7 +52,7 @@ worth promoting: it shows what actually changes, over the part of the curve
 the objective responds to.
 }
 \details{
-The age-binned plot series is drawn as well, in orange. That series -- not the
+The age-binned plot series is drawn as well, in blue. That series -- not the
 scatter behind it -- is what the ground-plot term of the score is computed
 against, so a candidate that looks wrong against the cloud but right against
 the binned points is behaving exactly as scored.
@@ -60,11 +60,16 @@ the binned points is behaving exactly as scored.
 Each binned point is sized by the number of plots behind it, because they
 routinely differ by more than an order of magnitude and an equal-sized point
 hides that completely. A bin holding a single plot is not a median of
-anything, and the sharp reversals in the orange series are usually those bins.
+anything, and the sharp reversals in the series are usually those bins.
+
+The points are NOT joined by line segments. Connecting them asserts a
+trajectory across ages where nothing was measured, and most of the movement
+that line described came from the one-plot bins.
 
 Passing \code{smooth} overlays a fit through the whole cloud with a confidence
 band, for comparison only -- see \code{\link[=growth_smooth_observations]{growth_smooth_observations()}}. It is not
-scored, and the legend says so.
+scored, and the legend says so. It shares the binned points' colour because
+it summarizes the same observations; glyph, not hue, is what tells them apart.
 }
 \seealso{
 Other growth calibration helpers:

@@ -118,7 +118,7 @@ plot_growth_calibration <- function(
 #' worth promoting: it shows what actually changes, over the part of the curve
 #' the objective responds to.
 #'
-#' The age-binned plot series is drawn as well, in orange. That series -- not the
+#' The age-binned plot series is drawn as well, in blue. That series -- not the
 #' scatter behind it -- is what the ground-plot term of the score is computed
 #' against, so a candidate that looks wrong against the cloud but right against
 #' the binned points is behaving exactly as scored.
@@ -126,11 +126,16 @@ plot_growth_calibration <- function(
 #' Each binned point is sized by the number of plots behind it, because they
 #' routinely differ by more than an order of magnitude and an equal-sized point
 #' hides that completely. A bin holding a single plot is not a median of
-#' anything, and the sharp reversals in the orange series are usually those bins.
+#' anything, and the sharp reversals in the series are usually those bins.
+#'
+#' The points are NOT joined by line segments. Connecting them asserts a
+#' trajectory across ages where nothing was measured, and most of the movement
+#' that line described came from the one-plot bins.
 #'
 #' Passing `smooth` overlays a fit through the whole cloud with a confidence
 #' band, for comparison only -- see [growth_smooth_observations()]. It is not
-#' scored, and the legend says so.
+#' scored, and the legend says so. It shares the binned points' colour because
+#' it summarizes the same observations; glyph, not hue, is what tells them apart.
 #'
 #' @param species Character. Modelled species code.
 #' @param current_curve,candidate_curve Tibbles with `age` and
@@ -174,18 +179,20 @@ plot_growth_candidate <- function(
 
   ## Every drawn series is MAPPED, never given a bare colour, so each one earns
   ## a legend key. The binned series in particular is what the score is actually
-  ## computed against, and an unlabelled orange line invites the reader to
-  ## guess.
+  ## computed against, and an unlabelled series invites the reader to guess.
   plots_label <- "ground plots"
   binned_label <- "ground plots, age-binned (scored)"
   smooth_label <- "ground plots, GAM fit (not scored)"
   has_smooth <- !is.null(smooth) && nrow(smooth) > 0L
+  ## The binned points and the fit summarize the SAME observations, so they
+  ## share a colour and are told apart by glyph. Giving them different colours
+  ## implied two independent series.
   pal <- stats::setNames(
-    c("black", "firebrick", "grey60", "darkorange3"),
+    c("black", "firebrick", "grey60", .growth_plot_summary_colour),
     c(current_label, candidate_label, plots_label, binned_label)
   )
   if (has_smooth) {
-    pal <- c(pal, stats::setNames("steelblue4", smooth_label))
+    pal <- c(pal, stats::setNames(.growth_plot_summary_colour, smooth_label))
   }
 
   ## Behind everything, so the band reads as context rather than as a series.
@@ -193,7 +200,7 @@ plot_growth_candidate <- function(
     ggplot2::geom_ribbon(
       data = smooth,
       ggplot2::aes(x = .data$age, ymin = .data$lo, ymax = .data$hi),
-      fill = "steelblue4",
+      fill = .growth_plot_summary_colour,
       alpha = 0.16
     )
   }
@@ -235,13 +242,9 @@ plot_growth_candidate <- function(
     )
 
   if (!is.null(binned) && nrow(binned) > 0L) {
-    p <- p +
-      ggplot2::geom_line(
-        data = binned,
-        ggplot2::aes(x = .data$age, y = .data$value, colour = binned_label),
-        linewidth = 0.6,
-        alpha = 0.9
-      )
+    ## Deliberately NOT joined by line segments. A straight line between two bin
+    ## medians asserts a trajectory through ages where nothing was measured, and
+    ## most of the apparent movement it drew was bins holding a single plot.
     ## Area proportional to the plot count, with a visible floor: a one-plot bin
     ## must still be findable on the page, since knowing where those bins ARE is
     ## the point. Integer breaks because a fractional plot is not a thing.
@@ -291,10 +294,10 @@ plot_growth_candidate <- function(
       colour = ggplot2::guide_legend(
         nrow = 2L,
         override.aes = list(
-          linetype = c("solid", "solid", "blank", "solid", if (has_smooth) "solid"),
+          linetype = c("solid", "solid", "blank", "blank", if (has_smooth) "solid"),
           shape = c(NA, NA, 16, 18, if (has_smooth) NA),
-          linewidth = c(1, 1, 0, 0.6, if (has_smooth) 0.7),
-          size = c(0, 0, 1.3, 2.1, if (has_smooth) 0)
+          linewidth = c(1, 1, 0, 0, if (has_smooth) 0.7),
+          size = c(0, 0, 1.3, 2.6, if (has_smooth) 0)
         )
       )
     ) +
@@ -311,7 +314,19 @@ plot_growth_candidate <- function(
         sprintf("shaded: fitting window (%g to %g yr)", mature_window[[1L]], mature_window[[2L]])
     ) +
     ggplot2::theme_bw(base_size = 10) +
-    ggplot2::theme(legend.position = "bottom", legend.box = "vertical")
+    ## Four stacked guides otherwise take half the panel. Tight spacing and small
+    ## keys keep the data area dominant; the size guide in particular needs no
+    ## more room than its largest key.
+    ggplot2::theme(
+      legend.position = "bottom",
+      legend.box = "vertical",
+      legend.box.spacing = ggplot2::unit(0.2, "lines"),
+      legend.spacing.y = ggplot2::unit(0.1, "lines"),
+      legend.margin = ggplot2::margin(0, 0, 0, 0),
+      legend.key.height = ggplot2::unit(0.8, "lines"),
+      legend.text = ggplot2::element_text(size = ggplot2::rel(0.8)),
+      legend.title = ggplot2::element_text(size = ggplot2::rel(0.8))
+    )
 }
 
 #' Plot factorial sensitivity of fit to each growth parameter
@@ -540,7 +555,9 @@ write_growth_review_bundle <- function(
       subtitle = sub
     )
     f <- file.path(dir, paste0("review-", sp, ".png"))
-    ggplot2::ggsave(f, p, width = 7, height = 5, dpi = 200)
+    ## Taller than the panel needs, to absorb the legend box rather than let it
+    ## squeeze the data area.
+    ggplot2::ggsave(f, p, width = 7, height = 5.8, dpi = 200)
     written <- c(written, f)
   }
 
@@ -555,20 +572,24 @@ write_growth_review_bundle <- function(
       "",
       "review-<species>.png   current parameters (black) vs best candidate (red),",
       "                       over the SORTIE / TIPSY / ground-plot references.",
-      "                       Grey points are individual plots; the ORANGE series",
-      "                       is those plots binned by age, and it -- not the",
-      "                       scatter -- is what the score is computed against,",
+      "                       Grey points are individual plots; the BLUE DIAMONDS",
+      "                       are those plots binned by age, and they -- not the",
+      "                       scatter -- are what the score is computed against,",
       "                       so every age band counts once however many plots",
       "                       landed in it.",
-      "                       Each orange point is SIZED by how many plots are",
-      "                       behind it. The counts differ by more than an order",
-      "                       of magnitude, and the sharp reversals in the orange",
-      "                       series are usually its smallest points: a bin",
-      "                       holding one plot is not a median of anything.",
-      "                       The BLUE line and band are a spline through the",
+      "                       Each diamond is SIZED by how many plots are behind",
+      "                       it. The counts differ by more than an order of",
+      "                       magnitude, and the sharp reversals in the series",
+      "                       are usually its smallest points: a bin holding one",
+      "                       plot is not a median of anything. They are NOT",
+      "                       joined up, because a line between two bins asserts",
+      "                       a trajectory through ages nobody measured.",
+      "                       The BLUE LINE and band are a spline through the",
       "                       whole cloud, drawn for comparison ONLY -- nothing",
-      "                       is scored against it. Where the band is wide, the",
-      "                       binned points nearby are not evidence of much.",
+      "                       is scored against it. Same colour as the diamonds",
+      "                       because it summarizes the same observations. Where",
+      "                       the band is wide, the binned points nearby are not",
+      "                       evidence of much.",
       "                       The shaded band is the fitting window. It is DERIVED:",
       "                       it opens at age 20, below which the plot programmes",
       "                       do not sample, and closes at the earliest of the 95th",

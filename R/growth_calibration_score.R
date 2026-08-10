@@ -1062,6 +1062,11 @@ growth_best_candidates <- function(
 ## key that means SORTIE everywhere else.
 .growth_reference_linetypes <- c(SORTIE = "solid", TIPSY = "14")
 
+## Shared by every summary of the ground-plot cloud -- the age-binned points and
+## the fitted curve alike. One colour, because they are one set of observations
+## summarized two ways; the glyph is what separates them.
+.growth_plot_summary_colour <- "steelblue4"
+
 ## Legend breaks for the plots-per-bin size scale. Always show 1, because
 ## "this point is a single plot" is the thing the scale exists to communicate,
 ## and always show the maximum, so the reader can judge the span.
@@ -1071,9 +1076,18 @@ growth_best_candidates <- function(
     return(1L)
   }
   hi <- max(n)
-  breaks <- unique(c(1L, pretty(c(1L, hi), n = 3L), hi))
+  if (hi <= 1) {
+    return(1L)
+  }
+  ## At most four keys: this guide shares a crowded legend box with three
+  ## others, and 1 and the maximum carry almost all of its meaning.
+  breaks <- unique(c(1L, pretty(c(1L, hi), n = 2L), hi))
   breaks <- breaks[breaks >= 1 & breaks <= hi]
-  as.integer(sort(unique(round(breaks))))
+  breaks <- as.integer(sort(unique(round(breaks))))
+  if (length(breaks) > 4L) {
+    breaks <- unique(c(breaks[[1L]], breaks[c(2L, length(breaks) - 1L)], breaks[[length(breaks)]]))
+  }
+  breaks
 }
 
 #' Age at which a reference growth curve's increment peaks
