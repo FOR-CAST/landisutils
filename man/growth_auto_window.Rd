@@ -10,12 +10,12 @@ growth_auto_window(
   age_floor = 20,
   age_quantile = 0.95,
   senescence_frac = 0.45,
-  sources = c("SORTIE", "TIPSY")
+  sources = c("SORTIE", "TIPSY", "VDYP")
 )
 }
 \arguments{
 \item{reference}{A data frame of reference observations, with columns
-\code{source} (\code{"SORTIE"}, \code{"TIPSY"} or \code{"Ground plots"}), \code{age} and
+\code{source} (\code{"SORTIE"}, \code{"TIPSY"}, \code{"VDYP"} or \code{"Ground plots"}), \code{age} and
 \code{aboveground_c_mg_ha}.}
 
 \item{longevity}{Numeric. The species' \code{longevity}.}

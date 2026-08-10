@@ -25,7 +25,7 @@ plot_growth_candidate(
 \code{aboveground_c_mg_ha}. \code{candidate_curve} may be \code{NULL}.}
 
 \item{reference}{A data frame of reference observations, with columns
-\code{source} (\code{"SORTIE"}, \code{"TIPSY"} or \code{"Ground plots"}), \code{age} and
+\code{source} (\code{"SORTIE"}, \code{"TIPSY"}, \code{"VDYP"} or \code{"Ground plots"}), \code{age} and
 \code{aboveground_c_mg_ha}.}
 
 \item{binned}{Optional tibble from \code{\link[=growth_bin_observations]{growth_bin_observations()}}. An \code{n} column,

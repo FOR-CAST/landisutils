@@ -8,14 +8,14 @@ growth_reference_inflection(
   reference,
   method = c("inflection", "asymptote"),
   frac = 0.9,
-  sources = c("SORTIE", "TIPSY"),
+  sources = c("SORTIE", "TIPSY", "VDYP"),
   smooth_window = 21L,
   default = 100
 )
 }
 \arguments{
 \item{reference}{A data frame of reference observations, with columns
-\code{source} (\code{"SORTIE"}, \code{"TIPSY"} or \code{"Ground plots"}), \code{age} and
+\code{source} (\code{"SORTIE"}, \code{"TIPSY"}, \code{"VDYP"} or \code{"Ground plots"}), \code{age} and
 \code{aboveground_c_mg_ha}.}
 
 \item{method}{\code{"inflection"} or \code{"asymptote"}.}

@@ -29,7 +29,7 @@ scale_linetype_growth_reference <- function() {
 #' @param species Character. Modelled species code.
 #' @param curve A tibble with `age` and `aboveground_c_mg_ha`.
 #' @param reference A data frame of reference observations, with columns
-#'   `source` (`"SORTIE"`, `"TIPSY"` or `"Ground plots"`), `age` and
+#'   `source` (`"SORTIE"`, `"TIPSY"`, `"VDYP"` or `"Ground plots"`), `age` and
 #'   `aboveground_c_mg_ha`.
 #' @param x_max Numeric. Upper age limit for the panel.
 #' @param mature_window Numeric length-2. Fitting window to shade;
@@ -47,7 +47,7 @@ plot_growth_calibration <- function(
 ) {
   .need("ggplot2", "Plotting a growth calibration")
   obs <- dplyr::filter(reference, .data$source == "Ground plots")
-  model <- dplyr::filter(reference, .data$source %in% c("SORTIE", "TIPSY"))
+  model <- dplyr::filter(reference, .data$source %in% c("SORTIE", "TIPSY", "VDYP"))
 
   shade <- NULL
   if (!is.null(mature_window)) {
@@ -141,7 +141,7 @@ plot_growth_calibration <- function(
 #' @param current_curve,candidate_curve Tibbles with `age` and
 #'   `aboveground_c_mg_ha`. `candidate_curve` may be `NULL`.
 #' @param reference A data frame of reference observations, with columns
-#'   `source` (`"SORTIE"`, `"TIPSY"` or `"Ground plots"`), `age` and
+#'   `source` (`"SORTIE"`, `"TIPSY"`, `"VDYP"` or `"Ground plots"`), `age` and
 #'   `aboveground_c_mg_ha`.
 #' @param binned Optional tibble from [growth_bin_observations()]. An `n` column,
 #'   when present, sizes the points.
@@ -170,7 +170,7 @@ plot_growth_candidate <- function(
 ) {
   .need("ggplot2", "Plotting a growth candidate")
   obs <- dplyr::filter(reference, .data$source == "Ground plots")
-  model <- dplyr::filter(reference, .data$source %in% c("SORTIE", "TIPSY"))
+  model <- dplyr::filter(reference, .data$source %in% c("SORTIE", "TIPSY", "VDYP"))
 
   curves <- dplyr::bind_rows(
     dplyr::mutate(current_curve, series = current_label),

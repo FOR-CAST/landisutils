@@ -393,7 +393,7 @@ growth_smooth_observations <- function(
 #' simply stops.
 #'
 #' @param reference A data frame of reference observations, with columns
-#'   `source` (`"SORTIE"`, `"TIPSY"` or `"Ground plots"`), `age` and
+#'   `source` (`"SORTIE"`, `"TIPSY"`, `"VDYP"` or `"Ground plots"`), `age` and
 #'   `aboveground_c_mg_ha`.
 #' @param window Numeric length-2. The fitting window.
 #' @param bin,plot_quantile,min_plots Ground-plot controls; `min_plots` is
@@ -1119,7 +1119,7 @@ growth_best_candidates <- function(
 #' still carries much of the rapid-growth phase.
 #'
 #' @param reference A data frame of reference observations, with columns
-#'   `source` (`"SORTIE"`, `"TIPSY"` or `"Ground plots"`), `age` and
+#'   `source` (`"SORTIE"`, `"TIPSY"`, `"VDYP"` or `"Ground plots"`), `age` and
 #'   `aboveground_c_mg_ha`.
 #' @param method `"inflection"` or `"asymptote"`.
 #' @param frac Numeric. Fraction of the curve maximum, for `"asymptote"`.
@@ -1135,7 +1135,7 @@ growth_reference_inflection <- function(
   reference,
   method = c("inflection", "asymptote"),
   frac = 0.9,
-  sources = c("SORTIE", "TIPSY"),
+  sources = c("SORTIE", "TIPSY", "VDYP"),
   smooth_window = 21L,
   default = 100
 ) {
@@ -1199,7 +1199,7 @@ growth_reference_inflection <- function(
 #' species is still at its plateau throughout its window.
 #'
 #' @param reference A data frame of reference observations, with columns
-#'   `source` (`"SORTIE"`, `"TIPSY"` or `"Ground plots"`), `age` and
+#'   `source` (`"SORTIE"`, `"TIPSY"`, `"VDYP"` or `"Ground plots"`), `age` and
 #'   `aboveground_c_mg_ha`.
 #' @param longevity Numeric. The species' `longevity`.
 #' @param age_floor Numeric. Youngest age to score.
@@ -1216,7 +1216,7 @@ growth_auto_window <- function(
   age_floor = 20,
   age_quantile = 0.95,
   senescence_frac = 0.45,
-  sources = c("SORTIE", "TIPSY")
+  sources = c("SORTIE", "TIPSY", "VDYP")
 ) {
   ages_of <- function(srcs) {
     a <- reference$age[reference$source %in% srcs & !is.na(reference$aboveground_c_mg_ha)]
