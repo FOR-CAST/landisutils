@@ -142,24 +142,38 @@ download_dir <- normalizePath(download_dir, mustWork = TRUE)
 ## Helpers (adapted from scripts/update_landis_extensions.R)
 ## ---------------------------------------------------------------------------
 
+## Also captures each entry's `commit:`. The installer lookup needs it because upstream publishes a
+## rebuilt installer on the branch the YAML pins BEFORE merging it to the default branch -- the
+## UCLv2 PnET-Succession and Output-PnET 6.1 installers sat on `UCL_update` while `master` still
+## offered the UCLv1 6.0.3, so a default-branch-only lookup silently installed the older generation.
 parse_extensions_yaml <- function(text) {
   lines <- strsplit(text, "\n")[[1]]
-  repo <- org <- NULL
+  cur <- NULL
   out <- list()
+  flush <- function() {
+    if (!is.null(cur) && !is.null(cur$repo) && !is.null(cur$org)) {
+      out[[length(out) + 1L]] <<- list(
+        repo = cur$repo,
+        org = cur$org,
+        commit = if (is.null(cur$commit)) NA_character_ else cur$commit
+      )
+    }
+  }
   for (line in lines) {
     stripped <- trimws(line)
     if (nchar(stripped) == 0 || startsWith(stripped, "#")) {
       next
     }
     if (grepl("^-\\s*repo:\\s*(\\S+)", stripped)) {
-      repo <- sub("^-\\s*repo:\\s*(\\S+).*", "\\1", stripped)
-      org <- NULL
-    } else if (grepl("^org:\\s*(\\S+)", stripped) && !is.null(repo)) {
-      org <- sub("^org:\\s*(\\S+).*", "\\1", stripped)
-      out <- c(out, list(list(repo = repo, org = org)))
-      repo <- org <- NULL
+      flush()
+      cur <- list(repo = sub("^-\\s*repo:\\s*(\\S+).*", "\\1", stripped))
+    } else if (grepl("^org:\\s*(\\S+)", stripped) && !is.null(cur)) {
+      cur$org <- sub("^org:\\s*(\\S+).*", "\\1", stripped)
+    } else if (grepl("^commit:\\s*(\\S+)", stripped) && !is.null(cur)) {
+      cur$commit <- sub("^commit:\\s*(\\S+).*", "\\1", stripped)
     }
   }
+  flush()
   do.call(rbind, lapply(out, as.data.frame, stringsAsFactors = FALSE))
 }
 
@@ -212,16 +226,34 @@ latest_v8_installer <- function(items) {
   tail(sorted, 1)[[1]]
 }
 
-find_deploy_installer <- function(org, repo) {
-  for (path in c("deploy/installer", "deploy/current", "deploy")) {
-    items <- tryCatch(
-      gh("GET /repos/{owner}/{repo}/contents/{path}", owner = org, repo = repo, path = path),
-      error = function(e) NULL
-    )
-    result <- latest_v8_installer(items)
-    if (!is.null(result)) return(result)
+## Search the default branch AND the ref the YAML pins, then take the highest version across both.
+##
+## Neither alone is right. Default-branch-only misses an installer published on the branch the
+## image is built from (PnET-Succession 6.1, the UCLv2 rebuild, lives on `UCL_update` while `master`
+## still offers the UCLv1 6.0.3). Pinned-ref-only silently downgrades extensions whose maintainer
+## published a newer installer after the pinned commit (Biomass Succession 7.2.1 -> 7.2, NECN 8.2.1
+## -> 8.2). The union gets the newest of each, and the measured generation check downstream is what
+## guarantees the resulting set is coherent -- so preferring "newest" here is safe.
+find_deploy_installer <- function(org, repo, ref = NULL) {
+  gather <- function(r) {
+    for (path in c("deploy/installer", "deploy/current", "deploy")) {
+      args <- list(
+        "GET /repos/{owner}/{repo}/contents/{path}",
+        owner = org,
+        repo = repo,
+        path = path
+      )
+      if (!is.null(r) && !is.na(r) && nzchar(r)) {
+        args$ref <- r
+      }
+      items <- tryCatch(do.call(gh, args), error = function(e) NULL)
+      if (!is.null(latest_v8_installer(items))) {
+        return(items)
+      }
+    }
+    list()
   }
-  NULL
+  latest_v8_installer(c(gather(NULL), gather(ref)))
 }
 
 find_release_installer <- function(org, repo) {
@@ -621,7 +653,7 @@ for (i in seq_len(nrow(extensions))) {
   result <- if (org == "Klemet") {
     find_release_installer(org, repo)
   } else {
-    find_deploy_installer(org, repo)
+    find_deploy_installer(org, repo, extensions$commit[i])
   }
 
   if (is.null(result)) {
@@ -740,6 +772,31 @@ wrong_gen_dlls <- if (is.null(measured)) {
 ## Windows runner.
 wrong_gen <- if (TARGET_COHORT_GENERATION == 2L) 1L else 2L
 
+## An installer can also drop a wrong-generation LIBRARY beside a correct extension, and that
+## poisons a run just as surely: Forest Roads binds UniversalCohorts-v2 itself but ships
+## `Landis.Library.HarvestManagement-v4.dll`, which binds v1. Scanning only `Landis.Extension.*`
+## therefore passes it. Attribute libraries the same way, from the same per-installer diff.
+libs_wrong_gen_repos <- character(0)
+for (repo in names(installer_libs)) {
+  for (lib in installer_libs[[repo]]) {
+    p <- file.path(ext_dir, lib)
+    if (!nzchar(ext_dir) || !file.exists(p)) {
+      next
+    }
+    refs <- assembly_refs(p)
+    if (length(refs) == 0L) {
+      next
+    }
+    gen <- if (any(grepl("UniversalCohorts-v2|Succession-v10", refs))) 2L else 1L
+    if (gen != TARGET_COHORT_GENERATION) {
+      libs_wrong_gen_repos <- c(libs_wrong_gen_repos, repo)
+      lib_txt <- sub("[.]dll$", "", lib)
+      cli_alert_danger("{repo} ships {lib_txt}, which binds UniversalCohorts-v{gen}")
+    }
+  }
+}
+libs_wrong_gen_repos <- unique(libs_wrong_gen_repos)
+
 if (length(wrong_gen_dlls) > 0L && length(installer_exts) > 0L) {
   hit <- vapply(installer_exts, function(dlls) any(dlls %in% wrong_gen_dlls), logical(1))
   EXTENSIONS_EXCLUDED <- names(installer_exts)[hit]
@@ -760,6 +817,8 @@ if (length(wrong_gen_dlls) > 0L && length(installer_exts) > 0L) {
     )
   }
 }
+
+EXTENSIONS_EXCLUDED <- sort(unique(c(EXTENSIONS_EXCLUDED, libs_wrong_gen_repos)))
 
 cli_h1("Extensions excluded from scenarios (measured)")
 if (length(EXTENSIONS_EXCLUDED) > 0L) {

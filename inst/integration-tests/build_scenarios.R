@@ -570,7 +570,7 @@ build_one <- function(scen_name, image_id, image_info, builder, out_dir) {
   writeLines(image_info$image, file.path(scen_dir, ".landis_image"))
   scen_dir
 }
-##' Build the NECN Succession extension for the upstream `TestNECN_UCLv2_AllExtension`
+##' Build the NECN Succession extension for the upstream `TestNECN_AllExtension`
 ##' fixture set. Three scenarios drive NECN off exactly these inputs and differ only in
 ##' the disturbance and output extensions layered on top, so the backend is configured
 ##' once here rather than copied per scenario -- the three copies had already drifted
@@ -644,7 +644,7 @@ necn_succession_for_fixture <- function(scen_dir) {
 ## ---------------------------------------------------------------------------
 ## Scenario: NECN AllExtension
 ##
-## Mirrors `tests/TestNECN_UCLv2_AllExtension/scenario.txt` from the upstream
+## Mirrors `tests/TestNECN_AllExtension/scenario.txt` from the upstream
 ## Tool-Docker-Apptainer repo. NECN Succession + 9 disturbance/output
 ## extensions, all UCL v2-compatible -- the scenario therefore runs unfiltered
 ## on both Docker images.
@@ -658,7 +658,7 @@ necn_succession_for_fixture <- function(scen_dir) {
 
 build_necn_all_extension <- function(scen_dir, allowed_classes) {
   ## Download upstream NECN test inputs (flattened into scen_dir).
-  download_repo_subtree(TDA_REPO, TDA_REF, "tests/TestNECN_UCLv2_AllExtension/inputs", scen_dir)
+  download_repo_subtree(TDA_REPO, TDA_REF, "tests/TestNECN_AllExtension/inputs", scen_dir)
   flatten_path_refs(scen_dir)
 
   scen_name <- basename(scen_dir)
@@ -1453,7 +1453,7 @@ build_pnet_all_extension <- function(scen_dir, allowed_classes) {
 ##
 ## More targeted than `build_necn_all_extension`: validates that NECN Succession
 ## config + SCRAPPLE config + every biomass-flavoured output extension parse
-## cleanly together. Reuses `tests/TestNECN_UCLv2_AllExtension/inputs` (same
+## cleanly together. Reuses `tests/TestNECN_AllExtension/inputs` (same
 ## fixtures as `build_necn_all_extension`) but exercises a much smaller
 ## extension stack so a SCRAPPLE/output regression isn't masked by failures
 ## elsewhere in the AllExtension scenario.
@@ -1470,7 +1470,7 @@ build_necn_scrpple <- function(scen_dir, allowed_classes) {
     return(NULL)
   }
 
-  download_repo_subtree(TDA_REPO, TDA_REF, "tests/TestNECN_UCLv2_AllExtension/inputs", scen_dir)
+  download_repo_subtree(TDA_REPO, TDA_REF, "tests/TestNECN_AllExtension/inputs", scen_dir)
   flatten_path_refs(scen_dir)
 
   scen_name <- basename(scen_dir)
@@ -1611,7 +1611,7 @@ build_necn_scrpple <- function(scen_dir, allowed_classes) {
 ## generated configuration against the console parser, not to re-test the output
 ## extensions that `necn_all_extension` already covers.
 ##
-## The `TestNECN_UCLv2_AllExtension` fixture already ships the Dynamic Fire
+## The `TestNECN_AllExtension` fixture already ships the Dynamic Fire
 ## inputs under `disturbances/dynamicFireSystem` (species table, weather
 ## database, slope rasters), so this adds no download the other NECN scenarios
 ## do not already perform.
@@ -1622,7 +1622,7 @@ build_necn_dynamic_fire <- function(scen_dir, allowed_classes) {
     return(NULL)
   }
 
-  download_repo_subtree(TDA_REPO, TDA_REF, "tests/TestNECN_UCLv2_AllExtension/inputs", scen_dir)
+  download_repo_subtree(TDA_REPO, TDA_REF, "tests/TestNECN_AllExtension/inputs", scen_dir)
   flatten_path_refs(scen_dir)
 
   scen_name <- basename(scen_dir)
