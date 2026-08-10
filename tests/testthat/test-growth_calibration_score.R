@@ -87,6 +87,24 @@ test_that("smoothing a plot cloud returns a monotone-in-support band, clamped at
   expect_true(all(out$hi >= out$value & out$value >= out$lo))
 })
 
+test_that("the band contains its own curve even where the spline runs negative", {
+  skip_if_not_installed("mgcv")
+  ## A cloud that starts well above zero and rises steeply: an unconstrained
+  ## spline undershoots below zero at the young end, which is where clamping
+  ## only `lo` used to leave `lo > value`.
+  set.seed(2)
+  age <- rep(c(20, 30, 40, 60, 90, 130, 190, 260), each = 5)
+  obs <- tibble::tibble(
+    age = age,
+    aboveground_c_mg_ha = pmax(0.5, 1.4 * age - 25 + stats::rnorm(length(age), sd = 20))
+  )
+  out <- growth_smooth_observations(obs, n_grid = 60)
+
+  expect_true(all(out$value >= 0))
+  expect_true(all(out$lo >= 0))
+  expect_true(all(out$hi >= out$value & out$value >= out$lo))
+})
+
 test_that("smoothing declines to fit when there is nothing to smooth", {
   skip_if_not_installed("mgcv")
   obs <- tibble::tibble(age = c(10, 20, 30), aboveground_c_mg_ha = c(5, 40, 90))

@@ -368,11 +368,15 @@ growth_smooth_observations <- function(
   grid <- data.frame(age = seq(min(d$age), max(d$age), length.out = n_grid))
   pred <- stats::predict(fit, grid, se.fit = TRUE)
   z <- stats::qnorm(1 - (1 - level) / 2)
+  ## Clamp the FIT as well as the band, not just the band: an unconstrained
+  ## spline runs slightly negative at the young end where the plots start above
+  ## zero, and clamping only `lo` would leave `lo > value` there -- a band that
+  ## does not contain its own curve.
   out <- tibble::tibble(
     age = grid$age,
-    value = as.numeric(pred$fit),
+    value = pmax(0, as.numeric(pred$fit)),
     lo = pmax(0, as.numeric(pred$fit) - z * as.numeric(pred$se.fit)),
-    hi = as.numeric(pred$fit) + z * as.numeric(pred$se.fit)
+    hi = pmax(0, as.numeric(pred$fit) + z * as.numeric(pred$se.fit))
   )
   attr(out, "k") <- kk
   out

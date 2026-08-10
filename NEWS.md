@@ -1,3 +1,7 @@
+# landisutils 0.0.107
+
+* `growth_smooth_observations()` clamps the fitted curve at zero, not just its confidence band. An unconstrained spline dips slightly negative at the young end wherever the plots themselves start above zero -- visible on real hemlock data around age 15 -- and clamping only `lo` left `lo > value` there, a band that did not contain its own curve.
+
 # landisutils 0.0.106
 
 * `plot_growth_candidate()` no longer joins the age-binned points with line segments. A straight line between two bin medians asserts a trajectory across ages where nothing was measured, and most of the movement it described came from bins holding a single plot.
