@@ -1,5 +1,17 @@
 # Changelog
 
+## landisutils 0.0.110
+
+- The `vdyp` series is now actually drawn. 0.0.109 widened the plots’
+  source filter but left `.growth_reference_linetypes` at
+  `c(SORTIE, TIPSY)`, and the scale is built with `limits = names(...)`
+  and `na.translate = FALSE` – so a source missing from that vector is
+  DROPPED from the plot rather than drawn in a default style. A VDYP
+  curve was therefore scored, filtered in, and still invisible, with the
+  only symptom a “Removed N rows containing missing values” warning that
+  reads like harmless clipping. A test now asserts the vector covers
+  every modelled source.
+
 ## landisutils 0.0.109
 
 - The `vdyp` reference series added in 0.0.101 was only wired into

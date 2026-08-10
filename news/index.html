@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.109</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.110</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,6 +41,10 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.110" id="landisutils-00110">landisutils 0.0.110<a class="anchor" aria-label="anchor" href="#landisutils-00110"></a></h2>
+<ul><li>The <code>vdyp</code> series is now actually drawn. 0.0.109 widened the plots’ source filter but left <code>.growth_reference_linetypes</code> at <code>c(SORTIE, TIPSY)</code>, and the scale is built with <code>limits = names(...)</code> and <code>na.translate = FALSE</code> – so a source missing from that vector is DROPPED from the plot rather than drawn in a default style. A VDYP curve was therefore scored, filtered in, and still invisible, with the only symptom a “Removed N rows containing missing values” warning that reads like harmless clipping. A test now asserts the vector covers every modelled source.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.109" id="landisutils-00109">landisutils 0.0.109<a class="anchor" aria-label="anchor" href="#landisutils-00109"></a></h2>
 <ul><li>The <code>vdyp</code> reference series added in 0.0.101 was only wired into scoring. <code><a href="../reference/plot_growth_calibration.html">plot_growth_calibration()</a></code> and the review-bundle plots filtered the modelled curve on <code>c("SORTIE", "TIPSY")</code>, so a VDYP-labelled curve was scored but drawn nowhere – the failure mode was a missing line on a figure, with nothing raised. <code><a href="../reference/growth_reference_inflection.html">growth_reference_inflection()</a></code> and <code><a href="../reference/growth_auto_window.html">growth_auto_window()</a></code> defaulted <code>sources</code> the same way: the former silently returned its <code>default</code> instead of the computed inflection (100 rather than 12 on the test fixture), and the latter skipped the <code>min(upper, max(model_ages))</code> tightening, widening the fitting window from 150 to 212 where the modelled curve ends before the plots do. All four now include <code>"VDYP"</code>.</li>
