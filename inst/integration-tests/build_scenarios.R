@@ -570,32 +570,12 @@ build_one <- function(scen_name, image_id, image_info, builder, out_dir) {
   writeLines(image_info$image, file.path(scen_dir, ".landis_image"))
   scen_dir
 }
-
-## ---------------------------------------------------------------------------
-## Scenario: NECN AllExtension
-##
-## Mirrors `tests/TestNECN_UCLv2_AllExtension/scenario.txt` from the upstream
-## Tool-Docker-Apptainer repo. NECN Succession + 9 disturbance/output
-## extensions, all UCL v2-compatible -- the scenario therefore runs unfiltered
-## on both Docker images.
-##
-## Layout: flat (every file in <scen_dir>). The package regenerates each
-## extension's config file on top of upstream-provided ancillary inputs
-## (rasters, CSVs, climate). Parameter values mostly mirror our existing
-## `tests/testthat/test-ext_*.R` Core8 fixtures, which already produce
-## parser-compatible output.
-## ---------------------------------------------------------------------------
-
-build_necn_all_extension <- function(scen_dir, allowed_classes) {
-  ## Download upstream NECN test inputs (flattened into scen_dir).
-  download_repo_subtree(TDA_REPO, TDA_REF, "tests/TestNECN_UCLv2_AllExtension/inputs", scen_dir)
-  flatten_path_refs(scen_dir)
-
-  scen_name <- basename(scen_dir)
-
-  ## ---- NECN Succession ----------------------------------------------------
-  ## Soil-map paths must be absolute when passed to NECNSuccession$new(); the
-  ## active binding's .relPath() interprets bare filenames as CWD-relative.
+##' Build the NECN Succession extension for the upstream `TestNECN_UCLv2_AllExtension`
+##' fixture set. Three scenarios drive NECN off exactly these inputs and differ only in
+##' the disturbance and output extensions layered on top, so the backend is configured
+##' once here rather than copied per scenario -- the three copies had already drifted
+##' into being maintained by hand.
+necn_succession_for_fixture <- function(scen_dir) {
   abs <- function(name) file.path(scen_dir, name)
   soil_map_names <- list(
     SoilDepthMapName = abs("random110.tif"),
@@ -657,6 +637,36 @@ build_necn_all_extension <- function(scen_dir, allowed_classes) {
     HarvestReductionParameters = harvest_params
   )
 
+  ext_necn
+}
+
+
+## ---------------------------------------------------------------------------
+## Scenario: NECN AllExtension
+##
+## Mirrors `tests/TestNECN_UCLv2_AllExtension/scenario.txt` from the upstream
+## Tool-Docker-Apptainer repo. NECN Succession + 9 disturbance/output
+## extensions, all UCL v2-compatible -- the scenario therefore runs unfiltered
+## on both Docker images.
+##
+## Layout: flat (every file in <scen_dir>). The package regenerates each
+## extension's config file on top of upstream-provided ancillary inputs
+## (rasters, CSVs, climate). Parameter values mostly mirror our existing
+## `tests/testthat/test-ext_*.R` Core8 fixtures, which already produce
+## parser-compatible output.
+## ---------------------------------------------------------------------------
+
+build_necn_all_extension <- function(scen_dir, allowed_classes) {
+  ## Download upstream NECN test inputs (flattened into scen_dir).
+  download_repo_subtree(TDA_REPO, TDA_REF, "tests/TestNECN_UCLv2_AllExtension/inputs", scen_dir)
+  flatten_path_refs(scen_dir)
+
+  scen_name <- basename(scen_dir)
+
+  ## ---- NECN Succession ----------------------------------------------------
+  ## Soil-map paths must be absolute when passed to NECNSuccession$new(); the
+  ## active binding's .relPath() interprets bare filenames as CWD-relative.
+  ext_necn <- necn_succession_for_fixture(scen_dir)
   ## ---- Social Climate Fire (SCRAPPLE) ------------------------------------
   scrpple_species <- tibble::tribble(
     ~SpeciesCode , ~AgeDBH , ~MaximumBarkThickness ,
@@ -1466,67 +1476,7 @@ build_necn_scrpple <- function(scen_dir, allowed_classes) {
   scen_name <- basename(scen_dir)
 
   ## ---- NECN Succession (mirrors build_necn_all_extension) ----------------
-  abs <- function(name) file.path(scen_dir, name)
-  soil_map_names <- list(
-    SoilDepthMapName = abs("random110.tif"),
-    SoilDrainMapName = abs("constantpoint75.tif"),
-    SoilBaseFlowMapName = abs("constantpoint4.tif"),
-    SoilStormFlowMapName = abs("constantpoint4.tif"),
-    SoilFieldCapacityMapName = abs("random_point1_point2.tif"),
-    SoilWiltingPointMapName = abs("random_point05_point099.tif"),
-    SoilPercentClayMapName = abs("random_point01_point5.tif"),
-    SoilPercentSandMapName = abs("random_point01_point5.tif"),
-    InitialSOM1CsurfMapName = abs("random110.tif"),
-    InitialSOM1NsurfMapName = abs("random6.tif"),
-    InitialSOM1CsoilMapName = abs("random110.tif"),
-    InitialSOM1NsoilMapName = abs("random9.tif"),
-    InitialSOM2CMapName = abs("random4500.tif"),
-    InitialSOM2NMapName = abs("random145.tif"),
-    InitialSOM3CMapName = abs("random1294.tif"),
-    InitialSOM3NMapName = abs("random50.tif"),
-    InitialDeadWoodSurfaceMapName = abs("random110.tif"),
-    InitialDeadCoarseRootsMapName = abs("random50.tif")
-  )
-  fire_params <- tibble::tribble(
-    ~FireSeverity        , ~CoarseDebrisReduction , ~FineLitterReduction ,
-    ~CohortWoodReduction , ~CohortLeafReduction   , ~SOMReduction        ,
-    1L                   , 0.0                    , 0.5                  , 0.05 , 0.85 , 0.10 ,
-    2L                   , 0.5                    , 0.75                 , 0.15 , 0.95 , 0.50 ,
-    3L                   , 1.0                    , 1.0                  , 0.35 , 1.00 , 0.75
-  )
-  harvest_params <- tibble::tribble(
-    ~PrescriptionName  , ~DeadWoodReduction , ~DeadLitterReduction , ~SOMReduction ,
-    ~CohortWoodRemoval , ~CohortLeafRemoval ,
-    "MaxAgeClearcut"   , 0.5                , 0.15                 , 0.2           , 0.8 , 0.15 ,
-    "PatchCutting"     , 1.0                , 1.0                  , 1.0           , 1.0 , 1.0
-  )
-  ext_necn <- NECNSuccession$new(
-    path = scen_dir,
-    Timestep = 5L,
-    SeedingAlgorithm = "WardSeedDispersal",
-    InitialCommunitiesCSV = file.path(scen_dir, "initial-communities.csv"),
-    InitialCommunitiesMap = file.path(scen_dir, "initial-communities.img"),
-    ClimateConfigFile = file.path(scen_dir, "climate-generator-baseline.txt"),
-    SoilMaps = soil_map_names,
-    CalibrateMode = FALSE,
-    SmokeModelOutputs = FALSE,
-    WaterDecayFunction = "Ratio",
-    ProbabilityEstablishAdjust = 1.0,
-    InitialMineralN = 2.0,
-    InitialFineFuels = 0.99,
-    AtmosphericNSlope = 0.05,
-    AtmosphericNIntercept = 0.05,
-    Latitude = 44.0,
-    DenitrificationRate = 0.001,
-    DecayRateSurf = 0.01,
-    DecayRateSOM1 = 0.01,
-    DecayRateSOM2 = 0.2,
-    DecayRateSOM3 = 0.001,
-    SpeciesParameters = file.path(scen_dir, "NECN_Spp_Table.csv"),
-    FireReductionParameters = fire_params,
-    HarvestReductionParameters = harvest_params
-  )
-
+  ext_necn <- necn_succession_for_fixture(scen_dir)
   ## ---- Social Climate Fire (SCRAPPLE) ------------------------------------
   scrpple_species <- tibble::tribble(
     ~SpeciesCode , ~AgeDBH , ~MaximumBarkThickness ,
@@ -1622,6 +1572,140 @@ build_necn_scrpple <- function(scen_dir, allowed_classes) {
   ## ---- Filter, write, and assemble scenario.txt --------------------------
   exts <- list(ext_necn, ext_scf, ext_ob, ext_obc, ext_obba, ext_obr)
   exts <- filter_extensions_for_image(exts, allowed_classes)
+
+  for (e in exts) {
+    e$write()
+  }
+
+  climate_cfg <- LandisClimateConfig$new(path = scen_dir)
+  climate_cfg$add_file("climate.txt")
+
+  scen <- scenario(
+    name = scen_name,
+    extensions = exts,
+    climate_config = climate_cfg,
+    path = scen_dir,
+    Duration = 50,
+    EcoregionsFiles = c(file.path(scen_dir, "ecoregion.txt"), file.path(scen_dir, "ecoregion.img")),
+    SpeciesInputFile = file.path(scen_dir, "species.txt"),
+    CellLength = 30,
+    DisturbancesRandomOrder = FALSE,
+    RandomNumberSeed = 1111
+  )
+
+  scen_dir
+}
+
+## ---------------------------------------------------------------------------
+## Scenario: NECN Succession + Dynamic Fire System + Dynamic Biomass Fuels
+##
+## Dynamic Fire and Dynamic Fuels had no coverage on the native Windows runner.
+## Both publish current UCLv2 installers and both were being installed, but the
+## only scenario referencing them was `pnet_all_extension`, which needs
+## PnET-Succession -- published for Windows as a UCLv1 binary. So the pair was
+## installed, correct, and never loaded on either Windows leg. Pairing them with
+## NECN Succession (v2 in both upstream lists) covers them wherever all three
+## are registered, independently of PnET.
+##
+## Deliberately kept small: the point is to exercise the two fire extensions'
+## generated configuration against the console parser, not to re-test the output
+## extensions that `necn_all_extension` already covers.
+##
+## The `TestNECN_UCLv2_AllExtension` fixture already ships the Dynamic Fire
+## inputs under `disturbances/dynamicFireSystem` (species table, weather
+## database, slope rasters), so this adds no download the other NECN scenarios
+## do not already perform.
+## ---------------------------------------------------------------------------
+
+build_necn_dynamic_fire <- function(scen_dir, allowed_classes) {
+  if (!all(c("NECNSuccession", "DynamicFire", "DynamicFuels") %in% allowed_classes)) {
+    return(NULL)
+  }
+
+  download_repo_subtree(TDA_REPO, TDA_REF, "tests/TestNECN_UCLv2_AllExtension/inputs", scen_dir)
+  flatten_path_refs(scen_dir)
+
+  scen_name <- basename(scen_dir)
+
+  ext_necn <- necn_succession_for_fixture(scen_dir)
+
+  ## ---- Dynamic Fire System -----------------------------------------------
+  ## A single fire ecoregion, tracking the fixture's `ecoregion.txt` (code 0
+  ## inactive, code 1 active). LANDIS-II reads raw cell values and ignores the
+  ## GDAL NoData flag, so a map code with no row here aborts the run with
+  ## "Unknown map code" -- the fire ecoregion table and the ecoregion map have
+  ## to be kept in step.
+  df_sizes <- tibble::tribble(
+    ~EcoCode       , ~EcoName   , ~Mu         , ~Sigma , ~Max ,
+    ~SpFMCLo       , ~SpFMCHi   , ~SpHiProp   ,
+    ~SumFMCLo      , ~SumFMCHi  , ~SumHiProp  ,
+    ~FallFMCLo     , ~FallFMCHi , ~FallHiProp ,
+    ~OpenFuelIndex , ~NumFires  ,
+                 1 , "fire1"    , 4.0         ,  0.1   ,   50 ,
+                85 ,        100 , 0.50        , 92     ,  120 , 0.50 , 120 , 120 , 0.50 , 2 , 0.5
+  )
+  ## `PropFire` is passed as plain normalised proportions; `insertSeasonTable()`
+  ## quantizes them to the dyadic fractions (k/128) the C# parser requires, since
+  ## it checks the sum in single-precision float.
+  df_season <- tibble::tribble(
+    ~Name    , ~LeafStatus , ~PropFire , ~PercentCuring , ~DayLengthProp ,
+    "Spring" , "LeafOff"   , 0.20      ,             50 , 1.0            ,
+    "Summer" , "LeafOn"    , 0.50      ,             51 , 1.0            ,
+    "Fall"   , "LeafOff"   , 0.30      ,            100 , 1.0
+  )
+  ext_df <- DynamicFire$new(
+    path = scen_dir,
+    Timestep = 10,
+    Species_CSV_File = file.path(scen_dir, "DynamicFire_Spp_Table.csv"),
+    EventSizeType = "size_based",
+    BuildUpIndex = "yes",
+    WeatherRandomizer = 0L,
+    FireSizesTable = df_sizes,
+    InitialFireEcoregionsMap = file.path(scen_dir, "ecoregion.img"),
+    GroundSlopeFile = file.path(scen_dir, "ecoregion.img"),
+    UphillSlopeAzimuthMap = file.path(scen_dir, "ecoregion.img"),
+    SeasonTable = df_season,
+    InitialWeatherDatabase = file.path(scen_dir, "dynamic-fire_WeatherData.csv"),
+    FuelTypeTable = defaultFuelTypeTable(),
+    SeverityCalibrationFactor = 1.0,
+    FireDamageTable = defaultFireDamageTable(),
+    LogFile = file.path(scen_dir, "fire/dynamic-fire-event-log.csv"),
+    SummaryLogFile = file.path(scen_dir, "fire/dynamic-fire-summary-log.csv")
+  )
+
+  ## ---- Dynamic Biomass Fuels ---------------------------------------------
+  duf_spp_coeffs <- tibble::tribble(
+    ~Species   , ~FuelCoefficient ,
+    "abiebals" , 1.00             , "acerrubr" , 0.50 , "acersacc" , 1.00 ,
+    "betualle" , 1.00             , "fraxamer" , 1.00 , "piceglau" , 1.00 ,
+    "pinubank" , 1.00             , "pinuresi" , 1.00 , "pinustro" , 1.00 ,
+    "poputrem" , 1.00             , "querelli" , 1.00 , "querrubr" , 1.00 ,
+    "thujocci" , 1.00             , "tiliamer" , 1.00
+  )
+  duf_fuel_types <- tibble::tribble(
+    ~FuelType , ~BaseFuel   , ~AgeMin , ~AgeMax , ~Species                                                                                             ,
+            1 , "Conifer"   ,       0 ,     900 , list("thujocci")                                                                                     ,
+            2 , "Conifer"   ,       0 ,     500 , list("piceglau", "abiebals")                                                                         ,
+            8 , "Deciduous" ,       0 ,     300 , list("acerrubr", "acersacc", "betualle", "fraxamer", "poputrem", "querelli", "querrubr", "tiliamer")
+  )
+  ext_duf <- DynamicFuels$new(
+    path = scen_dir,
+    Timestep = 10,
+    SpeciesFuelCoefficients = duf_spp_coeffs,
+    HardwoodMaximum = 15L,
+    DeadFirMaxAge = 15L,
+    FuelTypes = duf_fuel_types,
+    EcoregionTable = data.frame(FuelType = integer(0), Ecoregion = character(0)),
+    DisturbanceConversionTable = data.frame(
+      Fuel = integer(0),
+      Type = integer(0),
+      Duration = character(0),
+      Prescription = character(0)
+    )
+  )
+
+  ## ---- Filter, write, and assemble scenario.txt --------------------------
+  exts <- filter_extensions_for_image(list(ext_necn, ext_df, ext_duf), allowed_classes)
 
   for (e in exts) {
     e$write()
@@ -1874,6 +1958,7 @@ for (image_id in names(IMAGES)) {
     list(name = "necn_all_extension", builder = build_necn_all_extension),
     list(name = "pnet_all_extension", builder = build_pnet_all_extension),
     list(name = "necn_scrpple", builder = build_necn_scrpple),
+    list(name = "necn_dynamic_fire", builder = build_necn_dynamic_fire),
     list(name = "forcs", builder = build_forcs)
   )) {
     p <- build_one(sb$name, image_id, image_info, sb$builder, out_dir)
