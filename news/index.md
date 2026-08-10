@@ -1,5 +1,14 @@
 # Changelog
 
+## landisutils 0.0.107
+
+- [`growth_smooth_observations()`](https://for-cast.github.io/landisutils/reference/growth_smooth_observations.md)
+  clamps the fitted curve at zero, not just its confidence band. An
+  unconstrained spline dips slightly negative at the young end wherever
+  the plots themselves start above zero – visible on real hemlock data
+  around age 15 – and clamping only `lo` left `lo > value` there, a band
+  that did not contain its own curve.
+
 ## landisutils 0.0.106
 
 - [`plot_growth_candidate()`](https://for-cast.github.io/landisutils/reference/plot_growth_candidate.md)

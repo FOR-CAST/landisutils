@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.106</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.107</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,6 +41,11 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.107" id="landisutils-00107">landisutils 0.0.107<a class="anchor" aria-label="anchor" href="#landisutils-00107"></a></h2>
+<ul><li>
+<code><a href="../reference/growth_smooth_observations.html">growth_smooth_observations()</a></code> clamps the fitted curve at zero, not just its confidence band. An unconstrained spline dips slightly negative at the young end wherever the plots themselves start above zero – visible on real hemlock data around age 15 – and clamping only <code>lo</code> left <code>lo &gt; value</code> there, a band that did not contain its own curve.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.106" id="landisutils-00106">landisutils 0.0.106<a class="anchor" aria-label="anchor" href="#landisutils-00106"></a></h2>
 <ul><li>
