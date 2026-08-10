@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.104</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.105</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,6 +41,15 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.105" id="landisutils-00105">landisutils 0.0.105<a class="anchor" aria-label="anchor" href="#landisutils-00105"></a></h2>
+<ul><li>
+<code><a href="../reference/plot_growth_candidate.html">plot_growth_candidate()</a></code> sizes each age-binned point by the number of plots behind it, instead of drawing every bin at the same size. The counts differ by more than an order of magnitude – in the network this was built against, 34% of 20-year bins hold a single plot and 66% hold fewer than five – so an equal-sized point presented a lone observation as a median. Bootstrapping the bin medians there put 3 of 4 consecutive steps for one species, and 4 of 5 for another, inside their own sampling intervals: the sharp reversals in the series are mostly its smallest points, and now they look like it.</li>
+<li>
+<code><a href="../reference/growth_smooth_observations.html">growth_smooth_observations()</a></code> fits a thin-plate spline through a ground-plot cloud and returns it with a confidence band, and <code><a href="../reference/plot_growth_candidate.html">plot_growth_candidate()</a></code> gains a <code>smooth</code> argument that overlays it. This is a visual aid for judging the binned series and nothing scores against it: <code><a href="../reference/growth_reference_curves.html">growth_reference_curves()</a></code> still bins, because replacing the scored reference would move every <code>biomass_max_est</code> that rests on plots. The fit is on the identity scale – a log link is the obvious response to right-skewed biomass but extrapolates violently from a handful of old plots, lifting one species’ curve to 347 Mg C/ha against a binned maximum of 238 – and it is never drawn outside the observed age range.</li>
+<li>
+<code><a href="../reference/write_growth_review_bundle.html">write_growth_review_bundle()</a></code> draws the smooth on every panel by default (<code>smooth_plots</code>), and takes <code>smooth_site</code> so the fit collapses repeat visits exactly as the binned series does. Its <code>README.txt</code> explains both additions.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.104" id="landisutils-00104">landisutils 0.0.104<a class="anchor" aria-label="anchor" href="#landisutils-00104"></a></h2>
 <ul><li>

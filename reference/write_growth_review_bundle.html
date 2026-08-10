@@ -9,7 +9,7 @@ directory that needs no Quarto render and no pipeline knowledge to inspect."><me
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.104</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.105</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -61,7 +61,10 @@ directory that needs no Quarto render and no pipeline knowledge to inspect.</p>
 <span>  <span class="va">best</span>,</span>
 <span>  <span class="va">windows</span>,</span>
 <span>  scoring_file <span class="op">=</span> <span class="st">"growth_scoring.csv"</span>,</span>
-<span>  params_file <span class="op">=</span> <span class="st">"the growth-parameter table"</span></span>
+<span>  params_file <span class="op">=</span> <span class="st">"the growth-parameter table"</span>,</span>
+<span>  smooth_plots <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  smooth_bin <span class="op">=</span> <span class="fl">20L</span>,</span>
+<span>  smooth_site <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -107,6 +110,19 @@ species, supplying the age-binned ground-plot series.</p></dd>
 <code>README.txt</code>, so a reviewer is pointed at the files this project actually
 keeps them in.</p></dd>
 
+
+<dt id="arg-smooth-plots">smooth_plots<a class="anchor" aria-label="anchor" href="#arg-smooth-plots"></a></dt>
+<dd><p>Logical. Overlay a spline through the ground-plot cloud
+on each panel, for comparison against the binned series. Display only;
+nothing is scored against it. See <code><a href="growth_smooth_observations.html">growth_smooth_observations()</a></code>.</p></dd>
+
+
+<dt id="arg-smooth-bin-smooth-site">smooth_bin, smooth_site<a class="anchor" aria-label="anchor" href="#arg-smooth-bin-smooth-site"></a></dt>
+<dd><p>Passed to <code><a href="growth_smooth_observations.html">growth_smooth_observations()</a></code>.
+<code>smooth_bin</code> may be a single width or a vector named by species. Set
+<code>smooth_site</code> to the location column wherever the plots are a permanent
+network, so the fit and the binned series rest on the same evidence.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -135,6 +151,7 @@ keeps them in.</p></dd>
 <code><a href="growth_reference_inflection.html">growth_reference_inflection()</a></code>,
 <code><a href="growth_score_fit.html">growth_score_fit()</a></code>,
 <code><a href="growth_scoring_for.html">growth_scoring_for()</a></code>,
+<code><a href="growth_smooth_observations.html">growth_smooth_observations()</a></code>,
 <code><a href="growth_structure_design.html">growth_structure_design()</a></code>,
 <code><a href="growth_window_for.html">growth_window_for()</a></code>,
 <code><a href="plot_growth_calibration.html">plot_growth_calibration()</a></code>,

@@ -13,7 +13,7 @@ the objective responds to."><meta property="og:image" content="https://for-cast.
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.104</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.105</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -63,6 +63,7 @@ the objective responds to.</p>
 <span>  <span class="va">candidate_curve</span>,</span>
 <span>  <span class="va">reference</span>,</span>
 <span>  binned <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  smooth <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  current_label <span class="op">=</span> <span class="st">"current parameters"</span>,</span>
 <span>  candidate_label <span class="op">=</span> <span class="st">"best candidate"</span>,</span>
 <span>  x_max <span class="op">=</span> <span class="fl">400</span>,</span>
@@ -91,7 +92,13 @@ the objective responds to.</p>
 
 
 <dt id="arg-binned">binned<a class="anchor" aria-label="anchor" href="#arg-binned"></a></dt>
-<dd><p>Optional tibble from <code><a href="growth_bin_observations.html">growth_bin_observations()</a></code>.</p></dd>
+<dd><p>Optional tibble from <code><a href="growth_bin_observations.html">growth_bin_observations()</a></code>. An <code>n</code> column,
+when present, sizes the points.</p></dd>
+
+
+<dt id="arg-smooth">smooth<a class="anchor" aria-label="anchor" href="#arg-smooth"></a></dt>
+<dd><p>Optional tibble from <code><a href="growth_smooth_observations.html">growth_smooth_observations()</a></code>, drawn as a
+fitted line and confidence band. Display only; nothing is scored against it.</p></dd>
 
 
 <dt id="arg-current-label-candidate-label">current_label, candidate_label<a class="anchor" aria-label="anchor" href="#arg-current-label-candidate-label"></a></dt>
@@ -120,6 +127,13 @@ the objective responds to.</p>
 scatter behind it – is what the ground-plot term of the score is computed
 against, so a candidate that looks wrong against the cloud but right against
 the binned points is behaving exactly as scored.</p>
+<p>Each binned point is sized by the number of plots behind it, because they
+routinely differ by more than an order of magnitude and an equal-sized point
+hides that completely. A bin holding a single plot is not a median of
+anything, and the sharp reversals in the orange series are usually those bins.</p>
+<p>Passing <code>smooth</code> overlays a fit through the whole cloud with a confidence
+band, for comparison only – see <code><a href="growth_smooth_observations.html">growth_smooth_observations()</a></code>. It is not
+scored, and the legend says so.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
@@ -144,6 +158,7 @@ the binned points is behaving exactly as scored.</p>
 <code><a href="growth_reference_inflection.html">growth_reference_inflection()</a></code>,
 <code><a href="growth_score_fit.html">growth_score_fit()</a></code>,
 <code><a href="growth_scoring_for.html">growth_scoring_for()</a></code>,
+<code><a href="growth_smooth_observations.html">growth_smooth_observations()</a></code>,
 <code><a href="growth_structure_design.html">growth_structure_design()</a></code>,
 <code><a href="growth_window_for.html">growth_window_for()</a></code>,
 <code><a href="plot_growth_calibration.html">plot_growth_calibration()</a></code>,

@@ -14,6 +14,7 @@ plot_growth_candidate(
   candidate_curve,
   reference,
   binned = NULL,
+  smooth = NULL,
   current_label = "current parameters",
   candidate_label = "best candidate",
   x_max = 400,
@@ -43,6 +44,14 @@ plot_growth_candidate(
 
   Optional tibble from
   [`growth_bin_observations()`](https://for-cast.github.io/landisutils/reference/growth_bin_observations.md).
+  An `n` column, when present, sizes the points.
+
+- smooth:
+
+  Optional tibble from
+  [`growth_smooth_observations()`](https://for-cast.github.io/landisutils/reference/growth_smooth_observations.md),
+  drawn as a fitted line and confidence band. Display only; nothing is
+  scored against it.
 
 - current_label, candidate_label:
 
@@ -71,6 +80,17 @@ not the scatter behind it – is what the ground-plot term of the score is
 computed against, so a candidate that looks wrong against the cloud but
 right against the binned points is behaving exactly as scored.
 
+Each binned point is sized by the number of plots behind it, because
+they routinely differ by more than an order of magnitude and an
+equal-sized point hides that completely. A bin holding a single plot is
+not a median of anything, and the sharp reversals in the orange series
+are usually those bins.
+
+Passing `smooth` overlays a fit through the whole cloud with a
+confidence band, for comparison only – see
+[`growth_smooth_observations()`](https://for-cast.github.io/landisutils/reference/growth_smooth_observations.md).
+It is not scored, and the legend says so.
+
 ## See also
 
 Other growth calibration helpers:
@@ -94,6 +114,7 @@ Other growth calibration helpers:
 [`growth_reference_inflection()`](https://for-cast.github.io/landisutils/reference/growth_reference_inflection.md),
 [`growth_score_fit()`](https://for-cast.github.io/landisutils/reference/growth_score_fit.md),
 [`growth_scoring_for()`](https://for-cast.github.io/landisutils/reference/growth_scoring_for.md),
+[`growth_smooth_observations()`](https://for-cast.github.io/landisutils/reference/growth_smooth_observations.md),
 [`growth_structure_design()`](https://for-cast.github.io/landisutils/reference/growth_structure_design.md),
 [`growth_window_for()`](https://for-cast.github.io/landisutils/reference/growth_window_for.md),
 [`plot_growth_calibration()`](https://for-cast.github.io/landisutils/reference/plot_growth_calibration.md),

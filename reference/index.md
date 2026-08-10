@@ -313,6 +313,9 @@
 - [`growth_scoring_for()`](https://for-cast.github.io/landisutils/reference/growth_scoring_for.md)
   : Look up one species' scoring controls, with defaults
 
+- [`growth_smooth_observations()`](https://for-cast.github.io/landisutils/reference/growth_smooth_observations.md)
+  : Smooth a ground-plot cloud for display
+
 - [`growth_structure_design()`](https://for-cast.github.io/landisutils/reference/growth_structure_design.md)
   : Build a design crossing landscape cohort structures with a parameter
   sweep

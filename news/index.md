@@ -1,5 +1,35 @@
 # Changelog
 
+## landisutils 0.0.105
+
+- [`plot_growth_candidate()`](https://for-cast.github.io/landisutils/reference/plot_growth_candidate.md)
+  sizes each age-binned point by the number of plots behind it, instead
+  of drawing every bin at the same size. The counts differ by more than
+  an order of magnitude – in the network this was built against, 34% of
+  20-year bins hold a single plot and 66% hold fewer than five – so an
+  equal-sized point presented a lone observation as a median.
+  Bootstrapping the bin medians there put 3 of 4 consecutive steps for
+  one species, and 4 of 5 for another, inside their own sampling
+  intervals: the sharp reversals in the series are mostly its smallest
+  points, and now they look like it.
+- [`growth_smooth_observations()`](https://for-cast.github.io/landisutils/reference/growth_smooth_observations.md)
+  fits a thin-plate spline through a ground-plot cloud and returns it
+  with a confidence band, and
+  [`plot_growth_candidate()`](https://for-cast.github.io/landisutils/reference/plot_growth_candidate.md)
+  gains a `smooth` argument that overlays it. This is a visual aid for
+  judging the binned series and nothing scores against it:
+  [`growth_reference_curves()`](https://for-cast.github.io/landisutils/reference/growth_reference_curves.md)
+  still bins, because replacing the scored reference would move every
+  `biomass_max_est` that rests on plots. The fit is on the identity
+  scale – a log link is the obvious response to right-skewed biomass but
+  extrapolates violently from a handful of old plots, lifting one
+  species’ curve to 347 Mg C/ha against a binned maximum of 238 – and it
+  is never drawn outside the observed age range.
+- [`write_growth_review_bundle()`](https://for-cast.github.io/landisutils/reference/write_growth_review_bundle.md)
+  draws the smooth on every panel by default (`smooth_plots`), and takes
+  `smooth_site` so the fit collapses repeat visits exactly as the binned
+  series does. Its `README.txt` explains both additions.
+
 ## landisutils 0.0.104
 
 - [`calibrate_dynamic_fire()`](https://for-cast.github.io/landisutils/reference/calibrate_dynamic_fire.md)’s

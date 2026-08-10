@@ -88,6 +88,7 @@ Other growth calibration helpers:
 [`growth_reference_curves()`](https://for-cast.github.io/landisutils/reference/growth_reference_curves.md),
 [`growth_reference_inflection()`](https://for-cast.github.io/landisutils/reference/growth_reference_inflection.md),
 [`growth_scoring_for()`](https://for-cast.github.io/landisutils/reference/growth_scoring_for.md),
+[`growth_smooth_observations()`](https://for-cast.github.io/landisutils/reference/growth_smooth_observations.md),
 [`growth_structure_design()`](https://for-cast.github.io/landisutils/reference/growth_structure_design.md),
 [`growth_window_for()`](https://for-cast.github.io/landisutils/reference/growth_window_for.md),
 [`plot_growth_calibration()`](https://for-cast.github.io/landisutils/reference/plot_growth_calibration.md),

@@ -17,7 +17,10 @@ write_growth_review_bundle(
   best,
   windows,
   scoring_file = "growth_scoring.csv",
-  params_file = "the growth-parameter table"
+  params_file = "the growth-parameter table",
+  smooth_plots = TRUE,
+  smooth_bin = 20L,
+  smooth_site = NULL
 )
 ```
 
@@ -63,6 +66,22 @@ write_growth_review_bundle(
   Character. Paths named in the bundle's `README.txt`, so a reviewer is
   pointed at the files this project actually keeps them in.
 
+- smooth_plots:
+
+  Logical. Overlay a spline through the ground-plot cloud on each panel,
+  for comparison against the binned series. Display only; nothing is
+  scored against it. See
+  [`growth_smooth_observations()`](https://for-cast.github.io/landisutils/reference/growth_smooth_observations.md).
+
+- smooth_bin, smooth_site:
+
+  Passed to
+  [`growth_smooth_observations()`](https://for-cast.github.io/landisutils/reference/growth_smooth_observations.md).
+  `smooth_bin` may be a single width or a vector named by species. Set
+  `smooth_site` to the location column wherever the plots are a
+  permanent network, so the fit and the binned series rest on the same
+  evidence.
+
 ## Value
 
 Character vector of the written file paths.
@@ -90,6 +109,7 @@ Other growth calibration helpers:
 [`growth_reference_inflection()`](https://for-cast.github.io/landisutils/reference/growth_reference_inflection.md),
 [`growth_score_fit()`](https://for-cast.github.io/landisutils/reference/growth_score_fit.md),
 [`growth_scoring_for()`](https://for-cast.github.io/landisutils/reference/growth_scoring_for.md),
+[`growth_smooth_observations()`](https://for-cast.github.io/landisutils/reference/growth_smooth_observations.md),
 [`growth_structure_design()`](https://for-cast.github.io/landisutils/reference/growth_structure_design.md),
 [`growth_window_for()`](https://for-cast.github.io/landisutils/reference/growth_window_for.md),
 [`plot_growth_calibration()`](https://for-cast.github.io/landisutils/reference/plot_growth_calibration.md),
