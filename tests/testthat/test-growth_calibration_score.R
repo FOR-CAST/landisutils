@@ -611,3 +611,13 @@ test_that("the fitting window and inflection see a VDYP curve", {
   )
   expect_equal(growth_reference_inflection(short), growth_reference_inflection(as_tipsy))
 })
+
+test_that("every modelled source has a linetype, or it is dropped from the plot", {
+  ## The scale uses limits = names(.growth_reference_linetypes) with na.translate = FALSE, so a
+  ## source absent from this vector is not drawn in a default style -- it is removed. The only
+  ## symptom is a ggplot2 "Removed N rows" warning, which is easy to read as harmless clipping.
+  ## This asserts the vector covers every source the plots and scoring accept.
+  modelled <- c("SORTIE", "TIPSY", "VDYP")
+  expect_setequal(names(landisutils:::.growth_reference_linetypes), modelled)
+  expect_false(any(is.na(landisutils:::.growth_reference_linetypes[modelled])))
+})
