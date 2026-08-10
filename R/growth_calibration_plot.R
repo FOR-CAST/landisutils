@@ -290,8 +290,15 @@ plot_growth_candidate <- function(
     scale_linetype_growth_reference() +
     ## Without this the observation keys inherit the line geom and read as
     ## curves, which is exactly the confusion the legend is meant to remove.
+    ## Explicit order: ggplot2 otherwise sequences the guides by how the scales
+    ## happen to be built, which differs between species and leaves a six-panel
+    ## set with its legends in six different arrangements.
     ggplot2::guides(
+      size = ggplot2::guide_legend(order = 2L),
+      linetype = ggplot2::guide_legend(order = 3L),
+      shape = ggplot2::guide_legend(order = 4L),
       colour = ggplot2::guide_legend(
+        order = 1L,
         nrow = 2L,
         override.aes = list(
           linetype = c("solid", "solid", "blank", "blank", if (has_smooth) "solid"),
