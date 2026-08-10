@@ -11,7 +11,7 @@ growth_reference_inflection(
   reference,
   method = c("inflection", "asymptote"),
   frac = 0.9,
-  sources = c("SORTIE", "TIPSY"),
+  sources = c("SORTIE", "TIPSY", "VDYP"),
   smooth_window = 21L,
   default = 100
 )
@@ -22,7 +22,7 @@ growth_reference_inflection(
 - reference:
 
   A data frame of reference observations, with columns `source`
-  (`"SORTIE"`, `"TIPSY"` or `"Ground plots"`), `age` and
+  (`"SORTIE"`, `"TIPSY"`, `"VDYP"` or `"Ground plots"`), `age` and
   `aboveground_c_mg_ha`.
 
 - method:

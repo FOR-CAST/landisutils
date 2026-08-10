@@ -37,7 +37,7 @@ plot_growth_candidate(
 - reference:
 
   A data frame of reference observations, with columns `source`
-  (`"SORTIE"`, `"TIPSY"` or `"Ground plots"`), `age` and
+  (`"SORTIE"`, `"TIPSY"`, `"VDYP"` or `"Ground plots"`), `age` and
   `aboveground_c_mg_ha`.
 
 - binned:

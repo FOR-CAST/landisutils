@@ -1,5 +1,24 @@
 # Changelog
 
+## landisutils 0.0.109
+
+- The `vdyp` reference series added in 0.0.101 was only wired into
+  scoring.
+  [`plot_growth_calibration()`](https://for-cast.github.io/landisutils/reference/plot_growth_calibration.md)
+  and the review-bundle plots filtered the modelled curve on
+  `c("SORTIE", "TIPSY")`, so a VDYP-labelled curve was scored but drawn
+  nowhere – the failure mode was a missing line on a figure, with
+  nothing raised.
+  [`growth_reference_inflection()`](https://for-cast.github.io/landisutils/reference/growth_reference_inflection.md)
+  and
+  [`growth_auto_window()`](https://for-cast.github.io/landisutils/reference/growth_auto_window.md)
+  defaulted `sources` the same way: the former silently returned its
+  `default` instead of the computed inflection (100 rather than 12 on
+  the test fixture), and the latter skipped the
+  `min(upper, max(model_ages))` tightening, widening the fitting window
+  from 150 to 212 where the modelled curve ends before the plots do. All
+  four now include `"VDYP"`.
+
 ## landisutils 0.0.108
 
 - [`calibrate_dynamic_fire()`](https://for-cast.github.io/landisutils/reference/calibrate_dynamic_fire.md)

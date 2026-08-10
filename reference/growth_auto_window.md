@@ -13,7 +13,7 @@ growth_auto_window(
   age_floor = 20,
   age_quantile = 0.95,
   senescence_frac = 0.45,
-  sources = c("SORTIE", "TIPSY")
+  sources = c("SORTIE", "TIPSY", "VDYP")
 )
 ```
 
@@ -22,7 +22,7 @@ growth_auto_window(
 - reference:
 
   A data frame of reference observations, with columns `source`
-  (`"SORTIE"`, `"TIPSY"` or `"Ground plots"`), `age` and
+  (`"SORTIE"`, `"TIPSY"`, `"VDYP"` or `"Ground plots"`), `age` and
   `aboveground_c_mg_ha`.
 
 - longevity:
