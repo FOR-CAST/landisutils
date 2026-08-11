@@ -2147,3 +2147,85 @@ test_that(".scenario_template_digest() warns instead of silently returning NULL"
   expect_snapshot(x <- .scenario_template_digest("/nonexistent/scenario-template"))
   expect_null(x)
 })
+
+## Severity is scored on the three categories the observation distinguishes, not five ----------
+
+.fake_reps_sev <- function(mean_sevs) {
+  list(list(events = data.frame(mean_severity = mean_sevs)))
+}
+
+test_that(".chi_sq_severity() collapses to 3 classes by default", {
+  ## The observed reference is 3-class at source and spread onto 1-5 by a trapezoid kernel, so
+  ## classes 1|2 and 4|5 are equal by construction. A simulator that puts its low-severity mass
+  ## entirely in class 1 rather than splitting it must NOT be penalised for that.
+  obs <- c(`1` = 0.405, `2` = 0.405, `3` = 0.044, `4` = 0.073, `5` = 0.073)
+  split_low <- .fake_reps_sev(c(rep(1, 405), rep(2, 405), rep(3, 44), rep(4, 73), rep(5, 73)))
+  all_in_1 <- .fake_reps_sev(c(rep(1, 810), rep(3, 44), rep(4, 73), rep(5, 73)))
+
+  ## Both have identical low/medium/high aggregates, so both must score the same.
+  expect_equal(.chi_sq_severity(split_low, obs), .chi_sq_severity(all_in_1, obs), tolerance = 1e-8)
+})
+
+test_that(".chi_sq_severity() still penalises a genuine low/med/high disagreement", {
+  obs <- c(`1` = 0.225, `2` = 0.225, `3` = 0.326, `4` = 0.112, `5` = 0.112)
+  matching <- .fake_reps_sev(c(rep(1, 225), rep(2, 225), rep(3, 326), rep(4, 112), rep(5, 112)))
+  too_low <- .fake_reps_sev(c(rep(1, 890), rep(3, 80), rep(4, 30)))
+  expect_lt(.chi_sq_severity(matching, obs), .chi_sq_severity(too_low, obs))
+})
+
+test_that("the 5-class form is still reachable for comparison", {
+  obs <- c(`1` = 0.405, `2` = 0.405, `3` = 0.044, `4` = 0.073, `5` = 0.073)
+  split_low <- .fake_reps_sev(c(rep(1, 405), rep(2, 405), rep(3, 44), rep(4, 73), rep(5, 73)))
+  all_in_1 <- .fake_reps_sev(c(rep(1, 810), rep(3, 44), rep(4, 73), rep(5, 73)))
+  withr::local_options(landisutils.calibration.severity_classes = 5L)
+  ## Under 5-class scoring the within-low shape IS charged, which is the behaviour being replaced.
+  expect_false(isTRUE(all.equal(.chi_sq_severity(split_low, obs), .chi_sq_severity(all_in_1, obs))))
+})
+
+## A parameter SUBSET is allowed; absent names keep the template's value --------------------
+
+.mini_fire_txt <- function(dir) {
+  writeLines(
+    c(
+      "SeverityCalibrationFactor    1",
+      "",
+      ">>   Fire Sizes",
+      ">> EcoCode EcoName Mu Sigma Max SpFMCLo SpFMCHi SpHiProp SumFMCLo SumFMCHi SumHiProp FallFMCLo FallFMCHi FallHiProp OpenFuelIndex NumFires",
+      "1    FRU59    1.8    1.4    2370    120    120    0.5    88    114    0.5    120    120    0.5    2    0.87",
+      "",
+      "FuelTypeTable",
+      ">> Index Base Surface IgnProb a b c q BUI maxBE CBH",
+      "1    Conifer    C1    1.0    1    2    3    4    5    6    7",
+      "2    Open    O1a    1.0    1    2    3    4    5    6    7"
+    ),
+    file.path(dir, "dynamic-fire.txt")
+  )
+  dir
+}
+
+.hiprops <- function(dir) {
+  ln <- readLines(file.path(dir, "dynamic-fire.txt"))
+  row <- ln[grepl("^1 +FRU59", ln)]
+  p <- strsplit(trimws(row), "\\s+")[[1]]
+  as.numeric(p[c(8L, 11L, 14L)])
+}
+
+test_that("patch_fire_config() accepts a subset and leaves absent parameters alone", {
+  d <- .mini_fire_txt(withr::local_tempdir())
+  ## The 7-parameter set: SpHiProp / FallHiProp dropped because FMC is capped at 120 outside
+  ## summer, making them incapable of changing any outcome.
+  patch_fire_config(d, c(SumHiProp = 0.25, IgnProb_Conifer = 0.5))
+  expect_equal(.hiprops(d), c(0.5, 0.25, 0.5)) ## Sp and Fall untouched at the template's 0.5
+})
+
+test_that("patch_fire_config() still patches every parameter it IS given", {
+  d <- .mini_fire_txt(withr::local_tempdir())
+  patch_fire_config(d, c(SpHiProp = 0.1, SumHiProp = 0.2, FallHiProp = 0.3))
+  expect_equal(.hiprops(d), c(0.1, 0.2, 0.3))
+})
+
+test_that("patch_fire_config() rejects an unknown or empty parameter vector", {
+  d <- .mini_fire_txt(withr::local_tempdir())
+  expect_error(patch_fire_config(d, c(NotAParameter = 1)))
+  expect_error(patch_fire_config(d, stats::setNames(numeric(0), character(0))))
+})

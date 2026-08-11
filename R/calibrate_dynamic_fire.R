@@ -239,30 +239,39 @@ patch_fire_config <- function(scenario_dir, par_vec) {
     fs::dir_exists(scenario_dir),
     is.numeric(par_vec),
     !is.null(names(par_vec)),
-    setequal(names(par_vec), calibration_par_names())
+    length(par_vec) > 0L,
+    all(names(par_vec) %in% calibration_par_names())
   )
+  ## A SUBSET is allowed, and an absent name means "leave the template's value alone". Requiring
+  ## all nine forced every calibration to search dimensions that may be degenerate for the fire
+  ## regime at hand: with FMC capped at 120% outside the summer dip, SpFMCLo == SpFMCHi and
+  ## FallFMCLo == FallFMCHi, so SpHiProp and FallHiProp cannot change any outcome and were two
+  ## dimensions of pure noise -- visible as candidates that differed only in those values scoring
+  ## byte-identical losses.
   fire_txt <- fs::path(scenario_dir, "dynamic-fire.txt")
   if (!fs::file_exists(fire_txt)) {
     stop("dynamic-fire.txt not found in ", scenario_dir, call. = FALSE)
   }
   lines <- readLines(fire_txt)
 
-  ## 1. SeverityCalibrationFactor scalar
-  sev_idx <- grep("^SeverityCalibrationFactor[[:space:]]", lines)
-  if (length(sev_idx) != 1L) {
-    stop(
-      "Expected exactly one SeverityCalibrationFactor line in ",
-      fire_txt,
-      " (found ",
-      length(sev_idx),
-      ")",
-      call. = FALSE
+  ## 1. SeverityCalibrationFactor scalar (skipped entirely when not calibrated)
+  if ("SeverityCalibrationFactor" %in% names(par_vec)) {
+    sev_idx <- grep("^SeverityCalibrationFactor[[:space:]]", lines)
+    if (length(sev_idx) != 1L) {
+      stop(
+        "Expected exactly one SeverityCalibrationFactor line in ",
+        fire_txt,
+        " (found ",
+        length(sev_idx),
+        ")",
+        call. = FALSE
+      )
+    }
+    lines[sev_idx] <- sprintf(
+      "SeverityCalibrationFactor    %g",
+      par_vec[["SeverityCalibrationFactor"]]
     )
   }
-  lines[sev_idx] <- sprintf(
-    "SeverityCalibrationFactor    %g",
-    par_vec[["SeverityCalibrationFactor"]]
-  )
 
   ## 2. FireSizesTable HiProp columns (8 / 11 / 14)
   fs_hdr <- grep(">>\\s+Fire Sizes", lines)
@@ -276,9 +285,15 @@ patch_fire_config <- function(scenario_dir, par_vec) {
   while (i <= length(lines) && nzchar(trimws(lines[i])) && !grepl("^[A-Za-z]", lines[i])) {
     parts <- strsplit(trimws(lines[i]), "\\s+")[[1]]
     if (length(parts) >= 14L) {
-      parts[8L] <- sprintf("%g", par_vec[["SpHiProp"]])
-      parts[11L] <- sprintf("%g", par_vec[["SumHiProp"]])
-      parts[14L] <- sprintf("%g", par_vec[["FallHiProp"]])
+      if ("SpHiProp" %in% names(par_vec)) {
+        parts[8L] <- sprintf("%g", par_vec[["SpHiProp"]])
+      }
+      if ("SumHiProp" %in% names(par_vec)) {
+        parts[11L] <- sprintf("%g", par_vec[["SumHiProp"]])
+      }
+      if ("FallHiProp" %in% names(par_vec)) {
+        parts[14L] <- sprintf("%g", par_vec[["FallHiProp"]])
+      }
       lines[i] <- paste(parts, collapse = "    ")
     }
     i <- i + 1L
@@ -289,13 +304,16 @@ patch_fire_config <- function(scenario_dir, par_vec) {
   if (length(ftt_hdr) != 1L) {
     stop("Could not locate FuelTypeTable header in ", fire_txt, call. = FALSE)
   }
-  base_multipliers <- c(
-    Conifer = par_vec[["IgnProb_Conifer"]],
-    ConiferPlantation = par_vec[["IgnProb_ConiferPlantation"]],
-    Deciduous = par_vec[["IgnProb_Deciduous"]],
-    Slash = par_vec[["IgnProb_Slash"]],
-    Open = par_vec[["IgnProb_Open"]]
+  ## Only the fuel bases whose multiplier is being calibrated; the rest keep the template value.
+  .ign <- c(
+    Conifer = "IgnProb_Conifer",
+    ConiferPlantation = "IgnProb_ConiferPlantation",
+    Deciduous = "IgnProb_Deciduous",
+    Slash = "IgnProb_Slash",
+    Open = "IgnProb_Open"
   )
+  .ign <- .ign[.ign %in% names(par_vec)]
+  base_multipliers <- stats::setNames(as.numeric(par_vec[unname(.ign)]), names(.ign))
   j <- ftt_hdr + 1L
   while (j <= length(lines) && (grepl("^[[:space:]]*>>", lines[j]) || !nzchar(trimws(lines[j])))) {
     j <- j + 1L
@@ -305,8 +323,12 @@ patch_fire_config <- function(scenario_dir, par_vec) {
     if (length(parts) >= 11L) {
       base <- parts[2L]
       default_ignprob <- suppressWarnings(as.numeric(parts[4L]))
-      mult <- base_multipliers[[base]]
-      if (!is.null(mult) && !is.na(default_ignprob)) {
+      ## `[[` on an atomic vector ERRORS for a missing name -- it does not return NULL -- so the
+      ## former `!is.null(mult)` guard was dead code that only ever held because all five bases
+      ## were always present. With a calibrated SUBSET they are not, and a fuel row whose base is
+      ## not being calibrated must simply keep its template IgnProb.
+      mult <- if (base %in% names(base_multipliers)) base_multipliers[[base]] else NA_real_
+      if (!is.na(mult) && !is.na(default_ignprob)) {
         ## LANDIS-II Dynamic Fire requires IgnProb in [0, 1.0]; clamp so a
         ## DEoptim trial whose multiplier pushes the product above 1.0 (e.g.,
         ## `IgnProb_Conifer = 1.5` against a default IgnProb of 1.0) does not
@@ -620,6 +642,28 @@ loss_from_stats <- function(
   sim_p <- as.numeric(sim_counts) / sum(sim_counts)
   obs_p <- as.numeric(severity_dist[names(sim_counts)])
   obs_p[is.na(obs_p)] <- 0
+
+  ## Score on the THREE categories the observation actually distinguishes, not five.
+  ##
+  ## Every observed reference here is 3-class at source -- CanLaBS applies two dNBR thresholds,
+  ## and the BC layer is Low/Medium/High -- and is spread onto LANDIS 1-5 by a trapezoid kernel
+  ## that splits low across classes 1|2 and high across 4|5. So an observed vector always has the
+  ## form (a, a, b, c, c): the 1-vs-2 and 4-vs-5 equality is an artifact of that projection, not a
+  ## measurement. Scoring on 5 therefore charges the simulator for its within-low and within-high
+  ## shape, about which the observation says nothing. Measured on this landscape: of the 1.02 total
+  ## absolute error against the study-area reference, 0.79 -- 78% -- came from that split alone,
+  ## while the aggregate low/medium/high proportions very nearly matched (0.888 vs 0.810 low).
+  ##
+  ## Collapsing both sides keeps every bit of real signal (a genuine low/med/high disagreement
+  ## still scores) and drops only the fabricated part. Opt back into the 5-class form with
+  ## `options(landisutils.calibration.severity_classes = 5L)` for backwards comparison.
+  if (identical(as.integer(getOption("landisutils.calibration.severity_classes", 3L)), 3L)) {
+    collapse3 <- function(p) c(sum(p[1:2]), p[[3]], sum(p[4:5]))
+    if (length(sim_p) == 5L && length(obs_p) == 5L) {
+      sim_p <- collapse3(sim_p)
+      obs_p <- collapse3(obs_p)
+    }
+  }
 
   ## Laplace smoothing (additive smoothing) on obs_p. The previous
   ## `pmax(obs_p, 1e-6)` in the denominator gave any empty observed class a

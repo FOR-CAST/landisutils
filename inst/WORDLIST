@@ -60,6 +60,7 @@ C1
 C5
 C7
 CanESM2
+CanLaBS
 CellIDs
 CForC
 CGCM4
@@ -91,6 +92,7 @@ derechos
 DGS
 disablable
 DisturbFireFromBiomassPools
+dNBR
 docker's
 docstrings
 Doggett
