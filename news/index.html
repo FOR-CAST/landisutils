@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.113</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.114</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,6 +41,12 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.114" id="landisutils-00114">landisutils 0.0.114<a class="anchor" aria-label="anchor" href="#landisutils-00114"></a></h2>
+<ul><li>
+<code><a href="../reference/plot_growth_candidate.html">plot_growth_candidate()</a></code> draws the age-binned points ON TOP of the plot-cloud smooth instead of under it. The smooth is an aid; the points are what the ground-plot term of the score is computed against, and a line drawn over them hid the very values it summarizes. The points gain a white outline, which separates a point from the line exactly where the two coincide and the reader is checking agreement.</li>
+<li>The binned points now map <code>fill</code> (shape 23 takes its interior from fill), so the fill scale is given the same name, breaks and limits as the colour scale and ggplot2 merges the two into one series legend. Silencing the fill guide instead leaves that key labelled but glyph-less: <code>override.aes</code> can only restyle a key that some layer contributes, and once nothing maps colour to the series there is no key to restyle. <code>override.aes</code> is supplied on the colour guide only, since giving it to both merges correctly but warns.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.113" id="landisutils-00113">landisutils 0.0.113<a class="anchor" aria-label="anchor" href="#landisutils-00113"></a></h2>
 <ul><li>

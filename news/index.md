@@ -1,5 +1,23 @@
 # Changelog
 
+## landisutils 0.0.114
+
+- [`plot_growth_candidate()`](https://for-cast.github.io/landisutils/reference/plot_growth_candidate.md)
+  draws the age-binned points ON TOP of the plot-cloud smooth instead of
+  under it. The smooth is an aid; the points are what the ground-plot
+  term of the score is computed against, and a line drawn over them hid
+  the very values it summarizes. The points gain a white outline, which
+  separates a point from the line exactly where the two coincide and the
+  reader is checking agreement.
+- The binned points now map `fill` (shape 23 takes its interior from
+  fill), so the fill scale is given the same name, breaks and limits as
+  the colour scale and ggplot2 merges the two into one series legend.
+  Silencing the fill guide instead leaves that key labelled but
+  glyph-less: `override.aes` can only restyle a key that some layer
+  contributes, and once nothing maps colour to the series there is no
+  key to restyle. `override.aes` is supplied on the colour guide only,
+  since giving it to both merges correctly but warns.
+
 ## landisutils 0.0.113
 
 - [`calibrate_dynamic_fire()`](https://for-cast.github.io/landisutils/reference/calibrate_dynamic_fire.md)
