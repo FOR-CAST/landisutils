@@ -1,5 +1,17 @@
 # Changelog
 
+## landisutils 0.0.117
+
+- **Removed the internal `.growth_plot_summary_colour`.** Use
+  `growth_plot_palette()[["summary"]]`. It was kept in 0.0.115 only
+  because a co-developed project reached for it with `:::`; that project
+  pins its own copy of the value, so the compatibility shim bought
+  nothing but a second definition to keep in step. **A consumer calling
+  `landisutils:::.growth_plot_summary_colour` will now error** –
+  reaching into a namespace was never a supported contract, and the
+  exported palette is the replacement. Rendered figures are unchanged
+  (verified byte-identical).
+
 ## landisutils 0.0.116
 
 - New exported
