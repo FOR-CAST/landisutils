@@ -1,5 +1,42 @@
 # Changelog
 
+## landisutils 0.0.111
+
+- [`calibrate_dynamic_fire()`](https://for-cast.github.io/landisutils/reference/calibrate_dynamic_fire.md)
+  scores severity on the THREE categories the observed reference
+  actually distinguishes, not five. Every reference in use is 3-class at
+  source – CanLaBS applies two dNBR thresholds, the BC layer is
+  Low/Medium/High – and is projected onto LANDIS 1-5 by a trapezoid
+  kernel that splits low across classes 1 and 2 and high across 4 and 5.
+  An observed vector therefore always has the form `(a, a, b, c, c)`,
+  and that equality is an artifact of the projection rather than a
+  measurement, so scoring on five charged the simulator for its
+  within-low and within-high shape while the observation said nothing
+  about it. Measured on a 397,100-cell landscape: of 1.02 total absolute
+  error against the study-area reference, 0.79 came from that split
+  alone, while the aggregate low/medium/high proportions nearly matched
+  (0.888 simulated against 0.810 observed). Both sides now collapse
+  before scoring;
+  `options(landisutils.calibration.severity_classes = 5L)` restores the
+  previous behaviour for comparison.
+- [`patch_fire_config()`](https://for-cast.github.io/landisutils/reference/patch_fire_config.md)
+  accepts a SUBSET of
+  [`calibration_par_names()`](https://for-cast.github.io/landisutils/reference/calibration_par_names.md),
+  leaving any field whose parameter is absent at its template value.
+  Requiring all nine forced every calibration to search dimensions that
+  can be degenerate for the fire regime at hand: with foliar moisture
+  content capped at 120% outside the mid-summer dip,
+  `SpFMCLo == SpFMCHi` and `FallFMCLo == FallFMCHi`, so `SpHiProp` and
+  `FallHiProp` cannot change any outcome – two of nine dimensions spent
+  on pure noise, and a contributor to an objective that behaved as a
+  step function.
+- [`patch_fire_config()`](https://for-cast.github.io/landisutils/reference/patch_fire_config.md)
+  no longer errors when a fuel row’s base type is not among the
+  calibrated multipliers. `[[` on an atomic vector raises a subscript
+  error for a missing name rather than returning `NULL`, so the existing
+  `!is.null()` guard was dead code that held only because all five bases
+  were always present.
+
 ## landisutils 0.0.110
 
 - The `vdyp` series is now actually drawn. 0.0.109 widened the plots’

@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.110</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.111</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,6 +41,15 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.111" id="landisutils-00111">landisutils 0.0.111<a class="anchor" aria-label="anchor" href="#landisutils-00111"></a></h2>
+<ul><li>
+<code><a href="../reference/calibrate_dynamic_fire.html">calibrate_dynamic_fire()</a></code> scores severity on the THREE categories the observed reference actually distinguishes, not five. Every reference in use is 3-class at source – CanLaBS applies two dNBR thresholds, the BC layer is Low/Medium/High – and is projected onto LANDIS 1-5 by a trapezoid kernel that splits low across classes 1 and 2 and high across 4 and 5. An observed vector therefore always has the form <code>(a, a, b, c, c)</code>, and that equality is an artifact of the projection rather than a measurement, so scoring on five charged the simulator for its within-low and within-high shape while the observation said nothing about it. Measured on a 397,100-cell landscape: of 1.02 total absolute error against the study-area reference, 0.79 came from that split alone, while the aggregate low/medium/high proportions nearly matched (0.888 simulated against 0.810 observed). Both sides now collapse before scoring; <code>options(landisutils.calibration.severity_classes = 5L)</code> restores the previous behaviour for comparison.</li>
+<li>
+<code><a href="../reference/patch_fire_config.html">patch_fire_config()</a></code> accepts a SUBSET of <code><a href="../reference/calibration_par_names.html">calibration_par_names()</a></code>, leaving any field whose parameter is absent at its template value. Requiring all nine forced every calibration to search dimensions that can be degenerate for the fire regime at hand: with foliar moisture content capped at 120% outside the mid-summer dip, <code>SpFMCLo == SpFMCHi</code> and <code>FallFMCLo == FallFMCHi</code>, so <code>SpHiProp</code> and <code>FallHiProp</code> cannot change any outcome – two of nine dimensions spent on pure noise, and a contributor to an objective that behaved as a step function.</li>
+<li>
+<code><a href="../reference/patch_fire_config.html">patch_fire_config()</a></code> no longer errors when a fuel row’s base type is not among the calibrated multipliers. <code>[[</code> on an atomic vector raises a subscript error for a missing name rather than returning <code>NULL</code>, so the existing <code>!is.null()</code> guard was dead code that held only because all five bases were always present.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.110" id="landisutils-00110">landisutils 0.0.110<a class="anchor" aria-label="anchor" href="#landisutils-00110"></a></h2>
 <ul><li>The <code>vdyp</code> series is now actually drawn. 0.0.109 widened the plots’ source filter but left <code>.growth_reference_linetypes</code> at <code>c(SORTIE, TIPSY)</code>, and the scale is built with <code>limits = names(...)</code> and <code>na.translate = FALSE</code> – so a source missing from that vector is DROPPED from the plot rather than drawn in a default style. A VDYP curve was therefore scored, filtered in, and still invisible, with the only symptom a “Removed N rows containing missing values” warning that reads like harmless clipping. A test now asserts the vector covers every modelled source.</li>
