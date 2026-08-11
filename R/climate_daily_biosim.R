@@ -668,6 +668,48 @@ assemble_climate_library_file_scf <- function(dataset_path, vars, id_col = "EcoI
   utils::getFromNamespace(name, "cffdrs")
 }
 
+## Magnitude at or above which a BioSIM FWI value is the formatting artifact described
+## in repair_fwi_exponent() rather than a measurement. The smallest artifact BioSIM can
+## emit is 1e5 (from a true 1e-5); the largest legitimate value in any of these columns
+## is below 2e3, so 1e4 sits in the gap.
+.fwi_artifact_min <- 1e4
+
+#' Repair BioSIM's sign-dropped scientific-notation exponents
+#'
+#' `BioSIM` returns the Fire Weather Index System codes and indices as text, and drops
+#' the minus sign from the exponent whenever a value is small enough to be formatted in
+#' scientific notation (below `1e-4`). A true `6.49936E-05` comes back as `6.49936E+05`:
+#' the mantissa is intact and only the exponent's sign is lost, so
+#' `v * 10^(-2 * floor(log10(v)))` recovers the original value exactly. Verified against
+#' the FWI System equations -- `FFMC = 17.1624, WS = 8.96132` gives `ISI = 6.49934e-05`,
+#' and `BioSIM` returned `649936`.
+#'
+#' Only saturated fuels drive the codes below `1e-4`, so the artifact is confined to wet,
+#' low-hazard records, but it inflates them by up to eighteen orders of magnitude. Any
+#' downstream mean over cells or days is destroyed by a handful of contaminated records,
+#' so this must be applied before the values are aggregated or used to derive indices.
+#'
+#' Applied to the three moisture codes (`FFMC`, `DMC`, `DC`), which `BioSIM` reports
+#' directly and which cannot be recomputed from the other returned columns without a
+#' precipitation series. The behaviour indices (`ISI`, `BUI`, `FWI`) are pure functions of
+#' those codes and are re-derived from the repaired values by [get_fwi_daily()] instead.
+#'
+#' @param v numeric vector of a single FWI System code.
+#'
+#' @returns `v` with artifact values restored; all other values untouched.
+#'
+#' @seealso [get_fwi_daily()]
+#'
+#' @export
+repair_fwi_exponent <- function(v) {
+  stopifnot(is.numeric(v))
+  hit <- !is.na(v) & v >= .fwi_artifact_min
+  if (any(hit)) {
+    v[hit] <- v[hit] * 10^(-2 * floor(log10(v[hit])))
+  }
+  v
+}
+
 #' Fetch a single year of daily BioSIM Fire Weather Index for one location batch
 #'
 #' Wraps [BioSIM::generateWeather()] for the `FWI_Daily` model, fetching one
@@ -765,36 +807,35 @@ get_fwi_daily <- function(
     eco_lookup <- data.frame(CellID = locations$ID, EcoID = locations$EcoID)
     FWI_cleaned <- dplyr::left_join(FWI_cleaned, eco_lookup, by = "CellID")
 
-    ## FFMC must be corrected first because ISI (and hence FWI) is derived from it.
-    .fine_fuel_moisture_code <- .cffdrs_fn("fine_fuel_moisture_code")
     .initial_spread_index <- .cffdrs_fn("initial_spread_index")
     .buildup_index <- .cffdrs_fn("buildup_index")
     .fire_weather_index <- .cffdrs_fn("fire_weather_index")
 
+    ## Repair the three moisture codes BioSIM reports directly, then re-derive every
+    ## behaviour index from the repaired codes. The codes are recursive and
+    ## precipitation-driven, so they must be recovered in place (see
+    ## repair_fwi_exponent()). Repairing DMC and DC matters as much as FFMC: a corrupt
+    ## DMC would otherwise flow into buildup_index() and from there into FWI.
+    ##
+    ## BUI, ISI and FWI as returned by BioSIM are DISCARDED, not repaired. They carry
+    ## the same artifact -- BUI goes below 1e-4 whenever DMC does -- but they are pure
+    ## functions of the codes, so recomputing is strictly safer than repairing: it needs
+    ## no threshold and cannot mistake an extreme value for corruption. Nothing is lost
+    ## by doing so; on uncorrupted records the recomputed BUI reproduces BioSIM's to
+    ## within 5e-6 relative, and ISI and FWI to within 0.8%.
     FWI_fixed <- FWI_cleaned |>
       dplyr::mutate(
-        FFMC = dplyr::if_else(
-          FFMC <= 101,
-          FFMC,
-          .fine_fuel_moisture_code(
-            ffmc_yda = dplyr::lag(FFMC),
-            temp = .data$T,
-            rh = RH,
-            ws = WS,
-            prec = Prcp
-          )
-        )
-      ) |>
-      dplyr::mutate(
+        dplyr::across(dplyr::all_of(c("FFMC", "DMC", "DC")), repair_fwi_exponent),
         ISI = .initial_spread_index(FFMC, WS),
-        ## BUI must be recomputed before FWI: BioSIM occasionally returns corrupt BUI
-        ## (up to ~5.8e5), and FWI is derived from it. cffdrs recomputes BUI from DMC/DC.
         BUI = .buildup_index(DMC, DC),
         FWI = .fire_weather_index(ISI, BUI),
         ## TODO: should also correct DSR; not used downstream so dropped
         DSR = NULL
       )
 
+    ## Upper bounds are generous envelopes, well above anything the Canadian FWI System
+    ## produces -- they exist to catch corruption the repair did not anticipate, not to
+    ## clip legitimate extremes. FFMC's ceiling is definitional (the scale saturates).
     stopifnot(
       all(FWI_fixed$RH >= 0, na.rm = TRUE),
       all(FWI_fixed$RH <= 100, na.rm = TRUE),
@@ -803,11 +844,15 @@ get_fwi_daily <- function(
       all(FWI_fixed$FFMC >= 0, na.rm = TRUE),
       all(FWI_fixed$FFMC <= 101, na.rm = TRUE),
       all(FWI_fixed$DMC >= 0, na.rm = TRUE),
+      all(FWI_fixed$DMC <= 1000, na.rm = TRUE),
       all(FWI_fixed$DC >= 0, na.rm = TRUE),
+      all(FWI_fixed$DC <= 2000, na.rm = TRUE),
       all(FWI_fixed$ISI >= 0, na.rm = TRUE),
       all(FWI_fixed$ISI < 100, na.rm = TRUE),
       all(FWI_fixed$BUI >= 0, na.rm = TRUE),
-      all(FWI_fixed$FWI >= 0, na.rm = TRUE)
+      all(FWI_fixed$BUI <= 1000, na.rm = TRUE),
+      all(FWI_fixed$FWI >= 0, na.rm = TRUE),
+      all(FWI_fixed$FWI < 200, na.rm = TRUE)
     )
 
     FWI_fixed <- dplyr::group_by(FWI_fixed, YEAR, BatchID)
