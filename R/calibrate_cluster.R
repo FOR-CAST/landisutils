@@ -527,6 +527,38 @@
     )
   }
 
+  ## A fleet SMALLER than NP is legitimate, but it is never free, and its cost is a step function
+  ## rather than a gradient. DEoptim dispatches NP evaluations per generation and parLapply splits
+  ## them into `length(cl)` chunks, so a generation takes ceiling(NP / total) evaluation times and
+  ## the barrier waits for whichever worker drew the extra one. Dropping from NP to NP - 1 workers
+  ## therefore DOUBLES the generation while leaving almost every worker idle for the second half:
+  ## observed here as 89 workers against NP = 90, which turned a 3.9 h generation into ~7.8 h for
+  ## want of a single container, with nothing in the log to say so.
+  ##
+  ## Warn rather than abort: running deliberately below NP is a reasonable choice when a host cannot
+  ## hold NP containers, and calibrations do run that way on purpose. The point is that the decision
+  ## should be visible and quantified, not discovered from a wall-clock that is quietly 2x.
+  if (total < max_workers) {
+    waves <- ceiling(max_workers / total)
+    idle <- waves * total - max_workers
+    warning(
+      glue::glue(
+        "calibration fleet is {total} worker(s) against NP = {max_workers}: each generation now ",
+        "costs {waves} evaluation wave(s) instead of 1",
+        if (idle > 0L) {
+          glue::glue(", with {idle} worker(s) idle at the barrier in the last wave")
+        } else {
+          ""
+        },
+        ". Per host: ",
+        paste(sprintf("%s=%d", names(capped), as.integer(capped)), collapse = ", "),
+        ". Raise cfg$nodes (or cfg$mem_fraction, if a host was RAM-capped above) to reach ",
+        "{max_workers}, or lower NP to {total} to stop paying for a wave that is mostly idle."
+      ),
+      call. = FALSE
+    )
+  }
+
   host_vec <- rep(names(capped), times = as.integer(capped))
   message(glue::glue(
     "calibrate_dynamic_fire: PSOCK cluster over {length(capped)} host(s), {total} worker(s): ",

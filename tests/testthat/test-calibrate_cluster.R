@@ -87,3 +87,62 @@ test_that(".verify_worker_pools() passes a fully healthy fleet", {
   res <- expect_no_error(suppressMessages(.verify_worker_pools(cl)))
   expect_length(res, 2L)
 })
+
+## Helper: drive .start_calibration_cluster() as far as the fleet-sizing warning, then stop before
+## any cluster is opened. The capacity probe is mocked so the cap is decided by `nodes` alone.
+local_fleet_sizing <- function(ram = 4000, cores = 512, .local_envir = parent.frame()) {
+  testthat::local_mocked_bindings(
+    .probe_node_capacity = function(hosts, rscript, outfile = nullfile()) {
+      list(
+        ram = stats::setNames(rep(ram, length(hosts)), hosts),
+        cores = stats::setNames(rep(cores, length(hosts)), hosts)
+      )
+    },
+    .psock_cluster = function(...) stop("STOP_BEFORE_CLUSTER", call. = FALSE),
+    .env = .local_envir
+  )
+}
+
+size_fleet <- function(nodes, max_workers) {
+  suppressMessages(try(
+    .start_calibration_cluster(
+      nodes = nodes,
+      max_workers = max_workers,
+      image = "img",
+      scratch_root = tempdir(),
+      cpu_limit = 1,
+      mem_limit = "16g",
+      mem_fraction = 0.9,
+      pull = FALSE,
+      name_prefix = "test",
+      start_pools = FALSE
+    ),
+    silent = TRUE
+  ))
+}
+
+test_that(".start_calibration_cluster() warns when the fleet is smaller than NP", {
+  local_fleet_sizing()
+  expect_warning(size_fleet(c(hostA = 10L), max_workers = 20L), "2 evaluation wave")
+  expect_warning(size_fleet(c(hostA = 10L), max_workers = 20L), "10 worker\\(s\\) against NP = 20")
+})
+
+test_that(".start_calibration_cluster() flags the expensive one-short-of-NP case", {
+  local_fleet_sizing()
+  ## The regression: 89 workers against NP = 90 doubled every generation while 88 of them sat idle
+  ## in the second wave. The cost is a step function, so ONE missing container is not a 1/90 loss.
+  expect_warning(size_fleet(c(hostA = 19L), max_workers = 20L), "2 evaluation wave")
+  expect_warning(size_fleet(c(hostA = 19L), max_workers = 20L), "18 worker\\(s\\) idle")
+})
+
+test_that(".start_calibration_cluster() is silent when the fleet meets NP", {
+  local_fleet_sizing()
+  ## Trimming DOWN to NP is the normal path and must not warn.
+  expect_no_warning(size_fleet(c(hostA = 20L), max_workers = 20L))
+  expect_no_warning(size_fleet(c(hostA = 30L), max_workers = 20L))
+})
+
+test_that(".start_calibration_cluster() reports the per-host split in the shortfall warning", {
+  local_fleet_sizing()
+  expect_warning(size_fleet(c(hostA = 6L, hostB = 4L), max_workers = 20L), "hostA=6, hostB=4")
+})
