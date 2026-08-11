@@ -2229,3 +2229,66 @@ test_that("patch_fire_config() rejects an unknown or empty parameter vector", {
   expect_error(patch_fire_config(d, c(NotAParameter = 1)))
   expect_error(patch_fire_config(d, stats::setNames(numeric(0), character(0))))
 })
+
+
+test_that("calibrate_dynamic_fire() accepts a parameter SUBSET in cfg$lower/upper", {
+  ## The regression: a strict setequal() against calibration_par_names() at the entry point meant a
+  ## 7-parameter config errored before the first trial, even though patch_fire_config() had already
+  ## been taught to leave unnamed fields at their template value.
+  skip_if_not_installed("DEoptim")
+  observed <- list(
+    primary = list(
+      lambda_obs = 4,
+      n_fires_by_year = tibble::tibble(year = 1:20, n = sample.int(8, 20, replace = TRUE)),
+      fire_sizes_ha = sort(stats::rlnorm(50, 3, 2))
+    ),
+    secondary = NULL
+  )
+  observed$fru59 <- observed$primary
+  obs_path <- withr::local_tempfile(fileext = ".rds")
+  saveRDS(observed, obs_path)
+  scen_dir <- withr::local_tempdir()
+  writeLines("LandisData  \"Scenario\"", fs::path(scen_dir, "scenario.txt"))
+
+  cfg <- list(
+    ## SpHiProp / FallHiProp deliberately absent: inert where FMC is capped at 120 outside summer.
+    lower = c(
+      SeverityCalibrationFactor = 0.5,
+      SumHiProp = 0,
+      IgnProb_Conifer = 0,
+      IgnProb_ConiferPlantation = 0,
+      IgnProb_Deciduous = 0,
+      IgnProb_Slash = 0,
+      IgnProb_Open = 0
+    ),
+    upper = c(
+      SeverityCalibrationFactor = 2.5,
+      SumHiProp = 1,
+      IgnProb_Conifer = 1.5,
+      IgnProb_ConiferPlantation = 1.5,
+      IgnProb_Deciduous = 1.5,
+      IgnProb_Slash = 1.5,
+      IgnProb_Open = 1.5
+    ),
+    NP = 14L,
+    itermax = 2L,
+    n_reps = 1L,
+    sim_years = 5L,
+    weights = c(count = 1, size = 1, area_fuel = 0, severity = 0),
+    n_cores = 1L,
+    parallel = FALSE,
+    simulator = "mock",
+    base_seed = 12345L,
+    trace = FALSE
+  )
+
+  res <- suppressWarnings(suppressMessages(calibrate_dynamic_fire(
+    observed_targets_path = obs_path,
+    scenario_template = fs::path(scen_dir, "scenario.txt"),
+    cfg = cfg,
+    out_dir = withr::local_tempdir()
+  )))
+  expect_length(res$best_params, 7L)
+  expect_setequal(names(res$best_params), names(cfg$lower))
+  expect_true(is.finite(res$objective))
+})

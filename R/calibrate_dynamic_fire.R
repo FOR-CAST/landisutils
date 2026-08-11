@@ -36,6 +36,16 @@ calibration_par_names <- function() {
   )
 }
 
+## Safe read of one calibrated parameter, with a default when it is not being calibrated.
+##
+## `par_vec[["name"]]` on an ATOMIC vector raises a subscript error for a missing name -- it does
+## NOT return NULL -- so the idiom `par_vec[["x"]] %||% default` does not protect anything: the
+## error fires before `%||%` ever sees a value. That mattered once the calibrated set became a
+## subset of `calibration_par_names()`.
+.par <- function(par_vec, name, default = NULL) {
+  if (!is.null(names(par_vec)) && name %in% names(par_vec)) par_vec[[name]] else default
+}
+
 ## LANDIS-II writes CSVs with a trailing comma -> empty trailing column.
 ## Strip it so downstream column references aren't misaligned.
 .read_landis_csv <- function(p) {
@@ -1957,9 +1967,9 @@ sim_mock <- function(
   lambda <- max(
     0.5,
     8 *
-      (par_vec[["SeverityCalibrationFactor"]] %||% 1) *
-      (1 + (par_vec[["SpHiProp"]] %||% 0)) *
-      (1 + (par_vec[["SumHiProp"]] %||% 0)) /
+      .par(par_vec, "SeverityCalibrationFactor", 1) *
+      (1 + .par(par_vec, "SpHiProp", 0)) *
+      (1 + .par(par_vec, "SumHiProp", 0)) /
       4
   )
   n_fires_per_year <- as.integer(stats::rpois(sim_years, lambda = lambda))
@@ -1967,7 +1977,7 @@ sim_mock <- function(
   fire_sizes_ha <- if (total_fires > 0L) {
     sort(stats::rlnorm(
       total_fires,
-      meanlog = 3 + 1.5 * (par_vec[["IgnProb_Conifer"]] %||% 1),
+      meanlog = 3 + 1.5 * .par(par_vec, "IgnProb_Conifer", 1),
       sdlog = 2
     ))
   } else {
@@ -2385,8 +2395,22 @@ calibrate_dynamic_fire <- function(observed_targets_path, scenario_template, cfg
   ## Docker daemon cannot see (e.g. user-space autofs / sshfs / NFS mounts).
   scratch_root <- fs::path_real(fs::dir_create(cfg$scratch_root %||% fs::path(out_dir, "scratch")))
   observed <- readRDS(observed_targets_path)
-  par_names <- calibration_par_names()
-  stopifnot(setequal(names(cfg$lower), par_names), setequal(names(cfg$upper), par_names))
+  ## The SEARCHED parameters are whichever `cfg$lower` / `cfg$upper` name, in a stable order -- not
+  ## necessarily all of `calibration_par_names()`. Requiring the full set (the former
+  ## `setequal(...)`) forced every calibration to search dimensions that can be degenerate for the
+  ## fire regime at hand: with FMC capped at 120% outside the summer dip, SpFMCLo == SpFMCHi and
+  ## FallFMCLo == FallFMCHi, so SpHiProp and FallHiProp cannot move any outcome. `patch_fire_config()`
+  ## leaves an unnamed field at its template value, so a subset is well defined end to end.
+  stopifnot(
+    !is.null(names(cfg$lower)),
+    !is.null(names(cfg$upper)),
+    length(cfg$lower) > 0L,
+    setequal(names(cfg$lower), names(cfg$upper)),
+    all(names(cfg$lower) %in% calibration_par_names())
+  )
+  ## Order by calibration_par_names() so the vector layout is stable across runs regardless of the
+  ## order the caller happened to write the bounds in.
+  par_names <- calibration_par_names()[calibration_par_names() %in% names(cfg$lower)]
   cfg$lower <- cfg$lower[par_names]
   cfg$upper <- cfg$upper[par_names]
 
