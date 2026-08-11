@@ -248,15 +248,30 @@ plot_growth_candidate <- function(
     ## Area proportional to the plot count, with a visible floor: a one-plot bin
     ## must still be findable on the page, since knowing where those bins ARE is
     ## the point. Integer breaks because a fractional plot is not a thing.
+    ## The SMOOTH goes down first and the scored points on top of it, never the
+    ## other way round: the fit is an aid, the points are what the ground-plot
+    ## term is computed against, and a line drawn over them hides the very values
+    ## it summarizes. A white outline separates a point from the line where the
+    ## two coincide, which is exactly where the reader is checking agreement.
+    if (has_smooth) {
+      p <- p +
+        ggplot2::geom_line(
+          data = smooth,
+          ggplot2::aes(x = .data$age, y = .data$value, colour = smooth_label),
+          linewidth = 0.7
+        )
+    }
     p <- if ("n" %in% names(binned)) {
       p +
         ggplot2::geom_point(
           data = binned,
-          ggplot2::aes(x = .data$age, y = .data$value, colour = binned_label, size = .data$n),
-          shape = 18
+          ggplot2::aes(x = .data$age, y = .data$value, fill = binned_label, size = .data$n),
+          shape = 23,
+          colour = "white",
+          stroke = 0.4
         ) +
         ggplot2::scale_size(
-          range = c(1.1, 4.6),
+          range = c(1.4, 5),
           transform = "sqrt",
           breaks = .growth_bin_size_breaks(binned$n)
         )
@@ -264,14 +279,27 @@ plot_growth_candidate <- function(
       p +
         ggplot2::geom_point(
           data = binned,
-          ggplot2::aes(x = .data$age, y = .data$value, colour = binned_label),
-          size = 2.1,
-          shape = 18
+          ggplot2::aes(x = .data$age, y = .data$value, fill = binned_label),
+          size = 2.4,
+          shape = 23,
+          colour = "white",
+          stroke = 0.4
         )
     }
-  }
-
-  if (has_smooth) {
+    ## Shape 23 takes its interior from `fill`, so this series is mapped on fill
+    ## while every other series is mapped on colour. The fill scale is given the
+    ## SAME name, breaks and limits as the colour scale so ggplot2 merges the two
+    ## into one legend. Silencing it instead leaves the key label with no glyph:
+    ## `override.aes` can only restyle a key some layer contributes, and once
+    ## nothing maps colour to this series there is no key to restyle.
+    p <- p +
+      ggplot2::scale_fill_manual(
+        values = pal,
+        breaks = names(pal),
+        limits = names(pal),
+        name = NULL
+      )
+  } else if (has_smooth) {
     p <- p +
       ggplot2::geom_line(
         data = smooth,
@@ -294,18 +322,30 @@ plot_growth_candidate <- function(
     ## happen to be built, which differs between species and leaves a six-panel
     ## set with its legends in six different arrangements.
     ggplot2::guides(
-      size = ggplot2::guide_legend(order = 2L),
+      ## The binned points map `fill` (shape 23 takes its interior from fill, and
+      ## its outline is the fixed white), so NOTHING maps colour to that series
+      ## and its key would otherwise be drawn empty -- the label appears, the
+      ## glyph does not. Both guides therefore state the marker explicitly.
+      size = ggplot2::guide_legend(
+        order = 2L,
+        override.aes = list(
+          shape = 23,
+          fill = .growth_plot_summary_colour,
+          colour = "white",
+          stroke = 0.4
+        )
+      ),
       linetype = ggplot2::guide_legend(order = 3L),
       shape = ggplot2::guide_legend(order = 4L),
+      ## Both scales need the same order and layout or ggplot2 declines to merge
+      ## them and draws two legends for one set of series. `override.aes` goes on
+      ## the colour guide ONLY: supplying it twice merges fine but warns
+      ## "Duplicated `override.aes` is ignored".
+      fill = ggplot2::guide_legend(order = 1L, nrow = 2L),
       colour = ggplot2::guide_legend(
         order = 1L,
         nrow = 2L,
-        override.aes = list(
-          linetype = c("solid", "solid", "blank", "blank", if (has_smooth) "solid"),
-          shape = c(NA, NA, 16, 18, if (has_smooth) NA),
-          linewidth = c(1, 1, 0, 0, if (has_smooth) 0.7),
-          size = c(0, 0, 1.3, 2.6, if (has_smooth) 0)
-        )
+        override.aes = .growth_series_key(has_smooth)
       )
     ) +
     ggplot2::coord_cartesian(xlim = c(0, x_max)) +

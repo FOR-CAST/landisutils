@@ -1076,6 +1076,27 @@ growth_best_candidates <- function(
 ## summarized two ways; the glyph is what separates them.
 .growth_plot_summary_colour <- "steelblue4"
 
+## Key glyphs for the review panel's series legend, in palette order: current
+## parameters, best candidate, ground plots, age-binned points, GAM fit. The
+## colour and fill guides must be given IDENTICAL specs or ggplot2 refuses to
+## merge them and draws the same series twice.
+.growth_series_key <- function(has_smooth) {
+  list(
+    linetype = c("solid", "solid", "blank", "blank", if (has_smooth) "solid"),
+    shape = c(NA, NA, 16, 23, if (has_smooth) NA),
+    fill = c(NA, NA, NA, .growth_plot_summary_colour, if (has_smooth) NA),
+    colour = c(
+      "black",
+      "firebrick",
+      "grey60",
+      "white",
+      if (has_smooth) .growth_plot_summary_colour
+    ),
+    linewidth = c(1, 1, 0, 0, if (has_smooth) 0.7),
+    size = c(0, 0, 1.3, 2.6, if (has_smooth) 0)
+  )
+}
+
 ## Legend breaks for the plots-per-bin size scale. Always show 1, because
 ## "this point is a single plot" is the thing the scale exists to communicate,
 ## and always show the maximum, so the reader can judge the span.
