@@ -1,5 +1,25 @@
 # Changelog
 
+## landisutils 0.0.112
+
+- [`calibrate_dynamic_fire()`](https://for-cast.github.io/landisutils/reference/calibrate_dynamic_fire.md)
+  accepts a SUBSET of
+  [`calibration_par_names()`](https://for-cast.github.io/landisutils/reference/calibration_par_names.md)
+  in `cfg$lower` / `cfg$upper`, searching only the parameters named and
+  ordering them canonically. 0.0.111 taught
+  [`patch_fire_config()`](https://for-cast.github.io/landisutils/reference/patch_fire_config.md)
+  to leave an unnamed field at its template value but left a strict
+  [`setequal()`](https://rdrr.io/r/base/sets.html) at the entry point,
+  so a deliberately reduced 7-parameter configuration still errored
+  before the first trial.
+- New internal `.par()` reads one calibrated parameter with a default.
+  `par_vec[["name"]]` on an ATOMIC vector raises a subscript error for a
+  missing name rather than returning `NULL`, so the previous
+  `par_vec[["x"]] %||% default` idiom protected nothing – the error
+  fires before `%||%` sees a value. This is the third site where that
+  assumption broke once the calibrated set became a subset, after the
+  fuel-base multipliers and the entry-point check.
+
 ## landisutils 0.0.111
 
 - [`calibrate_dynamic_fire()`](https://for-cast.github.io/landisutils/reference/calibrate_dynamic_fire.md)
