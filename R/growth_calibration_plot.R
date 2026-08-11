@@ -57,7 +57,7 @@ plot_growth_calibration <- function(
       xmax = min(x_max, mature_window[[2L]]),
       ymin = -Inf,
       ymax = Inf,
-      fill = "goldenrod2",
+      fill = growth_plot_palette()[["window"]],
       alpha = 0.13
     )
   }
@@ -78,7 +78,7 @@ plot_growth_calibration <- function(
     ggplot2::geom_line(
       data = model,
       ggplot2::aes(x = .data$age, y = .data$aboveground_c_mg_ha, linetype = .data$source),
-      colour = "grey35",
+      colour = growth_plot_palette()[["reference"]],
       linewidth = 0.6,
       ## Round caps turn the short "on" segment into a round dot. Without them a
       ## dot pattern renders as a short dash, because R scales dash lengths by
@@ -88,7 +88,7 @@ plot_growth_calibration <- function(
     ggplot2::geom_line(
       data = curve,
       ggplot2::aes(x = .data$age, y = .data$aboveground_c_mg_ha),
-      colour = "black",
+      colour = growth_plot_palette()[["current"]],
       linewidth = 1
     ) +
     ggplot2::scale_shape_manual(values = c(16, 17, 15, 3, 7, 8, 4, 10, 12)) +
@@ -188,7 +188,7 @@ plot_growth_candidate <- function(
   ## share a colour and are told apart by glyph. Giving them different colours
   ## implied two independent series.
   pal <- stats::setNames(
-    c("black", "firebrick", "grey60", .growth_plot_summary_colour),
+    unname(growth_plot_palette()[c("current", "candidate", "plots", "summary")]),
     c(current_label, candidate_label, plots_label, binned_label)
   )
   if (has_smooth) {
@@ -212,7 +212,7 @@ plot_growth_candidate <- function(
       xmax = min(x_max, mature_window[[2L]]),
       ymin = -Inf,
       ymax = Inf,
-      fill = "goldenrod2",
+      fill = growth_plot_palette()[["window"]],
       alpha = 0.13
     ) +
     ribbon +
@@ -236,7 +236,7 @@ plot_growth_candidate <- function(
     ggplot2::geom_line(
       data = model,
       ggplot2::aes(x = .data$age, y = .data$aboveground_c_mg_ha, linetype = .data$source),
-      colour = "grey35",
+      colour = growth_plot_palette()[["reference"]],
       linewidth = 0.5,
       lineend = "round"
     )
@@ -267,7 +267,7 @@ plot_growth_candidate <- function(
           data = binned,
           ggplot2::aes(x = .data$age, y = .data$value, fill = binned_label, size = .data$n),
           shape = 23,
-          colour = "white",
+          colour = growth_plot_palette()[["key_outline"]],
           stroke = 0.4
         ) +
         ggplot2::scale_size(
@@ -282,7 +282,7 @@ plot_growth_candidate <- function(
           ggplot2::aes(x = .data$age, y = .data$value, fill = binned_label),
           size = 2.4,
           shape = 23,
-          colour = "white",
+          colour = growth_plot_palette()[["key_outline"]],
           stroke = 0.4
         )
     }
@@ -331,7 +331,7 @@ plot_growth_candidate <- function(
         override.aes = list(
           shape = 23,
           fill = .growth_plot_summary_colour,
-          colour = "white",
+          colour = growth_plot_palette()[["key_outline"]],
           stroke = 0.4
         )
       ),

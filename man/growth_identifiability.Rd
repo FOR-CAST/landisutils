@@ -71,6 +71,7 @@ Other growth calibration helpers:
 \code{\link[=growth_factorial_ratio_grid]{growth_factorial_ratio_grid()}},
 \code{\link[=growth_fitting_windows]{growth_fitting_windows()}},
 \code{\link[=growth_inflation_factor]{growth_inflation_factor()}},
+\code{\link[=growth_plot_palette]{growth_plot_palette()}},
 \code{\link[=growth_pseudo_species_name]{growth_pseudo_species_name()}},
 \code{\link[=growth_reference_curves]{growth_reference_curves()}},
 \code{\link[=growth_reference_inflection]{growth_reference_inflection()}},

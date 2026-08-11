@@ -22,3 +22,19 @@
       Warning:
       level recovered by extrapolation for Aa: the best candidate reached under 90% of its own asymptote, so `biomass_max_est` is scaled up by 2x. Check `biomass_max_lo`/`biomass_max_hi` before promoting it.
 
+# palette overrides apply, and a typo is an error rather than a no-op
+
+    Code
+      growth_plot_palette(candiate = "darkorange")
+    Condition
+      Error:
+      ! unknown palette role(s): candiate. Known roles: current, candidate, plots, faint, summary, reference, window, key_outline.
+
+---
+
+    Code
+      growth_plot_palette("darkorange")
+    Condition
+      Error:
+      ! overrides must be named, e.g. growth_plot_palette(candidate = 'red').
+

@@ -1071,27 +1071,101 @@ growth_best_candidates <- function(
 ## "Removed N rows containing missing values (geom_line)" warning.
 .growth_reference_linetypes <- c(SORTIE = "solid", TIPSY = "14", VDYP = "22")
 
-## Shared by every summary of the ground-plot cloud -- the age-binned points and
-## the fitted curve alike. One colour, because they are one set of observations
-## summarized two ways; the glyph is what separates them.
-.growth_plot_summary_colour <- "steelblue4"
+.growth_palette_default <- c(
+  ## The parameter set in use, and the sweep result being weighed against it.
+  current = "black",
+  candidate = "firebrick",
+  ## Individual ground plots, and those carrying so little weight that drawing
+  ## them at full strength would misstate what the curve was fitted to.
+  plots = "grey60",
+  faint = "grey72",
+  ## Every summary of the ground-plot cloud -- the age-binned points and the
+  ## fitted curve alike. ONE colour, because they are one set of observations
+  ## summarized two ways; the glyph is what separates them.
+  summary = "steelblue4",
+  ## Model reference curves (SORTIE / TIPSY / VDYP). They share a colour and are
+  ## told apart by linetype; see [scale_linetype_growth_reference()].
+  reference = "grey35",
+  ## The shaded fitting window, and the outline that keeps a point legible where
+  ## it sits on top of a line.
+  window = "goldenrod2",
+  key_outline = "white"
+)
+
+#' Colours for the growth-calibration figures
+#'
+#' The figure families in this package and in the projects that use it are read
+#' side by side, so a colour has to mean the same thing in all of them. This is
+#' that vocabulary, keyed by ROLE rather than by figure, so a project drawing its
+#' own variant can match without copying hex values -- and so changing one is a
+#' single edit rather than a search.
+#'
+#' Colours only. Linetypes have their own scale
+#' ([scale_linetype_growth_reference()]), and the review panel's per-series key
+#' spec is positional and specific to that one figure, so folding all three into
+#' a single table would couple things that change for different reasons.
+#'
+#' Returns a NAMED CHARACTER VECTOR, which is what
+#' `ggplot2::scale_colour_manual(values = )` and friends take directly.
+#'
+#' Roles: `current`, `candidate`, `plots`, `faint`, `summary`, `reference`,
+#' `window`, `key_outline`.
+#'
+#' @param ... Optional named overrides, e.g. `candidate = "darkorange"`. Names
+#'   must be existing roles; anything else is an error rather than a silently
+#'   ignored typo.
+#'
+#' @return A named character vector of colours.
+#' @family growth calibration helpers
+#' @export
+#' @examples
+#' growth_plot_palette()[["summary"]]
+#' growth_plot_palette(candidate = "darkorange")[["candidate"]]
+growth_plot_palette <- function(...) {
+  out <- .growth_palette_default
+  over <- list(...)
+  if (length(over) == 0L) {
+    return(out)
+  }
+  if (is.null(names(over)) || !all(nzchar(names(over)))) {
+    stop("overrides must be named, e.g. growth_plot_palette(candidate = 'red').", call. = FALSE)
+  }
+  unknown <- setdiff(names(over), names(out))
+  if (length(unknown)) {
+    stop(
+      "unknown palette role(s): ",
+      paste(unknown, collapse = ", "),
+      ". Known roles: ",
+      paste(names(out), collapse = ", "),
+      ".",
+      call. = FALSE
+    )
+  }
+  out[names(over)] <- vapply(over, as.character, character(1))
+  out
+}
+
+## Retained because a co-developed project reaches for it directly. New code
+## should call `growth_plot_palette()`.
+.growth_plot_summary_colour <- .growth_palette_default[["summary"]]
 
 ## Key glyphs for the review panel's series legend, in palette order: current
 ## parameters, best candidate, ground plots, age-binned points, GAM fit. The
 ## colour and fill guides must be given IDENTICAL specs or ggplot2 refuses to
 ## merge them and draws the same series twice.
 .growth_series_key <- function(has_smooth) {
+  pal <- growth_plot_palette()
   list(
     linetype = c("solid", "solid", "blank", "blank", if (has_smooth) "solid"),
     shape = c(NA, NA, 16, 23, if (has_smooth) NA),
-    fill = c(NA, NA, NA, .growth_plot_summary_colour, if (has_smooth) NA),
-    colour = c(
-      "black",
-      "firebrick",
-      "grey60",
-      "white",
-      if (has_smooth) .growth_plot_summary_colour
-    ),
+    fill = c(NA, NA, NA, pal[["summary"]], if (has_smooth) NA),
+    colour = unname(pal[c(
+      "current",
+      "candidate",
+      "plots",
+      "key_outline",
+      if (has_smooth) "summary"
+    )]),
     linewidth = c(1, 1, 0, 0, if (has_smooth) 0.7),
     size = c(0, 0, 1.3, 2.6, if (has_smooth) 0)
   )

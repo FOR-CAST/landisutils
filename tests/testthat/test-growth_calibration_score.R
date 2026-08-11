@@ -621,3 +621,25 @@ test_that("every modelled source has a linetype, or it is dropped from the plot"
   expect_setequal(names(landisutils:::.growth_reference_linetypes), modelled)
   expect_false(any(is.na(landisutils:::.growth_reference_linetypes[modelled])))
 })
+
+test_that("the palette covers every role the figures key on", {
+  pal <- growth_plot_palette()
+
+  expect_type(pal, "character")
+  expect_named(
+    pal,
+    c("current", "candidate", "plots", "faint", "summary", "reference", "window", "key_outline")
+  )
+  ## Named, so it drops straight into scale_*_manual(values = ).
+  expect_true(all(nzchar(pal)))
+  ## The co-developed internal must not drift from the exported role.
+  expect_equal(landisutils:::.growth_plot_summary_colour, pal[["summary"]])
+})
+
+test_that("palette overrides apply, and a typo is an error rather than a no-op", {
+  expect_equal(growth_plot_palette(candidate = "darkorange")[["candidate"]], "darkorange")
+  ## Untouched roles survive.
+  expect_equal(growth_plot_palette(candidate = "darkorange")[["summary"]], "steelblue4")
+  expect_snapshot(error = TRUE, growth_plot_palette(candiate = "darkorange"))
+  expect_snapshot(error = TRUE, growth_plot_palette("darkorange"))
+})
