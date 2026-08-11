@@ -1,5 +1,42 @@
 # Changelog
 
+## landisutils 0.0.116
+
+- New exported
+  [`repair_fwi_exponent()`](https://for-cast.github.io/landisutils/reference/repair_fwi_exponent.md),
+  applied by
+  [`get_fwi_daily()`](https://for-cast.github.io/landisutils/reference/get_fwi_daily.md)
+  to `FFMC`, `DMC` and `DC` before any index is derived from them.
+  BioSIM returns the FWI System values as text and drops the minus sign
+  from the exponent whenever a value is small enough to be written in
+  scientific notation (below `1e-4`), so a true `6.49936E-05` comes back
+  as `649936` – mantissa and exponent magnitude intact, sign gone.
+  `v * 10^(-2 * floor(log10(v)))` therefore recovers the original
+  exactly. Only saturated fuels drive the codes that low, so the
+  artifact is confined to wet, low-hazard records, which is precisely
+  why it goes unnoticed: the values are large rather than missing, so no
+  [`is.na()`](https://rdrr.io/r/base/NA.html) or `-9999` sentinel check
+  sees them, and a single contaminated cell destroys any mean taken over
+  cells or days. Reproduced against the live server on 2026-08-11 with a
+  one-cell, one-year call (59 of 365 days affected); reported upstream.
+- [`get_fwi_daily()`](https://for-cast.github.io/landisutils/reference/get_fwi_daily.md)
+  repairs `DMC` and `DC`, not just `FFMC`. A corrupt `DMC` flowed
+  straight into `buildup_index()` and from there into `FWI`, and the
+  previous assertion block bounded `DMC`, `DC` and `BUI` from below
+  only, so nothing caught it.
+- [`get_fwi_daily()`](https://for-cast.github.io/landisutils/reference/get_fwi_daily.md)
+  recovers a corrupt `FFMC` in place instead of recomputing it from the
+  previous day. The old path called `fine_fuel_moisture_code()` with
+  `dplyr::lag(FFMC)` over an UNGROUPED batch of many cells, so the
+  “previous day” was routinely a different cell entirely, and the lag
+  was taken from the same corrupt column it was correcting. The exponent
+  repair is exact and needs no neighbouring record.
+- [`get_fwi_daily()`](https://for-cast.github.io/landisutils/reference/get_fwi_daily.md)’s
+  post-repair assertions gained upper bounds on `DMC`, `DC`, `BUI` and
+  `FWI`. They are generous envelopes well above anything the Canadian
+  FWI System produces, and exist to fail the fetch on an uncharacterised
+  fault rather than to clip legitimate extremes.
+
 ## landisutils 0.0.115
 
 - New exported
@@ -33,7 +70,9 @@
 
 ## landisutils 0.0.115
 
-- New exported `repair_fwi_exponent()`, applied by
+- New exported
+  [`repair_fwi_exponent()`](https://for-cast.github.io/landisutils/reference/repair_fwi_exponent.md),
+  applied by
   [`get_fwi_daily()`](https://for-cast.github.io/landisutils/reference/get_fwi_daily.md)
   to `FFMC`, `DMC` and `DC` before any index is derived from them.
   BioSIM returns the FWI System values as text and drops the minus sign

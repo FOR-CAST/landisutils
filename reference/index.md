@@ -817,6 +817,9 @@
   /
   [`landis_run_local()`](https://for-cast.github.io/landisutils/reference/landis_run_local.md)
 
+- [`repair_fwi_exponent()`](https://for-cast.github.io/landisutils/reference/repair_fwi_exponent.md)
+  : Repair BioSIM's sign-dropped scientific-notation exponents
+
 - [`roadType()`](https://for-cast.github.io/landisutils/reference/roadType.md)
   : Construct a non-exit road type
 
