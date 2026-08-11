@@ -64,11 +64,19 @@ jobs:
     if: needs.gate.outputs.run == 'true'
     runs-on: windows-latest
 
-    ## One leg per extension generation. The v8 collection ships UniversalCohorts v1 and v2 (and
+    ## One leg per upstream extension LIST. The v8 collection ships UniversalCohorts v1 and v2 (and
     ## Succession v9 and v10) side by side, and an extension built against one cannot share a
     ## landscape with an extension built against the other, so the two sets cannot be installed on
-    ## a single machine and still produce meaningful runs. fail-fast is off: a break in one
-    ## generation says nothing about the other.
+    ## a single machine and still produce meaningful runs. fail-fast is off: a break in one leg says
+    ## nothing about the other.
+    ##
+    ## `image:` names the YAML, NOT the artifact under test. Each leg installs the newest PUBLISHED
+    ## Windows installer for every repo in its list, ignoring the `commit:` the YAML pins -- so
+    ## neither leg reproduces the docker image it is named after (see the header of
+    ## install_landis_windows.R). `extensions-v8-release.yaml` in particular is the UCLv1 source
+    ## set, yet most of its repos now publish a v2 installer, so that leg installs a MIX. Which
+    ## extensions are actually usable is therefore measured after installation, never assumed from
+    ## the list's name.
     strategy:
       fail-fast: false
       matrix:
@@ -176,28 +184,25 @@ jobs:
             if (-not $scen_path) { continue }
             $scen_name = Split-Path -Leaf $scen_path
 
-            ## Run only the scenarios this leg's installed extension set can support.
-            $want = $false
-            if ($env:LANDIS_IMAGE_SET -eq "uclv2") {
-              ## biomass_succession is image-agnostic and uses only the succession extension.
-              ## SCRAPPLE is in EXTENSIONS_EXCLUDED here (listed in the UCLv2 YAML upstream but
-              ## built against the older library), so its scenarios are not built on this leg.
-              $want = ($scen_name -eq "biomass_succession") -or
-                      (($scen_name -like "*__uclv2") -and ($scen_name -notlike "*scrpple*"))
-            } else {
-              ## Release leg. Two of its scenarios are knowingly excluded because they combine
-              ## extensions from BOTH library generations, which aborts with
-              ##   The data type of site variable "Succession.UniversalCohorts" is
-              ##   Landis.Library.UniversalCohorts.SiteCohorts, not ...SiteCohorts
-              ## -- the same type from two different assemblies. That is an upstream defect in the
-              ## published Windows installers, not something this package can fix:
-              ##   biomass_succession_plus_extras -- Local/Wildlife Habitat Output bind the older library
-              ##   pnet_all_extension__release    -- the PnET stack likewise
-              ## Delete the exclusion once those installers are rebuilt against UCLv2.
-              $want = $scen_name -in @("necn_all_extension__release", "forcs__release")
-            }
+            ## Run every scenario built for THIS leg's image. `build_scenarios.R` emits both image
+            ## variants in one invocation, so the suffix is the whole selection rule; a scenario
+            ## with no `__<image>` suffix is image-agnostic and runs on both legs.
+            ##
+            ## There is deliberately no per-scenario exclusion list here any more. The previous one
+            ## named scenarios that mix cohort-library generations and abort with
+            ##   The data type of site variable "Succession.UniversalCohorts" is
+            ##   Landis.Library.UniversalCohorts.SiteCohorts, not ...SiteCohorts
+            ## (the same type from two different assemblies). It went stale in both directions: it
+            ## blamed SCRAPPLE, which binds v2 and runs to completion, and the release leg's
+            ## allowlist had narrowed to two scenarios, silently dropping several that do work.
+            ## The install step now MEASURES which generation each installed extension binds and
+            ## exports the offenders as LANDIS_EXCLUDE_EXTENSIONS, so an unrunnable extension is
+            ## dropped from the scenario that would have contained it and the scenario either runs
+            ## without it or is skipped at build time for want of a succession backend.
+            $suffix = "__" + $env:LANDIS_IMAGE_SET
+            $want = ($scen_name -notlike "*__*") -or ($scen_name -like "*$suffix")
             if (-not $want) {
-              Write-Host "skip (not supported by the $($env:LANDIS_IMAGE_SET) extension set): $scen_name"
+              Write-Host "skip (belongs to the other extension generation): $scen_name"
               $skipped += $scen_name
               continue
             }
