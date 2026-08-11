@@ -817,6 +817,11 @@
   /
   [`landis_run_local()`](https://for-cast.github.io/landisutils/reference/landis_run_local.md)
 
+- [`repair_fwi_daily()`](https://for-cast.github.io/landisutils/reference/repair_fwi_daily.md)
+  :
+
+  Repair and re-derive a table of BioSIM `FWI_Daily` records
+
 - [`repair_fwi_exponent()`](https://for-cast.github.io/landisutils/reference/repair_fwi_exponent.md)
   : Repair BioSIM's sign-dropped scientific-notation exponents
 

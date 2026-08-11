@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.117</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.118</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,6 +41,12 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.118" id="landisutils-00118">landisutils 0.0.118<a class="anchor" aria-label="anchor" href="#landisutils-00118"></a></h2>
+<ul><li>New exported <code><a href="../reference/repair_fwi_daily.html">repair_fwi_daily()</a></code>, the single entry point for making BioSIM <code>FWI_Daily</code> output trustworthy: it repairs <code>FFMC</code>, <code>DMC</code> and <code>DC</code> via <code><a href="../reference/repair_fwi_exponent.html">repair_fwi_exponent()</a></code>, re-derives <code>BUI</code>, <code>ISI</code> and <code>FWI</code> from the repaired codes, and validates the result against physical bounds. <code><a href="../reference/get_fwi_daily.html">get_fwi_daily()</a></code> now calls it instead of carrying its own copy of that logic. Exported because projects with their own BioSIM fetch need the identical correction, and a repair that lives in one project is a repair every other project rediscovers the hard way – which is what happened here.</li>
+<li>
+<code>BUI</code>, <code>ISI</code> and <code>FWI</code> are documented as DISCARDED rather than repaired. They carry the same artifact as the codes (<code>BUI</code> drops below <code>1e-4</code> whenever <code>DMC</code> does), but being pure functions of the codes they can simply be recomputed, which needs no threshold and cannot mistake a genuine extreme for corruption. Nothing is lost: on uncorrupted records the recomputed <code>BUI</code> reproduces BioSIM own to within <code>5e-6</code> relative, and <code>ISI</code> and <code>FWI</code> to within 0.8%.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.117" id="landisutils-00117">landisutils 0.0.117<a class="anchor" aria-label="anchor" href="#landisutils-00117"></a></h2>
 <ul><li>
