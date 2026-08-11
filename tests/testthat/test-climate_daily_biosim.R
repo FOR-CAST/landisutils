@@ -41,3 +41,41 @@ test_that("repair_fwi_exponent lands every repaired value below the artifact thr
 test_that("repair_fwi_exponent rejects non-numeric input", {
   expect_error(repair_fwi_exponent("649936"))
 })
+
+test_that("repair_fwi_daily repairs the codes and re-derives the indices", {
+  ## row 1-2: real corrupt ISI/FWI records from a live fetch (FFMC/DMC/DC clean)
+  ## row 3:   clean record
+  ## row 4:   real corrupt DMC (true 9.14847e-05), which must not reach buildup_index()
+  x <- data.frame(
+    FFMC = c(17.16240, 1.79614, 60, 17.16240),
+    DMC = c(1.14745, 0, 40, 914847),
+    DC = c(96.4630, 91.8443, 300, 200),
+    ISI = c(649936, 149181000, 3, 5),
+    BUI = c(2.2286250, 0, 30, 25),
+    FWI = c(3026.811, 21822.165, 8, 9),
+    WS = c(8.96132, 13.86130, 12, 9)
+  )
+  out <- repair_fwi_daily(x)
+
+  expect_equal(out$DMC[[4]], 9.14847e-05, tolerance = 1e-8)
+  expect_true(all(out$ISI < 100))
+  expect_true(all(out$FWI < 200))
+  ## the clean record keeps BioSIM's own BUI, which recomputing reproduces
+  expect_equal(out$BUI[[3]], 60, tolerance = 1e-6)
+  ## unrelated columns are carried through untouched
+  expect_identical(out$WS, x$WS)
+})
+
+test_that("repair_fwi_daily validates and reports out-of-range values", {
+  x <- data.frame(FFMC = 60, DMC = 40, DC = 300, WS = 12)
+  expect_silent(repair_fwi_daily(x))
+
+  ## too large to be valid, too small to be the exponent artifact
+  bad <- data.frame(FFMC = 500, DMC = 40, DC = 300, WS = 12)
+  expect_error(repair_fwi_daily(bad), "outside physical bounds")
+  expect_no_error(repair_fwi_daily(bad, validate = FALSE))
+})
+
+test_that("repair_fwi_daily requires the columns it repairs from", {
+  expect_error(repair_fwi_daily(data.frame(FFMC = 60)), "needs column")
+})

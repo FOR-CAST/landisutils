@@ -1,3 +1,8 @@
+# landisutils 0.0.118
+
+* New exported `repair_fwi_daily()`, the single entry point for making BioSIM `FWI_Daily` output trustworthy: it repairs `FFMC`, `DMC` and `DC` via `repair_fwi_exponent()`, re-derives `BUI`, `ISI` and `FWI` from the repaired codes, and validates the result against physical bounds. `get_fwi_daily()` now calls it instead of carrying its own copy of that logic. Exported because projects with their own BioSIM fetch need the identical correction, and a repair that lives in one project is a repair every other project rediscovers the hard way -- which is what happened here.
+* `BUI`, `ISI` and `FWI` are documented as DISCARDED rather than repaired. They carry the same artifact as the codes (`BUI` drops below `1e-4` whenever `DMC` does), but being pure functions of the codes they can simply be recomputed, which needs no threshold and cannot mistake a genuine extreme for corruption. Nothing is lost: on uncorrupted records the recomputed `BUI` reproduces BioSIM own to within `5e-6` relative, and `ISI` and `FWI` to within 0.8%.
+
 # landisutils 0.0.117
 
 * **Removed the internal `.growth_plot_summary_colour`.** Use `growth_plot_palette()[["summary"]]`. It was kept in 0.0.115 only because a co-developed project reached for it with `:::`; that project pins its own copy of the value, so the compatibility shim bought nothing but a second definition to keep in step. **A consumer calling `landisutils:::.growth_plot_summary_colour` will now error** -- reaching into a namespace was never a supported contract, and the exported palette is the replacement. Rendered figures are unchanged (verified byte-identical).

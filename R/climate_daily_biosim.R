@@ -710,6 +710,99 @@ repair_fwi_exponent <- function(v) {
   v
 }
 
+## Physical bounds on the FWI System codes and indices, used to validate repaired data.
+## FFMC's ceiling is definitional (the scale saturates at 101); the rest are generous
+## envelopes well above anything the Canadian FWI System produces, and exist to catch
+## corruption the repair did not anticipate, not to clip legitimate extremes.
+.fwi_bounds <- list(
+  FFMC = c(0, 101),
+  DMC = c(0, 1000),
+  DC = c(0, 2000),
+  ISI = c(0, 100),
+  BUI = c(0, 1000),
+  FWI = c(0, 200)
+)
+
+#' Repair and re-derive a table of BioSIM `FWI_Daily` records
+#'
+#' The single entry point for making BioSIM `FWI_Daily` output trustworthy. Used by
+#' [get_fwi_daily()], and exported so that projects with their own BioSIM fetch apply
+#' exactly the same correction rather than reimplementing it.
+#'
+#' Two steps:
+#'
+#' 1. **Repair the three moisture codes** `FFMC`, `DMC` and `DC` in place, via
+#'    [repair_fwi_exponent()]. These are recursive, precipitation-driven daily codes, and
+#'    `FWI_Daily` does not return precipitation in every configuration, so they cannot in
+#'    general be recomputed from the other columns and must be recovered as they stand.
+#'    Repairing `DMC` and `DC` matters as much as `FFMC`: a corrupt `DMC` otherwise flows
+#'    into the buildup index and from there into `FWI`.
+#'
+#' 2. **Discard and re-derive the three behaviour indices** `BUI`, `ISI` and `FWI` from
+#'    the repaired codes using `cffdrs`. These carry the same artifact as the codes --
+#'    `BUI` drops below `1e-4` whenever `DMC` does -- but they are pure functions of the
+#'    codes, so recomputing is strictly safer than repairing: it needs no threshold and
+#'    cannot mistake a genuine extreme for corruption. Nothing is lost by doing so. On
+#'    uncorrupted records the recomputed values reproduce BioSIM's own to within `5e-6`
+#'    relative for `BUI` and 0.8% for `ISI` and `FWI`.
+#'
+#' Records BioSIM did not model (`-9999` sentinels, which callers map to `NA` before
+#' calling) pass through as `NA`.
+#'
+#' @param fwi_daily data frame of `FWI_Daily` records with at least `FFMC`, `DMC`, `DC`
+#'   and `WS`.
+#' @param validate logical. Check the repaired values against physical bounds and error
+#'   on a violation. Default `TRUE`; a violation means a failure mode the repair does not
+#'   characterise, which must not reach a weather database silently.
+#'
+#' @returns `fwi_daily` with `FFMC`, `DMC` and `DC` repaired and `BUI`, `ISI` and `FWI`
+#'   re-derived.
+#'
+#' @seealso [repair_fwi_exponent()], [get_fwi_daily()]
+#'
+#' @export
+repair_fwi_daily <- function(fwi_daily, validate = TRUE) {
+  required <- c("FFMC", "DMC", "DC", "WS")
+  missing <- setdiff(required, names(fwi_daily))
+  if (length(missing)) {
+    stop("repair_fwi_daily() needs column(s): ", paste(missing, collapse = ", "), call. = FALSE)
+  }
+
+  .initial_spread_index <- .cffdrs_fn("initial_spread_index")
+  .buildup_index <- .cffdrs_fn("buildup_index")
+  .fire_weather_index <- .cffdrs_fn("fire_weather_index")
+
+  out <- fwi_daily |>
+    dplyr::mutate(
+      dplyr::across(dplyr::all_of(c("FFMC", "DMC", "DC")), repair_fwi_exponent),
+      ISI = .initial_spread_index(FFMC, WS),
+      BUI = .buildup_index(DMC, DC),
+      FWI = .fire_weather_index(ISI, BUI)
+    )
+
+  if (isTRUE(validate)) {
+    bad <- vapply(
+      names(.fwi_bounds),
+      function(v) {
+        lim <- .fwi_bounds[[v]]
+        sum(!is.na(out[[v]]) & (out[[v]] < lim[[1]] | out[[v]] > lim[[2]]))
+      },
+      integer(1)
+    )
+    if (any(bad > 0)) {
+      offenders <- names(bad)[bad > 0]
+      stop(
+        "BioSIM FWI values outside physical bounds after repair: ",
+        paste0(offenders, " (", bad[offenders], " rows)", collapse = ", "),
+        ". Inspect the fetch before using this weather source.",
+        call. = FALSE
+      )
+    }
+  }
+
+  out
+}
+
 #' Fetch a single year of daily BioSIM Fire Weather Index for one location batch
 #'
 #' Wraps [BioSIM::generateWeather()] for the `FWI_Daily` model, fetching one
@@ -807,52 +900,16 @@ get_fwi_daily <- function(
     eco_lookup <- data.frame(CellID = locations$ID, EcoID = locations$EcoID)
     FWI_cleaned <- dplyr::left_join(FWI_cleaned, eco_lookup, by = "CellID")
 
-    .initial_spread_index <- .cffdrs_fn("initial_spread_index")
-    .buildup_index <- .cffdrs_fn("buildup_index")
-    .fire_weather_index <- .cffdrs_fn("fire_weather_index")
+    ## TODO: should also correct DSR; not used downstream so dropped
+    FWI_fixed <- repair_fwi_daily(dplyr::mutate(FWI_cleaned, DSR = NULL))
 
-    ## Repair the three moisture codes BioSIM reports directly, then re-derive every
-    ## behaviour index from the repaired codes. The codes are recursive and
-    ## precipitation-driven, so they must be recovered in place (see
-    ## repair_fwi_exponent()). Repairing DMC and DC matters as much as FFMC: a corrupt
-    ## DMC would otherwise flow into buildup_index() and from there into FWI.
-    ##
-    ## BUI, ISI and FWI as returned by BioSIM are DISCARDED, not repaired. They carry
-    ## the same artifact -- BUI goes below 1e-4 whenever DMC does -- but they are pure
-    ## functions of the codes, so recomputing is strictly safer than repairing: it needs
-    ## no threshold and cannot mistake an extreme value for corruption. Nothing is lost
-    ## by doing so; on uncorrupted records the recomputed BUI reproduces BioSIM's to
-    ## within 5e-6 relative, and ISI and FWI to within 0.8%.
-    FWI_fixed <- FWI_cleaned |>
-      dplyr::mutate(
-        dplyr::across(dplyr::all_of(c("FFMC", "DMC", "DC")), repair_fwi_exponent),
-        ISI = .initial_spread_index(FFMC, WS),
-        BUI = .buildup_index(DMC, DC),
-        FWI = .fire_weather_index(ISI, BUI),
-        ## TODO: should also correct DSR; not used downstream so dropped
-        DSR = NULL
-      )
-
-    ## Upper bounds are generous envelopes, well above anything the Canadian FWI System
-    ## produces -- they exist to catch corruption the repair did not anticipate, not to
-    ## clip legitimate extremes. FFMC's ceiling is definitional (the scale saturates).
+    ## Meteorological inputs BioSIM reports directly and that repair_fwi_daily() does not
+    ## touch (they never get small enough to trigger the artifact).
     stopifnot(
       all(FWI_fixed$RH >= 0, na.rm = TRUE),
       all(FWI_fixed$RH <= 100, na.rm = TRUE),
       all(FWI_fixed$WD >= 0, na.rm = TRUE),
-      all(FWI_fixed$WD <= 360, na.rm = TRUE),
-      all(FWI_fixed$FFMC >= 0, na.rm = TRUE),
-      all(FWI_fixed$FFMC <= 101, na.rm = TRUE),
-      all(FWI_fixed$DMC >= 0, na.rm = TRUE),
-      all(FWI_fixed$DMC <= 1000, na.rm = TRUE),
-      all(FWI_fixed$DC >= 0, na.rm = TRUE),
-      all(FWI_fixed$DC <= 2000, na.rm = TRUE),
-      all(FWI_fixed$ISI >= 0, na.rm = TRUE),
-      all(FWI_fixed$ISI < 100, na.rm = TRUE),
-      all(FWI_fixed$BUI >= 0, na.rm = TRUE),
-      all(FWI_fixed$BUI <= 1000, na.rm = TRUE),
-      all(FWI_fixed$FWI >= 0, na.rm = TRUE),
-      all(FWI_fixed$FWI < 200, na.rm = TRUE)
+      all(FWI_fixed$WD <= 360, na.rm = TRUE)
     )
 
     FWI_fixed <- dplyr::group_by(FWI_fixed, YEAR, BatchID)
