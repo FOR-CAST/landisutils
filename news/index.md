@@ -1,5 +1,71 @@
 # Changelog
 
+## landisutils 0.0.115
+
+- New exported
+  [`growth_plot_palette()`](https://for-cast.github.io/landisutils/reference/growth_plot_palette.md),
+  a named character vector of the growth figures’ colours keyed by ROLE
+  (`current`, `candidate`, `plots`, `faint`, `summary`, `reference`,
+  `window`, `key_outline`). The figure families here and in the projects
+  that consume them are read side by side, so a colour has to mean the
+  same thing in all of them; until now `steelblue4` was defined once in
+  this package and again in a co-developed project, and `white`,
+  `grey35`, `goldenrod2` and `black` each recurred within this file. A
+  named vector because that is exactly what `scale_*_manual(values = )`
+  takes, and a function rather than an exported constant so it can
+  accept overrides (`growth_plot_palette(candidate = "darkorange")`)
+  without breaking callers. An unknown role is an error, not a silently
+  ignored typo.
+- Colours only, deliberately: linetypes have
+  [`scale_linetype_growth_reference()`](https://for-cast.github.io/landisutils/reference/scale_linetype_growth_reference.md)
+  and the review panel’s per-series key spec is positional and specific
+  to that figure, so folding all three into one table would couple
+  things that change for different reasons.
+- Every colour in
+  [`plot_growth_calibration()`](https://for-cast.github.io/landisutils/reference/plot_growth_calibration.md)
+  and
+  [`plot_growth_candidate()`](https://for-cast.github.io/landisutils/reference/plot_growth_candidate.md)
+  now resolves through the palette. Verified output-neutral: the
+  rendered review panel is byte-identical before and after.
+  `.growth_plot_summary_colour` is retained, since a co-developed
+  project reaches for it directly, but is now derived from the palette
+  so the two cannot drift.
+
+## landisutils 0.0.115
+
+- New exported `repair_fwi_exponent()`, applied by
+  [`get_fwi_daily()`](https://for-cast.github.io/landisutils/reference/get_fwi_daily.md)
+  to `FFMC`, `DMC` and `DC` before any index is derived from them.
+  BioSIM returns the FWI System values as text and drops the minus sign
+  from the exponent whenever a value is small enough to be written in
+  scientific notation (below `1e-4`), so a true `6.49936E-05` comes back
+  as `649936` – mantissa and exponent magnitude intact, sign gone.
+  `v * 10^(-2 * floor(log10(v)))` therefore recovers the original
+  exactly. Only saturated fuels drive the codes that low, so the
+  artifact is confined to wet, low-hazard records, which is precisely
+  why it goes unnoticed: the values are large rather than missing, so no
+  [`is.na()`](https://rdrr.io/r/base/NA.html) or `-9999` sentinel check
+  sees them, and a single contaminated cell destroys any mean taken over
+  cells or days. Reproduced against the live server on 2026-08-11; filed
+  upstream.
+- [`get_fwi_daily()`](https://for-cast.github.io/landisutils/reference/get_fwi_daily.md)
+  repairs `DMC` and `DC`, not just `FFMC`. A corrupt `DMC` flowed
+  straight into `buildup_index()` and from there into `FWI`, and the
+  previous assertion block bounded `DMC`, `DC` and `BUI` from below
+  only, so nothing caught it.
+- [`get_fwi_daily()`](https://for-cast.github.io/landisutils/reference/get_fwi_daily.md)
+  recovers a corrupt `FFMC` in place instead of recomputing it from the
+  previous day. The old path called `fine_fuel_moisture_code()` with
+  `dplyr::lag(FFMC)` over an UNGROUPED batch of many cells, so the
+  “previous day” was routinely a different cell entirely, and the lag
+  was taken from the same corrupt column it was correcting. The exponent
+  repair is exact and needs no neighbouring record.
+- [`get_fwi_daily()`](https://for-cast.github.io/landisutils/reference/get_fwi_daily.md)’s
+  post-repair assertions gained upper bounds on `DMC`, `DC`, `BUI` and
+  `FWI`. They are generous envelopes well above anything the Canadian
+  FWI System produces, and exist to fail the fetch on an uncharacterised
+  fault rather than to clip legitimate extremes.
+
 ## landisutils 0.0.114
 
 - [`plot_growth_candidate()`](https://for-cast.github.io/landisutils/reference/plot_growth_candidate.md)

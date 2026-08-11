@@ -298,6 +298,9 @@
 
   Recover the `biomass_max` a candidate implies
 
+- [`growth_plot_palette()`](https://for-cast.github.io/landisutils/reference/growth_plot_palette.md)
+  : Colours for the growth-calibration figures
+
 - [`growth_pseudo_species_name()`](https://for-cast.github.io/landisutils/reference/growth_pseudo_species_name.md)
   : Name a pseudo-species
 

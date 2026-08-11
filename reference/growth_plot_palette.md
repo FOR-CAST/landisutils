@@ -1,42 +1,47 @@
-# Extract distinct cohort structures from the initial communities
+# Colours for the growth-calibration figures
 
-Reduces the landscape's initial communities to the distinct
-**structures** they contain – a structure being the set of (species,
-age) cohorts in a community, irrespective of which map codes carry it.
-On this landscape 444k communities collapse to roughly 1.7k structures
-with one or two cohorts, which is what makes a structure-aware
-calibration tractable at all.
+The figure families in this package and in the projects that use it are
+read side by side, so a colour has to mean the same thing in all of
+them. This is that vocabulary, keyed by ROLE rather than by figure, so a
+project drawing its own variant can match without copying hex values –
+and so changing one is a single edit rather than a search.
 
 ## Usage
 
 ``` r
-extract_landscape_cohort_structures(ic, max_cohorts = 2L)
+growth_plot_palette(...)
 ```
 
 ## Arguments
 
-- ic:
+- ...:
 
-  A data frame of initial communities with `MapCode`, `SpeciesCode`, and
-  `Age` (the `landis_ic_data_list` target).
-
-- max_cohorts:
-
-  Integer. Largest community size to retain.
+  Optional named overrides, e.g. `candidate = "darkorange"`. Names must
+  be existing roles; anything else is an error rather than a silently
+  ignored typo.
 
 ## Value
 
-A tibble with one row per cohort: `structure_id`, `n_cohorts`,
-`species`, `cohort_age`, `n_communities`.
+A named character vector of colours.
 
 ## Details
 
-`n_communities` is carried so downstream work can weight or subset
-structures by how much of the landscape they actually represent.
+Colours only. Linetypes have their own scale
+([`scale_linetype_growth_reference()`](https://for-cast.github.io/landisutils/reference/scale_linetype_growth_reference.md)),
+and the review panel's per-series key spec is positional and specific to
+that one figure, so folding all three into a single table would couple
+things that change for different reasons.
+
+Returns a NAMED CHARACTER VECTOR, which is what
+`ggplot2::scale_colour_manual(values = )` and friends take directly.
+
+Roles: `current`, `candidate`, `plots`, `faint`, `summary`, `reference`,
+`window`, `key_outline`.
 
 ## See also
 
 Other growth calibration helpers:
+[`extract_landscape_cohort_structures()`](https://for-cast.github.io/landisutils/reference/extract_landscape_cohort_structures.md),
 [`growth_add_objective()`](https://for-cast.github.io/landisutils/reference/growth_add_objective.md),
 [`growth_auto_window()`](https://for-cast.github.io/landisutils/reference/growth_auto_window.md),
 [`growth_best_candidates()`](https://for-cast.github.io/landisutils/reference/growth_best_candidates.md),
@@ -51,7 +56,6 @@ Other growth calibration helpers:
 [`growth_fitting_windows()`](https://for-cast.github.io/landisutils/reference/growth_fitting_windows.md),
 [`growth_identifiability()`](https://for-cast.github.io/landisutils/reference/growth_identifiability.md),
 [`growth_inflation_factor()`](https://for-cast.github.io/landisutils/reference/growth_inflation_factor.md),
-[`growth_plot_palette()`](https://for-cast.github.io/landisutils/reference/growth_plot_palette.md),
 [`growth_pseudo_species_name()`](https://for-cast.github.io/landisutils/reference/growth_pseudo_species_name.md),
 [`growth_reference_curves()`](https://for-cast.github.io/landisutils/reference/growth_reference_curves.md),
 [`growth_reference_inflection()`](https://for-cast.github.io/landisutils/reference/growth_reference_inflection.md),
@@ -66,3 +70,12 @@ Other growth calibration helpers:
 [`read_growth_scoring()`](https://for-cast.github.io/landisutils/reference/read_growth_scoring.md),
 [`scale_linetype_growth_reference()`](https://for-cast.github.io/landisutils/reference/scale_linetype_growth_reference.md),
 [`write_growth_review_bundle()`](https://for-cast.github.io/landisutils/reference/write_growth_review_bundle.md)
+
+## Examples
+
+``` r
+growth_plot_palette()[["summary"]]
+#> [1] "steelblue4"
+growth_plot_palette(candidate = "darkorange")[["candidate"]]
+#> [1] "darkorange"
+```
