@@ -1,5 +1,22 @@
 # Changelog
 
+## landisutils 0.0.113
+
+- [`calibrate_dynamic_fire()`](https://for-cast.github.io/landisutils/reference/calibrate_dynamic_fire.md)
+  warns when the realized worker fleet is smaller than `NP`, reporting
+  the resulting number of evaluation waves, how many workers idle at the
+  barrier, and the per-host split. DEoptim dispatches `NP` evaluations
+  per generation and `parLapply` splits them into `length(cl)` chunks,
+  so a generation costs `ceiling(NP / fleet)` evaluation times: the cost
+  is a STEP function, and going from `NP` to `NP - 1` workers doubles
+  the generation while leaving almost every worker idle for the second
+  half. Observed as 89 workers against `NP = 90`, which turned a 3.9 h
+  generation into ~7.8 h for want of one container, with nothing in the
+  log to say so. This warns rather than aborts because running
+  deliberately below `NP` is reasonable when a host cannot hold that
+  many containers; the point is that the trade is visible and quantified
+  instead of being discovered from a wall clock that is quietly doubled.
+
 ## landisutils 0.0.112
 
 - [`calibrate_dynamic_fire()`](https://for-cast.github.io/landisutils/reference/calibrate_dynamic_fire.md)
