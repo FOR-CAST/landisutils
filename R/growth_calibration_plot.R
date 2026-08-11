@@ -192,7 +192,7 @@ plot_growth_candidate <- function(
     c(current_label, candidate_label, plots_label, binned_label)
   )
   if (has_smooth) {
-    pal <- c(pal, stats::setNames(.growth_plot_summary_colour, smooth_label))
+    pal <- c(pal, stats::setNames(growth_plot_palette()[["summary"]], smooth_label))
   }
 
   ## Behind everything, so the band reads as context rather than as a series.
@@ -200,7 +200,7 @@ plot_growth_candidate <- function(
     ggplot2::geom_ribbon(
       data = smooth,
       ggplot2::aes(x = .data$age, ymin = .data$lo, ymax = .data$hi),
-      fill = .growth_plot_summary_colour,
+      fill = growth_plot_palette()[["summary"]],
       alpha = 0.16
     )
   }
@@ -330,7 +330,7 @@ plot_growth_candidate <- function(
         order = 2L,
         override.aes = list(
           shape = 23,
-          fill = .growth_plot_summary_colour,
+          fill = growth_plot_palette()[["summary"]],
           colour = growth_plot_palette()[["key_outline"]],
           stroke = 0.4
         )

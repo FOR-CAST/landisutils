@@ -632,8 +632,9 @@ test_that("the palette covers every role the figures key on", {
   )
   ## Named, so it drops straight into scale_*_manual(values = ).
   expect_true(all(nzchar(pal)))
-  ## The co-developed internal must not drift from the exported role.
-  expect_equal(landisutils:::.growth_plot_summary_colour, pal[["summary"]])
+  ## The summary role is what both figure families key on; pin it so a change
+  ## is a deliberate edit here rather than a silent drift.
+  expect_equal(pal[["summary"]], "steelblue4")
 })
 
 test_that("palette overrides apply, and a typo is an error rather than a no-op", {

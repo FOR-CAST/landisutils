@@ -1145,9 +1145,6 @@ growth_plot_palette <- function(...) {
   out
 }
 
-## Retained because a co-developed project reaches for it directly. New code
-## should call `growth_plot_palette()`.
-.growth_plot_summary_colour <- .growth_palette_default[["summary"]]
 
 ## Key glyphs for the review panel's series legend, in palette order: current
 ## parameters, best candidate, ground plots, age-binned points, GAM fit. The

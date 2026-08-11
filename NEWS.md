@@ -1,3 +1,7 @@
+# landisutils 0.0.117
+
+* **Removed the internal `.growth_plot_summary_colour`.** Use `growth_plot_palette()[["summary"]]`. It was kept in 0.0.115 only because a co-developed project reached for it with `:::`; that project pins its own copy of the value, so the compatibility shim bought nothing but a second definition to keep in step. **A consumer calling `landisutils:::.growth_plot_summary_colour` will now error** -- reaching into a namespace was never a supported contract, and the exported palette is the replacement. Rendered figures are unchanged (verified byte-identical).
+
 # landisutils 0.0.116
 
 * New exported `repair_fwi_exponent()`, applied by `get_fwi_daily()` to `FFMC`, `DMC` and `DC` before any index is derived from them. BioSIM returns the FWI System values as text and drops the minus sign from the exponent whenever a value is small enough to be written in scientific notation (below `1e-4`), so a true `6.49936E-05` comes back as `649936` -- mantissa and exponent magnitude intact, sign gone. `v * 10^(-2 * floor(log10(v)))` therefore recovers the original exactly. Only saturated fuels drive the codes that low, so the artifact is confined to wet, low-hazard records, which is precisely why it goes unnoticed: the values are large rather than missing, so no `is.na()` or `-9999` sentinel check sees them, and a single contaminated cell destroys any mean taken over cells or days. Reproduced against the live server on 2026-08-11 with a one-cell, one-year call (59 of 365 days affected); reported upstream.
