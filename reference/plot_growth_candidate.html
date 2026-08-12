@@ -13,7 +13,7 @@ the objective responds to."><meta property="og:image" content="https://for-cast.
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.118</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.119</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -66,7 +66,7 @@ the objective responds to.</p>
 <span>  smooth <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  current_label <span class="op">=</span> <span class="st">"current parameters"</span>,</span>
 <span>  candidate_label <span class="op">=</span> <span class="st">"best candidate"</span>,</span>
-<span>  x_max <span class="op">=</span> <span class="fl">400</span>,</span>
+<span>  x_max <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  mature_window <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">100L</span>, <span class="cn">Inf</span><span class="op">)</span>,</span>
 <span>  subtitle <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
@@ -106,7 +106,9 @@ fitted line and confidence band. Display only; nothing is scored against it.</p>
 
 
 <dt id="arg-x-max">x_max<a class="anchor" aria-label="anchor" href="#arg-x-max"></a></dt>
-<dd><p>Numeric. Upper age limit.</p></dd>
+<dd><p>Numeric or <code>NULL</code>. Upper age limit. <code>NULL</code> (the default)
+extends to the last age present in the data, so a longer run is never
+silently clipped.</p></dd>
 
 
 <dt id="arg-mature-window">mature_window<a class="anchor" aria-label="anchor" href="#arg-mature-window"></a></dt>

@@ -17,7 +17,7 @@ plot_growth_candidate(
   smooth = NULL,
   current_label = "current parameters",
   candidate_label = "best candidate",
-  x_max = 400,
+  x_max = NULL,
   mature_window = c(100L, Inf),
   subtitle = NULL
 )
@@ -59,7 +59,9 @@ plot_growth_candidate(
 
 - x_max:
 
-  Numeric. Upper age limit.
+  Numeric or `NULL`. Upper age limit. `NULL` (the default) extends to
+  the last age present in the data, so a longer run is never silently
+  clipped.
 
 - mature_window:
 

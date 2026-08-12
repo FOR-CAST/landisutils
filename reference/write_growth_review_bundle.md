@@ -20,7 +20,8 @@ write_growth_review_bundle(
   params_file = "the growth-parameter table",
   smooth_plots = TRUE,
   smooth_bin = 20L,
-  smooth_site = NULL
+  smooth_site = NULL,
+  x_max = NULL
 )
 ```
 
@@ -81,6 +82,11 @@ write_growth_review_bundle(
   `smooth_site` to the location column wherever the plots are a
   permanent network, so the fit and the binned series rest on the same
   evidence.
+
+- x_max:
+
+  Numeric or `NULL`. Upper age limit for every panel. `NULL` lets each
+  panel extend to the last age in its own data.
 
 ## Value
 

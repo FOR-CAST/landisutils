@@ -12,7 +12,7 @@ plot_growth_calibration(
   species,
   curve,
   reference,
-  x_max = 400,
+  x_max = NULL,
   mature_window = c(100L, Inf)
 )
 ```
@@ -35,7 +35,9 @@ plot_growth_calibration(
 
 - x_max:
 
-  Numeric. Upper age limit for the panel.
+  Numeric or `NULL`. Upper age limit for the panel. `NULL` (the default)
+  extends to the last age present in the data, so a longer run is never
+  silently clipped.
 
 - mature_window:
 

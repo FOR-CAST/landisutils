@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.118</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.119</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,6 +41,11 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.119" id="landisutils-00119">landisutils 0.0.119<a class="anchor" aria-label="anchor" href="#landisutils-00119"></a></h2>
+<ul><li>
+<code><a href="../reference/plot_growth_calibration.html">plot_growth_calibration()</a></code>, <code><a href="../reference/plot_growth_candidate.html">plot_growth_candidate()</a></code> and <code><a href="../reference/write_growth_review_bundle.html">write_growth_review_bundle()</a></code> default <code>x_max</code> to <code>NULL</code>, meaning “as far as the data goes”, instead of a hard-coded 400. The calibration horizon moved to 600 years precisely so western hemlock (longevity 650) would reach senescence inside the run, and the panels were then silently cutting the last 200 years off – the simulations were correct and the figures simply stopped drawing, with nothing on the axis to say the curve continued. Pass a number to clip deliberately, as the structure figures do.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.118" id="landisutils-00118">landisutils 0.0.118<a class="anchor" aria-label="anchor" href="#landisutils-00118"></a></h2>
 <ul><li>New exported <code><a href="../reference/repair_fwi_daily.html">repair_fwi_daily()</a></code>, the single entry point for making BioSIM <code>FWI_Daily</code> output trustworthy: it repairs <code>FFMC</code>, <code>DMC</code> and <code>DC</code> via <code><a href="../reference/repair_fwi_exponent.html">repair_fwi_exponent()</a></code>, re-derives <code>BUI</code>, <code>ISI</code> and <code>FWI</code> from the repaired codes, and validates the result against physical bounds. <code><a href="../reference/get_fwi_daily.html">get_fwi_daily()</a></code> now calls it instead of carrying its own copy of that logic. Exported because projects with their own BioSIM fetch need the identical correction, and a repair that lives in one project is a repair every other project rediscovers the hard way – which is what happened here.</li>

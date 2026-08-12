@@ -1,5 +1,19 @@
 # Changelog
 
+## landisutils 0.0.119
+
+- [`plot_growth_calibration()`](https://for-cast.github.io/landisutils/reference/plot_growth_calibration.md),
+  [`plot_growth_candidate()`](https://for-cast.github.io/landisutils/reference/plot_growth_candidate.md)
+  and
+  [`write_growth_review_bundle()`](https://for-cast.github.io/landisutils/reference/write_growth_review_bundle.md)
+  default `x_max` to `NULL`, meaning “as far as the data goes”, instead
+  of a hard-coded 400. The calibration horizon moved to 600 years
+  precisely so western hemlock (longevity 650) would reach senescence
+  inside the run, and the panels were then silently cutting the last 200
+  years off – the simulations were correct and the figures simply
+  stopped drawing, with nothing on the axis to say the curve continued.
+  Pass a number to clip deliberately, as the structure figures do.
+
 ## landisutils 0.0.118
 
 - New exported

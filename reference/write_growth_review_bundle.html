@@ -9,7 +9,7 @@ directory that needs no Quarto render and no pipeline knowledge to inspect."><me
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.118</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.119</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -64,7 +64,8 @@ directory that needs no Quarto render and no pipeline knowledge to inspect.</p>
 <span>  params_file <span class="op">=</span> <span class="st">"the growth-parameter table"</span>,</span>
 <span>  smooth_plots <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  smooth_bin <span class="op">=</span> <span class="fl">20L</span>,</span>
-<span>  smooth_site <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  smooth_site <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  x_max <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -122,6 +123,11 @@ nothing is scored against it. See <code><a href="growth_smooth_observations.html
 <code>smooth_bin</code> may be a single width or a vector named by species. Set
 <code>smooth_site</code> to the location column wherever the plots are a permanent
 network, so the fit and the binned series rest on the same evidence.</p></dd>
+
+
+<dt id="arg-x-max">x_max<a class="anchor" aria-label="anchor" href="#arg-x-max"></a></dt>
+<dd><p>Numeric or <code>NULL</code>. Upper age limit for every panel. <code>NULL</code> lets
+each panel extend to the last age in its own data.</p></dd>
 
 </dl></div>
     <div class="section level2">
