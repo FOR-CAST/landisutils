@@ -31,7 +31,9 @@ scale_linetype_growth_reference <- function() {
 #' @param reference A data frame of reference observations, with columns
 #'   `source` (`"SORTIE"`, `"TIPSY"`, `"VDYP"` or `"Ground plots"`), `age` and
 #'   `aboveground_c_mg_ha`.
-#' @param x_max Numeric. Upper age limit for the panel.
+#' @param x_max Numeric or `NULL`. Upper age limit for the panel. `NULL` (the
+#'   default) extends to the last age present in the data, so a longer run is
+#'   never silently clipped.
 #' @param mature_window Numeric length-2. Fitting window to shade;
 #'   `NULL` to omit.
 #'
@@ -42,12 +44,13 @@ plot_growth_calibration <- function(
   species,
   curve,
   reference,
-  x_max = 400,
+  x_max = NULL,
   mature_window = c(100L, Inf)
 ) {
   .need("ggplot2", "Plotting a growth calibration")
   obs <- dplyr::filter(reference, .data$source == "Ground plots")
   model <- dplyr::filter(reference, .data$source %in% c("SORTIE", "TIPSY", "VDYP"))
+  x_max <- .growth_x_max(x_max, curve$age, reference$age)
 
   shade <- NULL
   if (!is.null(mature_window)) {
@@ -148,7 +151,9 @@ plot_growth_calibration <- function(
 #' @param smooth Optional tibble from [growth_smooth_observations()], drawn as a
 #'   fitted line and confidence band. Display only; nothing is scored against it.
 #' @param current_label,candidate_label Character legend labels.
-#' @param x_max Numeric. Upper age limit.
+#' @param x_max Numeric or `NULL`. Upper age limit. `NULL` (the default)
+#'   extends to the last age present in the data, so a longer run is never
+#'   silently clipped.
 #' @param mature_window Numeric length-2. Fitting window to shade.
 #' @param subtitle Character. Overrides the default subtitle.
 #'
@@ -164,13 +169,14 @@ plot_growth_candidate <- function(
   smooth = NULL,
   current_label = "current parameters",
   candidate_label = "best candidate",
-  x_max = 400,
+  x_max = NULL,
   mature_window = c(100L, Inf),
   subtitle = NULL
 ) {
   .need("ggplot2", "Plotting a growth candidate")
   obs <- dplyr::filter(reference, .data$source == "Ground plots")
   model <- dplyr::filter(reference, .data$source %in% c("SORTIE", "TIPSY", "VDYP"))
+  x_max <- .growth_x_max(x_max, current_curve$age, candidate_curve$age, reference$age)
 
   curves <- dplyr::bind_rows(
     dplyr::mutate(current_curve, series = current_label),
@@ -487,6 +493,8 @@ plot_growth_factorial_sensitivity <- function(scores, current) {
 #' @param smooth_plots Logical. Overlay a spline through the ground-plot cloud
 #'   on each panel, for comparison against the binned series. Display only;
 #'   nothing is scored against it. See [growth_smooth_observations()].
+#' @param x_max Numeric or `NULL`. Upper age limit for every panel. `NULL` lets
+#'   each panel extend to the last age in its own data.
 #' @param smooth_bin,smooth_site Passed to [growth_smooth_observations()].
 #'   `smooth_bin` may be a single width or a vector named by species. Set
 #'   `smooth_site` to the location column wherever the plots are a permanent
@@ -508,7 +516,8 @@ write_growth_review_bundle <- function(
   params_file = "the growth-parameter table",
   smooth_plots = TRUE,
   smooth_bin = 20L,
-  smooth_site = NULL
+  smooth_site = NULL,
+  x_max = NULL
 ) {
   .need("ggplot2", "Writing a growth review bundle")
   dir <- fs::dir_create(dir)
@@ -599,6 +608,7 @@ write_growth_review_bundle <- function(
       binned = if (is.null(reference_curves)) NULL else reference_curves[[sp]]$binned,
       smooth = smooth,
       mature_window = win,
+      x_max = x_max,
       subtitle = sub
     )
     f <- file.path(dir, paste0("review-", sp, ".png"))

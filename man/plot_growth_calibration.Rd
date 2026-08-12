@@ -8,7 +8,7 @@ plot_growth_calibration(
   species,
   curve,
   reference,
-  x_max = 400,
+  x_max = NULL,
   mature_window = c(100L, Inf)
 )
 }
@@ -21,7 +21,9 @@ plot_growth_calibration(
 \code{source} (\code{"SORTIE"}, \code{"TIPSY"}, \code{"VDYP"} or \code{"Ground plots"}), \code{age} and
 \code{aboveground_c_mg_ha}.}
 
-\item{x_max}{Numeric. Upper age limit for the panel.}
+\item{x_max}{Numeric or \code{NULL}. Upper age limit for the panel. \code{NULL} (the
+default) extends to the last age present in the data, so a longer run is
+never silently clipped.}
 
 \item{mature_window}{Numeric length-2. Fitting window to shade;
 \code{NULL} to omit.}

@@ -17,7 +17,8 @@ write_growth_review_bundle(
   params_file = "the growth-parameter table",
   smooth_plots = TRUE,
   smooth_bin = 20L,
-  smooth_site = NULL
+  smooth_site = NULL,
+  x_max = NULL
 )
 }
 \arguments{
@@ -50,6 +51,9 @@ nothing is scored against it. See \code{\link[=growth_smooth_observations]{growt
 \code{smooth_bin} may be a single width or a vector named by species. Set
 \code{smooth_site} to the location column wherever the plots are a permanent
 network, so the fit and the binned series rest on the same evidence.}
+
+\item{x_max}{Numeric or \code{NULL}. Upper age limit for every panel. \code{NULL} lets
+each panel extend to the last age in its own data.}
 }
 \value{
 Character vector of the written file paths.

@@ -13,7 +13,7 @@ plot_growth_candidate(
   smooth = NULL,
   current_label = "current parameters",
   candidate_label = "best candidate",
-  x_max = 400,
+  x_max = NULL,
   mature_window = c(100L, Inf),
   subtitle = NULL
 )
@@ -36,7 +36,9 @@ fitted line and confidence band. Display only; nothing is scored against it.}
 
 \item{current_label, candidate_label}{Character legend labels.}
 
-\item{x_max}{Numeric. Upper age limit.}
+\item{x_max}{Numeric or \code{NULL}. Upper age limit. \code{NULL} (the default)
+extends to the last age present in the data, so a longer run is never
+silently clipped.}
 
 \item{mature_window}{Numeric length-2. Fitting window to shade.}
 

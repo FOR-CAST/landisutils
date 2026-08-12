@@ -1146,6 +1146,23 @@ growth_plot_palette <- function(...) {
 }
 
 
+## Upper age limit for a growth panel. `NULL` means "as far as the data goes",
+## which is the only default that cannot silently clip a longer run: a hard 400
+## hid the entire senescence half of a 600-year western hemlock curve, whose
+## longevity is 650, and the figure gave no sign the data continued past the
+## axis. Rounded up to a multiple of 50 so the axis stays tidy.
+.growth_x_max <- function(x_max, ...) {
+  if (!is.null(x_max)) {
+    return(x_max)
+  }
+  ages <- unlist(list(...), use.names = FALSE)
+  ages <- ages[is.finite(ages)]
+  if (!length(ages)) {
+    return(400)
+  }
+  ceiling(max(ages) / 50) * 50
+}
+
 ## Key glyphs for the review panel's series legend, in palette order: current
 ## parameters, best candidate, ground plots, age-binned points, GAM fit. The
 ## colour and fill guides must be given IDENTICAL specs or ggplot2 refuses to

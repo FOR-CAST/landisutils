@@ -1,3 +1,7 @@
+# landisutils 0.0.119
+
+* `plot_growth_calibration()`, `plot_growth_candidate()` and `write_growth_review_bundle()` default `x_max` to `NULL`, meaning "as far as the data goes", instead of a hard-coded 400. The calibration horizon moved to 600 years precisely so western hemlock (longevity 650) would reach senescence inside the run, and the panels were then silently cutting the last 200 years off -- the simulations were correct and the figures simply stopped drawing, with nothing on the axis to say the curve continued. Pass a number to clip deliberately, as the structure figures do.
+
 # landisutils 0.0.118
 
 * New exported `repair_fwi_daily()`, the single entry point for making BioSIM `FWI_Daily` output trustworthy: it repairs `FFMC`, `DMC` and `DC` via `repair_fwi_exponent()`, re-derives `BUI`, `ISI` and `FWI` from the repaired codes, and validates the result against physical bounds. `get_fwi_daily()` now calls it instead of carrying its own copy of that logic. Exported because projects with their own BioSIM fetch need the identical correction, and a repair that lives in one project is a repair every other project rediscovers the hard way -- which is what happened here.
