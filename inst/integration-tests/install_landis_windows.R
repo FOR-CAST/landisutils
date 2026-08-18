@@ -663,6 +663,26 @@ for (i in seq_len(nrow(extensions))) {
   }
 
   dest <- file.path(download_dir, result$name)
+
+  ## Re-validate a CACHED installer against the size the API reports, the same way the Core MSI
+  ## already does. Presence alone is not evidence it is current: maintainers republish a corrected
+  ## binary under the SAME release tag and the SAME filename rather than bumping the version. That
+  ## is exactly what happened to Forest Roads -- `...module.2.1.0-setup.exe` was replaced in place
+  ## to swap a v1-bound harvest library for the v2 one -- and nothing here would have noticed. The
+  ## Actions cache is keyed on `_pins.R`, which does not change when an upstream asset does, so a
+  ## cache hit would have replayed the old binary indefinitely, gone on measuring it as the wrong
+  ## generation, and kept the extension excluded long after it was fixed. Size is a weak checksum,
+  ## but it is the only integrity field the contents and releases APIs offer, and a rebuild moves it.
+  if (file.exists(dest) && !is.null(result$size) && result$size > 0L) {
+    cached <- file.size(dest)
+    if (!is.na(cached) && cached != result$size) {
+      cli_alert_warning(
+        "cached {result$name} is {cached} bytes, upstream reports {result$size}; re-downloading"
+      )
+      file.remove(dest)
+    }
+  }
+
   if (!file.exists(dest)) {
     cli_alert_info("downloading {result$name}")
     if (!download_with_check(result$url, dest, result$size)) {
