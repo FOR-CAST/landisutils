@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.119</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.120</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,6 +41,11 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.120" id="landisutils-00120">landisutils 0.0.120<a class="anchor" aria-label="anchor" href="#landisutils-00120"></a></h2>
+<ul><li>
+<code>prepSpeciesData(type = "succession")</code> now writes the columns Biomass Succession declares as <code>double</code> – <code>LeafLongevity</code>, <code>WoodDecayRate</code>, <code>MortalityCurve</code>, <code>GrowthCurve</code>, <code>LeafLignin</code> – with an explicit decimal point. The extension parses <code>species.csv</code> into a .NET <code>DataTable</code>, which infers each column’s type from the FIRST data row, so a whole number written bare typed the column <code>Int32</code> and every later decimal aborted the run at extension load with <code>Couldn't store &lt;0.1&gt; in GrowthCurve Column.  Expected type is Int32.</code> The values were always legal – the v7 User Guide documents <code>GrowthCurve</code> as 0.0-1.0 and <code>MortalityCurve</code> as 5.0-25.0 – but the file has to declare itself. This is silent and order-dependent: a parameter sweep whose first species happened to carry a fractional value ran fine, while an otherwise identical sweep starting at 0 did not.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.119" id="landisutils-00119">landisutils 0.0.119<a class="anchor" aria-label="anchor" href="#landisutils-00119"></a></h2>
 <ul><li>

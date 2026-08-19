@@ -1,5 +1,22 @@
 # Changelog
 
+## landisutils 0.0.120
+
+- `prepSpeciesData(type = "succession")` now writes the columns Biomass
+  Succession declares as `double` – `LeafLongevity`, `WoodDecayRate`,
+  `MortalityCurve`, `GrowthCurve`, `LeafLignin` – with an explicit
+  decimal point. The extension parses `species.csv` into a .NET
+  `DataTable`, which infers each column’s type from the FIRST data row,
+  so a whole number written bare typed the column `Int32` and every
+  later decimal aborted the run at extension load with
+  `Couldn't store <0.1> in GrowthCurve Column. Expected type is Int32.`
+  The values were always legal – the v7 User Guide documents
+  `GrowthCurve` as 0.0-1.0 and `MortalityCurve` as 5.0-25.0 – but the
+  file has to declare itself. This is silent and order-dependent: a
+  parameter sweep whose first species happened to carry a fractional
+  value ran fine, while an otherwise identical sweep starting at 0 did
+  not.
+
 ## landisutils 0.0.119
 
 - [`plot_growth_calibration()`](https://for-cast.github.io/landisutils/reference/plot_growth_calibration.md),
