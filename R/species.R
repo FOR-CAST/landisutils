@@ -1,3 +1,36 @@
+## Columns Biomass Succession declares as `double` (v7 User Guide 2.12.1-2.12.6). ShadeTolerance and
+## FireTolerance are excluded deliberately: the extension types those as integers.
+.biomass_double_cols <- c(
+  "LeafLongevity",
+  "WoodDecayRate",
+  "MortalityCurve",
+  "GrowthCurve",
+  "LeafLignin"
+)
+
+## Format a numeric as text that always carries a decimal point.
+##
+## Biomass Succession parses species.csv into a .NET DataTable, and DataTable infers each column's
+## TYPE FROM THE FIRST DATA ROW. A whole number written bare -- `write.csv()` renders 0 as "0" -- types
+## the column Int32, and every later decimal in that column then aborts the run at extension load:
+##
+##   Couldn't store <0.1> in GrowthCurve Column.  Expected type is Int32.
+##
+## The values are legal; the file simply has to declare itself. A sweep whose first species happened
+## to carry a fractional value ran fine while an otherwise identical sweep starting at 0 did not,
+## which is how this surfaced.
+##
+## Appending ".0" rather than formatting to fixed digits keeps the exact value: 0.062 stays 0.062
+## rather than becoming 0.0620000.
+.as_landis_double <- function(x) {
+  if (!is.numeric(x)) {
+    return(x)
+  }
+  s <- format(x, trim = TRUE, scientific = FALSE)
+  out <- ifelse(grepl(".", s, fixed = TRUE), s, paste0(s, ".0"))
+  ifelse(is.na(x), NA_character_, out)
+}
+
 #' Species Data File
 #'
 #' @param df data.frame corresponding to the species data table
@@ -114,7 +147,13 @@ prepSpeciesData <- function(df = NULL, type = NULL, path = NULL, filename = NULL
       )
     filename <- filename %||% "species.csv"
     file <- file.path(path, filename)
-    write.csv(SpeciesData, file, row.names = FALSE)
+    ## `quote = 1L` keeps SpeciesCode quoted, as before, while leaving the numeric columns bare --
+    ## they are character vectors now (see .as_landis_double()) and would otherwise be quoted.
+    SpeciesData <- dplyr::mutate(
+      SpeciesData,
+      dplyr::across(dplyr::any_of(.biomass_double_cols), .as_landis_double)
+    )
+    write.csv(SpeciesData, file, row.names = FALSE, quote = 1L)
   }
 
   return(file)
