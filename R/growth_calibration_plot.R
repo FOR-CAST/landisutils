@@ -417,10 +417,15 @@ plot_growth_factorial_sensitivity <- function(scores, current) {
     mort_shp = "Mortality shape",
     anpp_prop = "Max. ANPP (% of max. biomass)"
   )
-  ## Swept means "takes more than one value somewhere in the design", not "is a column here".
+  ## Swept means "varies WITHIN a species", not "takes more than one value in the table". The design
+  ## assigns a fixed parameter per species, so a column holding 10 for one species and 25 for another
+  ## is globally varied and locally constant -- and it is the local structure the figure plots, since
+  ## every box is a comparison against that species' own calibrated value.
   swept <- vapply(
     names(labels),
-    function(p) length(unique(stats::na.omit(scores[[p]]))) > 1L,
+    function(p) {
+      max(tapply(scores[[p]], scores$species, \(x) length(unique(stats::na.omit(x))))) > 1L
+    },
     logical(1)
   )
   if (!any(swept)) {
