@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.122</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.123</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,6 +41,11 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.123" id="landisutils-00123">landisutils 0.0.123<a class="anchor" aria-label="anchor" href="#landisutils-00123"></a></h2>
+<ul><li>
+<code><a href="../reference/plot_growth_factorial_sensitivity.html">plot_growth_factorial_sensitivity()</a></code> decides whether a parameter was swept by whether it varies WITHIN a species, not across the whole table. A design that fixes a parameter per species leaves the column globally varied and locally constant, so the 0.0.122 check saw variation and kept drawing the panel it was added to suppress. Every box in this figure is a comparison against that species’ own calibrated value, so the local structure is what governs.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.122" id="landisutils-00122">landisutils 0.0.122<a class="anchor" aria-label="anchor" href="#landisutils-00122"></a></h2>
 <ul><li>

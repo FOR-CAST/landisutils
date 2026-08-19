@@ -1,5 +1,16 @@
 # Changelog
 
+## landisutils 0.0.123
+
+- [`plot_growth_factorial_sensitivity()`](https://for-cast.github.io/landisutils/reference/plot_growth_factorial_sensitivity.md)
+  decides whether a parameter was swept by whether it varies WITHIN a
+  species, not across the whole table. A design that fixes a parameter
+  per species leaves the column globally varied and locally constant, so
+  the 0.0.122 check saw variation and kept drawing the panel it was
+  added to suppress. Every box in this figure is a comparison against
+  that species’ own calibrated value, so the local structure is what
+  governs.
+
 ## landisutils 0.0.122
 
 - [`plot_growth_factorial_sensitivity()`](https://for-cast.github.io/landisutils/reference/plot_growth_factorial_sensitivity.md)
