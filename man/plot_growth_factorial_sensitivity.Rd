@@ -23,8 +23,14 @@ to; a parameter whose boxes overlap is one the reference data cannot
 constrain.
 }
 \details{
-Only the SWEPT parameters appear. \code{biomass_max} is pinned across the factorial
-and recovered arithmetically, so it has no sensitivity to show.
+Only the SWEPT parameters appear, and which those are is read from \code{scores}
+rather than assumed. \code{biomass_max} is pinned across the factorial and
+recovered arithmetically, so it has no sensitivity to show; a shape parameter
+the design fixes to one value per species has none either, and drawing it
+would be actively misleading. Such a parameter has no "calibrated" box at all
+-- every cell sits on one side of the in-use value -- so the panel would show
+a lone box under "lower" or "higher" and invite the reader to interpret the
+side as a result, when it only restates which value was assigned.
 
 Candidates are shown by their position RELATIVE to the calibrated value
 rather than by their absolute value: the candidates differ per species, so an
