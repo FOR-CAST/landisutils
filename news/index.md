@@ -1,5 +1,39 @@
 # Changelog
 
+## landisutils 0.0.122
+
+- [`plot_growth_factorial_sensitivity()`](https://for-cast.github.io/landisutils/reference/plot_growth_factorial_sensitivity.md)
+  draws only the parameters the design actually SWEPT, read from
+  `scores` rather than assumed to be all three. A parameter fixed to one
+  value per species has no “calibrated” box – every cell sits on one
+  side of the in-use value – so it rendered as a lone box under “lower”
+  or “higher”, which reads as a result but only restates which value was
+  assigned. Fixing a shape parameter is a legitimate design choice when
+  the fitting window cannot see it, and the figure now reflects that
+  instead of misreporting it.
+
+## landisutils 0.0.121
+
+- [`apply_calibrated_hi_prop()`](https://for-cast.github.io/landisutils/reference/apply_calibrated_hi_prop.md)
+  and
+  [`apply_calibrated_ignprob()`](https://for-cast.github.io/landisutils/reference/apply_calibrated_ignprob.md)
+  accept a SUBSET of
+  [`calibration_par_names()`](https://for-cast.github.io/landisutils/reference/calibration_par_names.md),
+  leaving any field whose parameter is absent at its template value.
+  `[[` on an atomic vector raises a subscript error for a missing name
+  rather than returning `NULL`, so both indexed unconditionally and
+  aborted the moment a calibration searched fewer parameters than the
+  full set. This is the FOURTH site of that assumption, after the
+  fuel-base multipliers, the entry-point check and
+  [`sim_mock()`](https://for-cast.github.io/landisutils/reference/sim_mock.md),
+  and the first to bite OUTSIDE the calibration: a search that dropped a
+  degenerate season wrote an 8-parameter `best_params.rds`, and the next
+  PRODUCTION scenario build died with `subscript out of bounds` before
+  any calibration could start. An uncalibrated `IgnProb` base now takes
+  a neutral 1.0 multiplier, which is what the pre-existing
+  `m[is.na(m)] <- 1.0` already intended for a base absent from the table
+  – the multiplier vector simply could not be constructed to reach it.
+
 ## landisutils 0.0.120
 
 - `prepSpeciesData(type = "succession")` now writes the columns Biomass

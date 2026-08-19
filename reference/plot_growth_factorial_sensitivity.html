@@ -15,7 +15,7 @@ constrain."><meta property="og:image" content="https://for-cast.github.io/landis
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.120</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.122</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -82,8 +82,14 @@ and the parameter columns.</p></dd>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>Only the SWEPT parameters appear. <code>biomass_max</code> is pinned across the factorial
-and recovered arithmetically, so it has no sensitivity to show.</p>
+    <p>Only the SWEPT parameters appear, and which those are is read from <code>scores</code>
+rather than assumed. <code>biomass_max</code> is pinned across the factorial and
+recovered arithmetically, so it has no sensitivity to show; a shape parameter
+the design fixes to one value per species has none either, and drawing it
+would be actively misleading. Such a parameter has no "calibrated" box at all
+– every cell sits on one side of the in-use value – so the panel would show
+a lone box under "lower" or "higher" and invite the reader to interpret the
+side as a result, when it only restates which value was assigned.</p>
 <p>Candidates are shown by their position RELATIVE to the calibrated value
 rather than by their absolute value: the candidates differ per species, so an
 absolute axis would have to carry every species' values in every panel.</p>
