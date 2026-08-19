@@ -2292,3 +2292,33 @@ test_that("calibrate_dynamic_fire() accepts a parameter SUBSET in cfg$lower/uppe
   expect_setequal(names(res$best_params), names(cfg$lower))
   expect_true(is.finite(res$objective))
 })
+
+test_that("apply_calibrated_hi_prop() accepts a parameter subset", {
+  ## The regression: a calibration that drops a degenerate season writes a best_params.rds without
+  ## it, and `[[` on an atomic vector raises a subscript error for the missing name rather than
+  ## returning NULL. That aborted the next PRODUCTION scenario build with "subscript out of bounds",
+  ## before any calibration could start -- the fourth site of this assumption after the fuel-base
+  ## multipliers, the entry-point check and sim_mock.
+  tbl <- data.frame(SpHiProp = 0.5, SumHiProp = 0.5, FallHiProp = 0.5)
+  out <- apply_calibrated_hi_prop(tbl, c(SpHiProp = 0.1, SumHiProp = 0.2))
+
+  expect_equal(out$SpHiProp, 0.1)
+  expect_equal(out$SumHiProp, 0.2)
+  ## the uncalibrated season keeps its TEMPLATE value
+  expect_equal(out$FallHiProp, 0.5)
+})
+
+test_that("apply_calibrated_ignprob() leaves uncalibrated bases at their template value", {
+  tbl <- data.frame(Base = c("Conifer", "Deciduous", "Open"), IgnProb = c(1.0, 0.5, 0.8))
+  ## Only the two bases the landscape can produce are calibrated.
+  out <- apply_calibrated_ignprob(tbl, c(IgnProb_Conifer = 0.5, IgnProb_Deciduous = 2.0))
+
+  expect_equal(out$IgnProb[1], 0.5) ## 1.0 * 0.5
+  expect_equal(out$IgnProb[2], 1.0) ## 0.5 * 2.0
+  expect_equal(out$IgnProb[3], 0.8) ## untouched: multiplier defaults to 1
+})
+
+test_that("apply_calibrated_ignprob() still clamps to the [0, 1] LANDIS-II range", {
+  tbl <- data.frame(Base = "Conifer", IgnProb = 0.9)
+  expect_equal(apply_calibrated_ignprob(tbl, c(IgnProb_Conifer = 2.0))$IgnProb, 1.0)
+})

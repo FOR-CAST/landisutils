@@ -721,12 +721,18 @@ apply_calibrated_ignprob <- function(fuel_type_table, calibrated_fire_params) {
     is.numeric(calibrated_fire_params),
     !is.null(names(calibrated_fire_params))
   )
+  ## Default 1.0 = leave that base's template IgnProb alone. An uncalibrated base must be neutral,
+  ## not an error: a fuel table can legitimately omit bases the landscape cannot produce, and their
+  ## multipliers are then dropped from the search (they are inert -- candidates differing only in
+  ## them score identically). `.par()` is used because `[[` on an atomic vector raises a subscript
+  ## error for a missing name; the pre-existing `m[is.na(m)] <- 1.0` below already handled a base
+  ## absent from THIS vector, but the vector itself could not be built in the first place.
   multipliers <- c(
-    Conifer = calibrated_fire_params[["IgnProb_Conifer"]],
-    ConiferPlantation = calibrated_fire_params[["IgnProb_ConiferPlantation"]],
-    Deciduous = calibrated_fire_params[["IgnProb_Deciduous"]],
-    Slash = calibrated_fire_params[["IgnProb_Slash"]],
-    Open = calibrated_fire_params[["IgnProb_Open"]]
+    Conifer = .par(calibrated_fire_params, "IgnProb_Conifer", 1.0),
+    ConiferPlantation = .par(calibrated_fire_params, "IgnProb_ConiferPlantation", 1.0),
+    Deciduous = .par(calibrated_fire_params, "IgnProb_Deciduous", 1.0),
+    Slash = .par(calibrated_fire_params, "IgnProb_Slash", 1.0),
+    Open = .par(calibrated_fire_params, "IgnProb_Open", 1.0)
   )
   m <- multipliers[fuel_type_table$Base]
   m[is.na(m)] <- 1.0
@@ -761,9 +767,17 @@ apply_calibrated_hi_prop <- function(fire_size_table, calibrated_fire_params) {
     is.numeric(calibrated_fire_params),
     !is.null(names(calibrated_fire_params))
   )
-  fire_size_table$SpHiProp <- calibrated_fire_params[["SpHiProp"]]
-  fire_size_table$SumHiProp <- calibrated_fire_params[["SumHiProp"]]
-  fire_size_table$FallHiProp <- calibrated_fire_params[["FallHiProp"]]
+  ## Only overwrite the seasons that were actually CALIBRATED, leaving the rest at their template
+  ## value -- the same contract patch_fire_config() follows. `[[` on an atomic vector raises a
+  ## subscript error for a missing name rather than returning NULL, so indexing unconditionally
+  ## aborts the moment a calibration searches a subset. That is not hypothetical: a run that dropped
+  ## the degenerate FallHiProp produced an 8-parameter best_params.rds, and the next production
+  ## scenario build died here with "subscript out of bounds" before the calibration could start.
+  for (col in c("SpHiProp", "SumHiProp", "FallHiProp")) {
+    if (col %in% names(calibrated_fire_params)) {
+      fire_size_table[[col]] <- calibrated_fire_params[[col]]
+    }
+  }
   fire_size_table
 }
 
