@@ -298,6 +298,9 @@
 
   Recover the `biomass_max` a candidate implies
 
+- [`growth_mortality_onset_frac()`](https://for-cast.github.io/landisutils/reference/growth_mortality_onset_frac.md)
+  : Fraction of longevity at which age-related mortality begins
+
 - [`growth_plot_palette()`](https://for-cast.github.io/landisutils/reference/growth_plot_palette.md)
   : Colours for the growth-calibration figures
 

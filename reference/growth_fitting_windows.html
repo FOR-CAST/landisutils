@@ -13,7 +13,7 @@ DEPARTURES from what the data implies."><meta property="og:image" content="https
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.123</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.124</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -57,7 +57,13 @@ DEPARTURES from what the data implies.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">growth_fitting_windows</span><span class="op">(</span><span class="va">references</span>, <span class="va">species_core</span>, scoring <span class="op">=</span> <span class="cn">NULL</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">growth_fitting_windows</span><span class="op">(</span></span>
+<span>  <span class="va">references</span>,</span>
+<span>  <span class="va">species_core</span>,</span>
+<span>  scoring <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  mort_shp <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  <span class="va">...</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -74,6 +80,14 @@ DEPARTURES from what the data implies.</p>
 
 <dt id="arg-scoring">scoring<a class="anchor" aria-label="anchor" href="#arg-scoring"></a></dt>
 <dd><p>A tibble from <code><a href="read_growth_scoring.html">read_growth_scoring()</a></code>, or <code>NULL</code>.</p></dd>
+
+
+<dt id="arg-mort-shp">mort_shp<a class="anchor" aria-label="anchor" href="#arg-mort-shp"></a></dt>
+<dd><p>Per-species <code>MortalityCurve</code>: a named numeric vector, or a
+data frame with <code>species</code> and <code>mort_shp</code>. Supplying it makes each window
+close at that species' own onset of age-related mortality rather than at a
+single fraction shared by every species; see <code><a href="growth_auto_window.html">growth_auto_window()</a></code>. A
+species missing from it falls back to <code>senescence_frac</code>.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
@@ -102,6 +116,7 @@ DEPARTURES from what the data implies.</p>
 <code><a href="growth_factorial_ratio_grid.html">growth_factorial_ratio_grid()</a></code>,
 <code><a href="growth_identifiability.html">growth_identifiability()</a></code>,
 <code><a href="growth_inflation_factor.html">growth_inflation_factor()</a></code>,
+<code><a href="growth_mortality_onset_frac.html">growth_mortality_onset_frac()</a></code>,
 <code><a href="growth_plot_palette.html">growth_plot_palette()</a></code>,
 <code><a href="growth_pseudo_species_name.html">growth_pseudo_species_name()</a></code>,
 <code><a href="growth_reference_curves.html">growth_reference_curves()</a></code>,

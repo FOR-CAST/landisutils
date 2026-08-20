@@ -13,6 +13,7 @@ growth_auto_window(
   age_floor = 20,
   age_quantile = 0.95,
   senescence_frac = 0.45,
+  mort_shp = NULL,
   sources = c("SORTIE", "TIPSY", "VDYP")
 )
 ```
@@ -39,7 +40,13 @@ growth_auto_window(
 
 - senescence_frac:
 
-  Numeric. Fraction of longevity at which to close.
+  Numeric. Fraction of longevity at which to close, used only when
+  `mort_shp` is `NULL`.
+
+- mort_shp:
+
+  Numeric `MortalityCurve` for this species, or `NULL`. When supplied it
+  sets the cap and `senescence_frac` is ignored.
 
 - sources:
 
@@ -60,19 +67,37 @@ so scoring there would import a bias the sweep cannot fix.
 The window CLOSES at the earliest of three limits: the `age_quantile` of
 the observed plot ages, beyond which the cloud thins to a handful of
 stands; the end of the modelled reference curve; and `senescence_frac` x
-`longevity`. The last of those is the one that binds in practice.
-LANDIS-II ramps mortality up as a cohort approaches `longevity` and the
-curve then falls to exactly zero and stays there, so an open-ended
-window scores the modelled die-off rather than the level the stand
-holds. The cap is a fraction of `longevity` rather than something read
-off the simulated curve, because the decline timing depends on the
-mortality shape, which is itself being swept – a candidate-dependent
-window would score different candidates over different ranges and could
-not rank them fairly.
+`longevity`. LANDIS-II ramps mortality up as a cohort approaches
+`longevity` and the curve then falls to exactly zero and stays there, so
+an open-ended window scores the modelled die-off rather than the level
+the stand holds.
 
-`senescence_frac = 0.45` is conservative: across the calibrated species
-the earliest departure from 95% of peak biomass is at 0.47 x longevity,
-so every species is still at its plateau throughout its window.
+WHERE THAT CAP BELONGS IS A PROPERTY OF `MortalityCurve`. The extension
+defines it as a position in the lifespan (2.12.4: 5 puts onset at 10% of
+life span, 25 at 85%), so the age at which a species leaves its plateau
+varies by nearly twofold across the documented range. Supply `mort_shp`
+and the cap is that species' own onset, via
+[`growth_mortality_onset_frac()`](https://for-cast.github.io/landisutils/reference/growth_mortality_onset_frac.md).
+Measured on one calibration, the departure from 95% of peak biomass ran
+0.43-0.48 x longevity at `MortalityCurve` 10, 0.63-0.70 at 15 and
+0.82-0.84 at 25 – so a single fraction cannot separate a species that
+breaks up early from one that holds its stand almost to the end, which
+is the distinction the parameter exists to make.
+
+The cap is at the ONSET of mortality, not at peak biomass, and is
+therefore conservative: biomass keeps rising for a period after onset
+while growth still exceeds mortality. That is deliberate. Peak location
+depends on `GrowthCurve` as well, and `GrowthCurve` may still be swept –
+a peak-based cap would then score different candidates over different
+ranges and could not rank them fairly. Onset depends on `MortalityCurve`
+alone, so as long as that is assigned rather than swept, every candidate
+for a species sees one window.
+
+`senescence_frac` remains as the fallback when `mort_shp` is not
+supplied. Its default of 0.45 was calibrated against a parameterisation
+that gave every species a `MortalityCurve` near 23; it does not
+generalise, and on a set carrying 10s the earliest 95%-of-peak departure
+falls to 0.433, below the cap itself.
 
 ## See also
 
@@ -91,6 +116,7 @@ Other growth calibration helpers:
 [`growth_fitting_windows()`](https://for-cast.github.io/landisutils/reference/growth_fitting_windows.md),
 [`growth_identifiability()`](https://for-cast.github.io/landisutils/reference/growth_identifiability.md),
 [`growth_inflation_factor()`](https://for-cast.github.io/landisutils/reference/growth_inflation_factor.md),
+[`growth_mortality_onset_frac()`](https://for-cast.github.io/landisutils/reference/growth_mortality_onset_frac.md),
 [`growth_plot_palette()`](https://for-cast.github.io/landisutils/reference/growth_plot_palette.md),
 [`growth_pseudo_species_name()`](https://for-cast.github.io/landisutils/reference/growth_pseudo_species_name.md),
 [`growth_reference_curves()`](https://for-cast.github.io/landisutils/reference/growth_reference_curves.md),

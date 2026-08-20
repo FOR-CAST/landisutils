@@ -10,7 +10,13 @@ data implies.
 ## Usage
 
 ``` r
-growth_fitting_windows(references, species_core, scoring = NULL, ...)
+growth_fitting_windows(
+  references,
+  species_core,
+  scoring = NULL,
+  mort_shp = NULL,
+  ...
+)
 ```
 
 ## Arguments
@@ -28,6 +34,15 @@ growth_fitting_windows(references, species_core, scoring = NULL, ...)
   A tibble from
   [`read_growth_scoring()`](https://for-cast.github.io/landisutils/reference/read_growth_scoring.md),
   or `NULL`.
+
+- mort_shp:
+
+  Per-species `MortalityCurve`: a named numeric vector, or a data frame
+  with `species` and `mort_shp`. Supplying it makes each window close at
+  that species' own onset of age-related mortality rather than at a
+  single fraction shared by every species; see
+  [`growth_auto_window()`](https://for-cast.github.io/landisutils/reference/growth_auto_window.md).
+  A species missing from it falls back to `senescence_frac`.
 
 - ...:
 
@@ -56,6 +71,7 @@ Other growth calibration helpers:
 [`growth_factorial_ratio_grid()`](https://for-cast.github.io/landisutils/reference/growth_factorial_ratio_grid.md),
 [`growth_identifiability()`](https://for-cast.github.io/landisutils/reference/growth_identifiability.md),
 [`growth_inflation_factor()`](https://for-cast.github.io/landisutils/reference/growth_inflation_factor.md),
+[`growth_mortality_onset_frac()`](https://for-cast.github.io/landisutils/reference/growth_mortality_onset_frac.md),
 [`growth_plot_palette()`](https://for-cast.github.io/landisutils/reference/growth_plot_palette.md),
 [`growth_pseudo_species_name()`](https://for-cast.github.io/landisutils/reference/growth_pseudo_species_name.md),
 [`growth_reference_curves()`](https://for-cast.github.io/landisutils/reference/growth_reference_curves.md),
