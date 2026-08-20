@@ -36,6 +36,7 @@ Other growth calibration helpers:
 \code{\link[=growth_fitting_windows]{growth_fitting_windows()}},
 \code{\link[=growth_identifiability]{growth_identifiability()}},
 \code{\link[=growth_inflation_factor]{growth_inflation_factor()}},
+\code{\link[=growth_mortality_onset_frac]{growth_mortality_onset_frac()}},
 \code{\link[=growth_plot_palette]{growth_plot_palette()}},
 \code{\link[=growth_reference_curves]{growth_reference_curves()}},
 \code{\link[=growth_reference_inflection]{growth_reference_inflection()}},

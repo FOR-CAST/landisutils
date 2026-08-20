@@ -1284,6 +1284,26 @@ growth_reference_inflection <- function(
   default
 }
 
+#' Fraction of longevity at which age-related mortality begins
+#'
+#' Biomass Succession expresses `MortalityCurve` as a position in the lifespan,
+#' not as a rate: v7 User Guide 2.12.4 states that 5 puts the onset of
+#' age-related mortality at 10% of life span and 25 puts it at 85%. This inverts
+#' that definition, linearly between the two documented endpoints.
+#'
+#' The parameter therefore carries no absolute meaning without the `longevity`
+#' it sits beside, which is why a value cannot be lifted from one
+#' parameterisation into another with a different lifespan.
+#'
+#' @param mort_shp Numeric `MortalityCurve`, 5 to 25.
+#'
+#' @return Numeric fraction of longevity, 0.10 to 0.85.
+#' @family growth calibration helpers
+#' @export
+growth_mortality_onset_frac <- function(mort_shp) {
+  0.10 + (as.numeric(mort_shp) - 5) / 20 * 0.75
+}
+
 #' Derive one species' fitting window from where its references have support
 #'
 #' Nobody should have to nominate an age range by hand. Both bounds are dictated
@@ -1299,18 +1319,34 @@ growth_reference_inflection <- function(
 #' The window CLOSES at the earliest of three limits: the `age_quantile` of the
 #' observed plot ages, beyond which the cloud thins to a handful of stands; the
 #' end of the modelled reference curve; and `senescence_frac` x `longevity`.
-#' The last of those is the one that binds in practice. LANDIS-II ramps mortality
-#' up as a cohort approaches `longevity` and the curve then falls to exactly zero
-#' and stays there, so an open-ended window scores the modelled die-off rather
-#' than the level the stand holds. The cap is a fraction of `longevity` rather
-#' than something read off the simulated curve, because the decline timing
-#' depends on the mortality shape, which is itself being swept -- a
-#' candidate-dependent window would score different candidates over different
-#' ranges and could not rank them fairly.
+#' LANDIS-II ramps mortality up as a cohort approaches `longevity` and the curve
+#' then falls to exactly zero and stays there, so an open-ended window scores the
+#' modelled die-off rather than the level the stand holds.
 #'
-#' `senescence_frac = 0.45` is conservative: across the calibrated species the
-#' earliest departure from 95% of peak biomass is at 0.47 x longevity, so every
-#' species is still at its plateau throughout its window.
+#' WHERE THAT CAP BELONGS IS A PROPERTY OF `MortalityCurve`. The extension
+#' defines it as a position in the lifespan (2.12.4: 5 puts onset at 10% of life
+#' span, 25 at 85%), so the age at which a species leaves its plateau varies by
+#' nearly twofold across the documented range. Supply `mort_shp` and the cap is
+#' that species' own onset, via [growth_mortality_onset_frac()]. Measured on one
+#' calibration, the departure from 95% of peak biomass ran 0.43-0.48 x longevity
+#' at `MortalityCurve` 10, 0.63-0.70 at 15 and 0.82-0.84 at 25 -- so a single
+#' fraction cannot separate a species that breaks up early from one that holds
+#' its stand almost to the end, which is the distinction the parameter exists to
+#' make.
+#'
+#' The cap is at the ONSET of mortality, not at peak biomass, and is therefore
+#' conservative: biomass keeps rising for a period after onset while growth still
+#' exceeds mortality. That is deliberate. Peak location depends on `GrowthCurve`
+#' as well, and `GrowthCurve` may still be swept -- a peak-based cap would then
+#' score different candidates over different ranges and could not rank them
+#' fairly. Onset depends on `MortalityCurve` alone, so as long as that is
+#' assigned rather than swept, every candidate for a species sees one window.
+#'
+#' `senescence_frac` remains as the fallback when `mort_shp` is not supplied. Its
+#' default of 0.45 was calibrated against a parameterisation that gave every
+#' species a `MortalityCurve` near 23; it does not generalise, and on a set
+#' carrying 10s the earliest 95%-of-peak departure falls to 0.433, below the cap
+#' itself.
 #'
 #' @param reference A data frame of reference observations, with columns
 #'   `source` (`"SORTIE"`, `"TIPSY"`, `"VDYP"` or `"Ground plots"`), `age` and
@@ -1318,7 +1354,10 @@ growth_reference_inflection <- function(
 #' @param longevity Numeric. The species' `longevity`.
 #' @param age_floor Numeric. Youngest age to score.
 #' @param age_quantile Numeric. Quantile of observed plot ages to close at.
-#' @param senescence_frac Numeric. Fraction of longevity at which to close.
+#' @param senescence_frac Numeric. Fraction of longevity at which to close, used
+#'   only when `mort_shp` is `NULL`.
+#' @param mort_shp Numeric `MortalityCurve` for this species, or `NULL`. When
+#'   supplied it sets the cap and `senescence_frac` is ignored.
 #' @param sources Character. Modelled reference series to consider.
 #'
 #' @return Numeric length-2.
@@ -1330,6 +1369,7 @@ growth_auto_window <- function(
   age_floor = 20,
   age_quantile = 0.95,
   senescence_frac = 0.45,
+  mort_shp = NULL,
   sources = c("SORTIE", "TIPSY", "VDYP")
 ) {
   ages_of <- function(srcs) {
@@ -1340,7 +1380,12 @@ growth_auto_window <- function(
   plot_ages <- ages_of("Ground plots")
   model_ages <- ages_of(sources)
 
-  upper <- senescence_frac * longevity
+  frac <- if (!is.null(mort_shp) && length(mort_shp) && !is.na(mort_shp[[1L]])) {
+    growth_mortality_onset_frac(mort_shp[[1L]])
+  } else {
+    senescence_frac
+  }
+  upper <- frac * longevity
   if (length(plot_ages) >= 5L) {
     upper <- min(upper, stats::quantile(plot_ages, age_quantile, names = FALSE))
   }
@@ -1352,7 +1397,14 @@ growth_auto_window <- function(
   ## timestep the simulation ever reports. Rounded INWARD so neither bound is
   ## pushed past the support it was derived from.
   lower <- ceiling(age_floor)
-  upper <- floor(upper)
+  ## The tolerance is not cosmetic. `growth_mortality_onset_frac(10)` is
+  ## 0.28749999999999998 rather than 0.2875, because 0.10 has no exact binary
+  ## representation, so an onset that lands mathematically on a whole year comes
+  ## out a hair below it and `floor()` takes the year before: 0.2875 x 400 gives
+  ## 114.99999999999999 and a cap of 114 instead of 115. Rounding inward is
+  ## deliberate everywhere else here, and this keeps that while not letting it be
+  ## triggered by representation error at an exact integer.
+  upper <- floor(upper + 1e-8)
   ## A degenerate window would silently score nothing.
   c(lower, max(upper, lower + 1))
 }
@@ -1367,20 +1419,35 @@ growth_auto_window <- function(
 #' @param references Named list of reference tables, one per species.
 #' @param species_core A tibble with `species` and `longevity`.
 #' @param scoring A tibble from [read_growth_scoring()], or `NULL`.
+#' @param mort_shp Per-species `MortalityCurve`: a named numeric vector, or a
+#'   data frame with `species` and `mort_shp`. Supplying it makes each window
+#'   close at that species' own onset of age-related mortality rather than at a
+#'   single fraction shared by every species; see [growth_auto_window()]. A
+#'   species missing from it falls back to `senescence_frac`.
 #' @param ... Passed to [growth_auto_window()].
 #'
 #' @return A tibble with `species`, `mature_from`, `mature_to`, `longevity`,
 #'   `inflection` and `window_source`.
 #' @family growth calibration helpers
 #' @export
-growth_fitting_windows <- function(references, species_core, scoring = NULL, ...) {
+growth_fitting_windows <- function(references, species_core, scoring = NULL, mort_shp = NULL, ...) {
   longevity_of <- function(sp) {
     i <- match(sp, species_core$species)
     if (is.na(i)) NA_real_ else as.numeric(species_core$longevity[[i]])
   }
 
+  ## Accept either shape rather than making the caller reshape: the assigned
+  ## values live in a per-species table in one project and a named vector in
+  ## another, and neither is more natural than the other.
+  if (is.data.frame(mort_shp)) {
+    mort_shp <- stats::setNames(as.numeric(mort_shp$mort_shp), as.character(mort_shp$species))
+  }
+  mort_of <- function(sp) {
+    if (is.null(mort_shp) || !sp %in% names(mort_shp)) NULL else unname(mort_shp[[sp]])
+  }
+
   auto <- purrr::map2(references, names(references), function(r, sp) {
-    w <- growth_auto_window(r, longevity_of(sp), ...)
+    w <- growth_auto_window(r, longevity_of(sp), mort_shp = mort_of(sp), ...)
     tibble::tibble(
       species = sp,
       mature_from = w[[1L]],

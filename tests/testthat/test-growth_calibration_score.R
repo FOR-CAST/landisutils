@@ -644,3 +644,43 @@ test_that("palette overrides apply, and a typo is an error rather than a no-op",
   expect_snapshot(error = TRUE, growth_plot_palette(candiate = "darkorange"))
   expect_snapshot(error = TRUE, growth_plot_palette("darkorange"))
 })
+
+test_that("growth_mortality_onset_frac inverts User Guide 2.12.4", {
+  expect_equal(growth_mortality_onset_frac(5), 0.10)
+  expect_equal(growth_mortality_onset_frac(25), 0.85)
+  expect_equal(growth_mortality_onset_frac(15), 0.475)
+})
+
+test_that("the window cap follows MortalityCurve when supplied", {
+  ref <- data.frame(source = "Ground plots", age = seq(10, 900, by = 10), aboveground_c_mg_ha = 1)
+  ## age_quantile pushed to 1 so the plot record cannot bind and the cap is visible
+  w10 <- growth_auto_window(ref, longevity = 400, mort_shp = 10, age_quantile = 1)
+  w25 <- growth_auto_window(ref, longevity = 400, mort_shp = 25, age_quantile = 1)
+  ## Literals, not floor(0.2875 * 400): that expression reproduces the very
+  ## float error the implementation guards against and would assert 114.
+  expect_equal(w10[[2L]], 115)
+  expect_equal(w25[[2L]], 340)
+
+  ## absent mort_shp keeps the scalar fallback
+  expect_equal(growth_auto_window(ref, longevity = 400, age_quantile = 1)[[2L]], floor(0.45 * 400))
+})
+
+test_that("growth_fitting_windows takes mort_shp as a vector or a data frame", {
+  ref <- data.frame(source = "Ground plots", age = seq(10, 900, 10), aboveground_c_mg_ha = 1)
+  refs <- list(Sp1 = ref, Sp2 = ref)
+  core <- data.frame(species = c("Sp1", "Sp2"), longevity = c(400, 400))
+
+  vec <- growth_fitting_windows(refs, core, mort_shp = c(Sp1 = 10, Sp2 = 25), age_quantile = 1)
+  dfm <- growth_fitting_windows(
+    refs,
+    core,
+    mort_shp = data.frame(species = c("Sp1", "Sp2"), mort_shp = c(10, 25)),
+    age_quantile = 1
+  )
+  expect_equal(vec$mature_to, c(115, 340))
+  expect_equal(dfm$mature_to, vec$mature_to)
+
+  ## a species absent from mort_shp falls back rather than erroring
+  part <- growth_fitting_windows(refs, core, mort_shp = c(Sp1 = 10), age_quantile = 1)
+  expect_equal(part$mature_to, c(115, 180))
+})

@@ -4,7 +4,13 @@
 \alias{growth_fitting_windows}
 \title{Per-species fitting windows}
 \usage{
-growth_fitting_windows(references, species_core, scoring = NULL, ...)
+growth_fitting_windows(
+  references,
+  species_core,
+  scoring = NULL,
+  mort_shp = NULL,
+  ...
+)
 }
 \arguments{
 \item{references}{Named list of reference tables, one per species.}
@@ -12,6 +18,12 @@ growth_fitting_windows(references, species_core, scoring = NULL, ...)
 \item{species_core}{A tibble with \code{species} and \code{longevity}.}
 
 \item{scoring}{A tibble from \code{\link[=read_growth_scoring]{read_growth_scoring()}}, or \code{NULL}.}
+
+\item{mort_shp}{Per-species \code{MortalityCurve}: a named numeric vector, or a
+data frame with \code{species} and \code{mort_shp}. Supplying it makes each window
+close at that species' own onset of age-related mortality rather than at a
+single fraction shared by every species; see \code{\link[=growth_auto_window]{growth_auto_window()}}. A
+species missing from it falls back to \code{senescence_frac}.}
 
 \item{...}{Passed to \code{\link[=growth_auto_window]{growth_auto_window()}}.}
 }
@@ -41,6 +53,7 @@ Other growth calibration helpers:
 \code{\link[=growth_factorial_ratio_grid]{growth_factorial_ratio_grid()}},
 \code{\link[=growth_identifiability]{growth_identifiability()}},
 \code{\link[=growth_inflation_factor]{growth_inflation_factor()}},
+\code{\link[=growth_mortality_onset_frac]{growth_mortality_onset_frac()}},
 \code{\link[=growth_plot_palette]{growth_plot_palette()}},
 \code{\link[=growth_pseudo_species_name]{growth_pseudo_species_name()}},
 \code{\link[=growth_reference_curves]{growth_reference_curves()}},
