@@ -277,6 +277,14 @@ growth_bin_observations <- function(obs, bin = 20L, probs = 0.5, site = NULL, we
       .by = ".bin"
     ) |>
     dplyr::arrange(.data$age) |>
+    ## A bin whose observations ALL carry zero weight has no value: the weighted
+    ## quantile of an empty effective sample is NA. Such a bin is not a thin bin,
+    ## it is an absent one -- every observation in it was excluded by the
+    ## weighting -- so it is dropped rather than carried as a hole. Carrying it
+    ## overstated `n_bins` and, because the plot LEVEL is a `max()` over the
+    ## binned values inside the window, a single such bin nullified the level and
+    ## with it every score for that species.
+    dplyr::filter(!is.na(.data$value)) |>
     dplyr::select(age, value, n, weight)
 }
 
@@ -487,7 +495,14 @@ growth_reference_curves <- function(
     vdyp = if (nrow(raw$vdyp)) max(raw$vdyp$value) else NA_real_,
     plots = if (nrow(binned)) {
       inside <- binned$age >= window[[1L]] & binned$age <= window[[2L]]
-      if (any(inside)) max(binned$value[inside]) else max(binned$value)
+      ## `na.rm` belt-and-braces: `growth_bin_observations()` no longer emits a
+      ## valueless bin, but a caller supplying its own binned series might.
+      lvl <- if (any(inside)) {
+        max(binned$value[inside], na.rm = TRUE)
+      } else {
+        max(binned$value, na.rm = TRUE)
+      }
+      if (is.finite(lvl)) lvl else NA_real_
     } else {
       NA_real_
     }

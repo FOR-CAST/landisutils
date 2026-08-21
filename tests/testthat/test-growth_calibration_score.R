@@ -684,3 +684,31 @@ test_that("growth_fitting_windows takes mort_shp as a vector or a data frame", {
   part <- growth_fitting_windows(refs, core, mort_shp = c(Sp1 = 10), age_quantile = 1)
   expect_equal(part$mature_to, c(115, 180))
 })
+
+test_that("growth_bin_observations() drops bins whose observations all carry zero weight", {
+  obs <- tibble::tibble(
+    age = c(25, 27, 55, 58, 150),
+    aboveground_c_mg_ha = c(10, 12, 40, 44, 99),
+    w = c(1, 1, 1, 1, 0)
+  )
+  binned <- growth_bin_observations(obs, bin = 20L, probs = 0.5, weight = "w")
+  expect_equal(nrow(binned), 2L)
+  expect_false(any(is.na(binned$value)))
+  expect_false(any(binned$age > 100))
+})
+
+test_that("a zero-weight bin does not nullify the ground-plot level", {
+  ## Regression: the level is a max() over the binned values inside the window,
+  ## so one valueless bin inside it used to make the level NA and drop every
+  ## plot-scored series for that species.
+  reference <- tibble::tibble(
+    source = "Ground plots",
+    age = c(25, 27, 55, 58, 150),
+    aboveground_c_mg_ha = c(10, 12, 40, 44, 99),
+    w = c(1, 1, 1, 1, 0)
+  )
+  ref <- growth_reference_curves(reference, window = c(20, 196), weight = "w")
+  expect_false(is.na(ref$levels[["plots"]]))
+  ## weighted median of the 40/44 bin is 40; the level is the max over bin values
+  expect_equal(ref$levels[["plots"]], 40)
+})
