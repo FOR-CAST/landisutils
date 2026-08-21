@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.124</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.125</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -42,6 +42,13 @@
     </div>
 
     <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.125" id="landisutils-00125">landisutils 0.0.125<a class="anchor" aria-label="anchor" href="#landisutils-00125"></a></h2>
+<ul><li>
+<code><a href="../reference/growth_bin_observations.html">growth_bin_observations()</a></code> DROPS a bin whose observations all carry zero weight, instead of emitting it with an <code>NA</code> value. The weighted quantile of an empty effective sample is <code>NA</code>, and such a bin is not a thin bin but an absent one – every observation in it was excluded by the weighting. Carrying it overstated <code>n_bins</code>, and because <code><a href="../reference/growth_reference_curves.html">growth_reference_curves()</a></code> takes the ground-plot LEVEL as a <code><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max()</a></code> over the binned values inside the window, one valueless bin made the level <code>NA</code> and dropped every plot-scored series for that species. Latent until a window widened far enough to admit one: a species scored on plots alone then returned <code>n_series = 0</code> and an all-<code>NA</code> row, with nothing to say why.</li>
+<li>
+<code><a href="../reference/growth_reference_curves.html">growth_reference_curves()</a></code> computes that <code><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max()</a></code> with <code>na.rm = TRUE</code> and returns <code>NA_real_</code> rather than <code>-Inf</code> when nothing survives, so a caller supplying its own binned series cannot reintroduce the same failure.</li>
+</ul></div>
+    <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.124" id="landisutils-00124">landisutils 0.0.124<a class="anchor" aria-label="anchor" href="#landisutils-00124"></a></h2>
 <ul><li>
 <code><a href="../reference/growth_auto_window.html">growth_auto_window()</a></code> and <code><a href="../reference/growth_fitting_windows.html">growth_fitting_windows()</a></code> accept <code>mort_shp</code> and close each species’ window at that species’ own onset of age-related mortality, instead of at one fraction of longevity shared by every species. Biomass Succession defines <code>MortalityCurve</code> as a POSITION in the lifespan (v7 User Guide 2.12.4), so where a species leaves its plateau varies nearly twofold across the documented range – measured on one calibration, the departure from 95% of peak biomass ran 0.43-0.48 x longevity at <code>MortalityCurve</code> 10, 0.63-0.70 at 15 and 0.82-0.84 at 25. A single fraction cannot separate a species that breaks up early from one that holds its stand almost to the end, which is the distinction the parameter exists to make. The <code>senescence_frac = 0.45</code> fallback remains for callers that do not supply <code>mort_shp</code>, but its default was calibrated against a parameterisation giving every species a <code>MortalityCurve</code> near 23 and does not generalise: on a set carrying 10s the earliest 95%-of-peak departure falls to 0.433, below the cap itself.</li>
@@ -50,7 +57,8 @@
 <li>
 <code><a href="../reference/growth_auto_window.html">growth_auto_window()</a></code> no longer loses a year to floating-point representation error. <code>0.10 + (10 - 5) / 20 * 0.75</code> is 0.28749999999999998, so an onset landing mathematically on a whole year came out a hair below it and the inward rounding took the year before – a cap of 114 where 115 was meant.</li>
 </ul></div>
-  </main></div>
+  </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
+    </nav></aside></div>
 
 
     <footer><div class="pkgdown-footer-left">

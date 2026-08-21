@@ -1,5 +1,26 @@
 # Changelog
 
+## landisutils 0.0.125
+
+- [`growth_bin_observations()`](https://for-cast.github.io/landisutils/reference/growth_bin_observations.md)
+  DROPS a bin whose observations all carry zero weight, instead of
+  emitting it with an `NA` value. The weighted quantile of an empty
+  effective sample is `NA`, and such a bin is not a thin bin but an
+  absent one – every observation in it was excluded by the weighting.
+  Carrying it overstated `n_bins`, and because
+  [`growth_reference_curves()`](https://for-cast.github.io/landisutils/reference/growth_reference_curves.md)
+  takes the ground-plot LEVEL as a
+  [`max()`](https://rdrr.io/r/base/Extremes.html) over the binned values
+  inside the window, one valueless bin made the level `NA` and dropped
+  every plot-scored series for that species. Latent until a window
+  widened far enough to admit one: a species scored on plots alone then
+  returned `n_series = 0` and an all-`NA` row, with nothing to say why.
+- [`growth_reference_curves()`](https://for-cast.github.io/landisutils/reference/growth_reference_curves.md)
+  computes that [`max()`](https://rdrr.io/r/base/Extremes.html) with
+  `na.rm = TRUE` and returns `NA_real_` rather than `-Inf` when nothing
+  survives, so a caller supplying its own binned series cannot
+  reintroduce the same failure.
+
 ## landisutils 0.0.124
 
 - [`growth_auto_window()`](https://for-cast.github.io/landisutils/reference/growth_auto_window.md)
