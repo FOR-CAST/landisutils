@@ -56,7 +56,7 @@ Suggests:
     santoku,
     sf,
     spelling,
-    targets
+    targets,
     testthat (>= 3.0.0),
     withr,
     zonal
