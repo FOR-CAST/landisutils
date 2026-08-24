@@ -1,5 +1,29 @@
 # Changelog
 
+## landisutils 0.0.126
+
+- [`plot_growth_calibration()`](https://for-cast.github.io/landisutils/reference/plot_growth_calibration.md)
+  gains `density`, drawing the ground-plot cloud as a WEIGHTED hexagonal
+  density with individual points kept only for the best-matched plots,
+  instead of one point per plot. Off by default, so nothing changes for
+  existing callers. It exists because the panels stop being readable
+  well before the data run out: one landscape’s lodgepole pine carries
+  3,106 plots and 57 BEC subzone legend keys, and the legend alone took
+  a third of the figure while the cloud was solid ink. The density
+  carries every plot, weighted, so nothing is dropped from view – what
+  changes is that a thousand plots stop competing for the same ink and
+  for a legend key each. Worth it only where the cloud is dense: a
+  species with a hundred plots gets a sparse, blocky grid that says less
+  than the points did, which is why the switch is the caller’s and not
+  automatic.
+- `density_bins` and `density_point_weight` control the grid resolution
+  and which plots are still drawn individually (default: those at 60% of
+  the species’ maximum weight or better). The per-plot colour and shape
+  legends are dropped in density mode along with the points that fed
+  them, and the manual shape scale with them, since a manual scale with
+  no layer behind it warns about levels it cannot find.
+- Requires ‘hexbin’, declared in Suggests and checked at call time.
+
 ## landisutils 0.0.125
 
 - [`growth_bin_observations()`](https://for-cast.github.io/landisutils/reference/growth_bin_observations.md)

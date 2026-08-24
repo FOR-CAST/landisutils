@@ -13,7 +13,7 @@ subzone and shaped by sample-establishment type."><meta property="og:image" cont
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.125</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.126</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -62,7 +62,10 @@ subzone and shaped by sample-establishment type.</p>
 <span>  <span class="va">curve</span>,</span>
 <span>  <span class="va">reference</span>,</span>
 <span>  x_max <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  mature_window <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">100L</span>, <span class="cn">Inf</span><span class="op">)</span></span>
+<span>  mature_window <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">100L</span>, <span class="cn">Inf</span><span class="op">)</span>,</span>
+<span>  density <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  density_bins <span class="op">=</span> <span class="fl">34L</span>,</span>
+<span>  density_point_weight <span class="op">=</span> <span class="fl">0.6</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -93,6 +96,27 @@ never silently clipped.</p></dd>
 <dt id="arg-mature-window">mature_window<a class="anchor" aria-label="anchor" href="#arg-mature-window"></a></dt>
 <dd><p>Numeric length-2. Fitting window to shade;
 <code>NULL</code> to omit.</p></dd>
+
+
+<dt id="arg-density">density<a class="anchor" aria-label="anchor" href="#arg-density"></a></dt>
+<dd><p>Logical. Draw the ground-plot cloud as a WEIGHTED hexagonal
+density instead of one point per plot, with individual points kept only for
+the best-matched plots. Off by default, because it is worth it only where
+the cloud is dense enough to be unreadable as points: a species with a
+hundred plots gets a sparse, blocky panel that says less than the points
+did. Requires the 'hexbin' package.</p></dd>
+
+
+<dt id="arg-density-bins">density_bins<a class="anchor" aria-label="anchor" href="#arg-density-bins"></a></dt>
+<dd><p>Integer. Number of bins across the x range of the
+hexagonal grid when <code>density</code> is <code>TRUE</code>.</p></dd>
+
+
+<dt id="arg-density-point-weight">density_point_weight<a class="anchor" aria-label="anchor" href="#arg-density-point-weight"></a></dt>
+<dd><p>Numeric. When <code>density</code> is <code>TRUE</code>, plots whose
+weight is at least this fraction of the species' maximum are still drawn
+individually over the density. Requires a <code>plot_weight</code> column; without one
+every plot counts equally and none is singled out.</p></dd>
 
 </dl></div>
     <div class="section level2">
