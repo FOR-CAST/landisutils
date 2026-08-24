@@ -53,3 +53,28 @@ test_that("a parameter fixed PER SPECIES is not mistaken for a swept one", {
   p <- plot_growth_factorial_sensitivity(scores, current)
   expect_false("Mortality shape" %in% levels(p$data$parameter))
 })
+
+test_that("plot_growth_calibration(density = TRUE) bins the plot cloud instead of drawing points", {
+  skip_if_not_installed("hexbin")
+  reference <- tibble::tibble(
+    source = "Ground plots",
+    age = seq(20, 200, length.out = 60),
+    aboveground_c_mg_ha = seq(10, 180, length.out = 60),
+    bec_label = "ICHmc",
+    leading_raw = "PL",
+    plot_weight = seq(0.05, 1, length.out = 60)
+  )
+  curve <- tibble::tibble(age = 1:200, aboveground_c_mg_ha = seq(1, 180, length.out = 200))
+
+  pts <- plot_growth_calibration("Pl", curve, reference, mature_window = c(20, 150))
+  den <- plot_growth_calibration("Pl", curve, reference, mature_window = c(20, 150), density = TRUE)
+
+  stats_of <- function(p) vapply(p$layers, \(l) class(l$stat)[[1L]], character(1))
+  expect_false(any(stats_of(pts) == "StatBinhex"))
+  expect_true(any(stats_of(den) == "StatBinhex"))
+  ## The density panel keeps the well-matched plots as points and drops the
+  ## per-plot colour and shape legends with them.
+  expect_null(den$labels$colour)
+  expect_null(den$labels$shape)
+  expect_equal(den$labels$colour %||% NA_character_, NA_character_)
+})

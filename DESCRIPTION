@@ -1,6 +1,6 @@
 Package: landisutils
 Title: Utilities for Running LANDIS-II Simulations
-Version: 0.0.125
+Version: 0.0.126
 Authors@R: 
     person(c("Alex", "M"), "Chubaty", , "achubaty@for-cast.ca", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0001-7146-8135"))
@@ -47,6 +47,7 @@ Suggests:
     future.apply,
     ggalluvial,
     ggplot2,
+    hexbin,
     keyring,
     knitr,
     mgcv,
@@ -55,7 +56,7 @@ Suggests:
     santoku,
     sf,
     spelling,
-    targets,
+    targets
     testthat (>= 3.0.0),
     withr,
     zonal

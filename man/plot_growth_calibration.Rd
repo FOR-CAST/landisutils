@@ -9,7 +9,10 @@ plot_growth_calibration(
   curve,
   reference,
   x_max = NULL,
-  mature_window = c(100L, Inf)
+  mature_window = c(100L, Inf),
+  density = FALSE,
+  density_bins = 34L,
+  density_point_weight = 0.6
 )
 }
 \arguments{
@@ -27,6 +30,21 @@ never silently clipped.}
 
 \item{mature_window}{Numeric length-2. Fitting window to shade;
 \code{NULL} to omit.}
+
+\item{density}{Logical. Draw the ground-plot cloud as a WEIGHTED hexagonal
+density instead of one point per plot, with individual points kept only for
+the best-matched plots. Off by default, because it is worth it only where
+the cloud is dense enough to be unreadable as points: a species with a
+hundred plots gets a sparse, blocky panel that says less than the points
+did. Requires the 'hexbin' package.}
+
+\item{density_bins}{Integer. Number of bins across the x range of the
+hexagonal grid when \code{density} is \code{TRUE}.}
+
+\item{density_point_weight}{Numeric. When \code{density} is \code{TRUE}, plots whose
+weight is at least this fraction of the species' maximum are still drawn
+individually over the density. Requires a \code{plot_weight} column; without one
+every plot counts equally and none is singled out.}
 }
 \value{
 A \code{ggplot}.

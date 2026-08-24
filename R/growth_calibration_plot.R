@@ -34,6 +34,18 @@ scale_linetype_growth_reference <- function() {
 #' @param x_max Numeric or `NULL`. Upper age limit for the panel. `NULL` (the
 #'   default) extends to the last age present in the data, so a longer run is
 #'   never silently clipped.
+#' @param density Logical. Draw the ground-plot cloud as a WEIGHTED hexagonal
+#'   density instead of one point per plot, with individual points kept only for
+#'   the best-matched plots. Off by default, because it is worth it only where
+#'   the cloud is dense enough to be unreadable as points: a species with a
+#'   hundred plots gets a sparse, blocky panel that says less than the points
+#'   did. Requires the 'hexbin' package.
+#' @param density_bins Integer. Number of bins across the x range of the
+#'   hexagonal grid when `density` is `TRUE`.
+#' @param density_point_weight Numeric. When `density` is `TRUE`, plots whose
+#'   weight is at least this fraction of the species' maximum are still drawn
+#'   individually over the density. Requires a `plot_weight` column; without one
+#'   every plot counts equally and none is singled out.
 #' @param mature_window Numeric length-2. Fitting window to shade;
 #'   `NULL` to omit.
 #'
@@ -45,7 +57,10 @@ plot_growth_calibration <- function(
   curve,
   reference,
   x_max = NULL,
-  mature_window = c(100L, Inf)
+  mature_window = c(100L, Inf),
+  density = FALSE,
+  density_bins = 34L,
+  density_point_weight = 0.6
 ) {
   .need("ggplot2", "Plotting a growth calibration")
   obs <- dplyr::filter(reference, .data$source == "Ground plots")
@@ -65,8 +80,41 @@ plot_growth_calibration <- function(
     )
   }
 
-  ggplot2::ggplot() +
-    shade +
+  ## Either one point per plot, or a weighted density with the best-matched
+  ## plots still drawn over it. The density carries EVERY plot, weighted, so
+  ## nothing is dropped from view; what changes is that a thousand plots stop
+  ## competing for the same ink and for a legend key each.
+  cloud <- if (isTRUE(density)) {
+    .need("hexbin", "Drawing a weighted ground-plot density")
+    has_w <- "plot_weight" %in% names(obs)
+    rel <- if (has_w) {
+      w <- obs$plot_weight
+      w[is.na(w)] <- 0
+      if (max(w) > 0) w / max(w) else w
+    } else {
+      rep(1, nrow(obs))
+    }
+    hex_aes <- if (has_w) {
+      ggplot2::aes(x = .data$age, y = .data$aboveground_c_mg_ha, weight = .data$plot_weight)
+    } else {
+      ggplot2::aes(x = .data$age, y = .data$aboveground_c_mg_ha)
+    }
+    list(
+      ggplot2::stat_binhex(data = obs, mapping = hex_aes, bins = density_bins),
+      ggplot2::scale_fill_gradient(
+        low = "grey88",
+        high = "grey25",
+        name = "Weighted\nplot density"
+      ),
+      ggplot2::geom_point(
+        data = obs[rel >= density_point_weight, , drop = FALSE],
+        ggplot2::aes(x = .data$age, y = .data$aboveground_c_mg_ha),
+        colour = growth_plot_palette()[["summary"]],
+        alpha = 0.65,
+        size = 0.9
+      )
+    )
+  } else {
     ggplot2::geom_point(
       data = obs,
       ggplot2::aes(
@@ -77,7 +125,12 @@ plot_growth_calibration <- function(
       ),
       alpha = 0.7,
       size = 1.6
-    ) +
+    )
+  }
+
+  ggplot2::ggplot() +
+    shade +
+    cloud +
     ggplot2::geom_line(
       data = model,
       ggplot2::aes(x = .data$age, y = .data$aboveground_c_mg_ha, linetype = .data$source),
@@ -94,14 +147,21 @@ plot_growth_calibration <- function(
       colour = growth_plot_palette()[["current"]],
       linewidth = 1
     ) +
-    ggplot2::scale_shape_manual(values = c(16, 17, 15, 3, 7, 8, 4, 10, 12)) +
+    ## Both are dropped in density mode: nothing maps shape or colour there, and
+    ## a manual scale with no layer behind it warns about levels it cannot find
+    ## while contributing a legend title for a key that never appears.
+    (if (isTRUE(density)) {
+      NULL
+    } else {
+      ggplot2::scale_shape_manual(values = c(16, 17, 15, 3, 7, 8, 4, 10, 12))
+    }) +
     scale_linetype_growth_reference() +
     ggplot2::coord_cartesian(xlim = c(0, x_max)) +
     ggplot2::labs(
       x = "Stand age (years)",
       y = expression("Aboveground live carbon" ~ (Mg ~ C ~ ha^-1)),
-      colour = "BEC subzone",
-      shape = "Leading species",
+      colour = if (isTRUE(density)) NULL else "BEC subzone",
+      shape = if (isTRUE(density)) NULL else "Leading species",
       linetype = "Reference",
       title = species,
       subtitle = if (is.null(mature_window)) {
