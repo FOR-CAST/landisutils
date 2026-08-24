@@ -1,5 +1,32 @@
 # Changelog
 
+## landisutils 0.0.127
+
+- [`read_landis_raster()`](https://for-cast.github.io/landisutils/reference/read_landis_raster.md)
+  asks terra how it reads an ungeoreferenced file instead of assuming,
+  which fixes LANDIS-II output rasters being returned VERTICALLY
+  MIRRORED under terra 1.9-46 and later. LANDIS-II writes no
+  geotransform, GDAL then reports the identity transform with a pixel
+  height of `+1`, and every terra up to 1.9-34 honoured that by placing
+  the first file row at the bottom – so this package flipped the rows
+  back. terra 1.9-46 (2026-08-22) stopped doing so and returns those
+  rows in file order, and the unconditional flip then introduced the
+  very inversion it existed to remove. Nothing in the package had
+  changed; the correction had simply become a corruption.
+- The new behaviour is detected rather than gated on a version. Which
+  terra release changed is not something this package can know, and a
+  boundary guessed wrong fails identically but is harder to find. A
+  15-row LANDIS-II community map whose codes run 3 to 17 down the file
+  ships in `inst/testdata/` and is read once per session; the direction
+  the values come back in is the answer. An explicit south-up
+  geotransform is unaffected and still flips, which terra 1.9-46 did not
+  change.
+- The row-order test no longer asserts which direction terra reads in.
+  That is terra’s business, not this package’s, and asserting it meant a
+  terra release failed the suite of a package whose own behaviour was
+  unchanged. The test now asserts the invariant that matters: what comes
+  back is the order LANDIS-II wrote.
+
 ## landisutils 0.0.126
 
 - [`plot_growth_calibration()`](https://for-cast.github.io/landisutils/reference/plot_growth_calibration.md)

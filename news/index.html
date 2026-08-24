@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.126</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.127</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,6 +41,13 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.127" id="landisutils-00127">landisutils 0.0.127<a class="anchor" aria-label="anchor" href="#landisutils-00127"></a></h2>
+<ul><li>
+<code><a href="../reference/read_landis_raster.html">read_landis_raster()</a></code> asks terra how it reads an ungeoreferenced file instead of assuming, which fixes LANDIS-II output rasters being returned VERTICALLY MIRRORED under terra 1.9-46 and later. LANDIS-II writes no geotransform, GDAL then reports the identity transform with a pixel height of <code>+1</code>, and every terra up to 1.9-34 honoured that by placing the first file row at the bottom – so this package flipped the rows back. terra 1.9-46 (2026-08-22) stopped doing so and returns those rows in file order, and the unconditional flip then introduced the very inversion it existed to remove. Nothing in the package had changed; the correction had simply become a corruption.</li>
+<li>The new behaviour is detected rather than gated on a version. Which terra release changed is not something this package can know, and a boundary guessed wrong fails identically but is harder to find. A 15-row LANDIS-II community map whose codes run 3 to 17 down the file ships in <code>inst/testdata/</code> and is read once per session; the direction the values come back in is the answer. An explicit south-up geotransform is unaffected and still flips, which terra 1.9-46 did not change.</li>
+<li>The row-order test no longer asserts which direction terra reads in. That is terra’s business, not this package’s, and asserting it meant a terra release failed the suite of a package whose own behaviour was unchanged. The test now asserts the invariant that matters: what comes back is the order LANDIS-II wrote.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.126" id="landisutils-00126">landisutils 0.0.126<a class="anchor" aria-label="anchor" href="#landisutils-00126"></a></h2>
 <ul><li>
