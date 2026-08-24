@@ -20,12 +20,23 @@ fixture_south_up <- function() {
 }
 
 testthat::test_that("read_landis_raster() restores the row order of a LANDIS-II output", {
-  ## terra reverses the rows of the south-up file on read; the map codes are
-  ## written 3, 4, ... 17 from the first row down
+  ## The map codes are written 3, 4, ... 17 from the first row down, and that is
+  ## what must come back whatever terra does with an ungeoreferenced file. The
+  ## previous version of this test also asserted the direction terra reads them
+  ## in, which is terra's business rather than this package's: terra 1.9-46
+  ## reversed that direction and the assertion failed on a package whose own
+  ## behaviour had not changed.
   testthat::expect_equal(
-    as.vector(terra::values(suppressWarnings(terra::rast(fixture_no_gt())))),
-    17:3
+    as.vector(terra::values(landisutils::read_landis_raster(fixture_no_gt()))),
+    3:17
   )
+})
+
+testthat::test_that("the row-order probe agrees with what terra actually does", {
+  observed <- as.vector(terra::values(suppressWarnings(terra::rast(fixture_no_gt()))))
+  reverses <- observed[[1L]] > observed[[length(observed)]]
+  testthat::expect_equal(landisutils:::.terra_reverses_ungeoreferenced(), reverses)
+  ## Both directions must land on file order once read through the package.
   testthat::expect_equal(
     as.vector(terra::values(landisutils::read_landis_raster(fixture_no_gt()))),
     3:17

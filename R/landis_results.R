@@ -26,12 +26,50 @@
 #' LANDIS-II release that starts writing a proper geotransform needs no change
 #' here.
 #' @noRd
+## Whether THIS terra reverses the rows of a file that carries no geotransform.
+##
+## It used to, always: GDAL reports the identity transform for such a file, whose
+## pixel height is +1, and terra honoured that by placing the first file row at
+## the bottom. terra 1.9-46 (2026-08-22) stopped doing so and now returns those
+## rows in file order, which silently inverted every LANDIS-II output read here.
+##
+## Asking terra what it does is better than asserting a version boundary. The
+## exact release that changed is not something this package can know, and a gate
+## guessed at the wrong version fails the same way, only harder to find. The
+## probe is a real 15-row LANDIS-II community map whose codes run 3..17 down the
+## file, so the answer is the direction of the values that come back.
+.terra_reverses_ungeoreferenced <- local({
+  cached <- NULL
+  function() {
+    if (!is.null(cached)) {
+      return(cached)
+    }
+    probe <- system.file("testdata", "landis-output-no-geotransform.tif", package = "landisutils")
+    if (!nzchar(probe) || !file.exists(probe)) {
+      warning(
+        "landisutils' row-order probe is missing from the installed package; ",
+        "assuming terra reverses ungeoreferenced rasters, which is how every ",
+        "version up to terra 1.9-34 behaved. Reinstall the package to remove ",
+        "this guess.",
+        call. = FALSE
+      )
+      cached <<- TRUE
+      return(cached)
+    }
+    v <- as.vector(terra::values(suppressWarnings(terra::rast(probe))))
+    ## Written 3, 4, ... 17 from the first row down.
+    cached <<- isTRUE(v[[1L]] > v[[length(v)]])
+    cached
+  }
+})
+
 .landis_raster_south_up <- function(path) {
   info <- terra::describe(path)
   px <- grep("^Pixel Size = ", info, value = TRUE)
   if (length(px) == 0L) {
-    ## no geotransform: GDAL reports the identity transform, whose pixel height is +1
-    return(TRUE)
+    ## No geotransform. Whether the rows need flipping is then a property of the
+    ## terra doing the reading, not of the file; see above.
+    return(.terra_reverses_ungeoreferenced())
   }
   dy <- suppressWarnings(as.numeric(sub("^Pixel Size = \\([^,]*,([^)]*)\\).*$", "\\1", px[[1L]])))
   if (is.na(dy)) {
