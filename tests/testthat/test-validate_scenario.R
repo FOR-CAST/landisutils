@@ -375,3 +375,39 @@ test_that("a genuinely missing input beside the scenario file is still caught", 
     fixed = TRUE
   )
 })
+
+test_that("row-less map codes on INACTIVE cells are not reported as missing communities", {
+  skip_if_not_installed("terra")
+  dir <- local_landis_scenario()
+
+  ## `landisbc::GetNonVegData()` writes distinct non-vegetated land-cover codes -- herb, shrub,
+  ## exposed land, water -- into the cells the ecoregion map calls inactive. None of them has CSV
+  ## rows, because none of them is a community, and LANDIS-II never resolves a community for an
+  ## inactive cell. Reading them as missing communities rejected production input that runs.
+  eco <- terra::values(read_landis_raster(fs::path(dir, "ecoregions.tif")), mat = FALSE)
+  eco[is.na(eco)] <- 0L
+  ic_path <- fs::path(dir, "initial-communities.tif")
+  ic <- terra::values(read_landis_raster(ic_path), mat = FALSE)
+  ic[is.na(ic)] <- 0L
+
+  inactive <- which(eco == 0L)
+  expect_gt(length(inactive), 3L)
+  ic[inactive] <- rep(c(6100L, 6200L, 7000L, 8000L), length.out = length(inactive))
+  .landis_write_map(ic_path, ic, nr = 6L, nc = 5L)
+
+  expect_equal(validate_landis_scenario(dir, error = FALSE), character(0))
+})
+
+test_that("row-less map codes on ACTIVE cells are still reported", {
+  skip_if_not_installed("terra")
+  dir <- local_landis_scenario()
+
+  ## The guard that matters is unchanged: on an ACTIVE cell an unresolvable code is a genuinely
+  ## missing community, and more than one of them means the CSV is incomplete.
+  csv <- fs::path(dir, "initial-communities.csv")
+  d <- data.table::fread(csv)
+  data.table::fwrite(d[d$MapCode == 1L, ], csv)
+
+  problems <- validate_landis_scenario(dir, error = FALSE)
+  expect_match(problems, "Unknown map code", all = FALSE, fixed = TRUE)
+})
