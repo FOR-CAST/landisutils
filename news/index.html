@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.128</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.129</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -42,14 +42,9 @@
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="0.0.128" id="landisutils-00128">landisutils 0.0.128<a class="anchor" aria-label="anchor" href="#landisutils-00128"></a></h2>
+<h2 class="pkg-version" data-toc-text="0.0.129" id="landisutils-00129">landisutils 0.0.129<a class="anchor" aria-label="anchor" href="#landisutils-00129"></a></h2>
 <ul><li>
-<code><a href="../reference/plot_growth_candidate.html">plot_growth_candidate()</a></code> gains <code>density</code>, drawing the ground-plot cloud as a WEIGHTED hexagonal density with the best-matched plots kept over it. <code><a href="../reference/write_growth_review_bundle.html">write_growth_review_bundle()</a></code> turns it on per species at <code>density_min_plots</code> (500 by default), since a bundle routinely spans two orders of magnitude in plot count and the panels stop being readable well before the data run out: one landscape’s lodgepole pine carries 1,639 plots and the cloud is solid ink with a shape key per leading species. The density carries every plot AT ITS WEIGHT, via the <code>plot_weight</code> column, so nothing leaves the figure and the shading reads as evidence rather than as sampling effort; without that column it falls back to counts.</li>
-<li>
-<code>density_points_max</code> replaces <code>density_point_weight</code> in <code><a href="../reference/plot_growth_calibration.html">plot_growth_calibration()</a></code>, and is the rule in <code><a href="../reference/plot_growth_candidate.html">plot_growth_candidate()</a></code> too. A fraction of the maximum weight does not control how many points get drawn, because the weight distribution differs by species: at 60% of maximum – the old default – one species keeps 989 of its plots and another keeps 65, and the first buries the density it was meant to annotate. A count draws the same number whatever the shape of the distribution. This is a breaking rename for callers that set the old argument.</li>
-<li>The review bundle’s README names Biomass Succession rather than ForCS. It was a copied label; nothing in the bundle was ever ForCS-specific.</li>
-<li>
-<code><a href="../reference/simplifyCohorts.html">simplifyCohorts()</a></code> CONSERVES biomass when it merges pixel groups. Each merged community now takes, per species, the mean of the stand totals of the pixel groups it pools, and divides that among the retained age classes in proportion to age. Previously every age class received its own scaled copy of the mean COHORT biomass, so a community’s biomass grew with the number of age classes pooled into it instead of being conserved; the signature was exact, with <code>sum(CohortBiomass)</code> equal to <code>max(CohortBiomass) * sum(age / max(age))</code> in 100% of species-in-cell cases. Measured on one landscape, the initial communities carried a median 440 t/ha against 116 t/ha observed and exceeded the succession extension’s own <code>maxB</code> by four to thirteen times – a landscape the simulation has to shed before it can do anything else, and one that biases anything calibrated against its fuels. Shares are computed over the DISTINCT retained age classes, because <code><a href="../reference/prepInitialCommunities.html">prepInitialCommunities()</a></code> deduplicates its rows and anything spread across duplicates would be dropped with them.</li>
+<code>plot_growth_candidate(density = TRUE)</code> maps the hex density on ALPHA rather than on fill. The binned-median series maps <code>fill</code> deliberately, so that its discrete scale merges with the colour legend into one key, and a continuous fill for the hexes collided with it: ggplot2 permits one scale per aesthetic and reports the collision as “continuous value supplied to a discrete scale”, which names neither layer. Alpha is unmapped elsewhere, reads adequately for a density, and leaves the legend construction untouched. 0.0.128 could not draw a bundle at all.</li>
 </ul></div>
   </main></div>
 
