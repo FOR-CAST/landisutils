@@ -1182,21 +1182,71 @@ growth_plot_palette <- function(...) {
 ## parameters, best candidate, ground plots, age-binned points, GAM fit. The
 ## colour and fill guides must be given IDENTICAL specs or ggplot2 refuses to
 ## merge them and draws the same series twice.
-.growth_series_key <- function(has_smooth) {
-  pal <- growth_plot_palette()
-  list(
-    linetype = c("solid", "solid", "blank", "blank", if (has_smooth) "solid"),
-    shape = c(NA, NA, 16, 23, if (has_smooth) NA),
-    fill = c(NA, NA, NA, pal[["summary"]], if (has_smooth) NA),
-    colour = unname(pal[c(
-      "current",
-      "candidate",
-      "plots",
-      "key_outline",
-      if (has_smooth) "summary"
-    )]),
-    linewidth = c(1, 1, 0, 0, if (has_smooth) 0.7),
-    size = c(0, 0, 1.3, 2.6, if (has_smooth) 0)
+## Per-key styling for the merged series legend. Built FROM THE KEYS PRESENT rather than from a fixed
+## order: `plots` and `binned` are each optional now (a hex density replaces the first, `binned = NULL`
+## drops the second), and a fixed-length vector against a shorter key set fails inside the legend
+## drawing with "replacement has 5 rows, data has 4" -- an error that names no layer and no scale.
+##
+## @param pal Named colour vector, in key order, as built by the caller.
+## @param plots_label,binned_label,smooth_label The three labels that need non-line glyphs.
+.growth_series_key <- function(pal, plots_label, binned_label, smooth_label) {
+  p <- growth_plot_palette()
+  keys <- names(pal)
+  spec <- function(k) {
+    if (identical(k, plots_label)) {
+      list(
+        linetype = "blank",
+        shape = 16,
+        fill = NA_character_,
+        colour = unname(p[["plots"]]),
+        linewidth = 0,
+        size = 1.3
+      )
+    } else if (identical(k, binned_label)) {
+      list(
+        linetype = "blank",
+        shape = 23,
+        fill = unname(p[["summary"]]),
+        colour = unname(p[["key_outline"]]),
+        linewidth = 0,
+        size = 2.6
+      )
+    } else if (identical(k, smooth_label)) {
+      list(
+        linetype = "solid",
+        shape = NA_real_,
+        fill = NA_character_,
+        colour = unname(p[["summary"]]),
+        linewidth = 0.7,
+        size = 0
+      )
+    } else {
+      ## A modelled curve: a plain line in its own colour.
+      list(
+        linetype = "solid",
+        shape = NA_real_,
+        fill = NA_character_,
+        colour = unname(pal[[k]]),
+        linewidth = 1,
+        size = 0
+      )
+    }
+  }
+  parts <- lapply(keys, spec)
+  ## Explicit templates: `shape` is NA for a curve and 16 for a point, `fill` NA for both, so an
+  ## inferred template takes the type of whichever key happens to come first and then fails on the
+  ## rest. Typed NAs in `spec()` plus these keep every column one type.
+  tmpl <- list(
+    linetype = NA_character_,
+    shape = NA_real_,
+    fill = NA_character_,
+    colour = NA_character_,
+    linewidth = NA_real_,
+    size = NA_real_
+  )
+  stats::setNames(
+    lapply(names(tmpl), function(a) vapply(parts, function(x) x[[a]], tmpl[[a]])),
+    names(tmpl)
   )
 }
 

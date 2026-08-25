@@ -220,3 +220,39 @@ test_that("the bundle README describes what was actually drawn", {
   ## The window cap stopped being 0.45 x longevity in 0.0.124; the text must not still say so.
   expect_false(any(grepl("0.45", with_binned, fixed = TRUE)))
 })
+
+test_that("only series that are drawn get a legend key", {
+  set.seed(1)
+  n <- 700L
+  obs <- data.frame(
+    source = "Ground plots",
+    age = runif(n, 20, 150),
+    aboveground_c_mg_ha = runif(n, 10, 200),
+    leading_raw = "AA",
+    plot_weight = runif(n, 0, 1)
+  )
+  binned <- data.frame(
+    age = seq(25, 145, 20),
+    value = seq(20, 120, length.out = 7),
+    n = c(10, 40, 80, 60, 30, 10, 5)
+  )
+  cur <- data.frame(age = 1:150, aboveground_c_mg_ha = seq(0, 100, length.out = 150))
+  keys <- function(bn, dens) {
+    p <- plot_growth_candidate(
+      species = "Sp1",
+      current_curve = cur,
+      candidate_curve = NULL,
+      reference = obs,
+      binned = bn,
+      density = dens
+    )
+    p$scales$get_scales("colour")$limits
+  }
+
+  ## The colour scale carries breaks/limits so the fill and colour legends merge, so a label left in
+  ## the palette with no layer behind it renders as a key with no glyph.
+  expect_false("ground plots" %in% keys(binned, TRUE))
+  expect_true("ground plots" %in% keys(binned, FALSE))
+  expect_false("ground plots, age-binned (scored)" %in% keys(NULL, TRUE))
+  expect_true("ground plots, age-binned (scored)" %in% keys(binned, FALSE))
+})

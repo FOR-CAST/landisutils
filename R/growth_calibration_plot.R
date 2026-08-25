@@ -273,10 +273,22 @@ plot_growth_candidate <- function(
   ## The binned points and the fit summarize the SAME observations, so they
   ## share a colour and are told apart by glyph. Giving them different colours
   ## implied two independent series.
+  has_binned <- !is.null(binned) && nrow(binned) > 0L
+  ## ONLY SERIES THAT ARE DRAWN GET A KEY. The colour scale carries `breaks` and `limits` equal to
+  ## `names(pal)` so the fill and colour legends merge into one, and the cost of that is that a label
+  ## left in `pal` with no layer behind it renders as a key with no glyph -- a legend entry for
+  ## something absent from the panel. Both can now be absent: `density = TRUE` replaces the per-plot
+  ## points with a hex density that has its own scale, and `binned = NULL` drops the binned series.
   pal <- stats::setNames(
-    unname(growth_plot_palette()[c("current", "candidate", "plots", "summary")]),
-    c(current_label, candidate_label, plots_label, binned_label)
+    unname(growth_plot_palette()[c("current", "candidate")]),
+    c(current_label, candidate_label)
   )
+  if (!isTRUE(density)) {
+    pal <- c(pal, stats::setNames(growth_plot_palette()[["plots"]], plots_label))
+  }
+  if (has_binned) {
+    pal <- c(pal, stats::setNames(growth_plot_palette()[["summary"]], binned_label))
+  }
   if (has_smooth) {
     pal <- c(pal, stats::setNames(growth_plot_palette()[["summary"]], smooth_label))
   }
@@ -500,7 +512,7 @@ plot_growth_candidate <- function(
       colour = ggplot2::guide_legend(
         order = 1L,
         nrow = 2L,
-        override.aes = .growth_series_key(has_smooth)
+        override.aes = .growth_series_key(pal, plots_label, binned_label, smooth_label)
       )
     ) +
     ggplot2::coord_cartesian(xlim = c(0, x_max)) +

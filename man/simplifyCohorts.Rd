@@ -21,6 +21,31 @@ list containing updated \code{cohortData} and \code{pixelGroupMap} objects
 Reduce the number of cohorts / pixel groups for LANDIS-II, which only supports (integer)
 initial community map codes between 0 and 65535.
 }
+\details{
+Biomass is CONSERVED across the merge. Each merged community takes, per species,
+the mean of the stand totals of the pixel groups it pools, and that total is then
+divided among the retained age classes in proportion to age, so the oldest class
+still carries the most. Before 0.0.128 each age class instead received its own
+scaled copy of the mean COHORT biomass, so a community's biomass grew with the
+number of age classes pooled into it rather than being conserved: measured on one
+landscape, initial communities carried a median 440 t/ha against 116 t/ha observed,
+and exceeded the succession extension's own \code{maxB} by four to thirteen times.
+
+The shares are computed over the DISTINCT retained age classes, because
+\code{\link[=prepInitialCommunities]{prepInitialCommunities()}} deduplicates its rows: partitioning across duplicate
+rows would lose whatever those duplicates carried. Integer rounding leaves the
+per-species total within a few g/m2 of the target.
+
+Conservation is per merged community, and the mean it takes over the pooled
+pixel groups is UNWEIGHTED: a pixel group covering one cell counts the same as
+one covering a thousand. Landscape biomass is therefore conserved only up to
+that weighting, and on a landscape where 1.6 million pixel groups collapse to
+4,153 communities the unweighted community mean sat about 1.2 times the
+pixel-group mean (151 against 126 t/ha), because small communities count
+equally with large ones. Weighting by pixel count would remove that; it is
+deliberately left alone here because it changes which stands the communities
+represent, not just their arithmetic.
+}
 \note{
 Ideally, the user should reduce the number of cohorts upstream
 (i.e., in \code{Biomass_borealDataPrep}), to ensure consistency of all data inputs.

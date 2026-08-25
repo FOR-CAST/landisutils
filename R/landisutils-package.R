@@ -1,7 +1,7 @@
 utils::globalVariables(c(
   ".", ".data", "active", "age", "age_bin", "age_max", "age_min", "all_files", "anpp_max",
   "anpp_prop", "Area", "as.data.table", "B", "BaseVar", "batch", "batch_map_code", "BatchID",
-  "biomass_max", "BUI", "CellID", "cellSize", "cohort_age", "CohortAge", "CohortBiomass",
+  "B_pg", "B_target", "i.B_target", "i.newB", "biomass_max", "BUI", "CellID", "cellSize", "cohort_age", "CohortAge", "CohortBiomass",
   "community", "DATE", "DAY", "Day", "DC", "DMC", "EcoID", "ecoregion", "ecoregion_label",
   "ecoregionGroup", "elev", "emfs_ha", "empiricalBurnRate", "establishprob", "everything",
   "FFMC", "FireRegionName", "FireSeverity", "FireTolerance", "firetolerance", "FWI",
@@ -19,7 +19,7 @@ utils::globalVariables(c(
   "shadetolerance", "species", "SpeciesCode", "speciesCode", "SpeciesName", "SproutAgeMax",
   "SproutAgeMin", "SRad", "starts_with", "structure_id", "swept_species", "Tmax", "Tmin",
   "total_biomass", "Value", "value", "Variable", "VegReprodProb", "WD", "weight_plots",
-  "weight_sortie", "weight_tipsy", "weight_vdyp", "window_source", "WndD", "WndS", "WoodDecayRate",
+  "weight_sortie", "weight_tipsy", "weight_vdyp", "window_source", "WndD", "WndS", "w", "WoodDecayRate",
   "wooddecayrate", "WS", "xBar", "YEAR", "Year", "year"
 ))
 

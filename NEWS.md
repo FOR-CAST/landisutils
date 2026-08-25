@@ -1,3 +1,8 @@
+# landisutils 0.0.132
+
+* `plot_growth_candidate()` gives a legend key only to series it actually draws. The colour scale carries `breaks` and `limits` so the fill and colour legends merge into one, and the cost of that is that a label left in the palette with no layer behind it renders as a key with no glyph. Both such labels can now be absent -- `density = TRUE` replaces the per-plot points with a hex density carrying its own scale, and `binned = NULL` drops the binned series -- so a bundle drawn both ways showed two legend entries for things not on the panel.
+* `.growth_series_key()` builds the per-key styling FROM THE KEYS PRESENT rather than from a fixed order. With a shorter key set the fixed-length vectors failed inside the legend drawing with "replacement has 5 rows, data has 4", which names neither layer nor scale.
+
 # landisutils 0.0.131
 
 * `write_growth_review_bundle()` writes a README describing what it ACTUALLY DREW. The panels vary with the arguments -- points or a hex density, a binned series or none -- and a fixed description drifts from them silently. It had been describing diamonds a caller could switch off by passing `reference_curves = NULL`, and a fitting-window rule of "0.45 x longevity" that stopped being how the cap is computed in 0.0.124, where it became the species' own onset of age-related mortality.
