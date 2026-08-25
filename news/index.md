@@ -16,6 +16,25 @@
   fixed-length vectors failed inside the legend drawing with
   “replacement has 5 rows, data has 4”, which names neither layer nor
   scale.
+- [`simplifyCohorts()`](https://for-cast.github.io/landisutils/reference/simplifyCohorts.md)
+  CONSERVES biomass when it merges pixel groups. Each merged community
+  now takes, per species, the mean of the stand totals of the pixel
+  groups it pools, and divides that among the retained age classes in
+  proportion to age. Previously every age class received its own scaled
+  copy of the mean COHORT biomass, so a community’s biomass grew with
+  the number of age classes pooled into it instead of being conserved;
+  the signature was exact, with `sum(CohortBiomass)` equal to
+  `max(CohortBiomass) * sum(age / max(age))` in 100% of species-in-cell
+  cases. Measured on one landscape whose `cohortData` carries a median
+  stand biomass of 119 t/ha against 116 t/ha observed, the initial
+  communities built from it carried a median 440 t/ha and exceeded the
+  succession extension’s own `maxB` by four to thirteen times; after the
+  fix the same landscape gives 148 t/ha. Shares are computed over the
+  DISTINCT retained age classes because
+  [`prepInitialCommunities()`](https://for-cast.github.io/landisutils/reference/prepInitialCommunities.md)
+  deduplicates its rows. Conservation is per merged community and the
+  mean over pooled pixel groups is unweighted, so landscape biomass is
+  conserved only up to that weighting.
 
 ## landisutils 0.0.131
 
