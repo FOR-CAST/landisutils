@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.129</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.130</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -42,11 +42,56 @@
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="0.0.129" id="landisutils-00129">landisutils 0.0.129<a class="anchor" aria-label="anchor" href="#landisutils-00129"></a></h2>
+<h2 class="pkg-version" data-toc-text="0.0.130" id="landisutils-00130">landisutils 0.0.130<a class="anchor" aria-label="anchor" href="#landisutils-00130"></a></h2>
 <ul><li>
-<code>plot_growth_candidate(density = TRUE)</code> maps the hex density on ALPHA rather than on fill. The binned-median series maps <code>fill</code> deliberately, so that its discrete scale merges with the colour legend into one key, and a continuous fill for the hexes collided with it: ggplot2 permits one scale per aesthetic and reports the collision as “continuous value supplied to a discrete scale”, which names neither layer. Alpha is unmapped elsewhere, reads adequately for a density, and leaves the legend construction untouched. 0.0.128 could not draw a bundle at all.</li>
+<code>plot_growth_candidate(density = TRUE)</code> renders. 0.0.128 introduced the density and could not draw a bundle at all; 0.0.129 misdiagnosed the cause and moved the hexes to <code>alpha</code>, which did not fix it. The contended aesthetic is FILL: <code>stat_binhex()</code> maps <code>fill = after_stat(count)</code> through its DEFAULT aes, which passing a fixed <code>fill</code> argument does not unset, while the binned-median series maps <code>fill</code> to a discrete label so that its key merges with the colour legend. With both present ggplot2 applies the discrete scale to continuous counts and reports “continuous value supplied to a discrete scale”, naming neither layer. In density mode the binned series now takes a fixed fill and maps <code>colour</code> instead, which keeps its key and leaves <code>fill</code> to the hexes.</li>
+<li>The regression test BUILDS the plot rather than only constructing it. Both earlier releases passed their tests: a scale collision surfaces at render time, so a test that stops at the ggplot object cannot see it.</li>
 </ul></div>
-  </main></div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.129" id="landisutils-00129">landisutils 0.0.129<a class="anchor" aria-label="anchor" href="#landisutils-00129"></a></h2>
+<ul><li>Attempted fix for the 0.0.128 render failure by mapping the hex density on <code>alpha</code>. It did not work; see 0.0.130 for the actual cause. Superseded.</li>
+</ul></div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.128" id="landisutils-00128">landisutils 0.0.128<a class="anchor" aria-label="anchor" href="#landisutils-00128"></a></h2>
+<ul><li>
+<code><a href="../reference/plot_growth_candidate.html">plot_growth_candidate()</a></code> gains <code>density</code>, drawing the ground-plot cloud as a WEIGHTED hexagonal density with the best-matched plots kept over it. <code><a href="../reference/write_growth_review_bundle.html">write_growth_review_bundle()</a></code> turns it on per species at <code>density_min_plots</code> (500 by default), since a bundle routinely spans two orders of magnitude in plot count and the panels stop being readable well before the data run out: one landscape’s lodgepole pine carries 1,639 plots and the cloud is solid ink with a shape key per leading species. The density carries every plot AT ITS WEIGHT, via the <code>plot_weight</code> column, so nothing leaves the figure and the shading reads as evidence rather than as sampling effort; without that column it falls back to counts. NOTE this release could not render; fixed in 0.0.130.</li>
+<li>
+<code>density_points_max</code> replaces <code>density_point_weight</code> in <code><a href="../reference/plot_growth_calibration.html">plot_growth_calibration()</a></code>, and is the rule in <code><a href="../reference/plot_growth_candidate.html">plot_growth_candidate()</a></code> too. A fraction of the maximum weight does not control how many points get drawn, because the weight distribution differs by species: at 60% of maximum – the old default – one species keeps 989 of its plots and another keeps 65, and the first buries the density it was meant to annotate. A count draws the same number whatever the shape of the distribution. This is a breaking rename for callers that set the old argument.</li>
+<li>The review bundle’s README names Biomass Succession rather than ForCS. It was a copied label; nothing in the bundle was ever ForCS-specific.</li>
+</ul></div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.127" id="landisutils-00127">landisutils 0.0.127<a class="anchor" aria-label="anchor" href="#landisutils-00127"></a></h2>
+<ul><li>
+<code><a href="../reference/read_landis_raster.html">read_landis_raster()</a></code> asks terra how it reads an ungeoreferenced file instead of assuming, which fixes LANDIS-II output rasters being returned VERTICALLY MIRRORED under terra 1.9-46 and later. LANDIS-II writes no geotransform, GDAL then reports the identity transform with a pixel height of <code>+1</code>, and every terra up to 1.9-34 honoured that by placing the first file row at the bottom – so this package flipped the rows back. terra 1.9-46 (2026-08-22) stopped doing so and returns those rows in file order, and the unconditional flip then introduced the very inversion it existed to remove. Nothing in the package had changed; the correction had simply become a corruption.</li>
+<li>The new behaviour is detected rather than gated on a version. Which terra release changed is not something this package can know, and a boundary guessed wrong fails identically but is harder to find. A 15-row LANDIS-II community map whose codes run 3 to 17 down the file ships in <code>inst/testdata/</code> and is read once per session; the direction the values come back in is the answer. An explicit south-up geotransform is unaffected and still flips, which terra 1.9-46 did not change.</li>
+<li>The row-order test no longer asserts which direction terra reads in. That is terra’s business, not this package’s, and asserting it meant a terra release failed the suite of a package whose own behaviour was unchanged. The test now asserts the invariant that matters: what comes back is the order LANDIS-II wrote.</li>
+</ul></div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.126" id="landisutils-00126">landisutils 0.0.126<a class="anchor" aria-label="anchor" href="#landisutils-00126"></a></h2>
+<ul><li>
+<code><a href="../reference/plot_growth_calibration.html">plot_growth_calibration()</a></code> gains <code>density</code>, drawing the ground-plot cloud as a WEIGHTED hexagonal density with individual points kept only for the best-matched plots, instead of one point per plot. Off by default, so nothing changes for existing callers. It exists because the panels stop being readable well before the data run out: one landscape’s lodgepole pine carries 3,106 plots and 57 BEC subzone legend keys, and the legend alone took a third of the figure while the cloud was solid ink. The density carries every plot, weighted, so nothing is dropped from view – what changes is that a thousand plots stop competing for the same ink and for a legend key each. Worth it only where the cloud is dense: a species with a hundred plots gets a sparse, blocky grid that says less than the points did, which is why the switch is the caller’s and not automatic.</li>
+<li>
+<code>density_bins</code> and <code>density_point_weight</code> control the grid resolution and which plots are still drawn individually (default: those at 60% of the species’ maximum weight or better). The per-plot colour and shape legends are dropped in density mode along with the points that fed them, and the manual shape scale with them, since a manual scale with no layer behind it warns about levels it cannot find.</li>
+<li>Requires ‘hexbin’, declared in Suggests and checked at call time.</li>
+</ul></div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.125" id="landisutils-00125">landisutils 0.0.125<a class="anchor" aria-label="anchor" href="#landisutils-00125"></a></h2>
+<ul><li>
+<code><a href="../reference/growth_bin_observations.html">growth_bin_observations()</a></code> DROPS a bin whose observations all carry zero weight, instead of emitting it with an <code>NA</code> value. The weighted quantile of an empty effective sample is <code>NA</code>, and such a bin is not a thin bin but an absent one – every observation in it was excluded by the weighting. Carrying it overstated <code>n_bins</code>, and because <code><a href="../reference/growth_reference_curves.html">growth_reference_curves()</a></code> takes the ground-plot LEVEL as a <code><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max()</a></code> over the binned values inside the window, one valueless bin made the level <code>NA</code> and dropped every plot-scored series for that species. Latent until a window widened far enough to admit one: a species scored on plots alone then returned <code>n_series = 0</code> and an all-<code>NA</code> row, with nothing to say why.</li>
+<li>
+<code><a href="../reference/growth_reference_curves.html">growth_reference_curves()</a></code> computes that <code><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max()</a></code> with <code>na.rm = TRUE</code> and returns <code>NA_real_</code> rather than <code>-Inf</code> when nothing survives, so a caller supplying its own binned series cannot reintroduce the same failure.</li>
+</ul></div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.124" id="landisutils-00124">landisutils 0.0.124<a class="anchor" aria-label="anchor" href="#landisutils-00124"></a></h2>
+<ul><li>
+<code><a href="../reference/growth_auto_window.html">growth_auto_window()</a></code> and <code><a href="../reference/growth_fitting_windows.html">growth_fitting_windows()</a></code> accept <code>mort_shp</code> and close each species’ window at that species’ own onset of age-related mortality, instead of at one fraction of longevity shared by every species. Biomass Succession defines <code>MortalityCurve</code> as a POSITION in the lifespan (v7 User Guide 2.12.4), so where a species leaves its plateau varies nearly twofold across the documented range – measured on one calibration, the departure from 95% of peak biomass ran 0.43-0.48 x longevity at <code>MortalityCurve</code> 10, 0.63-0.70 at 15 and 0.82-0.84 at 25. A single fraction cannot separate a species that breaks up early from one that holds its stand almost to the end, which is the distinction the parameter exists to make. The <code>senescence_frac = 0.45</code> fallback remains for callers that do not supply <code>mort_shp</code>, but its default was calibrated against a parameterisation giving every species a <code>MortalityCurve</code> near 23 and does not generalise: on a set carrying 10s the earliest 95%-of-peak departure falls to 0.433, below the cap itself.</li>
+<li>
+<code><a href="../reference/growth_mortality_onset_frac.html">growth_mortality_onset_frac()</a></code> is new and exported: it inverts the User Guide’s definition of <code>MortalityCurve</code> to the fraction of lifespan at which age-related mortality begins. Callers were open-coding the same arithmetic.</li>
+<li>
+<code><a href="../reference/growth_auto_window.html">growth_auto_window()</a></code> no longer loses a year to floating-point representation error. <code>0.10 + (10 - 5) / 20 * 0.75</code> is 0.28749999999999998, so an onset landing mathematically on a whole year came out a hair below it and the inward rounding took the year before – a cap of 114 where 115 was meant.</li>
+</ul></div>
+  </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
+    </nav></aside></div>
 
 
     <footer><div class="pkgdown-footer-left">
