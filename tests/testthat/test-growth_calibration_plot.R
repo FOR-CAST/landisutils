@@ -135,3 +135,38 @@ test_that("the review bundle README names Biomass Succession, not ForCS", {
   expect_match(readme[[1L]], "Biomass Succession")
   expect_false(any(grepl("ForCS", readme, fixed = TRUE)))
 })
+
+test_that("plot_growth_candidate BUILDS in both cloud modes with a binned series present", {
+  ## Regression for 0.0.128/0.0.129: the unit tests constructed the plot object but never built it,
+  ## so a scale collision that only surfaces at render time shipped twice. stat_binhex() maps
+  ## `fill = after_stat(count)` through its default aes, which a fixed `fill` argument does not
+  ## unset, and the binned series maps `fill` to a discrete label; both present, ggplot2 applies the
+  ## discrete scale to continuous counts. Building is the assertion that matters here.
+  set.seed(1)
+  n <- 700L
+  obs <- data.frame(
+    source = "Ground plots",
+    age = runif(n, 20, 150),
+    aboveground_c_mg_ha = runif(n, 10, 200),
+    leading_raw = "AA",
+    plot_weight = runif(n, 0, 1)
+  )
+  binned <- data.frame(
+    age = seq(25, 145, 20),
+    value = seq(20, 120, length.out = 7),
+    n = c(10, 40, 80, 60, 30, 10, 5)
+  )
+  cur <- data.frame(age = 1:150, aboveground_c_mg_ha = seq(0, 100, length.out = 150))
+
+  for (dens in c(TRUE, FALSE)) {
+    p <- plot_growth_candidate(
+      species = "Sp1",
+      current_curve = cur,
+      candidate_curve = NULL,
+      reference = obs,
+      binned = binned,
+      density = dens
+    )
+    expect_no_error(ggplot2::ggplot_build(p))
+  }
+})

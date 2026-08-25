@@ -408,9 +408,14 @@ plot_growth_candidate <- function(
       p +
         ggplot2::geom_point(
           data = binned,
-          ggplot2::aes(x = .data$age, y = .data$value, fill = binned_label, size = .data$n),
+          if (isTRUE(density)) {
+            ggplot2::aes(x = .data$age, y = .data$value, colour = binned_label, size = .data$n)
+          } else {
+            ggplot2::aes(x = .data$age, y = .data$value, fill = binned_label, size = .data$n)
+          },
           shape = 23,
-          colour = growth_plot_palette()[["key_outline"]],
+          fill = if (isTRUE(density)) growth_plot_palette()[["summary"]] else NA,
+          colour = if (isTRUE(density)) NULL else growth_plot_palette()[["key_outline"]],
           stroke = 0.4
         ) +
         ggplot2::scale_size(
@@ -422,10 +427,15 @@ plot_growth_candidate <- function(
       p +
         ggplot2::geom_point(
           data = binned,
-          ggplot2::aes(x = .data$age, y = .data$value, fill = binned_label),
+          if (isTRUE(density)) {
+            ggplot2::aes(x = .data$age, y = .data$value, colour = binned_label)
+          } else {
+            ggplot2::aes(x = .data$age, y = .data$value, fill = binned_label)
+          },
           size = 2.4,
           shape = 23,
-          colour = growth_plot_palette()[["key_outline"]],
+          fill = if (isTRUE(density)) growth_plot_palette()[["summary"]] else NA,
+          colour = if (isTRUE(density)) NULL else growth_plot_palette()[["key_outline"]],
           stroke = 0.4
         )
     }
@@ -435,13 +445,15 @@ plot_growth_candidate <- function(
     ## into one legend. Silencing it instead leaves the key label with no glyph:
     ## `override.aes` can only restyle a key some layer contributes, and once
     ## nothing maps colour to this series there is no key to restyle.
-    p <- p +
-      ggplot2::scale_fill_manual(
-        values = pal,
-        breaks = names(pal),
-        limits = names(pal),
-        name = NULL
-      )
+    if (!isTRUE(density)) {
+      p <- p +
+        ggplot2::scale_fill_manual(
+          values = pal,
+          breaks = names(pal),
+          limits = names(pal),
+          name = NULL
+        )
+    }
   } else if (has_smooth) {
     p <- p +
       ggplot2::geom_line(
