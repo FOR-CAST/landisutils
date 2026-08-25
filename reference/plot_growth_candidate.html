@@ -13,7 +13,7 @@ the objective responds to."><meta property="og:image" content="https://for-cast.
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.127</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.128</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -68,7 +68,10 @@ the objective responds to.</p>
 <span>  candidate_label <span class="op">=</span> <span class="st">"best candidate"</span>,</span>
 <span>  x_max <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  mature_window <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">100L</span>, <span class="cn">Inf</span><span class="op">)</span>,</span>
-<span>  subtitle <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  subtitle <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  density <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  density_bins <span class="op">=</span> <span class="fl">34L</span>,</span>
+<span>  density_points_max <span class="op">=</span> <span class="fl">150L</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -117,6 +120,26 @@ silently clipped.</p></dd>
 
 <dt id="arg-subtitle">subtitle<a class="anchor" aria-label="anchor" href="#arg-subtitle"></a></dt>
 <dd><p>Character. Overrides the default subtitle.</p></dd>
+
+
+<dt id="arg-density">density<a class="anchor" aria-label="anchor" href="#arg-density"></a></dt>
+<dd><p>Logical. Draw the ground-plot cloud as a WEIGHTED hexagonal
+density instead of one point per plot, keeping the best-matched plots drawn
+over it. Weighted via the <code>plot_weight</code> column if present, so the shading
+reads as evidence rather than as sampling effort; without that column it
+falls back to counts.</p></dd>
+
+
+<dt id="arg-density-bins">density_bins<a class="anchor" aria-label="anchor" href="#arg-density-bins"></a></dt>
+<dd><p>Integer. Bins across the x range of the hex grid.</p></dd>
+
+
+<dt id="arg-density-points-max">density_points_max<a class="anchor" aria-label="anchor" href="#arg-density-points-max"></a></dt>
+<dd><p>Integer. How many of the best-matched plots stay
+drawn individually over the density. A COUNT rather than a fraction of the
+maximum weight, because a fraction does not control the number drawn: the
+weight distribution differs by species, and at 60% of maximum one species
+keeps 989 plots where another keeps 65.</p></dd>
 
 </dl></div>
     <div class="section level2">

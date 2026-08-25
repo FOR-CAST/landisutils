@@ -16,7 +16,7 @@ plot_growth_calibration(
   mature_window = c(100L, Inf),
   density = FALSE,
   density_bins = 34L,
-  density_point_weight = 0.6
+  density_points_max = 150L
 )
 ```
 
@@ -60,12 +60,15 @@ plot_growth_calibration(
   Integer. Number of bins across the x range of the hexagonal grid when
   `density` is `TRUE`.
 
-- density_point_weight:
+- density_points_max:
 
-  Numeric. When `density` is `TRUE`, plots whose weight is at least this
-  fraction of the species' maximum are still drawn individually over the
-  density. Requires a `plot_weight` column; without one every plot
-  counts equally and none is singled out.
+  Integer. When `density` is `TRUE`, how many of the best-matched plots
+  stay drawn individually over the density. A COUNT rather than a
+  fraction of the maximum weight, because a fraction does not control
+  the number drawn: the weight distribution differs by species, and at
+  60% of maximum one species keeps 989 plots where another keeps 65.
+  Requires a `plot_weight` column; without one every plot counts
+  equally.
 
 ## Value
 

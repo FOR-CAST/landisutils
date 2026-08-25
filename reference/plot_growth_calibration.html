@@ -13,7 +13,7 @@ subzone and shaped by sample-establishment type."><meta property="og:image" cont
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.127</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.128</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -65,7 +65,7 @@ subzone and shaped by sample-establishment type.</p>
 <span>  mature_window <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">100L</span>, <span class="cn">Inf</span><span class="op">)</span>,</span>
 <span>  density <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  density_bins <span class="op">=</span> <span class="fl">34L</span>,</span>
-<span>  density_point_weight <span class="op">=</span> <span class="fl">0.6</span></span>
+<span>  density_points_max <span class="op">=</span> <span class="fl">150L</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -112,11 +112,13 @@ did. Requires the 'hexbin' package.</p></dd>
 hexagonal grid when <code>density</code> is <code>TRUE</code>.</p></dd>
 
 
-<dt id="arg-density-point-weight">density_point_weight<a class="anchor" aria-label="anchor" href="#arg-density-point-weight"></a></dt>
-<dd><p>Numeric. When <code>density</code> is <code>TRUE</code>, plots whose
-weight is at least this fraction of the species' maximum are still drawn
-individually over the density. Requires a <code>plot_weight</code> column; without one
-every plot counts equally and none is singled out.</p></dd>
+<dt id="arg-density-points-max">density_points_max<a class="anchor" aria-label="anchor" href="#arg-density-points-max"></a></dt>
+<dd><p>Integer. When <code>density</code> is <code>TRUE</code>, how many of the
+best-matched plots stay drawn individually over the density. A COUNT rather
+than a fraction of the maximum weight, because a fraction does not control
+the number drawn: the weight distribution differs by species, and at 60% of
+maximum one species keeps 989 plots where another keeps 65. Requires a
+<code>plot_weight</code> column; without one every plot counts equally.</p></dd>
 
 </dl></div>
     <div class="section level2">
