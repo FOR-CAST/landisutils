@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.131</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.132</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,6 +41,13 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.132" id="landisutils-00132">landisutils 0.0.132<a class="anchor" aria-label="anchor" href="#landisutils-00132"></a></h2>
+<ul><li>
+<code><a href="../reference/plot_growth_candidate.html">plot_growth_candidate()</a></code> gives a legend key only to series it actually draws. The colour scale carries <code>breaks</code> and <code>limits</code> so the fill and colour legends merge into one, and the cost of that is that a label left in the palette with no layer behind it renders as a key with no glyph. Both such labels can now be absent – <code>density = TRUE</code> replaces the per-plot points with a hex density carrying its own scale, and <code>binned = NULL</code> drops the binned series – so a bundle drawn both ways showed two legend entries for things not on the panel.</li>
+<li>
+<code>.growth_series_key()</code> builds the per-key styling FROM THE KEYS PRESENT rather than from a fixed order. With a shorter key set the fixed-length vectors failed inside the legend drawing with “replacement has 5 rows, data has 4”, which names neither layer nor scale.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.131" id="landisutils-00131">landisutils 0.0.131<a class="anchor" aria-label="anchor" href="#landisutils-00131"></a></h2>
 <ul><li>

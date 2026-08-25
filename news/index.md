@@ -1,5 +1,22 @@
 # Changelog
 
+## landisutils 0.0.132
+
+- [`plot_growth_candidate()`](https://for-cast.github.io/landisutils/reference/plot_growth_candidate.md)
+  gives a legend key only to series it actually draws. The colour scale
+  carries `breaks` and `limits` so the fill and colour legends merge
+  into one, and the cost of that is that a label left in the palette
+  with no layer behind it renders as a key with no glyph. Both such
+  labels can now be absent – `density = TRUE` replaces the per-plot
+  points with a hex density carrying its own scale, and `binned = NULL`
+  drops the binned series – so a bundle drawn both ways showed two
+  legend entries for things not on the panel.
+- `.growth_series_key()` builds the per-key styling FROM THE KEYS
+  PRESENT rather than from a fixed order. With a shorter key set the
+  fixed-length vectors failed inside the legend drawing with
+  “replacement has 5 rows, data has 4”, which names neither layer nor
+  scale.
+
 ## landisutils 0.0.131
 
 - [`write_growth_review_bundle()`](https://for-cast.github.io/landisutils/reference/write_growth_review_bundle.md)
