@@ -308,21 +308,29 @@ plot_growth_candidate <- function(
     ## are drawn, because the weight distribution differs by species: at 60% of maximum one species
     ## keeps 989 of its plots and another keeps 65, and the first buries the density it annotates.
     keep <- rank(-w, ties.method = "first") <= min(density_points_max, length(w))
+    ## MAPPED ON ALPHA, NOT FILL. The binned-median series deliberately maps `fill` so that its
+    ## discrete scale merges with the colour legend (see the comment at that layer), and a continuous
+    ## fill for the hexes would collide with it -- ggplot2 permits one scale per aesthetic, and the
+    ## error is the unhelpful "continuous value supplied to a discrete scale". Alpha is free, reads
+    ## adequately for a density, and leaves that legend construction untouched.
     hex_aes <- if (has_w) {
-      ggplot2::aes(x = .data$age, y = .data$aboveground_c_mg_ha, weight = .data$plot_weight)
+      ggplot2::aes(
+        x = .data$age,
+        y = .data$aboveground_c_mg_ha,
+        weight = .data$plot_weight,
+        alpha = ggplot2::after_stat(count)
+      )
     } else {
-      ggplot2::aes(x = .data$age, y = .data$aboveground_c_mg_ha)
+      ggplot2::aes(x = .data$age, y = .data$aboveground_c_mg_ha, alpha = ggplot2::after_stat(count))
     }
     list(
-      ggplot2::stat_binhex(data = obs, mapping = hex_aes, bins = density_bins),
-      ## Ramps to the SUMMARY colour rather than through greys: the density and the binned points are
-      ## the same observations summarized two ways, which is the argument that already governs the
-      ## binned series and the smooth.
-      ggplot2::scale_fill_gradient(
-        low = "grey93",
-        high = growth_plot_palette()[["summary"]],
-        name = "Weighted\nplot density"
+      ggplot2::stat_binhex(
+        data = obs,
+        mapping = hex_aes,
+        bins = density_bins,
+        fill = growth_plot_palette()[["summary"]]
       ),
+      ggplot2::scale_alpha_continuous(range = c(0.08, 1), name = "Weighted\nplot density"),
       ggplot2::geom_point(
         data = obs[keep, , drop = FALSE],
         ggplot2::aes(x = .data$age, y = .data$aboveground_c_mg_ha),
