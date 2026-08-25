@@ -801,37 +801,72 @@ write_growth_review_bundle <- function(
   utils::write.csv(best, summ, row.names = FALSE)
 
   readme <- file.path(dir, "README.txt")
+  ## What the panels actually got, so the description below cannot drift from them.
+  any_binned <- !is.null(reference_curves)
+  any_density <- any(vapply(
+    species,
+    function(sp) {
+      nrow(dplyr::filter(references[[sp]], .data$source == "Ground plots")) >= density_min_plots
+    },
+    logical(1)
+  ))
+
   writeLines(
     c(
       "Biomass Succession growth calibration -- review bundle",
       paste0("written ", format(Sys.time(), "%Y-%m-%d %H:%M:%S")),
       "",
+      ## DESCRIBES WHAT WAS ACTUALLY DRAWN. The panels vary with the arguments -- points or a hex
+      ## density, binned series or none -- and a fixed description drifts from them silently. It
+      ## previously described diamonds a caller could switch off, and a window rule (0.45 x longevity)
+      ## that stopped being how the cap is computed in 0.0.124.
       "review-<species>.png   current parameters (black) vs best candidate (red),",
       "                       over the SORTIE / TIPSY / ground-plot references.",
-      "                       Grey points are individual plots; the BLUE DIAMONDS",
-      "                       are those plots binned by age, and they -- not the",
-      "                       scatter -- are what the score is computed against,",
-      "                       so every age band counts once however many plots",
-      "                       landed in it.",
-      "                       Each diamond is SIZED by how many plots are behind",
-      "                       it. The counts differ by more than an order of",
-      "                       magnitude, and the sharp reversals in the series",
-      "                       are usually its smallest points: a bin holding one",
-      "                       plot is not a median of anything. They are NOT",
-      "                       joined up, because a line between two bins asserts",
-      "                       a trajectory through ages nobody measured.",
+      if (any_density) {
+        c(
+          "                       Ground plots are a HEX DENSITY shaded by the SUM",
+          "                       of their weights, not by how many fell in a cell,",
+          "                       so the shading reads as evidence rather than as",
+          "                       sampling effort. The individual points drawn over",
+          "                       it are the best-matched plots.",
+          "                       Species with fewer plots keep one point each: a",
+          "                       sparse hex grid says less than the points do."
+        )
+      } else {
+        "                       Grey points are individual plots."
+      },
+      if (any_binned) {
+        c(
+          "                       The BLUE DIAMONDS are those plots binned by age,",
+          "                       and they -- not the scatter -- are what the score",
+          "                       is computed against, so every age band counts once",
+          "                       however many plots landed in it.",
+          "                       Each diamond is SIZED by how many plots are behind",
+          "                       it. The counts differ by more than an order of",
+          "                       magnitude, and the sharp reversals in the series",
+          "                       are usually its smallest points: a bin holding one",
+          "                       plot is not a median of anything. They are NOT",
+          "                       joined up, because a line between two bins asserts",
+          "                       a trajectory through ages nobody measured."
+        )
+      } else {
+        c(
+          "                       The binned series is NOT drawn here. It remains",
+          "                       what the score is computed against; review-summary",
+          "                       carries the residual it produced."
+        )
+      },
       "                       The BLUE LINE and band are a spline through the",
       "                       whole cloud, drawn for comparison ONLY -- nothing",
-      "                       is scored against it. Same colour as the diamonds",
-      "                       because it summarizes the same observations. Where",
-      "                       the band is wide, the binned points nearby are not",
-      "                       evidence of much.",
+      "                       is scored against it. Where the band is wide, the",
+      "                       plots nearby are not evidence of much.",
       "                       The shaded band is the fitting window. It is DERIVED:",
       "                       it opens at age 20, below which the plot programmes",
       "                       do not sample, and closes at the earliest of the 95th",
       "                       percentile of plot ages, the end of the reference",
-      "                       curve, and 0.45 x longevity, before LANDIS-II's",
-      "                       senescence collapse.",
+      "                       curve, and the species' own onset of age-related",
+      "                       mortality, which is a fraction of longevity set by",
+      "                       its MortalityCurve.",
       "                       The candidate is drawn at the level its shape implies,",
       "                       not at the level it was simulated with.",
       "review-summary.csv     best candidate per species beside the values in use.",

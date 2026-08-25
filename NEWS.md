@@ -1,3 +1,8 @@
+# landisutils 0.0.131
+
+* `write_growth_review_bundle()` writes a README describing what it ACTUALLY DREW. The panels vary with the arguments -- points or a hex density, a binned series or none -- and a fixed description drifts from them silently. It had been describing diamonds a caller could switch off by passing `reference_curves = NULL`, and a fitting-window rule of "0.45 x longevity" that stopped being how the cap is computed in 0.0.124, where it became the species' own onset of age-related mortality.
+* Where the binned series is not drawn, the README says so and points at `review-summary.csv` for the residual, rather than omitting it: the series is still what the score is computed against whether or not it is on the panel.
+
 # landisutils 0.0.130
 
 * `plot_growth_candidate(density = TRUE)` renders. 0.0.128 introduced the density and could not draw a bundle at all; 0.0.129 misdiagnosed the cause and moved the hexes to `alpha`, which did not fix it. The contended aesthetic is FILL: `stat_binhex()` maps `fill = after_stat(count)` through its DEFAULT aes, which passing a fixed `fill` argument does not unset, while the binned-median series maps `fill` to a discrete label so that its key merges with the colour legend. With both present ggplot2 applies the discrete scale to continuous counts and reports "continuous value supplied to a discrete scale", naming neither layer. In density mode the binned series now takes a fixed fill and maps `colour` instead, which keeps its key and leaves `fill` to the hexes.

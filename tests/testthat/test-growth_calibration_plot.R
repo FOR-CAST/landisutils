@@ -170,3 +170,53 @@ test_that("plot_growth_candidate BUILDS in both cloud modes with a binned series
     expect_no_error(ggplot2::ggplot_build(p))
   }
 })
+
+test_that("the bundle README describes what was actually drawn", {
+  obs <- data.frame(
+    source = "Ground plots",
+    age = seq(20, 140, 2),
+    aboveground_c_mg_ha = seq(10, 130, 2),
+    leading_raw = "AA"
+  )
+  cur <- data.frame(
+    species = "Sp1",
+    age = 1:150,
+    aboveground_c_mg_ha = seq(0, 100, length.out = 150)
+  )
+  best <- data.frame(
+    species = "Sp1",
+    level_source_used = "plots",
+    level_source_requested = "plots",
+    n_plots = nrow(obs),
+    n_bins = 7L,
+    plots_sparse = FALSE,
+    window_source = "derived"
+  )
+  win <- data.frame(species = "Sp1", mature_from = 20, mature_to = 140)
+  rc <- stats::setNames(
+    list(list(binned = data.frame(age = seq(25, 125, 20), value = seq(20, 120, length.out = 6)))),
+    "Sp1"
+  )
+
+  readme <- function(reference_curves) {
+    d <- withr::local_tempdir()
+    write_growth_review_bundle(
+      dir = d,
+      species = "Sp1",
+      curves = cur,
+      references = stats::setNames(list(obs), "Sp1"),
+      reference_curves = reference_curves,
+      best = best,
+      windows = win
+    )
+    readLines(file.path(d, "README.txt"), warn = FALSE)
+  }
+
+  with_binned <- readme(rc)
+  without <- readme(NULL)
+  expect_true(any(grepl("BLUE DIAMONDS", with_binned, fixed = TRUE)))
+  expect_false(any(grepl("BLUE DIAMONDS", without, fixed = TRUE)))
+  expect_true(any(grepl("binned series is NOT drawn", without, fixed = TRUE)))
+  ## The window cap stopped being 0.45 x longevity in 0.0.124; the text must not still say so.
+  expect_false(any(grepl("0.45", with_binned, fixed = TRUE)))
+})
