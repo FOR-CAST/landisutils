@@ -42,10 +42,12 @@ scale_linetype_growth_reference <- function() {
 #'   did. Requires the 'hexbin' package.
 #' @param density_bins Integer. Number of bins across the x range of the
 #'   hexagonal grid when `density` is `TRUE`.
-#' @param density_point_weight Numeric. When `density` is `TRUE`, plots whose
-#'   weight is at least this fraction of the species' maximum are still drawn
-#'   individually over the density. Requires a `plot_weight` column; without one
-#'   every plot counts equally and none is singled out.
+#' @param density_points_max Integer. When `density` is `TRUE`, how many of the
+#'   best-matched plots stay drawn individually over the density. A COUNT rather
+#'   than a fraction of the maximum weight, because a fraction does not control
+#'   the number drawn: the weight distribution differs by species, and at 60% of
+#'   maximum one species keeps 989 plots where another keeps 65. Requires a
+#'   `plot_weight` column; without one every plot counts equally.
 #' @param mature_window Numeric length-2. Fitting window to shade;
 #'   `NULL` to omit.
 #'
@@ -60,7 +62,7 @@ plot_growth_calibration <- function(
   mature_window = c(100L, Inf),
   density = FALSE,
   density_bins = 34L,
-  density_point_weight = 0.6
+  density_points_max = 150L
 ) {
   .need("ggplot2", "Plotting a growth calibration")
   obs <- dplyr::filter(reference, .data$source == "Ground plots")
@@ -107,7 +109,11 @@ plot_growth_calibration <- function(
         name = "Weighted\nplot density"
       ),
       ggplot2::geom_point(
-        data = obs[rel >= density_point_weight, , drop = FALSE],
+        data = obs[
+          rank(-rel, ties.method = "first") <= min(density_points_max, length(rel)),
+          ,
+          drop = FALSE
+        ],
         ggplot2::aes(x = .data$age, y = .data$aboveground_c_mg_ha),
         colour = growth_plot_palette()[["summary"]],
         alpha = 0.65,
@@ -215,6 +221,17 @@ plot_growth_calibration <- function(
 #'   extends to the last age present in the data, so a longer run is never
 #'   silently clipped.
 #' @param mature_window Numeric length-2. Fitting window to shade.
+#' @param density Logical. Draw the ground-plot cloud as a WEIGHTED hexagonal
+#'   density instead of one point per plot, keeping the best-matched plots drawn
+#'   over it. Weighted via the `plot_weight` column if present, so the shading
+#'   reads as evidence rather than as sampling effort; without that column it
+#'   falls back to counts.
+#' @param density_bins Integer. Bins across the x range of the hex grid.
+#' @param density_points_max Integer. How many of the best-matched plots stay
+#'   drawn individually over the density. A COUNT rather than a fraction of the
+#'   maximum weight, because a fraction does not control the number drawn: the
+#'   weight distribution differs by species, and at 60% of maximum one species
+#'   keeps 989 plots where another keeps 65.
 #' @param subtitle Character. Overrides the default subtitle.
 #'
 #' @return A `ggplot`.
@@ -231,7 +248,10 @@ plot_growth_candidate <- function(
   candidate_label = "best candidate",
   x_max = NULL,
   mature_window = c(100L, Inf),
-  subtitle = NULL
+  subtitle = NULL,
+  density = FALSE,
+  density_bins = 34L,
+  density_points_max = 150L
 ) {
   .need("ggplot2", "Plotting a growth candidate")
   obs <- dplyr::filter(reference, .data$source == "Ground plots")
@@ -271,6 +291,66 @@ plot_growth_candidate <- function(
     )
   }
 
+  ## EITHER one point per plot, OR a weighted hex density with the best-matched plots over it.
+  ## Which is right depends on how many plots there are: the panels stop being readable well before
+  ## the data run out, and a species carrying thousands of plots is solid ink with a shape key per
+  ## leading species. The density carries EVERY plot at its weight, so nothing leaves the figure --
+  ## what changes is that a thousand plots stop competing for the same ink.
+  ##
+  ## Not automatic: a species with a hundred plots gets a sparse, blocky grid that says less than the
+  ## points did, so the switch is the caller's.
+  cloud <- if (isTRUE(density)) {
+    .need("hexbin", "Drawing a weighted ground-plot density")
+    has_w <- "plot_weight" %in% names(obs)
+    w <- if (has_w) obs$plot_weight else rep(1, nrow(obs))
+    w[is.na(w)] <- 0
+    ## A COUNT cap, not a fraction of the maximum weight. A fraction does not control how many points
+    ## are drawn, because the weight distribution differs by species: at 60% of maximum one species
+    ## keeps 989 of its plots and another keeps 65, and the first buries the density it annotates.
+    keep <- rank(-w, ties.method = "first") <= min(density_points_max, length(w))
+    hex_aes <- if (has_w) {
+      ggplot2::aes(x = .data$age, y = .data$aboveground_c_mg_ha, weight = .data$plot_weight)
+    } else {
+      ggplot2::aes(x = .data$age, y = .data$aboveground_c_mg_ha)
+    }
+    list(
+      ggplot2::stat_binhex(data = obs, mapping = hex_aes, bins = density_bins),
+      ## Ramps to the SUMMARY colour rather than through greys: the density and the binned points are
+      ## the same observations summarized two ways, which is the argument that already governs the
+      ## binned series and the smooth.
+      ggplot2::scale_fill_gradient(
+        low = "grey93",
+        high = growth_plot_palette()[["summary"]],
+        name = "Weighted\nplot density"
+      ),
+      ggplot2::geom_point(
+        data = obs[keep, , drop = FALSE],
+        ggplot2::aes(x = .data$age, y = .data$aboveground_c_mg_ha),
+        colour = growth_plot_palette()[["key_outline"]],
+        fill = growth_plot_palette()[["faint"]],
+        shape = 21,
+        stroke = 0.3,
+        size = 1.1,
+        alpha = 0.9
+      )
+    )
+  } else {
+    list(
+      ggplot2::geom_point(
+        data = obs,
+        ggplot2::aes(
+          x = .data$age,
+          y = .data$aboveground_c_mg_ha,
+          colour = plots_label,
+          shape = .data$leading_raw
+        ),
+        alpha = 0.6,
+        size = 1.5
+      ),
+      ggplot2::scale_shape_manual(values = c(16, 17, 15, 3, 7, 8, 4, 10, 12))
+    )
+  }
+
   p <- ggplot2::ggplot() +
     ggplot2::annotate(
       "rect",
@@ -287,18 +367,7 @@ plot_growth_candidate <- function(
     ## interchangeable -- in the network this was built against, black cottonwood
     ## carries a median 180 Mg C/ha against trembling aspen's 53. Without this a
     ## reviewer cannot see which member is setting the curve.
-    ggplot2::geom_point(
-      data = obs,
-      ggplot2::aes(
-        x = .data$age,
-        y = .data$aboveground_c_mg_ha,
-        colour = plots_label,
-        shape = .data$leading_raw
-      ),
-      alpha = 0.6,
-      size = 1.5
-    ) +
-    ggplot2::scale_shape_manual(values = c(16, 17, 15, 3, 7, 8, 4, 10, 12)) +
+    cloud +
     ggplot2::geom_line(
       data = model,
       ggplot2::aes(x = .data$age, y = .data$aboveground_c_mg_ha, linetype = .data$source),
@@ -598,7 +667,10 @@ write_growth_review_bundle <- function(
   smooth_plots = TRUE,
   smooth_bin = 20L,
   smooth_site = NULL,
-  x_max = NULL
+  x_max = NULL,
+  density_min_plots = 500L,
+  density_bins = 34L,
+  density_points_max = 150L
 ) {
   .need("ggplot2", "Writing a growth review bundle")
   dir <- fs::dir_create(dir)
@@ -690,7 +762,13 @@ write_growth_review_bundle <- function(
       smooth = smooth,
       mature_window = win,
       x_max = x_max,
-      subtitle = sub
+      subtitle = sub,
+      ## Per species, not per bundle: the threshold is where the panel stops reading, and a bundle
+      ## routinely spans two orders of magnitude in plot count.
+      density = nrow(dplyr::filter(references[[sp]], .data$source == "Ground plots")) >=
+        density_min_plots,
+      density_bins = density_bins,
+      density_points_max = density_points_max
     )
     f <- file.path(dir, paste0("review-", sp, ".png"))
     ## Taller than the panel needs, to absorb the legend box rather than let it
@@ -705,7 +783,7 @@ write_growth_review_bundle <- function(
   readme <- file.path(dir, "README.txt")
   writeLines(
     c(
-      "ForCS growth calibration -- review bundle",
+      "Biomass Succession growth calibration -- review bundle",
       paste0("written ", format(Sys.time(), "%Y-%m-%d %H:%M:%S")),
       "",
       "review-<species>.png   current parameters (black) vs best candidate (red),",

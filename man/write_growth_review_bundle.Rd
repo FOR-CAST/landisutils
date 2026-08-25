@@ -18,7 +18,10 @@ write_growth_review_bundle(
   smooth_plots = TRUE,
   smooth_bin = 20L,
   smooth_site = NULL,
-  x_max = NULL
+  x_max = NULL,
+  density_min_plots = 500L,
+  density_bins = 34L,
+  density_points_max = 150L
 )
 }
 \arguments{

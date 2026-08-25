@@ -12,7 +12,7 @@ plot_growth_calibration(
   mature_window = c(100L, Inf),
   density = FALSE,
   density_bins = 34L,
-  density_point_weight = 0.6
+  density_points_max = 150L
 )
 }
 \arguments{
@@ -41,10 +41,12 @@ did. Requires the 'hexbin' package.}
 \item{density_bins}{Integer. Number of bins across the x range of the
 hexagonal grid when \code{density} is \code{TRUE}.}
 
-\item{density_point_weight}{Numeric. When \code{density} is \code{TRUE}, plots whose
-weight is at least this fraction of the species' maximum are still drawn
-individually over the density. Requires a \code{plot_weight} column; without one
-every plot counts equally and none is singled out.}
+\item{density_points_max}{Integer. When \code{density} is \code{TRUE}, how many of the
+best-matched plots stay drawn individually over the density. A COUNT rather
+than a fraction of the maximum weight, because a fraction does not control
+the number drawn: the weight distribution differs by species, and at 60\% of
+maximum one species keeps 989 plots where another keeps 65. Requires a
+\code{plot_weight} column; without one every plot counts equally.}
 }
 \value{
 A \code{ggplot}.

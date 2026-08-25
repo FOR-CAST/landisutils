@@ -15,7 +15,10 @@ plot_growth_candidate(
   candidate_label = "best candidate",
   x_max = NULL,
   mature_window = c(100L, Inf),
-  subtitle = NULL
+  subtitle = NULL,
+  density = FALSE,
+  density_bins = 34L,
+  density_points_max = 150L
 )
 }
 \arguments{
@@ -43,6 +46,20 @@ silently clipped.}
 \item{mature_window}{Numeric length-2. Fitting window to shade.}
 
 \item{subtitle}{Character. Overrides the default subtitle.}
+
+\item{density}{Logical. Draw the ground-plot cloud as a WEIGHTED hexagonal
+density instead of one point per plot, keeping the best-matched plots drawn
+over it. Weighted via the \code{plot_weight} column if present, so the shading
+reads as evidence rather than as sampling effort; without that column it
+falls back to counts.}
+
+\item{density_bins}{Integer. Bins across the x range of the hex grid.}
+
+\item{density_points_max}{Integer. How many of the best-matched plots stay
+drawn individually over the density. A COUNT rather than a fraction of the
+maximum weight, because a fraction does not control the number drawn: the
+weight distribution differs by species, and at 60\% of maximum one species
+keeps 989 plots where another keeps 65.}
 }
 \value{
 A \code{ggplot}.
