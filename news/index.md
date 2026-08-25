@@ -1,5 +1,20 @@
 # Changelog
 
+## landisutils 0.0.131
+
+- [`write_growth_review_bundle()`](https://for-cast.github.io/landisutils/reference/write_growth_review_bundle.md)
+  writes a README describing what it ACTUALLY DREW. The panels vary with
+  the arguments – points or a hex density, a binned series or none – and
+  a fixed description drifts from them silently. It had been describing
+  diamonds a caller could switch off by passing
+  `reference_curves = NULL`, and a fitting-window rule of “0.45 x
+  longevity” that stopped being how the cap is computed in 0.0.124,
+  where it became the species’ own onset of age-related mortality.
+- Where the binned series is not drawn, the README says so and points at
+  `review-summary.csv` for the residual, rather than omitting it: the
+  series is still what the score is computed against whether or not it
+  is on the panel.
+
 ## landisutils 0.0.130
 
 - `plot_growth_candidate(density = TRUE)` renders. 0.0.128 introduced
