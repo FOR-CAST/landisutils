@@ -41,12 +41,17 @@ Other growth calibration helpers:
 \code{\link[=growth_reference_inflection]{growth_reference_inflection()}},
 \code{\link[=growth_score_fit]{growth_score_fit()}},
 \code{\link[=growth_smooth_observations]{growth_smooth_observations()}},
+\code{\link[=growth_structure_cell_curves]{growth_structure_cell_curves()}},
+\code{\link[=growth_structure_cohort_table]{growth_structure_cohort_table()}},
 \code{\link[=growth_structure_design]{growth_structure_design()}},
+\code{\link[=growth_structure_summary]{growth_structure_summary()}},
 \code{\link[=growth_window_for]{growth_window_for()}},
 \code{\link[=plot_growth_calibration]{plot_growth_calibration()}},
 \code{\link[=plot_growth_candidate]{plot_growth_candidate()}},
 \code{\link[=plot_growth_factorial_sensitivity]{plot_growth_factorial_sensitivity()}},
+\code{\link[=plot_growth_structures]{plot_growth_structures()}},
 \code{\link[=read_growth_scoring]{read_growth_scoring()}},
+\code{\link[=read_landscape_cohort_structures]{read_landscape_cohort_structures()}},
 \code{\link[=scale_linetype_growth_reference]{scale_linetype_growth_reference()}},
 \code{\link[=write_growth_review_bundle]{write_growth_review_bundle()}}
 }

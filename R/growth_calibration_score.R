@@ -1476,10 +1476,16 @@ growth_auto_window <- function(
 
 #' Per-species fitting windows
 #'
-#' Derives each species' window with [growth_auto_window()], then applies any
-#' explicit `age_min` / `age_max` from `growth_scoring.csv`. Blank cells keep
-#' the derived value, so the hand-maintained file only ever has to record
-#' DEPARTURES from what the data implies.
+#' Derives each species' window with [growth_auto_window()], optionally caps it
+#' from above, then applies any explicit `age_min` / `age_max` from
+#' `growth_scoring.csv`. Blank cells keep the derived value, so the
+#' hand-maintained file only ever has to record DEPARTURES from what the data
+#' implies.
+#'
+#' The three sources are applied in increasing order of authority: derived, then
+#' `caps`, then `scoring`. A hand-set bound is a constraint rather than a
+#' preference, so it wins over a cap; `window_source` reports which one the
+#' returned window came from.
 #'
 #' @param references Named list of reference tables, one per species.
 #' @param species_core A tibble with `species` and `longevity`.
@@ -1489,13 +1495,27 @@ growth_auto_window <- function(
 #'   close at that species' own onset of age-related mortality rather than at a
 #'   single fraction shared by every species; see [growth_auto_window()]. A
 #'   species missing from it falls back to `senescence_frac`.
+#' @param caps Optional tibble with `species` and `cap_age`, an upper bound on
+#'   `mature_to` -- e.g. the age at which an in-use reference curve plateaus,
+#'   beyond which it carries no shape left to fit. Species absent from it are
+#'   left alone.
+#' @param cap_label Character. The `window_source` value recorded for a species
+#'   whose window `caps` actually shortened.
 #' @param ... Passed to [growth_auto_window()].
 #'
 #' @return A tibble with `species`, `mature_from`, `mature_to`, `longevity`,
 #'   `inflection` and `window_source`.
 #' @family growth calibration helpers
 #' @export
-growth_fitting_windows <- function(references, species_core, scoring = NULL, mort_shp = NULL, ...) {
+growth_fitting_windows <- function(
+  references,
+  species_core,
+  scoring = NULL,
+  mort_shp = NULL,
+  caps = NULL,
+  cap_label = "cap",
+  ...
+) {
   longevity_of <- function(sp) {
     i <- match(sp, species_core$species)
     if (is.na(i)) NA_real_ else as.numeric(species_core$longevity[[i]])
@@ -1525,8 +1545,32 @@ growth_fitting_windows <- function(references, species_core, scoring = NULL, mor
   }) |>
     dplyr::bind_rows()
 
+  auto <- dplyr::mutate(auto, window_source = "derived")
+
+  ## An external upper bound on the window, per species -- e.g. the age at which
+  ## an in-use reference curve plateaus, beyond which it carries no shape to fit.
+  ## Applied BEFORE `scoring`, because a hand-set bound is a constraint and must
+  ## win over a cap as well as over the derived window.
+  if (!is.null(caps) && nrow(caps) > 0L) {
+    auto <- auto |>
+      dplyr::left_join(dplyr::select(caps, "species", "cap_age"), by = "species") |>
+      dplyr::mutate(
+        ## Evaluated BEFORE `mature_to` is overwritten below, so it records
+        ## whether the cap actually BOUND rather than comparing a value with
+        ## itself.
+        .capped = !is.na(.data$cap_age) & floor(.data$cap_age) <= .data$mature_to,
+        mature_to = dplyr::if_else(
+          is.na(.data$cap_age),
+          .data$mature_to,
+          pmin(.data$mature_to, floor(.data$cap_age))
+        ),
+        window_source = dplyr::if_else(.data$.capped, cap_label, .data$window_source)
+      ) |>
+      dplyr::select(-dplyr::any_of(c("cap_age", ".capped")))
+  }
+
   if (is.null(scoring) || nrow(scoring) == 0L) {
-    return(dplyr::mutate(auto, window_source = "derived"))
+    return(auto)
   }
 
   auto |>
@@ -1534,7 +1578,7 @@ growth_fitting_windows <- function(references, species_core, scoring = NULL, mor
     dplyr::mutate(
       window_source = dplyr::if_else(
         is.na(.data$age_min) & is.na(.data$age_max),
-        "derived",
+        .data$window_source,
         "growth_scoring.csv"
       ),
       mature_from = ceiling(dplyr::coalesce(.data$age_min, .data$mature_from)),

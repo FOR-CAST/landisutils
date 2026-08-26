@@ -712,3 +712,85 @@ test_that("a zero-weight bin does not nullify the ground-plot level", {
   ## weighted median of the 40/44 bin is 40; the level is the max over bin values
   expect_equal(ref$levels[["plots"]], 40)
 })
+
+test_that("caps shorten the derived window and are recorded in window_source", {
+  ref <- data.frame(source = "Ground plots", age = seq(10, 900, 10), aboveground_c_mg_ha = 1)
+  refs <- list(Sp1 = ref, Sp2 = ref)
+  core <- data.frame(species = c("Sp1", "Sp2"), longevity = c(400, 400))
+
+  ## derived mature_to is floor(0.45 * 400) = 180 for both
+  base <- growth_fitting_windows(refs, core, age_quantile = 1)
+  expect_equal(base$mature_to, c(180, 180))
+
+  capped <- growth_fitting_windows(
+    refs,
+    core,
+    caps = data.frame(species = "Sp1", cap_age = 120),
+    age_quantile = 1
+  )
+  expect_equal(capped$mature_to, c(120, 180))
+  expect_equal(capped$window_source, c("cap", "derived"))
+})
+
+test_that("a cap above the derived window neither extends it nor relabels it", {
+  ref <- data.frame(source = "Ground plots", age = seq(10, 900, 10), aboveground_c_mg_ha = 1)
+  refs <- list(Sp1 = ref)
+  core <- data.frame(species = "Sp1", longevity = 400)
+
+  w <- growth_fitting_windows(
+    refs,
+    core,
+    caps = data.frame(species = "Sp1", cap_age = 900),
+    age_quantile = 1
+  )
+  expect_equal(w$mature_to, 180)
+  expect_equal(w$window_source, "derived")
+})
+
+test_that("a hand-set scoring bound wins over a cap", {
+  ref <- data.frame(source = "Ground plots", age = seq(10, 900, 10), aboveground_c_mg_ha = 1)
+  refs <- list(Sp1 = ref, Sp2 = ref)
+  core <- data.frame(species = c("Sp1", "Sp2"), longevity = c(400, 400))
+  caps <- data.frame(species = c("Sp1", "Sp2"), cap_age = c(120, 120))
+  scoring <- tibble::tibble(
+    species = c("Sp1", "Sp2"),
+    age_min = c(50, NA_real_),
+    age_max = c(300, NA_real_)
+  )
+
+  w <- growth_fitting_windows(refs, core, scoring, caps = caps, age_quantile = 1)
+
+  ## Sp1 is overridden outwards past its cap; Sp2 has no override and keeps it.
+  expect_equal(w$mature_to, c(300, 120))
+  expect_equal(w$window_source, c("growth_scoring.csv", "cap"))
+})
+
+test_that("caps take a label and leave absent species alone", {
+  ref <- data.frame(source = "Ground plots", age = seq(10, 900, 10), aboveground_c_mg_ha = 1)
+  refs <- list(Sp1 = ref, Sp2 = ref)
+  core <- data.frame(species = c("Sp1", "Sp2"), longevity = c(400, 400))
+
+  w <- growth_fitting_windows(
+    refs,
+    core,
+    caps = data.frame(species = "Sp1", cap_age = 120),
+    cap_label = "in-use curve",
+    age_quantile = 1
+  )
+  expect_equal(w$window_source, c("in-use curve", "derived"))
+
+  ## NULL and empty caps are the no-op the old signature implied
+  expect_equal(
+    growth_fitting_windows(refs, core, caps = NULL, age_quantile = 1),
+    growth_fitting_windows(refs, core, age_quantile = 1)
+  )
+  expect_equal(
+    growth_fitting_windows(
+      refs,
+      core,
+      caps = data.frame(species = character(), cap_age = numeric()),
+      age_quantile = 1
+    )$mature_to,
+    c(180, 180)
+  )
+})

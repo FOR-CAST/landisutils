@@ -9,6 +9,8 @@ growth_fitting_windows(
   species_core,
   scoring = NULL,
   mort_shp = NULL,
+  caps = NULL,
+  cap_label = "cap",
   ...
 )
 }
@@ -25,6 +27,14 @@ close at that species' own onset of age-related mortality rather than at a
 single fraction shared by every species; see \code{\link[=growth_auto_window]{growth_auto_window()}}. A
 species missing from it falls back to \code{senescence_frac}.}
 
+\item{caps}{Optional tibble with \code{species} and \code{cap_age}, an upper bound on
+\code{mature_to} -- e.g. the age at which an in-use reference curve plateaus,
+beyond which it carries no shape left to fit. Species absent from it are
+left alone.}
+
+\item{cap_label}{Character. The \code{window_source} value recorded for a species
+whose window \code{caps} actually shortened.}
+
 \item{...}{Passed to \code{\link[=growth_auto_window]{growth_auto_window()}}.}
 }
 \value{
@@ -32,10 +42,17 @@ A tibble with \code{species}, \code{mature_from}, \code{mature_to}, \code{longev
 \code{inflection} and \code{window_source}.
 }
 \description{
-Derives each species' window with \code{\link[=growth_auto_window]{growth_auto_window()}}, then applies any
-explicit \code{age_min} / \code{age_max} from \code{growth_scoring.csv}. Blank cells keep
-the derived value, so the hand-maintained file only ever has to record
-DEPARTURES from what the data implies.
+Derives each species' window with \code{\link[=growth_auto_window]{growth_auto_window()}}, optionally caps it
+from above, then applies any explicit \code{age_min} / \code{age_max} from
+\code{growth_scoring.csv}. Blank cells keep the derived value, so the
+hand-maintained file only ever has to record DEPARTURES from what the data
+implies.
+}
+\details{
+The three sources are applied in increasing order of authority: derived, then
+\code{caps}, then \code{scoring}. A hand-set bound is a constraint rather than a
+preference, so it wins over a cap; \code{window_source} reports which one the
+returned window came from.
 }
 \seealso{
 Other growth calibration helpers:
@@ -61,12 +78,17 @@ Other growth calibration helpers:
 \code{\link[=growth_score_fit]{growth_score_fit()}},
 \code{\link[=growth_scoring_for]{growth_scoring_for()}},
 \code{\link[=growth_smooth_observations]{growth_smooth_observations()}},
+\code{\link[=growth_structure_cell_curves]{growth_structure_cell_curves()}},
+\code{\link[=growth_structure_cohort_table]{growth_structure_cohort_table()}},
 \code{\link[=growth_structure_design]{growth_structure_design()}},
+\code{\link[=growth_structure_summary]{growth_structure_summary()}},
 \code{\link[=growth_window_for]{growth_window_for()}},
 \code{\link[=plot_growth_calibration]{plot_growth_calibration()}},
 \code{\link[=plot_growth_candidate]{plot_growth_candidate()}},
 \code{\link[=plot_growth_factorial_sensitivity]{plot_growth_factorial_sensitivity()}},
+\code{\link[=plot_growth_structures]{plot_growth_structures()}},
 \code{\link[=read_growth_scoring]{read_growth_scoring()}},
+\code{\link[=read_landscape_cohort_structures]{read_landscape_cohort_structures()}},
 \code{\link[=scale_linetype_growth_reference]{scale_linetype_growth_reference()}},
 \code{\link[=write_growth_review_bundle]{write_growth_review_bundle()}}
 }

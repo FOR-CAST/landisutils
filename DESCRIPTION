@@ -1,6 +1,6 @@
 Package: landisutils
 Title: Utilities for Running LANDIS-II Simulations
-Version: 0.0.132
+Version: 0.0.133
 Authors@R: 
     person(c("Alex", "M"), "Chubaty", , "achubaty@for-cast.ca", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0001-7146-8135"))
@@ -128,6 +128,7 @@ Collate:
     'growth_calibration.R'
     'growth_calibration_plot.R'
     'growth_calibration_score.R'
+    'growth_structures.R'
     'initial_communities.R'
     'landis.R'
     'landis_datatype.R'
