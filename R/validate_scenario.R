@@ -319,10 +319,7 @@ validate_landis_scenario <- function(
   ## --- initial communities -----------------------------------------------------------------------
   ## The ecoregion mask scopes the map-code check to cells LANDIS-II will actually initialise.
   .eco_mask <- if (nrow(eco) > 0L) masks[[eco$abs[[1L]]]] else NULL
-  problems <- c(
-    problems,
-    .landis_check_initial_communities(path, refs, max_ic_csv_mb, .eco_mask)
-  )
+  problems <- c(problems, .landis_check_initial_communities(path, refs, max_ic_csv_mb, .eco_mask))
 
   ## --- per-extension contracts -------------------------------------------------------------------
   problems <- c(problems, .landis_check_extensions(path, configs, refs, masks))
@@ -544,7 +541,7 @@ validate_landis_scenario <- function(
   ## A map code is only REACHABLE where the ecoregion map says the cell is active: LANDIS-II never
   ## resolves a community for an inactive cell. Scoping the test to active cells is what lets a
   ## landscape carry several deliberate non-vegetated land-cover codes without their being read as
-  ## missing communities --  writes herb / shrub / bryoid / exposed /
+  ## missing communities -- landisbc writes herb / shrub / bryoid / exposed /
   ## water codes into the initial-communities map, and none of them has CSV rows because none of
   ## them is a community. Measured on an 890,400-cell BC landscape, 140,597 cells carry four such
   ## codes and not one is ecoregion-active; both scenarios staged from that map run to completion.
