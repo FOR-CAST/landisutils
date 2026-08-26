@@ -8,7 +8,7 @@ with its trajectory repeated and any naive aggregation counts it twice.
 ## Usage
 
 ``` r
-growth_structure_cell_curves(curves)
+growth_structure_cell_curves(curves, biomass = c("cell", "cohort"))
 ```
 
 ## Arguments
@@ -18,6 +18,16 @@ growth_structure_cell_curves(curves)
   A tibble of structure-run curves, carrying at least `batch`,
   `map_code`, `species`, `cohort_age`, `age` and `aboveground_c_mg_ha`.
   An optional `variant` column is carried through.
+
+- biomass:
+
+  What `aboveground_c_mg_ha` MEANS, which differs by extension and
+  cannot be detected from the data. `"cell"` (the default) is a
+  whole-cell total already, repeated once per cohort by the join, and is
+  de-duplicated. `"cohort"` is that cohort's own biomass and is SUMMED
+  over the cell's cohorts. Getting this wrong is quiet: de-duplicating
+  per-cohort values keeps one row per DISTINCT VALUE, which is neither a
+  total nor a trajectory.
 
 ## Value
 

@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.133</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.134</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,6 +41,13 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.134" id="landisutils-00134">landisutils 0.0.134<a class="anchor" aria-label="anchor" href="#landisutils-00134"></a></h2>
+<ul><li>
+<code><a href="../reference/growth_structure_cell_curves.html">growth_structure_cell_curves()</a></code> gains <code>biomass</code>, because what <code>aboveground_c_mg_ha</code> MEANS differs by extension and cannot be detected from the data. A per-cell output log reports a whole-cell total that the per-cohort join then repeats, so it is de-duplicated (<code>"cell"</code>, the default, unchanged). A per-cohort community output reports each cohort’s own biomass, which has to be SUMMED (<code>"cohort"</code>). Getting it wrong is quiet rather than loud: de-duplicating per-cohort values keeps one row per DISTINCT VALUE, so a cell of 16 cohorts carrying 4 distinct biomasses reduces to 4 rows that are neither a total nor a trajectory.</li>
+<li>
+<code><a href="../reference/plot_growth_structures.html">plot_growth_structures()</a></code> no longer labels its categories in terms of two. A structure design is capped on SPECIES, not cohorts, so a one-species cell can carry a dozen age classes; the labels are now <code>single cohort</code>, <code>one species, multiple cohorts</code> and <code>multiple species</code>. The previous wording was correct only for a design that also happened to hold at most two cohorts.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.133" id="landisutils-00133">landisutils 0.0.133<a class="anchor" aria-label="anchor" href="#landisutils-00133"></a></h2>
 <ul><li>

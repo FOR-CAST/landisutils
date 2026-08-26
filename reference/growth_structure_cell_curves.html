@@ -13,7 +13,7 @@ repeated and any naive aggregation counts it twice."><meta property="og:image" c
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.133</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.134</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -57,7 +57,7 @@ repeated and any naive aggregation counts it twice.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">growth_structure_cell_curves</span><span class="op">(</span><span class="va">curves</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">growth_structure_cell_curves</span><span class="op">(</span><span class="va">curves</span>, biomass <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cell"</span>, <span class="st">"cohort"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -68,6 +68,15 @@ repeated and any naive aggregation counts it twice.</p>
 <dd><p>A tibble of structure-run curves, carrying at least <code>batch</code>,
 <code>map_code</code>, <code>species</code>, <code>cohort_age</code>, <code>age</code> and <code>aboveground_c_mg_ha</code>. An
 optional <code>variant</code> column is carried through.</p></dd>
+
+
+<dt id="arg-biomass">biomass<a class="anchor" aria-label="anchor" href="#arg-biomass"></a></dt>
+<dd><p>What <code>aboveground_c_mg_ha</code> MEANS, which differs by extension
+and cannot be detected from the data. <code>"cell"</code> (the default) is a whole-cell
+total already, repeated once per cohort by the join, and is de-duplicated.
+<code>"cohort"</code> is that cohort's own biomass and is SUMMED over the cell's
+cohorts. Getting this wrong is quiet: de-duplicating per-cohort values keeps
+one row per DISTINCT VALUE, which is neither a total nor a trajectory.</p></dd>
 
 </dl></div>
     <div class="section level2">

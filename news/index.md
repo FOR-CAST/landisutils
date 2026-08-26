@@ -1,5 +1,25 @@
 # Changelog
 
+## landisutils 0.0.134
+
+- [`growth_structure_cell_curves()`](https://for-cast.github.io/landisutils/reference/growth_structure_cell_curves.md)
+  gains `biomass`, because what `aboveground_c_mg_ha` MEANS differs by
+  extension and cannot be detected from the data. A per-cell output log
+  reports a whole-cell total that the per-cohort join then repeats, so
+  it is de-duplicated (`"cell"`, the default, unchanged). A per-cohort
+  community output reports each cohort’s own biomass, which has to be
+  SUMMED (`"cohort"`). Getting it wrong is quiet rather than loud:
+  de-duplicating per-cohort values keeps one row per DISTINCT VALUE, so
+  a cell of 16 cohorts carrying 4 distinct biomasses reduces to 4 rows
+  that are neither a total nor a trajectory.
+- [`plot_growth_structures()`](https://for-cast.github.io/landisutils/reference/plot_growth_structures.md)
+  no longer labels its categories in terms of two. A structure design is
+  capped on SPECIES, not cohorts, so a one-species cell can carry a
+  dozen age classes; the labels are now `single cohort`,
+  `one species, multiple cohorts` and `multiple species`. The previous
+  wording was correct only for a design that also happened to hold at
+  most two cohorts.
+
 ## landisutils 0.0.133
 
 - [`growth_structure_cell_curves()`](https://for-cast.github.io/landisutils/reference/growth_structure_cell_curves.md),
