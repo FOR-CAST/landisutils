@@ -81,15 +81,28 @@ write_growth_review_bundle(
 
   Passed to
   [`growth_smooth_observations()`](https://for-cast.github.io/landisutils/reference/growth_smooth_observations.md).
-  `smooth_bin` may be a single width or a vector named by species. Set
-  `smooth_site` to the location column wherever the plots are a
-  permanent network, so the fit and the binned series rest on the same
-  evidence.
 
 - x_max:
 
   Numeric or `NULL`. Upper age limit for every panel. `NULL` lets each
   panel extend to the last age in its own data.
+
+- density_min_plots:
+
+  Integer. Draw the ground-plot cloud as a hex density rather than
+  points once a species has at least this many admissible plots. Below
+  it the hex grid is sparse and blocky and says less than the points
+  did, so the switch is per species rather than a global default.
+
+- density_bins, density_points_max:
+
+  Passed to
+  [`plot_growth_candidate()`](https://for-cast.github.io/landisutils/reference/plot_growth_candidate.md):
+  the number of hex bins across the panel, and the point cap used when
+  the cloud is drawn as points instead. `smooth_bin` may be a single
+  width or a vector named by species. Set `smooth_site` to the location
+  column wherever the plots are a permanent network, so the fit and the
+  binned series rest on the same evidence.
 
 ## Value
 

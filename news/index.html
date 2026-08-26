@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.135</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.136</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,6 +41,12 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.136" id="landisutils-00136">landisutils 0.0.136<a class="anchor" aria-label="anchor" href="#landisutils-00136"></a></h2>
+<ul><li>
+<code><a href="../reference/write_growth_review_bundle.html">write_growth_review_bundle()</a></code> documents <code>density_min_plots</code>, <code>density_bins</code> and <code>density_points_max</code>. They were added with the hex density and left undocumented, which is an R CMD check WARNING; CI runs with <code>error_on = "warning"</code> and had been failing on it since 2026-08-25.</li>
+<li>Declares <code>count</code> as a global. It is computed by <code>stat_binhex()</code> and reached through <code>after_stat()</code>, so it never exists as a binding R CMD check can see.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.135" id="landisutils-00135">landisutils 0.0.135<a class="anchor" aria-label="anchor" href="#landisutils-00135"></a></h2>
 <ul><li>

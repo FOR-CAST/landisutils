@@ -9,7 +9,7 @@ directory that needs no Quarto render and no pipeline knowledge to inspect."><me
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.135</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.136</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -122,15 +122,28 @@ nothing is scored against it. See <code><a href="growth_smooth_observations.html
 
 
 <dt id="arg-smooth-bin-smooth-site">smooth_bin, smooth_site<a class="anchor" aria-label="anchor" href="#arg-smooth-bin-smooth-site"></a></dt>
-<dd><p>Passed to <code><a href="growth_smooth_observations.html">growth_smooth_observations()</a></code>.
-<code>smooth_bin</code> may be a single width or a vector named by species. Set
-<code>smooth_site</code> to the location column wherever the plots are a permanent
-network, so the fit and the binned series rest on the same evidence.</p></dd>
+<dd><p>Passed to <code><a href="growth_smooth_observations.html">growth_smooth_observations()</a></code>.</p></dd>
 
 
 <dt id="arg-x-max">x_max<a class="anchor" aria-label="anchor" href="#arg-x-max"></a></dt>
 <dd><p>Numeric or <code>NULL</code>. Upper age limit for every panel. <code>NULL</code> lets
 each panel extend to the last age in its own data.</p></dd>
+
+
+<dt id="arg-density-min-plots">density_min_plots<a class="anchor" aria-label="anchor" href="#arg-density-min-plots"></a></dt>
+<dd><p>Integer. Draw the ground-plot cloud as a hex density
+rather than points once a species has at least this many admissible plots.
+Below it the hex grid is sparse and blocky and says less than the points
+did, so the switch is per species rather than a global default.</p></dd>
+
+
+<dt id="arg-density-bins-density-points-max">density_bins, density_points_max<a class="anchor" aria-label="anchor" href="#arg-density-bins-density-points-max"></a></dt>
+<dd><p>Passed to <code><a href="plot_growth_candidate.html">plot_growth_candidate()</a></code>:
+the number of hex bins across the panel, and the point cap used when the
+cloud is drawn as points instead.
+<code>smooth_bin</code> may be a single width or a vector named by species. Set
+<code>smooth_site</code> to the location column wherever the plots are a permanent
+network, so the fit and the binned series rest on the same evidence.</p></dd>
 
 </dl></div>
     <div class="section level2">
