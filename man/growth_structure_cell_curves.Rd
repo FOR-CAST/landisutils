@@ -4,12 +4,19 @@
 \alias{growth_structure_cell_curves}
 \title{Reduce structure-factorial curves to one trajectory per cell}
 \usage{
-growth_structure_cell_curves(curves)
+growth_structure_cell_curves(curves, biomass = c("cell", "cohort"))
 }
 \arguments{
 \item{curves}{A tibble of structure-run curves, carrying at least \code{batch},
 \code{map_code}, \code{species}, \code{cohort_age}, \code{age} and \code{aboveground_c_mg_ha}. An
 optional \code{variant} column is carried through.}
+
+\item{biomass}{What \code{aboveground_c_mg_ha} MEANS, which differs by extension
+and cannot be detected from the data. \code{"cell"} (the default) is a whole-cell
+total already, repeated once per cohort by the join, and is de-duplicated.
+\code{"cohort"} is that cohort's own biomass and is SUMMED over the cell's
+cohorts. Getting this wrong is quiet: de-duplicating per-cohort values keeps
+one row per DISTINCT VALUE, which is neither a total nor a trajectory.}
 }
 \value{
 A tibble with \code{batch}, \code{map_code}, \code{age}, \code{aboveground_c_mg_ha},

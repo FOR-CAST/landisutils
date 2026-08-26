@@ -122,6 +122,47 @@ test_that("plot_growth_structures() separates an age structure from a mixture", 
   ## The legend must distinguish the three kinds, not collapse them.
   expect_setequal(
     unique(ggplot2::ggplot_build(p)$plot$data$kind),
-    c("two cohorts, one species", "two species")
+    c("one species, multiple cohorts", "multiple species")
   )
+})
+
+
+test_that("growth_structure_cell_curves() sums per-cohort biomass instead of de-duplicating it", {
+  ## Same cell and age, three cohorts, two of which happen to carry equal biomass.
+  curves <- tibble::tibble(
+    batch = 1L,
+    map_code = 1L,
+    species = c("Aa", "Aa", "Aa"),
+    cohort_age = c(10L, 30L, 50L),
+    age = 1L,
+    aboveground_c_mg_ha = c(2, 2, 5)
+  )
+
+  summed <- growth_structure_cell_curves(curves, biomass = "cohort")
+  expect_equal(nrow(summed), 1L)
+  expect_equal(summed$aboveground_c_mg_ha, 9)
+  expect_equal(summed$n_cohorts, 3L)
+
+  ## The default treats the column as a whole-cell total already, so it keeps one
+  ## row per DISTINCT value -- 2 and 5, which is neither a total nor a trajectory.
+  deduped <- growth_structure_cell_curves(curves)
+  expect_equal(nrow(deduped), 2L)
+})
+
+test_that("plot_growth_structures() does not call a many-cohort cell two cohorts", {
+  skip_if_not_installed("ggplot2")
+  curves <- tibble::tibble(
+    batch = 1L,
+    map_code = 1L,
+    species = "Aa",
+    cohort_age = seq(10L, 160L, by = 10L),
+    age = 1L,
+    aboveground_c_mg_ha = 1
+  )
+  cells <- growth_structure_cell_curves(curves, biomass = "cohort")
+  s <- growth_structure_summary(cells, min_cells = 1L)
+  p <- plot_growth_structures(s, "Aa", x_max = 10)
+
+  expect_equal(unique(ggplot2::ggplot_build(p)$plot$data$kind), "one species, multiple cohorts")
+  expect_equal(unique(cells$n_cohorts), 16L)
 })

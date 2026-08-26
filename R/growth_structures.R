@@ -44,12 +44,19 @@ read_landscape_cohort_structures <- function(path) {
 #' @param curves A tibble of structure-run curves, carrying at least `batch`,
 #'   `map_code`, `species`, `cohort_age`, `age` and `aboveground_c_mg_ha`. An
 #'   optional `variant` column is carried through.
+#' @param biomass What `aboveground_c_mg_ha` MEANS, which differs by extension
+#'   and cannot be detected from the data. `"cell"` (the default) is a whole-cell
+#'   total already, repeated once per cohort by the join, and is de-duplicated.
+#'   `"cohort"` is that cohort's own biomass and is SUMMED over the cell's
+#'   cohorts. Getting this wrong is quiet: de-duplicating per-cohort values keeps
+#'   one row per DISTINCT VALUE, which is neither a total nor a trajectory.
 #'
 #' @return A tibble with `batch`, `map_code`, `age`, `aboveground_c_mg_ha`,
 #'   `n_cohorts` and `composition`.
 #' @family growth calibration helpers
 #' @export
-growth_structure_cell_curves <- function(curves) {
+growth_structure_cell_curves <- function(curves, biomass = c("cell", "cohort")) {
+  biomass <- match.arg(biomass)
   ## A cell is (batch, map_code), NOT map_code. `growth_calibration_partition()`
   ## renumbers map_code from 1 within each batch, so map_code 1 exists in every
   ## batch and grouping on it alone silently merges one cell per batch into a
@@ -71,8 +78,17 @@ growth_structure_cell_curves <- function(curves) {
       composition = paste(sort(.data$species), collapse = "+"),
       .by = dplyr::all_of(key)
     )
-  curves |>
-    dplyr::distinct(dplyr::pick(dplyr::all_of(c(key, "age", "aboveground_c_mg_ha")))) |>
+  per_cell <- if (biomass == "cell") {
+    dplyr::distinct(curves, dplyr::pick(dplyr::all_of(c(key, "age", "aboveground_c_mg_ha"))))
+  } else {
+    dplyr::summarise(
+      curves,
+      aboveground_c_mg_ha = sum(.data$aboveground_c_mg_ha),
+      .by = dplyr::all_of(c(key, "age"))
+    )
+  }
+
+  per_cell |>
     dplyr::inner_join(comp, by = key) |>
     dplyr::arrange(.data$batch, .data$map_code, .data$age)
 }
@@ -178,10 +194,13 @@ growth_structure_cohort_table <- function(cells, curves = NULL) {
   dplyr::arrange(out, dplyr::desc(.data$n_cells), .data$composition)
 }
 
+## Deliberately NOT phrased in terms of two: a structure design is capped on
+## SPECIES, not cohorts, so a one-species cell can carry a dozen age classes and
+## a label saying "two" would be wrong on most landscapes.
 .growth_structure_kinds <- c(
   "single cohort" = "#1b7837",
-  "two cohorts, one species" = "#e08214",
-  "two species" = "#762a83"
+  "one species, multiple cohorts" = "#e08214",
+  "multiple species" = "#762a83"
 )
 
 #' Plot mixtures against monocultures for one species
@@ -226,8 +245,8 @@ plot_growth_structures <- function(summary, species, x_max = 100) {
     n_species = lengths(lapply(strsplit(.data$composition, "+", fixed = TRUE), unique)),
     kind = dplyr::case_when(
       .data$n_cohorts == 1L ~ "single cohort",
-      .data$n_species == 1L ~ "two cohorts, one species",
-      .default = "two species"
+      .data$n_species == 1L ~ "one species, multiple cohorts",
+      .default = "multiple species"
     ),
     ## Built from the composition and the LARGEST cell count, not from each
     ## row's own: the variants share a design, so letting a per-variant count
