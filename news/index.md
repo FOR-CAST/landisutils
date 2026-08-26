@@ -1,5 +1,26 @@
 # Changelog
 
+## landisutils 0.0.135
+
+- [`growth_structure_cell_curves()`](https://for-cast.github.io/landisutils/reference/growth_structure_cell_curves.md)
+  COUNTS a repeated species in `composition` rather than repeating its
+  name: `Hw` for one cohort, `Hw x3` for three. The repeated form was
+  written for a design holding at most two cohorts; a structure design
+  is capped on SPECIES, so a landscape whose cells carry a dozen age
+  classes produced 255-character labels, unusable as a facet strip and
+  near-unique per cell. The counted form has the same equivalence
+  classes, so nothing regroups.
+- A `species_set` column carries the species actually present, and
+  [`plot_growth_structures()`](https://for-cast.github.io/landisutils/reference/plot_growth_structures.md)
+  matches and counts species on it instead of parsing `composition`. The
+  label carries counts now, so a bare species code no longer matches it;
+  a summary without the column still falls back to `composition`.
+- [`growth_structure_summary()`](https://for-cast.github.io/landisutils/reference/growth_structure_summary.md)
+  and
+  [`growth_structure_cohort_table()`](https://for-cast.github.io/landisutils/reference/growth_structure_cohort_table.md)
+  carry `species_set` through. It is a function of `composition`, so no
+  grouping changes.
+
 ## landisutils 0.0.134
 
 - [`growth_structure_cell_curves()`](https://for-cast.github.io/landisutils/reference/growth_structure_cell_curves.md)

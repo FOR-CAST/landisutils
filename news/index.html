@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.134</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.135</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,6 +41,14 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.135" id="landisutils-00135">landisutils 0.0.135<a class="anchor" aria-label="anchor" href="#landisutils-00135"></a></h2>
+<ul><li>
+<code><a href="../reference/growth_structure_cell_curves.html">growth_structure_cell_curves()</a></code> COUNTS a repeated species in <code>composition</code> rather than repeating its name: <code>Hw</code> for one cohort, <code>Hw x3</code> for three. The repeated form was written for a design holding at most two cohorts; a structure design is capped on SPECIES, so a landscape whose cells carry a dozen age classes produced 255-character labels, unusable as a facet strip and near-unique per cell. The counted form has the same equivalence classes, so nothing regroups.</li>
+<li>A <code>species_set</code> column carries the species actually present, and <code><a href="../reference/plot_growth_structures.html">plot_growth_structures()</a></code> matches and counts species on it instead of parsing <code>composition</code>. The label carries counts now, so a bare species code no longer matches it; a summary without the column still falls back to <code>composition</code>.</li>
+<li>
+<code><a href="../reference/growth_structure_summary.html">growth_structure_summary()</a></code> and <code><a href="../reference/growth_structure_cohort_table.html">growth_structure_cohort_table()</a></code> carry <code>species_set</code> through. It is a function of <code>composition</code>, so no grouping changes.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.134" id="landisutils-00134">landisutils 0.0.134<a class="anchor" aria-label="anchor" href="#landisutils-00134"></a></h2>
 <ul><li>

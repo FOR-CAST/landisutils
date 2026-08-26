@@ -32,7 +32,9 @@ growth_structure_cell_curves(curves, biomass = c("cell", "cohort"))
 ## Value
 
 A tibble with `batch`, `map_code`, `age`, `aboveground_c_mg_ha`,
-`n_cohorts` and `composition`.
+`n_cohorts`, `composition` (a display label, counted: `Hw` for one
+cohort, `Hw x3` for three) and `species_set` (the species present, for
+matching).
 
 ## Details
 
