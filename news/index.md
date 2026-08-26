@@ -1,5 +1,24 @@
 # Changelog
 
+## landisutils 0.0.137
+
+- [`validate_landis_scenario()`](https://for-cast.github.io/landisutils/reference/validate_landis_scenario.md)
+  scopes the initial-communities map-code check to cells the ecoregion
+  map calls ACTIVE. A map code is only reachable where the cell is
+  active, since LANDIS-II never resolves a community for an inactive
+  one, so testing the whole raster read deliberate non-vegetated
+  land-cover codes as missing communities and rejected input that runs.
+  `landisbc` writes distinct herb, shrub, bryoid, exposed-land and water
+  codes into inactive cells and none of them has CSV rows, because none
+  of them is a community: measured on an 890,400-cell landscape, 140,597
+  cells carry four such codes and not one is ecoregion-active, while
+  both scenarios staged from that map run to completion. Without a
+  readable ecoregions map it falls back to the whole raster, which can
+  over-report but never under-report.
+- This fix was written against 0.0.132 and stranded on an unpushed
+  commit while the package moved on to 0.0.136, so it was absent from
+  every released version. Restored here unchanged apart from a comment.
+
 ## landisutils 0.0.136
 
 - [`write_growth_review_bundle()`](https://for-cast.github.io/landisutils/reference/write_growth_review_bundle.md)

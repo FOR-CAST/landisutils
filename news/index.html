@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.136</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.137</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,6 +41,12 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.137" id="landisutils-00137">landisutils 0.0.137<a class="anchor" aria-label="anchor" href="#landisutils-00137"></a></h2>
+<ul><li>
+<code><a href="../reference/validate_landis_scenario.html">validate_landis_scenario()</a></code> scopes the initial-communities map-code check to cells the ecoregion map calls ACTIVE. A map code is only reachable where the cell is active, since LANDIS-II never resolves a community for an inactive one, so testing the whole raster read deliberate non-vegetated land-cover codes as missing communities and rejected input that runs. <code>landisbc</code> writes distinct herb, shrub, bryoid, exposed-land and water codes into inactive cells and none of them has CSV rows, because none of them is a community: measured on an 890,400-cell landscape, 140,597 cells carry four such codes and not one is ecoregion-active, while both scenarios staged from that map run to completion. Without a readable ecoregions map it falls back to the whole raster, which can over-report but never under-report.</li>
+<li>This fix was written against 0.0.132 and stranded on an unpushed commit while the package moved on to 0.0.136, so it was absent from every released version. Restored here unchanged apart from a comment.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.136" id="landisutils-00136">landisutils 0.0.136<a class="anchor" aria-label="anchor" href="#landisutils-00136"></a></h2>
 <ul><li>
