@@ -1,3 +1,7 @@
+## `count` is computed BY stat_binhex() and referenced through after_stat(), so
+## it never exists as a binding R CMD check can see.
+utils::globalVariables("count")
+
 #' Consistent linetype scale for reference curves
 #'
 #' @return A ggplot2 scale.
@@ -678,6 +682,13 @@ plot_growth_factorial_sensitivity <- function(scores, current) {
 #' @param x_max Numeric or `NULL`. Upper age limit for every panel. `NULL` lets
 #'   each panel extend to the last age in its own data.
 #' @param smooth_bin,smooth_site Passed to [growth_smooth_observations()].
+#' @param density_min_plots Integer. Draw the ground-plot cloud as a hex density
+#'   rather than points once a species has at least this many admissible plots.
+#'   Below it the hex grid is sparse and blocky and says less than the points
+#'   did, so the switch is per species rather than a global default.
+#' @param density_bins,density_points_max Passed to [plot_growth_candidate()]:
+#'   the number of hex bins across the panel, and the point cap used when the
+#'   cloud is drawn as points instead.
 #'   `smooth_bin` may be a single width or a vector named by species. Set
 #'   `smooth_site` to the location column wherever the plots are a permanent
 #'   network, so the fit and the binned series rest on the same evidence.

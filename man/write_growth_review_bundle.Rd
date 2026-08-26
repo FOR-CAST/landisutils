@@ -50,13 +50,22 @@ keeps them in.}
 on each panel, for comparison against the binned series. Display only;
 nothing is scored against it. See \code{\link[=growth_smooth_observations]{growth_smooth_observations()}}.}
 
-\item{smooth_bin, smooth_site}{Passed to \code{\link[=growth_smooth_observations]{growth_smooth_observations()}}.
-\code{smooth_bin} may be a single width or a vector named by species. Set
-\code{smooth_site} to the location column wherever the plots are a permanent
-network, so the fit and the binned series rest on the same evidence.}
+\item{smooth_bin, smooth_site}{Passed to \code{\link[=growth_smooth_observations]{growth_smooth_observations()}}.}
 
 \item{x_max}{Numeric or \code{NULL}. Upper age limit for every panel. \code{NULL} lets
 each panel extend to the last age in its own data.}
+
+\item{density_min_plots}{Integer. Draw the ground-plot cloud as a hex density
+rather than points once a species has at least this many admissible plots.
+Below it the hex grid is sparse and blocky and says less than the points
+did, so the switch is per species rather than a global default.}
+
+\item{density_bins, density_points_max}{Passed to \code{\link[=plot_growth_candidate]{plot_growth_candidate()}}:
+the number of hex bins across the panel, and the point cap used when the
+cloud is drawn as points instead.
+\code{smooth_bin} may be a single width or a vector named by species. Set
+\code{smooth_site} to the location column wherever the plots are a permanent
+network, so the fit and the binned series rest on the same evidence.}
 }
 \value{
 Character vector of the written file paths.

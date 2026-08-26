@@ -1,3 +1,8 @@
+# landisutils 0.0.136
+
+* `write_growth_review_bundle()` documents `density_min_plots`, `density_bins` and `density_points_max`. They were added with the hex density and left undocumented, which is an R CMD check WARNING; CI runs with `error_on = "warning"` and had been failing on it since 2026-08-25.
+* Declares `count` as a global. It is computed by `stat_binhex()` and reached through `after_stat()`, so it never exists as a binding R CMD check can see.
+
 # landisutils 0.0.135
 
 * `growth_structure_cell_curves()` COUNTS a repeated species in `composition` rather than repeating its name: `Hw` for one cohort, `Hw x3` for three. The repeated form was written for a design holding at most two cohorts; a structure design is capped on SPECIES, so a landscape whose cells carry a dozen age classes produced 255-character labels, unusable as a facet strip and near-unique per cell. The counted form has the same equivalence classes, so nothing regroups.
