@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.132</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.133</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,6 +41,16 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.133" id="landisutils-00133">landisutils 0.0.133<a class="anchor" aria-label="anchor" href="#landisutils-00133"></a></h2>
+<ul><li>
+<code><a href="../reference/growth_structure_cell_curves.html">growth_structure_cell_curves()</a></code>, <code><a href="../reference/growth_structure_summary.html">growth_structure_summary()</a></code>, <code><a href="../reference/growth_structure_cohort_table.html">growth_structure_cohort_table()</a></code>, <code><a href="../reference/plot_growth_structures.html">plot_growth_structures()</a></code> and <code><a href="../reference/read_landscape_cohort_structures.html">read_landscape_cohort_structures()</a></code> read a structure factorial back. <code><a href="../reference/growth_structure_design.html">growth_structure_design()</a></code> and <code><a href="../reference/growth_calibration_partition.html">growth_calibration_partition()</a></code> already BUILT the batched design here while every consumer reduced it downstream, which is what let the <code>map_code</code> renumbering be a trap rather than an invariant: the partitioner numbers <code>map_code</code> from 1 WITHIN each batch, so grouping on it alone merges one cell per batch into a single fictional stand carrying more cohorts than any structure holds. <code><a href="../reference/growth_structure_cell_curves.html">growth_structure_cell_curves()</a></code> keys on <code>(batch, map_code)</code> and asserts <code>batch</code> is present, so the mistake is now an error in the package that creates the condition rather than a guard each caller has to rediscover. A single-batch run cannot surface it.</li>
+<li>A structure run’s curves carry one row per (cell, timestep, COHORT) because the design they join against is per cohort, while the biomass column is a whole-cell total, so a multi-cohort cell arrives with its trajectory repeated. <code><a href="../reference/growth_structure_cell_curves.html">growth_structure_cell_curves()</a></code> reduces that to one row per (cell, timestep) and attaches the cell’s composition as a sorted <code>+</code>-separated label, keeping a repeated species – two cohorts of one species is an age structure, not a monoculture, and collapsing to unique species would label it identically to a single-cohort cell.</li>
+<li>
+<code><a href="../reference/growth_fitting_windows.html">growth_fitting_windows()</a></code> gains <code>caps</code> and <code>cap_label</code>, an optional per-species upper bound on <code>mature_to</code> – e.g. the age at which an in-use reference curve plateaus, beyond which it carries no shape left to fit. The three sources now apply in increasing order of authority (derived, then <code>caps</code>, then <code>scoring</code>), because a hand-set bound is a constraint rather than a preference and must win over a cap as well as over the derived window. <code>window_source</code> reports which one the returned window came from. Previously a caller wanting a cap had to wrap this function and re-implement the entire <code>scoring</code> override, which is how one downstream copy came to carry a duplicate of it.</li>
+<li>
+<code><a href="../reference/plot_growth_structures.html">plot_growth_structures()</a></code> labels <code>linetype</code> only where a linetype is actually mapped. Labelling an aesthetic no layer uses makes ggplot2 report “Ignoring unknown labels” on every build.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.132" id="landisutils-00132">landisutils 0.0.132<a class="anchor" aria-label="anchor" href="#landisutils-00132"></a></h2>
 <ul><li>

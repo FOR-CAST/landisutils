@@ -2,10 +2,10 @@
 
 Derives each species' window with
 [`growth_auto_window()`](https://for-cast.github.io/landisutils/reference/growth_auto_window.md),
-then applies any explicit `age_min` / `age_max` from
-`growth_scoring.csv`. Blank cells keep the derived value, so the
-hand-maintained file only ever has to record DEPARTURES from what the
-data implies.
+optionally caps it from above, then applies any explicit `age_min` /
+`age_max` from `growth_scoring.csv`. Blank cells keep the derived value,
+so the hand-maintained file only ever has to record DEPARTURES from what
+the data implies.
 
 ## Usage
 
@@ -15,6 +15,8 @@ growth_fitting_windows(
   species_core,
   scoring = NULL,
   mort_shp = NULL,
+  caps = NULL,
+  cap_label = "cap",
   ...
 )
 ```
@@ -44,6 +46,18 @@ growth_fitting_windows(
   [`growth_auto_window()`](https://for-cast.github.io/landisutils/reference/growth_auto_window.md).
   A species missing from it falls back to `senescence_frac`.
 
+- caps:
+
+  Optional tibble with `species` and `cap_age`, an upper bound on
+  `mature_to` – e.g. the age at which an in-use reference curve
+  plateaus, beyond which it carries no shape left to fit. Species absent
+  from it are left alone.
+
+- cap_label:
+
+  Character. The `window_source` value recorded for a species whose
+  window `caps` actually shortened.
+
 - ...:
 
   Passed to
@@ -53,6 +67,13 @@ growth_fitting_windows(
 
 A tibble with `species`, `mature_from`, `mature_to`, `longevity`,
 `inflection` and `window_source`.
+
+## Details
+
+The three sources are applied in increasing order of authority: derived,
+then `caps`, then `scoring`. A hand-set bound is a constraint rather
+than a preference, so it wins over a cap; `window_source` reports which
+one the returned window came from.
 
 ## See also
 
@@ -79,11 +100,16 @@ Other growth calibration helpers:
 [`growth_score_fit()`](https://for-cast.github.io/landisutils/reference/growth_score_fit.md),
 [`growth_scoring_for()`](https://for-cast.github.io/landisutils/reference/growth_scoring_for.md),
 [`growth_smooth_observations()`](https://for-cast.github.io/landisutils/reference/growth_smooth_observations.md),
+[`growth_structure_cell_curves()`](https://for-cast.github.io/landisutils/reference/growth_structure_cell_curves.md),
+[`growth_structure_cohort_table()`](https://for-cast.github.io/landisutils/reference/growth_structure_cohort_table.md),
 [`growth_structure_design()`](https://for-cast.github.io/landisutils/reference/growth_structure_design.md),
+[`growth_structure_summary()`](https://for-cast.github.io/landisutils/reference/growth_structure_summary.md),
 [`growth_window_for()`](https://for-cast.github.io/landisutils/reference/growth_window_for.md),
 [`plot_growth_calibration()`](https://for-cast.github.io/landisutils/reference/plot_growth_calibration.md),
 [`plot_growth_candidate()`](https://for-cast.github.io/landisutils/reference/plot_growth_candidate.md),
 [`plot_growth_factorial_sensitivity()`](https://for-cast.github.io/landisutils/reference/plot_growth_factorial_sensitivity.md),
+[`plot_growth_structures()`](https://for-cast.github.io/landisutils/reference/plot_growth_structures.md),
 [`read_growth_scoring()`](https://for-cast.github.io/landisutils/reference/read_growth_scoring.md),
+[`read_landscape_cohort_structures()`](https://for-cast.github.io/landisutils/reference/read_landscape_cohort_structures.md),
 [`scale_linetype_growth_reference()`](https://for-cast.github.io/landisutils/reference/scale_linetype_growth_reference.md),
 [`write_growth_review_bundle()`](https://for-cast.github.io/landisutils/reference/write_growth_review_bundle.md)

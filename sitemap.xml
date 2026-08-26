@@ -161,7 +161,10 @@
 <url><loc>https://for-cast.github.io/landisutils/reference/growth_score_fit.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/growth_scoring_for.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/growth_smooth_observations.html</loc></url>
+<url><loc>https://for-cast.github.io/landisutils/reference/growth_structure_cell_curves.html</loc></url>
+<url><loc>https://for-cast.github.io/landisutils/reference/growth_structure_cohort_table.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/growth_structure_design.html</loc></url>
+<url><loc>https://for-cast.github.io/landisutils/reference/growth_structure_summary.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/growth_window_for.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/harvestPrescription.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/host_cpu_info.html</loc></url>
@@ -295,6 +298,7 @@
 <url><loc>https://for-cast.github.io/landisutils/reference/plot_growth_calibration.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/plot_growth_candidate.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/plot_growth_factorial_sensitivity.html</loc></url>
+<url><loc>https://for-cast.github.io/landisutils/reference/plot_growth_structures.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/plot_species_biomass.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/plot_species_growth_curves.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/plot_transitions.html</loc></url>
@@ -343,6 +347,7 @@
 <url><loc>https://for-cast.github.io/landisutils/reference/read_growth_scoring.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/read_landis_raster.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/read_landis_resource_logs.html</loc></url>
+<url><loc>https://for-cast.github.io/landisutils/reference/read_landscape_cohort_structures.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/repair_fwi_daily.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/repair_fwi_exponent.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/roadType.html</loc></url>

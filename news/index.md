@@ -1,5 +1,54 @@
 # Changelog
 
+## landisutils 0.0.133
+
+- [`growth_structure_cell_curves()`](https://for-cast.github.io/landisutils/reference/growth_structure_cell_curves.md),
+  [`growth_structure_summary()`](https://for-cast.github.io/landisutils/reference/growth_structure_summary.md),
+  [`growth_structure_cohort_table()`](https://for-cast.github.io/landisutils/reference/growth_structure_cohort_table.md),
+  [`plot_growth_structures()`](https://for-cast.github.io/landisutils/reference/plot_growth_structures.md)
+  and
+  [`read_landscape_cohort_structures()`](https://for-cast.github.io/landisutils/reference/read_landscape_cohort_structures.md)
+  read a structure factorial back.
+  [`growth_structure_design()`](https://for-cast.github.io/landisutils/reference/growth_structure_design.md)
+  and
+  [`growth_calibration_partition()`](https://for-cast.github.io/landisutils/reference/growth_calibration_partition.md)
+  already BUILT the batched design here while every consumer reduced it
+  downstream, which is what let the `map_code` renumbering be a trap
+  rather than an invariant: the partitioner numbers `map_code` from 1
+  WITHIN each batch, so grouping on it alone merges one cell per batch
+  into a single fictional stand carrying more cohorts than any structure
+  holds.
+  [`growth_structure_cell_curves()`](https://for-cast.github.io/landisutils/reference/growth_structure_cell_curves.md)
+  keys on `(batch, map_code)` and asserts `batch` is present, so the
+  mistake is now an error in the package that creates the condition
+  rather than a guard each caller has to rediscover. A single-batch run
+  cannot surface it.
+- A structure run’s curves carry one row per (cell, timestep, COHORT)
+  because the design they join against is per cohort, while the biomass
+  column is a whole-cell total, so a multi-cohort cell arrives with its
+  trajectory repeated.
+  [`growth_structure_cell_curves()`](https://for-cast.github.io/landisutils/reference/growth_structure_cell_curves.md)
+  reduces that to one row per (cell, timestep) and attaches the cell’s
+  composition as a sorted `+`-separated label, keeping a repeated
+  species – two cohorts of one species is an age structure, not a
+  monoculture, and collapsing to unique species would label it
+  identically to a single-cohort cell.
+- [`growth_fitting_windows()`](https://for-cast.github.io/landisutils/reference/growth_fitting_windows.md)
+  gains `caps` and `cap_label`, an optional per-species upper bound on
+  `mature_to` – e.g. the age at which an in-use reference curve
+  plateaus, beyond which it carries no shape left to fit. The three
+  sources now apply in increasing order of authority (derived, then
+  `caps`, then `scoring`), because a hand-set bound is a constraint
+  rather than a preference and must win over a cap as well as over the
+  derived window. `window_source` reports which one the returned window
+  came from. Previously a caller wanting a cap had to wrap this function
+  and re-implement the entire `scoring` override, which is how one
+  downstream copy came to carry a duplicate of it.
+- [`plot_growth_structures()`](https://for-cast.github.io/landisutils/reference/plot_growth_structures.md)
+  labels `linetype` only where a linetype is actually mapped. Labelling
+  an aesthetic no layer uses makes ggplot2 report “Ignoring unknown
+  labels” on every build.
+
 ## landisutils 0.0.132
 
 - [`plot_growth_candidate()`](https://for-cast.github.io/landisutils/reference/plot_growth_candidate.md)

@@ -506,9 +506,18 @@ scenario(
 - [`growth_smooth_observations()`](https://for-cast.github.io/landisutils/reference/growth_smooth_observations.md)
   : Smooth a ground-plot cloud for display
 
+- [`growth_structure_cell_curves()`](https://for-cast.github.io/landisutils/reference/growth_structure_cell_curves.md)
+  : Reduce structure-factorial curves to one trajectory per cell
+
+- [`growth_structure_cohort_table()`](https://for-cast.github.io/landisutils/reference/growth_structure_cohort_table.md)
+  : Tabulate the cohorts the structure factorial actually simulated
+
 - [`growth_structure_design()`](https://for-cast.github.io/landisutils/reference/growth_structure_design.md)
   : Build a design crossing landscape cohort structures with a parameter
   sweep
+
+- [`growth_structure_summary()`](https://for-cast.github.io/landisutils/reference/growth_structure_summary.md)
+  : Summarise structure-factorial trajectories by stand composition
 
 - [`growth_window_for()`](https://for-cast.github.io/landisutils/reference/growth_window_for.md)
   : Look up one species' fitting window
@@ -807,6 +816,9 @@ scenario(
 - [`plot_growth_factorial_sensitivity()`](https://for-cast.github.io/landisutils/reference/plot_growth_factorial_sensitivity.md)
   : Plot factorial sensitivity of fit to each growth parameter
 
+- [`plot_growth_structures()`](https://for-cast.github.io/landisutils/reference/plot_growth_structures.md)
+  : Plot mixtures against monocultures for one species
+
 - [`plot_species_biomass()`](https://for-cast.github.io/landisutils/reference/plot_species_biomass.md)
   : Plot species biomass over time (stacked area)
 
@@ -1003,6 +1015,9 @@ scenario(
   [`landis_run_docker()`](https://for-cast.github.io/landisutils/reference/landis_run_docker.md)
   /
   [`landis_run_local()`](https://for-cast.github.io/landisutils/reference/landis_run_local.md)
+
+- [`read_landscape_cohort_structures()`](https://for-cast.github.io/landisutils/reference/read_landscape_cohort_structures.md)
+  : Read a landscape cohort-structure table
 
 - [`repair_fwi_daily()`](https://for-cast.github.io/landisutils/reference/repair_fwi_daily.md)
   :
