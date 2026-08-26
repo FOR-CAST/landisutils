@@ -1,3 +1,9 @@
+# landisutils 0.0.135
+
+* `growth_structure_cell_curves()` COUNTS a repeated species in `composition` rather than repeating its name: `Hw` for one cohort, `Hw x3` for three. The repeated form was written for a design holding at most two cohorts; a structure design is capped on SPECIES, so a landscape whose cells carry a dozen age classes produced 255-character labels, unusable as a facet strip and near-unique per cell. The counted form has the same equivalence classes, so nothing regroups.
+* A `species_set` column carries the species actually present, and `plot_growth_structures()` matches and counts species on it instead of parsing `composition`. The label carries counts now, so a bare species code no longer matches it; a summary without the column still falls back to `composition`.
+* `growth_structure_summary()` and `growth_structure_cohort_table()` carry `species_set` through. It is a function of `composition`, so no grouping changes.
+
 # landisutils 0.0.134
 
 * `growth_structure_cell_curves()` gains `biomass`, because what `aboveground_c_mg_ha` MEANS differs by extension and cannot be detected from the data. A per-cell output log reports a whole-cell total that the per-cohort join then repeats, so it is de-duplicated (`"cell"`, the default, unchanged). A per-cohort community output reports each cohort's own biomass, which has to be SUMMED (`"cohort"`). Getting it wrong is quiet rather than loud: de-duplicating per-cohort values keeps one row per DISTINCT VALUE, so a cell of 16 cohorts carrying 4 distinct biomasses reduces to 4 rows that are neither a total nor a trajectory.

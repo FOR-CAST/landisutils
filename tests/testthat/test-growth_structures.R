@@ -23,7 +23,7 @@ test_that("growth_structure_cell_curves() keys on (batch, map_code), not map_cod
   cells <- growth_structure_cell_curves(structure_curves())
 
   ## Merging the two batches would give one cell of 4 cohorts labelled Aa+Aa+Aa+Bb.
-  expect_equal(sort(unique(cells$composition)), c("Aa+Aa", "Aa+Bb"))
+  expect_equal(sort(unique(cells$composition)), c("Aa x2", "Aa+Bb"))
   expect_equal(max(cells$n_cohorts), 2L)
 })
 
@@ -31,7 +31,8 @@ test_that("growth_structure_cell_curves() keeps a repeated species in the compos
   cells <- growth_structure_cell_curves(structure_curves())
 
   ## Two cohorts of one species is an age structure, not a monoculture.
-  expect_equal(cells$composition[cells$batch == 2L], "Aa+Aa")
+  expect_equal(cells$composition[cells$batch == 2L], "Aa x2")
+  expect_equal(cells$species_set[cells$batch == 2L], "Aa")
 })
 
 test_that("growth_structure_cell_curves() requires the batch column", {
@@ -47,7 +48,7 @@ test_that("growth_structure_summary() drops compositions with too few cells", {
   expect_equal(nrow(growth_structure_summary(cells, min_cells = 25L)), 0L)
   expect_equal(
     sort(unique(growth_structure_summary(cells, min_cells = 1L)$composition)),
-    c("Aa+Aa", "Aa+Bb")
+    c("Aa x2", "Aa+Bb")
   )
 })
 
@@ -57,10 +58,10 @@ test_that("growth_structure_summary() reports the band across cells", {
 
   expect_named(
     s,
-    c("composition", "n_cohorts", "age", "n_cells", "lower", "median", "upper"),
+    c("composition", "species_set", "n_cohorts", "age", "n_cells", "lower", "median", "upper"),
     ignore.order = TRUE
   )
-  expect_equal(s$median[s$composition == "Aa+Aa"], 9)
+  expect_equal(s$median[s$composition == "Aa x2"], 9)
 })
 
 test_that("growth_structure_cohort_table() reports cohort ages only when given the curves", {
@@ -72,7 +73,7 @@ test_that("growth_structure_cohort_table() reports cohort ages only when given t
 
   expect_false("cohort_age_min" %in% names(without))
   expect_equal(with$cohort_age_min[with$composition == "Aa+Bb"], 10L)
-  expect_equal(with$cohort_age_max[with$composition == "Aa+Aa"], 70L)
+  expect_equal(with$cohort_age_max[with$composition == "Aa x2"], 70L)
 })
 
 test_that("growth_structure_cohort_table() counts cells across batches", {
@@ -165,4 +166,22 @@ test_that("plot_growth_structures() does not call a many-cohort cell two cohorts
 
   expect_equal(unique(ggplot2::ggplot_build(p)$plot$data$kind), "one species, multiple cohorts")
   expect_equal(unique(cells$n_cohorts), 16L)
+})
+
+
+test_that("a many-cohort composition gets a counted label, not a repeated one", {
+  curves <- tibble::tibble(
+    batch = 1L,
+    map_code = 1L,
+    species = rep(c("Aa", "Bb"), each = 8L),
+    cohort_age = rep(seq(10L, 80L, by = 10L), times = 2L),
+    age = 1L,
+    aboveground_c_mg_ha = 1
+  )
+  cells <- growth_structure_cell_curves(curves, biomass = "cohort")
+
+  expect_equal(cells$composition, "Aa x8+Bb x8")
+  expect_equal(cells$species_set, "Aa+Bb")
+  ## The repeated form would be 71 characters for a cell of 16.
+  expect_lt(nchar(cells$composition), 20L)
 })

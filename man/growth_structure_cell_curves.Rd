@@ -20,7 +20,8 @@ one row per DISTINCT VALUE, which is neither a total nor a trajectory.}
 }
 \value{
 A tibble with \code{batch}, \code{map_code}, \code{age}, \code{aboveground_c_mg_ha},
-\code{n_cohorts} and \code{composition}.
+\code{n_cohorts}, \code{composition} (a display label, counted: \code{Hw} for one cohort,
+\verb{Hw x3} for three) and \code{species_set} (the species present, for matching).
 }
 \description{
 A structure run's curves carry one row per (cell, timestep, COHORT), because

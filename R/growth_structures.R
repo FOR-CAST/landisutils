@@ -30,6 +30,15 @@ read_landscape_cohort_structures <- function(path) {
     )
 }
 
+## `Hw` for one cohort, `Hw x3` for three -- so that a single-cohort cell keeps
+## the bare species code and the label stays short however many age classes a
+## cell carries.
+.growth_composition_label <- function(species) {
+  n <- table(species)
+  nm <- sort(names(n))
+  paste(ifelse(n[nm] > 1L, paste0(nm, " x", as.integer(n[nm])), nm), collapse = "+")
+}
+
 #' Reduce structure-factorial curves to one trajectory per cell
 #'
 #' A structure run's curves carry one row per (cell, timestep, COHORT), because
@@ -52,7 +61,8 @@ read_landscape_cohort_structures <- function(path) {
 #'   one row per DISTINCT VALUE, which is neither a total nor a trajectory.
 #'
 #' @return A tibble with `batch`, `map_code`, `age`, `aboveground_c_mg_ha`,
-#'   `n_cohorts` and `composition`.
+#'   `n_cohorts`, `composition` (a display label, counted: `Hw` for one cohort,
+#'   `Hw x3` for three) and `species_set` (the species present, for matching).
 #' @family growth calibration helpers
 #' @export
 growth_structure_cell_curves <- function(curves, biomass = c("cell", "cohort")) {
@@ -72,10 +82,16 @@ growth_structure_cell_curves <- function(curves, biomass = c("cell", "cohort")) 
     dplyr::distinct(dplyr::pick(dplyr::all_of(c(key, "species", "cohort_age")))) |>
     dplyr::summarise(
       n_cohorts = dplyr::n(),
-      ## Duplicates kept: two cohorts of the SAME species at different ages is
-      ## `Hw+Hw`, not `Hw`. Collapsing to unique species would label it
-      ## identically to a single-cohort cell, which is a different experiment.
-      composition = paste(sort(.data$species), collapse = "+"),
+      ## Repeats are NOT collapsed away: two cohorts of one species at different
+      ## ages is a different experiment from one cohort of it, and labelling both
+      ## `Hw` would merge them. They are COUNTED rather than repeated, because a
+      ## structure design is capped on species and not cohorts -- repeating the
+      ## name per cohort gives a 255-character label on a landscape whose cells
+      ## carry a dozen age classes, which is unusable as a facet strip.
+      composition = .growth_composition_label(.data$species),
+      ## The species actually present, for matching and counting. `composition`
+      ## is a display label and must not be parsed for this.
+      species_set = paste(sort(unique(.data$species)), collapse = "+"),
       .by = dplyr::all_of(key)
     )
   per_cell <- if (biomass == "cell") {
@@ -113,7 +129,9 @@ growth_structure_summary <- function(cells, min_cells = 25L) {
   ## average away the very difference the second set exists to show, and would do
   ## it silently -- the band would just widen.
   variant <- intersect("variant", names(cells))
-  by_comp <- c("composition", variant)
+  ## `species_set` is a function of `composition`, so adding it changes no
+  ## grouping -- it only keeps the column, which the plot needs to match species.
+  by_comp <- c("composition", intersect("species_set", names(cells)), variant)
 
   keep <- cells |>
     dplyr::summarise(
@@ -158,7 +176,7 @@ growth_structure_summary <- function(cells, min_cells = 25L) {
 #' @export
 growth_structure_cohort_table <- function(cells, curves = NULL) {
   variant <- intersect("variant", names(cells))
-  by_comp <- c(variant, "composition", "n_cohorts")
+  by_comp <- c(variant, "composition", intersect("species_set", names(cells)), "n_cohorts")
 
   out <- cells |>
     dplyr::summarise(
@@ -226,7 +244,10 @@ growth_structure_cohort_table <- function(cells, curves = NULL) {
 #' @export
 plot_growth_structures <- function(summary, species, x_max = 100) {
   .need("ggplot2", "Plotting stand structures")
-  d <- dplyr::filter(summary, grepl(paste0("(^|\\+)", species, "($|\\+)"), .data$composition))
+  ## Matched on the species SET, never on the display label, which carries
+  ## counts and would not match a bare species code.
+  match_col <- if ("species_set" %in% names(summary)) "species_set" else "composition"
+  d <- dplyr::filter(summary, grepl(paste0("(^|\\+)", species, "($|\\+)"), .data[[match_col]]))
   if (nrow(d) == 0L) {
     return(NULL)
   }
@@ -242,7 +263,7 @@ plot_growth_structures <- function(summary, species, x_max = 100) {
   has_variant <- "variant" %in% names(d) && dplyr::n_distinct(d$variant) > 1L
   d <- dplyr::mutate(
     d,
-    n_species = lengths(lapply(strsplit(.data$composition, "+", fixed = TRUE), unique)),
+    n_species = lengths(lapply(strsplit(.data[[match_col]], "+", fixed = TRUE), unique)),
     kind = dplyr::case_when(
       .data$n_cohorts == 1L ~ "single cohort",
       .data$n_species == 1L ~ "one species, multiple cohorts",
