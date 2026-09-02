@@ -1,5 +1,29 @@
 # Changelog
 
+## landisutils 0.0.138
+
+- [`tar_landis()`](https://for-cast.github.io/landisutils/reference/tar_landis.md)
+  stages the RIGHT branch’s input files. When a pattern maps over
+  `scenario_dir` but not over the dependency target, every branch
+  receives all branches’ files, and the basename deduplication then has
+  to choose; files under the branch’s own `scenario_dir` were ordered
+  first so they would win. That prioritisation compared a `path_abs()`
+  spelling against a `path_real()` one, so in any project reaching its
+  LANDIS-II tree through a symlink the prefix test never matched, the
+  ordering became a no-op, and EVERY branch staged the first-listed
+  branch’s inputs. A two-batch run produced byte-identical outputs from
+  two different landscapes while each branch’s own correct inputs sat
+  unused on disk; the failure needs at least two branches to appear, so
+  single-branch runs cannot surface it. Both sides are now resolved with
+  `path_real()`.
+- [`landis_dep_files()`](https://for-cast.github.io/landisutils/reference/landis_dep_files.md)
+  is the resolution, pulled out of the
+  [`bquote()`](https://rdrr.io/r/base/bquote.html) target command so it
+  can be tested. The bug survived precisely because it was inline there,
+  where no test could reach it. Exported (`@keywords internal`) because
+  generated target code cannot reach an unexported name without `:::`;
+  not part of the user-facing API.
+
 ## landisutils 0.0.137
 
 - [`validate_landis_scenario()`](https://for-cast.github.io/landisutils/reference/validate_landis_scenario.md)

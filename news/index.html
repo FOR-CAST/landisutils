@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.137</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.138</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,6 +41,13 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.138" id="landisutils-00138">landisutils 0.0.138<a class="anchor" aria-label="anchor" href="#landisutils-00138"></a></h2>
+<ul><li>
+<code><a href="../reference/tar_landis.html">tar_landis()</a></code> stages the RIGHT branch’s input files. When a pattern maps over <code>scenario_dir</code> but not over the dependency target, every branch receives all branches’ files, and the basename deduplication then has to choose; files under the branch’s own <code>scenario_dir</code> were ordered first so they would win. That prioritisation compared a <code>path_abs()</code> spelling against a <code>path_real()</code> one, so in any project reaching its LANDIS-II tree through a symlink the prefix test never matched, the ordering became a no-op, and EVERY branch staged the first-listed branch’s inputs. A two-batch run produced byte-identical outputs from two different landscapes while each branch’s own correct inputs sat unused on disk; the failure needs at least two branches to appear, so single-branch runs cannot surface it. Both sides are now resolved with <code>path_real()</code>.</li>
+<li>
+<code><a href="../reference/landis_dep_files.html">landis_dep_files()</a></code> is the resolution, pulled out of the <code><a href="https://rdrr.io/r/base/bquote.html" class="external-link">bquote()</a></code> target command so it can be tested. The bug survived precisely because it was inline there, where no test could reach it. Exported (<code>@keywords internal</code>) because generated target code cannot reach an unexported name without <code>:::</code>; not part of the user-facing API.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.137" id="landisutils-00137">landisutils 0.0.137<a class="anchor" aria-label="anchor" href="#landisutils-00137"></a></h2>
 <ul><li>

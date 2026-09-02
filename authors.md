@@ -8,13 +8,13 @@
 ## Citation
 
 Chubaty AM (2026). *landisutils: Utilities for Running LANDIS-II
-Simulations*. R package version 0.0.137,
+Simulations*. R package version 0.0.138,
 <https://for-cast.github.io/landisutils/>.
 
     @Manual{,
       title = {landisutils: Utilities for Running LANDIS-II Simulations},
       author = {Alex M Chubaty},
       year = {2026},
-      note = {R package version 0.0.137},
+      note = {R package version 0.0.138},
       url = {https://for-cast.github.io/landisutils/},
     }
