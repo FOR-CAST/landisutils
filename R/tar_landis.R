@@ -1,3 +1,49 @@
+#' Resolve a replicate's dependency files against its own scenario directory
+#'
+#' Exported because [tar_landis()] emits a target command that calls it, and
+#' generated code cannot reach an unexported name without `:::`. Not part of the
+#' user-facing API.
+#'
+#' @param deps List of upstream target values; character elements are treated as
+#'   file paths.
+#' @param scenario_dir Character. The replicate's scenario directory.
+#'
+#' @return Character vector of files to stage, one per basename.
+#' @keywords internal
+#' @export
+##
+## `deps` is whatever the caller listed, and when a pattern maps over the
+## scenario dir but NOT over the dependency target, every branch receives ALL
+## branches' files. Deduplicating on basename then has to pick, so files under
+## THIS scenario dir are ordered first and win.
+##
+## That prioritisation compares paths, and the comparison has to be
+## like-for-like: `scenario_dir` is resolved with `path_real()`, so the
+## dependency files must be too. `path_abs()` alone keeps the symlinked
+## spelling, and a project that reaches its LANDIS-II tree through a symlink
+## (`LANDIS-II -> /mnt/projects/...`) then never matched the prefix. The
+## prioritisation silently became a no-op and every branch staged the
+## FIRST-listed branch's inputs -- so a multi-batch run produced byte-identical
+## outputs from different landscapes, with each branch's own correct inputs
+## still sitting unused on disk. Single-branch runs cannot surface it.
+landis_dep_files <- function(deps, scenario_dir) {
+  files <- Filter(is.character, deps) |> unlist()
+  if (is.null(files) || !length(files)) {
+    return(character(0))
+  }
+  files <- files |> fs::path_abs() |> unique()
+  files <- files[fs::file_exists(files)]
+  if (!length(files)) {
+    return(character(0))
+  }
+  files <- as.character(fs::path_real(files))
+  ## Trailing "/" so startsWith() matches only files *under* scenario_dir, not a
+  ## sibling sharing its prefix (phase_2_ICH_fire/ vs phase_2_ICH/).
+  sd_real <- paste0(fs::path_real(scenario_dir), "/")
+  files <- c(files[startsWith(files, sd_real)], files[!startsWith(files, sd_real)])
+  files[!duplicated(basename(files))]
+}
+
 ## LANDIS-II execution helpers (local and Docker) --------------------------------------------------
 
 #' Host CPU and RAM identification (cross-platform)
@@ -1348,18 +1394,7 @@ tar_landis <- function(
     .sd <- as.character(.(scenario_dir_expr))
     .rep_idx <- as.integer(.(rep_index_expr))
 
-    .dep_files <- Filter(is.character, .deps) |> unlist()
-    .dep_files <- .dep_files |> fs::path_abs() |> unique()
-    .dep_files <- .dep_files[fs::file_exists(.dep_files)]
-    ## Append "/" so startsWith() matches only files *under* .sd, not files
-    ## under a sibling whose name shares the same prefix
-    ## (e.g. phase_2_ICH_fire/ must not match prefix phase_2_ICH/).
-    .sd_real <- paste0(fs::path_real(.sd), "/")
-    .dep_files <- c(
-      .dep_files[startsWith(.dep_files, .sd_real)],
-      .dep_files[!startsWith(.dep_files, .sd_real)]
-    )
-    .dep_files <- .dep_files[!duplicated(basename(.dep_files))]
+    .dep_files <- landisutils::landis_dep_files(.deps, .sd)
 
     ## Final (tracked) replicate location: the value this target returns -- and
     ## everything {targets} tracks -- always points HERE, under scenario_dir.
