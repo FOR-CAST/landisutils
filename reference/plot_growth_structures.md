@@ -8,7 +8,7 @@ never let two cohorts compete for light.
 ## Usage
 
 ``` r
-plot_growth_structures(summary, species, x_max = 100)
+plot_growth_structures(summary, species, x_max = 100, max_panels = NULL)
 ```
 
 ## Arguments
@@ -25,6 +25,16 @@ plot_growth_structures(summary, species, x_max = 100)
 - x_max:
 
   Numeric or `NULL`. Clip the data to this simulation year.
+
+- max_panels:
+
+  Integer or `NULL`. Keep only this many compositions, those with the
+  most cells behind them. `NULL` (the default) keeps all, which is right
+  when cells hold at most a couple of cohorts and a species appears in a
+  handful of compositions. Where cells carry many age classes a species
+  can appear in over a hundred, and a facet per composition renders as
+  unreadable slivers with truncated strips. What was dropped is stated
+  in the subtitle rather than left implied.
 
 ## Value
 

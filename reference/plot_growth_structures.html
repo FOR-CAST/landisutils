@@ -13,7 +13,7 @@ cohorts compete for light."><meta property="og:image" content="https://for-cast.
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.138</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.139</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -57,7 +57,7 @@ cohorts compete for light.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">plot_growth_structures</span><span class="op">(</span><span class="va">summary</span>, <span class="va">species</span>, x_max <span class="op">=</span> <span class="fl">100</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">plot_growth_structures</span><span class="op">(</span><span class="va">summary</span>, <span class="va">species</span>, x_max <span class="op">=</span> <span class="fl">100</span>, max_panels <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -74,6 +74,16 @@ cohorts compete for light.</p>
 
 <dt id="arg-x-max">x_max<a class="anchor" aria-label="anchor" href="#arg-x-max"></a></dt>
 <dd><p>Numeric or <code>NULL</code>. Clip the data to this simulation year.</p></dd>
+
+
+<dt id="arg-max-panels">max_panels<a class="anchor" aria-label="anchor" href="#arg-max-panels"></a></dt>
+<dd><p>Integer or <code>NULL</code>. Keep only this many compositions, those
+with the most cells behind them. <code>NULL</code> (the default) keeps all, which is
+right when cells hold at most a couple of cohorts and a species appears in
+a handful of compositions. Where cells carry many age classes a species can
+appear in over a hundred, and a facet per composition renders as unreadable
+slivers with truncated strips. What was dropped is stated in the subtitle
+rather than left implied.</p></dd>
 
 </dl></div>
     <div class="section level2">

@@ -1,5 +1,17 @@
 # Changelog
 
+## landisutils 0.0.139
+
+- [`plot_growth_structures()`](https://for-cast.github.io/landisutils/reference/plot_growth_structures.md)
+  gains `max_panels`, keeping only the compositions with the most cells
+  behind them. A facet per composition is right when cells hold at most
+  a couple of cohorts and a species appears in a handful of them; where
+  cells carry ten to thirty age classes a species appears in over a
+  hundred, and the panel renders as unreadable slivers with truncated
+  facet strips and overlapping axis labels. `NULL` (the default) keeps
+  all, so existing callers are unchanged. What was dropped is stated in
+  the subtitle rather than left implied.
+
 ## landisutils 0.0.138
 
 - [`tar_landis()`](https://for-cast.github.io/landisutils/reference/tar_landis.md)
