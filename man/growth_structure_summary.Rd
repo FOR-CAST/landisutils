@@ -4,16 +4,23 @@
 \alias{growth_structure_summary}
 \title{Summarise structure-factorial trajectories by stand composition}
 \usage{
-growth_structure_summary(cells, min_cells = 25L)
+growth_structure_summary(cells, min_cells = 25L, start_age_breaks = NULL)
 }
 \arguments{
 \item{cells}{A tibble from \code{\link[=growth_structure_cell_curves]{growth_structure_cell_curves()}}.}
 
 \item{min_cells}{Integer. Drop compositions represented by fewer cells than
-this, which are too thin to read a band from.}
+this, which are too thin to read a band from. Applied per class when
+\code{start_age_breaks} is given, so a stratified call needs more cells overall.}
+
+\item{start_age_breaks}{Numeric or \code{NULL}. Breaks passed to \code{\link[=cut]{cut()}} to bin
+each cell's \code{start_age}, adding a \code{start_class} column and summarising
+within it. \code{NULL} (the default) pools over starting age, which is the
+historical behaviour. Requires \code{cells} to carry \code{start_age}.}
 }
 \value{
-A tibble, one row per composition and age.
+A tibble, one row per composition and age (and \code{start_class} when
+stratified).
 }
 \description{
 Each cell is one (cohort structure, parameter combination) pair, so several
@@ -21,6 +28,14 @@ cells share a composition and differ in parameters and cohort ages. The
 spread across them is therefore real variation in what the parameter set does
 to that mixture, not noise, and is reported as a band rather than averaged
 away.
+}
+\details{
+Pooling over starting age is usually the wrong default for reading a band.
+A composition's cells differ in two ways at once: the parameter combination,
+and the ages the map gave their cohorts. The second dominates, so a band
+taken over the pool is mostly stand age wearing the parameters' name. Supply
+\code{start_age_breaks} to summarise WITHIN starting-age classes instead, which
+leaves the remaining spread attributable to the parameters.
 }
 \seealso{
 Other growth calibration helpers:

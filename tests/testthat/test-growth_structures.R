@@ -217,3 +217,50 @@ test_that("plot_growth_structures() says nothing about dropping when nothing is 
   p <- plot_growth_structures(s, "Aa", x_max = NULL, max_panels = 99L)
   expect_no_match(p$labels$subtitle, "compositions with the most cells")
 })
+
+test_that("growth_structure_cell_curves() carries the cell's oldest starting cohort", {
+  cells <- growth_structure_cell_curves(structure_curves())
+
+  ## batch 1 holds cohorts aged 10 and 30; batch 2 holds 50 and 70.
+  expect_equal(cells$start_age[cells$batch == 1L], c(30L, 30L))
+  expect_equal(cells$start_age[cells$batch == 2L], 70L)
+})
+
+test_that("growth_structure_summary() summarises within starting-age classes when asked", {
+  cells <- growth_structure_cell_curves(structure_curves())
+  s <- growth_structure_summary(cells, min_cells = 1L, start_age_breaks = c(0, 40, Inf))
+
+  expect_true("start_class" %in% names(s))
+  ## The two batches fall either side of the break, so they never share a row.
+  expect_equal(dplyr::n_distinct(s$start_class), 2L)
+  expect_false(any(duplicated(s[, c("composition", "start_class", "age")])))
+})
+
+test_that("growth_structure_summary() pools over starting age by default", {
+  cells <- growth_structure_cell_curves(structure_curves())
+
+  ## The historical shape: no extra column, and no extra grouping.
+  expect_false("start_class" %in% names(growth_structure_summary(cells, min_cells = 1L)))
+})
+
+test_that("growth_structure_summary() rejects breaks when start_age is absent", {
+  cells <- dplyr::select(growth_structure_cell_curves(structure_curves()), -"start_age")
+
+  expect_error(
+    growth_structure_summary(cells, min_cells = 1L, start_age_breaks = c(0, 40, Inf)),
+    "needs a `start_age` column"
+  )
+})
+
+test_that("plot_growth_structures() colours by starting-age class when the summary carries one", {
+  skip_if_not_installed("ggplot2")
+  cells <- growth_structure_cell_curves(structure_curves())
+  s <- growth_structure_summary(cells, min_cells = 1L, start_age_breaks = c(0, 40, Inf))
+
+  p <- plot_growth_structures(s, "Aa", x_max = NULL)
+  mapped <- rlang::as_label(p$layers[[1]]$mapping$colour)
+  expect_match(mapped, "start_class")
+  ## Within a panel the composition is constant, so `kind` would say nothing;
+  ## and the band is suppressed rather than drawn once per class.
+  expect_false(any(vapply(p$layers, function(l) inherits(l$geom, "GeomRibbon"), logical(1))))
+})
