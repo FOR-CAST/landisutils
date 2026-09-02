@@ -4,7 +4,7 @@
 \alias{plot_growth_structures}
 \title{Plot mixtures against monocultures for one species}
 \usage{
-plot_growth_structures(summary, species, x_max = 100)
+plot_growth_structures(summary, species, x_max = 100, max_panels = NULL)
 }
 \arguments{
 \item{summary}{A tibble from \code{\link[=growth_structure_summary]{growth_structure_summary()}}.}
@@ -12,6 +12,14 @@ plot_growth_structures(summary, species, x_max = 100)
 \item{species}{Character. Modelled species code to plot.}
 
 \item{x_max}{Numeric or \code{NULL}. Clip the data to this simulation year.}
+
+\item{max_panels}{Integer or \code{NULL}. Keep only this many compositions, those
+with the most cells behind them. \code{NULL} (the default) keeps all, which is
+right when cells hold at most a couple of cohorts and a species appears in
+a handful of compositions. Where cells carry many age classes a species can
+appear in over a hundred, and a facet per composition renders as unreadable
+slivers with truncated strips. What was dropped is stated in the subtitle
+rather than left implied.}
 }
 \value{
 A ggplot, or \code{NULL} when the species appears in no composition.

@@ -1,3 +1,7 @@
+# landisutils 0.0.139
+
+* `plot_growth_structures()` gains `max_panels`, keeping only the compositions with the most cells behind them. A facet per composition is right when cells hold at most a couple of cohorts and a species appears in a handful of them; where cells carry ten to thirty age classes a species appears in over a hundred, and the panel renders as unreadable slivers with truncated facet strips and overlapping axis labels. `NULL` (the default) keeps all, so existing callers are unchanged. What was dropped is stated in the subtitle rather than left implied.
+
 # landisutils 0.0.138
 
 * `tar_landis()` stages the RIGHT branch's input files. When a pattern maps over `scenario_dir` but not over the dependency target, every branch receives all branches' files, and the basename deduplication then has to choose; files under the branch's own `scenario_dir` were ordered first so they would win. That prioritisation compared a `path_abs()` spelling against a `path_real()` one, so in any project reaching its LANDIS-II tree through a symlink the prefix test never matched, the ordering became a no-op, and EVERY branch staged the first-listed branch's inputs. A two-batch run produced byte-identical outputs from two different landscapes while each branch's own correct inputs sat unused on disk; the failure needs at least two branches to appear, so single-branch runs cannot surface it. Both sides are now resolved with `path_real()`.

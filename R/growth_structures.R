@@ -238,11 +238,18 @@ growth_structure_cohort_table <- function(cells, curves = NULL) {
 #' @param summary A tibble from [growth_structure_summary()].
 #' @param species Character. Modelled species code to plot.
 #' @param x_max Numeric or `NULL`. Clip the data to this simulation year.
+#' @param max_panels Integer or `NULL`. Keep only this many compositions, those
+#'   with the most cells behind them. `NULL` (the default) keeps all, which is
+#'   right when cells hold at most a couple of cohorts and a species appears in
+#'   a handful of compositions. Where cells carry many age classes a species can
+#'   appear in over a hundred, and a facet per composition renders as unreadable
+#'   slivers with truncated strips. What was dropped is stated in the subtitle
+#'   rather than left implied.
 #'
 #' @return A ggplot, or `NULL` when the species appears in no composition.
 #' @family growth calibration helpers
 #' @export
-plot_growth_structures <- function(summary, species, x_max = 100) {
+plot_growth_structures <- function(summary, species, x_max = 100, max_panels = NULL) {
   .need("ggplot2", "Plotting stand structures")
   ## Matched on the species SET, never on the display label, which carries
   ## counts and would not match a bare species code.
@@ -257,6 +264,17 @@ plot_growth_structures <- function(summary, species, x_max = 100) {
   ## simulate but production never reaches.
   if (!is.null(x_max)) {
     d <- dplyr::filter(d, .data$age <= x_max)
+  }
+  ## Keep the best-evidenced compositions. Ordered by cells first and then by
+  ## name, so the selection is deterministic rather than dependent on row order.
+  n_comp <- dplyr::n_distinct(d$composition)
+  dropped <- 0L
+  if (!is.null(max_panels) && n_comp > max_panels) {
+    rank <- d |>
+      dplyr::summarise(n_cells = max(.data$n_cells), .by = "composition") |>
+      dplyr::arrange(dplyr::desc(.data$n_cells), .data$composition)
+    d <- dplyr::filter(d, .data$composition %in% rank$composition[seq_len(max_panels)])
+    dropped <- n_comp - max_panels
   }
   ## Three cases, not two: a second cohort of the SAME species is an age
   ## structure, not a mixture, and saying otherwise misreads the panel.
@@ -308,6 +326,11 @@ plot_growth_structures <- function(summary, species, x_max = 100) {
           ""
         } else {
           paste0("\nshowing the first ", x_max, " yr; the run itself is longer")
+        },
+        if (dropped > 0L) {
+          paste0("\nthe ", n_comp - dropped, " compositions with the most cells, of ", n_comp)
+        } else {
+          ""
         }
       ),
       x = "Simulation year",

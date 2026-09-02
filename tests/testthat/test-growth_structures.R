@@ -185,3 +185,35 @@ test_that("a many-cohort composition gets a counted label, not a repeated one", 
   ## The repeated form would be 71 characters for a cell of 16.
   expect_lt(nchar(cells$composition), 20L)
 })
+
+test_that("plot_growth_structures() caps panels at the best-evidenced compositions", {
+  skip_if_not_installed("ggplot2")
+  ## Four compositions with distinct cell counts.
+  s <- tibble::tibble(
+    composition = rep(c("Aa x2", "Aa+Bb", "Aa+Cc", "Aa+Dd"), each = 2L),
+    species_set = rep(c("Aa", "Aa+Bb", "Aa+Cc", "Aa+Dd"), each = 2L),
+    n_cohorts = 2L,
+    age = rep(c(1L, 2L), times = 4L),
+    n_cells = rep(c(40L, 30L, 20L, 10L), each = 2L),
+    lower = 1,
+    median = 2,
+    upper = 3
+  )
+
+  all_p <- plot_growth_structures(s, "Aa", x_max = NULL)
+  expect_equal(dplyr::n_distinct(ggplot2::ggplot_build(all_p)$plot$data$composition), 4L)
+
+  capped <- plot_growth_structures(s, "Aa", x_max = NULL, max_panels = 2L)
+  kept <- ggplot2::ggplot_build(capped)$plot$data
+  expect_setequal(unique(kept$composition), c("Aa x2", "Aa+Bb"))
+  expect_match(capped$labels$subtitle, "2 compositions with the most cells, of 4")
+})
+
+test_that("plot_growth_structures() says nothing about dropping when nothing is dropped", {
+  skip_if_not_installed("ggplot2")
+  cells <- growth_structure_cell_curves(structure_curves())
+  s <- growth_structure_summary(cells, min_cells = 1L)
+
+  p <- plot_growth_structures(s, "Aa", x_max = NULL, max_panels = 99L)
+  expect_no_match(p$labels$subtitle, "compositions with the most cells")
+})
