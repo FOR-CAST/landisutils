@@ -15,7 +15,7 @@ away."><meta property="og:image" content="https://for-cast.github.io/landisutils
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.139</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.140</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -60,7 +60,7 @@ away.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">growth_structure_summary</span><span class="op">(</span><span class="va">cells</span>, min_cells <span class="op">=</span> <span class="fl">25L</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">growth_structure_summary</span><span class="op">(</span><span class="va">cells</span>, min_cells <span class="op">=</span> <span class="fl">25L</span>, start_age_breaks <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -73,12 +73,30 @@ away.</p>
 
 <dt id="arg-min-cells">min_cells<a class="anchor" aria-label="anchor" href="#arg-min-cells"></a></dt>
 <dd><p>Integer. Drop compositions represented by fewer cells than
-this, which are too thin to read a band from.</p></dd>
+this, which are too thin to read a band from. Applied per class when
+<code>start_age_breaks</code> is given, so a stratified call needs more cells overall.</p></dd>
+
+
+<dt id="arg-start-age-breaks">start_age_breaks<a class="anchor" aria-label="anchor" href="#arg-start-age-breaks"></a></dt>
+<dd><p>Numeric or <code>NULL</code>. Breaks passed to <code><a href="https://rdrr.io/r/base/cut.html" class="external-link">cut()</a></code> to bin
+each cell's <code>start_age</code>, adding a <code>start_class</code> column and summarising
+within it. <code>NULL</code> (the default) pools over starting age, which is the
+historical behaviour. Requires <code>cells</code> to carry <code>start_age</code>.</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A tibble, one row per composition and age.</p>
+    <p>A tibble, one row per composition and age (and <code>start_class</code> when
+stratified).</p>
+    </div>
+    <div class="section level2">
+    <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
+    <p>Pooling over starting age is usually the wrong default for reading a band.
+A composition's cells differ in two ways at once: the parameter combination,
+and the ages the map gave their cohorts. The second dominates, so a band
+taken over the pool is mostly stand age wearing the parameters' name. Supply
+<code>start_age_breaks</code> to summarise WITHIN starting-age classes instead, which
+leaves the remaining spread attributable to the parameters.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

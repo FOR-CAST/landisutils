@@ -1,5 +1,35 @@
 # Changelog
 
+## landisutils 0.0.140
+
+- [`growth_structure_summary()`](https://for-cast.github.io/landisutils/reference/growth_structure_summary.md)
+  gains `start_age_breaks`, summarising WITHIN starting-age classes
+  instead of pooling over them. A composition’s cells differ in two ways
+  at once, the parameter combination and the ages the
+  initial-communities map gave their cohorts, and the second dominates:
+  measured on a 14,375-cell structure sweep, starting age explains 92 to
+  99 percent of the within-composition variance against 0.2 to 3.3
+  percent for the swept parameters. A band taken over the pool is
+  therefore roughly ten times the parameter effect it is read as
+  showing, and is mostly stand age wearing the parameters’ name. `NULL`
+  (the default) pools as before.
+- [`growth_structure_cell_curves()`](https://for-cast.github.io/landisutils/reference/growth_structure_cell_curves.md)
+  carries `start_age`, the oldest cohort the cell begins with, which is
+  what `start_age_breaks` bins. Existing callers are unaffected: it is
+  an added column, and every downstream summarise names its grouping
+  explicitly.
+- [`plot_growth_structures()`](https://for-cast.github.io/landisutils/reference/plot_growth_structures.md)
+  colours by `start_class` when the summary carries one, on a viridis
+  ramp that DARKENS with starting age. Within a panel the previous
+  `kind` colouring was constant, since a panel is one composition, so it
+  only restated the facet strip. The ramp is truncated at 0.75 because
+  viridis ends in a yellow that sits at 1.23:1 against a light page;
+  multi-hue is a deliberate departure from one-hue-sequential, since
+  eight steps of a single hue are not separable at panel size, and
+  lightness stays monotone so the ordering survives in greyscale and
+  under colour-vision deficiency. Ribbons are suppressed when
+  stratified, as they already were for two variants.
+
 ## landisutils 0.0.139
 
 - [`plot_growth_structures()`](https://for-cast.github.io/landisutils/reference/plot_growth_structures.md)

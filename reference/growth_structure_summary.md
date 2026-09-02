@@ -9,7 +9,7 @@ rather than averaged away.
 ## Usage
 
 ``` r
-growth_structure_summary(cells, min_cells = 25L)
+growth_structure_summary(cells, min_cells = 25L, start_age_breaks = NULL)
 ```
 
 ## Arguments
@@ -22,11 +22,32 @@ growth_structure_summary(cells, min_cells = 25L)
 - min_cells:
 
   Integer. Drop compositions represented by fewer cells than this, which
-  are too thin to read a band from.
+  are too thin to read a band from. Applied per class when
+  `start_age_breaks` is given, so a stratified call needs more cells
+  overall.
+
+- start_age_breaks:
+
+  Numeric or `NULL`. Breaks passed to
+  [`cut()`](https://rdrr.io/r/base/cut.html) to bin each cell's
+  `start_age`, adding a `start_class` column and summarising within it.
+  `NULL` (the default) pools over starting age, which is the historical
+  behaviour. Requires `cells` to carry `start_age`.
 
 ## Value
 
-A tibble, one row per composition and age.
+A tibble, one row per composition and age (and `start_class` when
+stratified).
+
+## Details
+
+Pooling over starting age is usually the wrong default for reading a
+band. A composition's cells differ in two ways at once: the parameter
+combination, and the ages the map gave their cohorts. The second
+dominates, so a band taken over the pool is mostly stand age wearing the
+parameters' name. Supply `start_age_breaks` to summarise WITHIN
+starting-age classes instead, which leaves the remaining spread
+attributable to the parameters.
 
 ## See also
 

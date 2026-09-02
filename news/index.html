@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.139</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.140</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,6 +41,15 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.140" id="landisutils-00140">landisutils 0.0.140<a class="anchor" aria-label="anchor" href="#landisutils-00140"></a></h2>
+<ul><li>
+<code><a href="../reference/growth_structure_summary.html">growth_structure_summary()</a></code> gains <code>start_age_breaks</code>, summarising WITHIN starting-age classes instead of pooling over them. A composition’s cells differ in two ways at once, the parameter combination and the ages the initial-communities map gave their cohorts, and the second dominates: measured on a 14,375-cell structure sweep, starting age explains 92 to 99 percent of the within-composition variance against 0.2 to 3.3 percent for the swept parameters. A band taken over the pool is therefore roughly ten times the parameter effect it is read as showing, and is mostly stand age wearing the parameters’ name. <code>NULL</code> (the default) pools as before.</li>
+<li>
+<code><a href="../reference/growth_structure_cell_curves.html">growth_structure_cell_curves()</a></code> carries <code>start_age</code>, the oldest cohort the cell begins with, which is what <code>start_age_breaks</code> bins. Existing callers are unaffected: it is an added column, and every downstream summarise names its grouping explicitly.</li>
+<li>
+<code><a href="../reference/plot_growth_structures.html">plot_growth_structures()</a></code> colours by <code>start_class</code> when the summary carries one, on a viridis ramp that DARKENS with starting age. Within a panel the previous <code>kind</code> colouring was constant, since a panel is one composition, so it only restated the facet strip. The ramp is truncated at 0.75 because viridis ends in a yellow that sits at 1.23:1 against a light page; multi-hue is a deliberate departure from one-hue-sequential, since eight steps of a single hue are not separable at panel size, and lightness stays monotone so the ordering survives in greyscale and under colour-vision deficiency. Ribbons are suppressed when stratified, as they already were for two variants.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.139" id="landisutils-00139">landisutils 0.0.139<a class="anchor" aria-label="anchor" href="#landisutils-00139"></a></h2>
 <ul><li>
