@@ -486,6 +486,19 @@ plot_growth_candidate <- function(
       )
   }
 
+  ## Label only the aesthetics some layer actually maps. Which of `size`,
+  ## `shape` and `linetype` are mapped depends on the inputs -- a binned series
+  ## carrying `n`, leading species outside density mode, reference curves being
+  ## present -- and ggplot2 reports "Ignoring unknown labels" for any it is
+  ## handed for an aesthetic nothing uses. Read that off the layers rather than
+  ## restating their conditions here, which would drift from them.
+  mapped <- unique(unlist(lapply(p$layers, function(l) names(l$mapping))))
+  optional_labels <- list(
+    size = "plots in bin",
+    shape = "Leading species",
+    linetype = "Reference curve"
+  )
+
   p +
     ggplot2::geom_line(
       data = curves,
@@ -527,16 +540,23 @@ plot_growth_candidate <- function(
       )
     ) +
     ggplot2::coord_cartesian(xlim = c(0, x_max)) +
-    ggplot2::labs(
-      x = "Stand age (years)",
-      y = expression("Aboveground live carbon" ~ (Mg ~ C ~ ha^-1)),
-      colour = NULL,
-      size = "plots in bin",
-      shape = "Leading species",
-      linetype = "Reference curve",
-      title = species,
-      subtitle = subtitle %||%
-        sprintf("shaded: fitting window (%g to %g yr)", mature_window[[1L]], mature_window[[2L]])
+    do.call(
+      ggplot2::labs,
+      c(
+        list(
+          x = "Stand age (years)",
+          y = expression("Aboveground live carbon" ~ (Mg ~ C ~ ha^-1)),
+          colour = NULL,
+          title = species,
+          subtitle = subtitle %||%
+            sprintf(
+              "shaded: fitting window (%g to %g yr)",
+              mature_window[[1L]],
+              mature_window[[2L]]
+            )
+        ),
+        optional_labels[intersect(names(optional_labels), mapped)]
+      )
     ) +
     ggplot2::theme_bw(base_size = 10) +
     ## Four stacked guides otherwise take half the panel. Tight spacing and small
