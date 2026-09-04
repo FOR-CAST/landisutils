@@ -1,5 +1,16 @@
 # Changelog
 
+## landisutils 0.0.145
+
+- [`plot_growth_candidate()`](https://for-cast.github.io/landisutils/reference/plot_growth_candidate.md)
+  labels only the aesthetics a layer actually maps. `size`, `shape` and
+  `linetype` were labelled unconditionally while all three are mapped
+  conditionally – `size` on a binned series carrying `n`, `shape` on
+  leading species outside density mode, `linetype` on reference curves
+  being present – so ggplot2 reported “Ignoring unknown labels” on the
+  builds that omit one. The mapped set is read off the layers rather
+  than restated, so it cannot drift from the conditions that add them.
+
 ## landisutils 0.0.144
 
 - [`plot_growth_candidate()`](https://for-cast.github.io/landisutils/reference/plot_growth_candidate.md)

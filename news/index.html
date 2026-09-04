@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.144</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.145</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,6 +41,11 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.145" id="landisutils-00145">landisutils 0.0.145<a class="anchor" aria-label="anchor" href="#landisutils-00145"></a></h2>
+<ul><li>
+<code><a href="../reference/plot_growth_candidate.html">plot_growth_candidate()</a></code> labels only the aesthetics a layer actually maps. <code>size</code>, <code>shape</code> and <code>linetype</code> were labelled unconditionally while all three are mapped conditionally – <code>size</code> on a binned series carrying <code>n</code>, <code>shape</code> on leading species outside density mode, <code>linetype</code> on reference curves being present – so ggplot2 reported “Ignoring unknown labels” on the builds that omit one. The mapped set is read off the layers rather than restated, so it cannot drift from the conditions that add them.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.144" id="landisutils-00144">landisutils 0.0.144<a class="anchor" aria-label="anchor" href="#landisutils-00144"></a></h2>
 <ul><li>
