@@ -15,6 +15,11 @@ which is why each run needs a directory of its own.
 }
 \seealso{
 Other FPSM helpers:
-\code{\link[=fps_run_docker]{fps_run_docker()}}
+\code{\link[=fps_pools]{fps_pools()}},
+\code{\link[=fps_run_docker]{fps_run_docker()}},
+\code{\link[=fps_stocks_by_pool]{fps_stocks_by_pool()}},
+\code{\link[=open_fps_raw_out_dataset]{open_fps_raw_out_dataset()}},
+\code{\link[=read_fps_raw_out]{read_fps_raw_out()}},
+\code{\link[=write_fps_raw_out_parquet]{write_fps_raw_out_parquet()}}
 }
 \concept{FPSM helpers}

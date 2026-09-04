@@ -1,6 +1,6 @@
 Package: landisutils
 Title: Utilities for Running LANDIS-II Simulations
-Version: 0.0.141
+Version: 0.0.142
 Authors@R: 
     person(c("Alex", "M"), "Chubaty", , "achubaty@for-cast.ca", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0001-7146-8135"))
@@ -52,6 +52,7 @@ Suggests:
     knitr,
     mgcv,
     parallelly,
+    rlang,
     rmarkdown,
     santoku,
     sf,
@@ -125,6 +126,7 @@ Collate:
     'ext_root_rot.R'
     'ext_social_climate_fire.R'
     'forcs_output.R'
+    'fps_output.R'
     'fps_run.R'
     'growth_calibration.R'
     'growth_calibration_plot.R'

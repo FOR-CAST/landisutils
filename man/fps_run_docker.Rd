@@ -74,6 +74,11 @@ was never allocated to any pool, so a silent run is the only acceptable one.
 \code{\link[=landis_run_docker]{landis_run_docker()}}, \code{\link[=landis_find_docker]{landis_find_docker()}}
 
 Other FPSM helpers:
-\code{\link[=fps_output_files]{fps_output_files()}}
+\code{\link[=fps_output_files]{fps_output_files()}},
+\code{\link[=fps_pools]{fps_pools()}},
+\code{\link[=fps_stocks_by_pool]{fps_stocks_by_pool()}},
+\code{\link[=open_fps_raw_out_dataset]{open_fps_raw_out_dataset()}},
+\code{\link[=read_fps_raw_out]{read_fps_raw_out()}},
+\code{\link[=write_fps_raw_out_parquet]{write_fps_raw_out_parquet()}}
 }
 \concept{FPSM helpers}

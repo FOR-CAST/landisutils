@@ -1,3 +1,10 @@
+# landisutils 0.0.142
+
+* new FPSM output helpers `read_fps_raw_out()`, `fps_pools()`, `fps_stocks_by_pool()`, `write_fps_raw_out_parquet()` and `open_fps_raw_out_dataset()`, the counterparts to the ForCS `log_Summary` helpers and following the same read / atomic-publish / union-dataset shape.
+* `fps_pools()` drops the terminal simulation year by default. FPSM writes its annual end-of-year stock reports as types 4 and 5 up to the second-to-last year, then a different and partial residual set for the final year (types 1 and 2, decaying pools only), so carrying the final year into a stock series draws a collapse that did not happen. The cut is derived from the data -- the last year carrying a type 4 or 5 report -- not hard-coded.
+* `rlang` is declared in `Suggests`. `tests/testthat/test-growth_structures.R` calls `rlang::as_label()`, which `R CMD check` reports as an unstated dependency; the check workflow runs with `error_on = "warning"`, so this had been failing CI since 0.0.140 (9789252a, 2026-09-02). Unrelated to the FPSM work, fixed here because it blocks the same build.
+* all FPSM amounts are reported as tonnes of carbon. FPSM sums `gC/m^2 * cell_length^2 * 1e-6` over cells with no division by area, so its output is an absolute landscape total despite the user guide labelling the columns `tC/ha`; the two coincide only for a 100 m cell. It reports carbon, never CO2e.
+
 # landisutils 0.0.141
 
 * new `fps_run_docker()` and `fps_output_files()`, for running the Forest Product Sector Module (FPSM) over a directory holding an FPSM configuration and the two ForCS flux logs it names. FPSM is not a running LANDIS-II extension -- its `PlugIn.Run()` is an empty stub and the work happens in a console entry point -- so it gets plain functions rather than a `LandisExtension` subclass, and the runner omits the version assertion, startup jitter, output streaming and post-completion watchdog that `landis_run_docker()` needs. It keeps the image-digest capture, because that is what identifies the bytes that ran.
