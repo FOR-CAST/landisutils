@@ -1,5 +1,32 @@
 # Changelog
 
+## landisutils 0.0.141
+
+- new
+  [`fps_run_docker()`](https://for-cast.github.io/landisutils/reference/fps_run_docker.md)
+  and
+  [`fps_output_files()`](https://for-cast.github.io/landisutils/reference/fps_output_files.md),
+  for running the Forest Product Sector Module (FPSM) over a directory
+  holding an FPSM configuration and the two ForCS flux logs it names.
+  FPSM is not a running LANDIS-II extension – its `PlugIn.Run()` is an
+  empty stub and the work happens in a console entry point – so it gets
+  plain functions rather than a `LandisExtension` subclass, and the
+  runner omits the version assertion, startup jitter, output streaming
+  and post-completion watchdog that
+  [`landis_run_docker()`](https://for-cast.github.io/landisutils/reference/landis_run_docker.md)
+  needs. It keeps the image-digest capture, because that is what
+  identifies the bytes that ran.
+- [`fps_run_docker()`](https://for-cast.github.io/landisutils/reference/fps_run_docker.md)
+  performs three pre-flight checks, each guarding a failure that is
+  otherwise silent or obscure: the configured input filenames must exist
+  case-exactly (the shipped FPSM examples name `log_fluxDOM.csv` beside
+  `log_FluxDOM.csv`, which is harmless on Windows and fatal elsewhere);
+  each flux log’s header must still match the column positions FPSM
+  indexes, since it validates no headers and would read a reordered
+  column as the wrong quantity; and a non-empty `FPS_log.txt` fails the
+  run by default, because that file collects unallocated carbon among
+  other non-fatal problems.
+
 ## landisutils 0.0.140
 
 - [`growth_structure_summary()`](https://for-cast.github.io/landisutils/reference/growth_structure_summary.md)

@@ -228,6 +228,12 @@
 - [`extract_landscape_cohort_structures()`](https://for-cast.github.io/landisutils/reference/extract_landscape_cohort_structures.md)
   : Extract distinct cohort structures from the initial communities
 
+- [`fps_output_files()`](https://for-cast.github.io/landisutils/reference/fps_output_files.md)
+  : Files FPSM writes into its working directory
+
+- [`fps_run_docker()`](https://for-cast.github.io/landisutils/reference/fps_run_docker.md)
+  : Run the Forest Product Sector Module in a Docker container
+
 - [`georef_landis_raster()`](https://for-cast.github.io/landisutils/reference/georef_landis_raster.md)
   : Attach CRS and extent from a template to a LANDIS-II raster
 

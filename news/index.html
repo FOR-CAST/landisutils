@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.140</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.141</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,6 +41,12 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.141" id="landisutils-00141">landisutils 0.0.141<a class="anchor" aria-label="anchor" href="#landisutils-00141"></a></h2>
+<ul><li>new <code><a href="../reference/fps_run_docker.html">fps_run_docker()</a></code> and <code><a href="../reference/fps_output_files.html">fps_output_files()</a></code>, for running the Forest Product Sector Module (FPSM) over a directory holding an FPSM configuration and the two ForCS flux logs it names. FPSM is not a running LANDIS-II extension – its <code>PlugIn.Run()</code> is an empty stub and the work happens in a console entry point – so it gets plain functions rather than a <code>LandisExtension</code> subclass, and the runner omits the version assertion, startup jitter, output streaming and post-completion watchdog that <code><a href="../reference/landis_run_docker.html">landis_run_docker()</a></code> needs. It keeps the image-digest capture, because that is what identifies the bytes that ran.</li>
+<li>
+<code><a href="../reference/fps_run_docker.html">fps_run_docker()</a></code> performs three pre-flight checks, each guarding a failure that is otherwise silent or obscure: the configured input filenames must exist case-exactly (the shipped FPSM examples name <code>log_fluxDOM.csv</code> beside <code>log_FluxDOM.csv</code>, which is harmless on Windows and fatal elsewhere); each flux log’s header must still match the column positions FPSM indexes, since it validates no headers and would read a reordered column as the wrong quantity; and a non-empty <code>FPS_log.txt</code> fails the run by default, because that file collects unallocated carbon among other non-fatal problems.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.140" id="landisutils-00140">landisutils 0.0.140<a class="anchor" aria-label="anchor" href="#landisutils-00140"></a></h2>
 <ul><li>
