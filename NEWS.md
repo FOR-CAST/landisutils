@@ -1,3 +1,7 @@
+# landisutils 0.0.144
+
+* `plot_growth_candidate()` omits the binned points' white outline in density mode rather than passing `colour = NULL`. A NULL fixed aesthetic still reaches the layer, so ggplot2 reported "Ignoring empty aesthetic: `colour`" on every density-mode build; the series is mapped on colour there and wants no fixed outline at all.
+
 # landisutils 0.0.143
 
 * `growth_structure_cell_curves()` orders the `composition` label by the OLDEST cohort rather than alphabetically, so `Hw+Ba` and `Ba+Hw` are different mixtures instead of the same one. They are not interchangeable: measured on the Gitanyow landscape, the `Ba+Hw` pool carried 14,555 communities against 1,256 for `Hw+Ba`, so the single alphabetical panel was an average over two populations differing more than tenfold in extent. Ties break alphabetically, so equal starting ages give a deterministic order.

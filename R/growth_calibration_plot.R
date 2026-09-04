@@ -420,19 +420,30 @@ plot_growth_candidate <- function(
           linewidth = 0.7
         )
     }
+    ## The white outline is ABSENT in density mode, not NULL. There the series is
+    ## mapped on colour, so a fixed outline would fight the mapping -- but a NULL
+    ## fixed aesthetic still reaches the layer, where ggplot2 reports "Ignoring
+    ## empty aesthetic: colour". Building the argument list means the parameter
+    ## is simply not passed.
+    binned_point <- function(mapping, ...) {
+      do.call(
+        ggplot2::geom_point,
+        c(
+          list(mapping = mapping, data = binned, shape = 23, stroke = 0.4),
+          list(...),
+          if (isTRUE(density)) NULL else list(colour = growth_plot_palette()[["key_outline"]])
+        )
+      )
+    }
     p <- if ("n" %in% names(binned)) {
       p +
-        ggplot2::geom_point(
-          data = binned,
+        binned_point(
           if (isTRUE(density)) {
             ggplot2::aes(x = .data$age, y = .data$value, colour = binned_label, size = .data$n)
           } else {
             ggplot2::aes(x = .data$age, y = .data$value, fill = binned_label, size = .data$n)
           },
-          shape = 23,
-          fill = if (isTRUE(density)) growth_plot_palette()[["summary"]] else NA,
-          colour = if (isTRUE(density)) NULL else growth_plot_palette()[["key_outline"]],
-          stroke = 0.4
+          fill = if (isTRUE(density)) growth_plot_palette()[["summary"]] else NA
         ) +
         ggplot2::scale_size(
           range = c(1.4, 5),
@@ -441,18 +452,14 @@ plot_growth_candidate <- function(
         )
     } else {
       p +
-        ggplot2::geom_point(
-          data = binned,
+        binned_point(
           if (isTRUE(density)) {
             ggplot2::aes(x = .data$age, y = .data$value, colour = binned_label)
           } else {
             ggplot2::aes(x = .data$age, y = .data$value, fill = binned_label)
           },
           size = 2.4,
-          shape = 23,
-          fill = if (isTRUE(density)) growth_plot_palette()[["summary"]] else NA,
-          colour = if (isTRUE(density)) NULL else growth_plot_palette()[["key_outline"]],
-          stroke = 0.4
+          fill = if (isTRUE(density)) growth_plot_palette()[["summary"]] else NA
         )
     }
     ## Shape 23 takes its interior from `fill`, so this series is mapped on fill

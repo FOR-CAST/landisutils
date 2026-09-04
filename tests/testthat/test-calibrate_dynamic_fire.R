@@ -1906,8 +1906,18 @@ test_that(".scenario_template_digest() tracks file CONTENTS, not names or mtimes
 
   ## No template (mock / non-Docker simulators) contributes nothing rather than erroring.
   expect_null(landisutils:::.scenario_template_digest(NULL))
-  expect_null(landisutils:::.scenario_template_digest(fs::path(root, "does-not-exist")))
-  expect_null(landisutils:::.scenario_template_digest(fs::dir_create(fs::path(root, "empty"))))
+  ## Both warn on the way to NULL, deliberately: a template the fingerprint
+  ## cannot see means cached losses would survive a template change. Assert the
+  ## warning rather than letting it escape, which left it in the suite's output
+  ## where a real regression would be harder to spot.
+  expect_warning(
+    expect_null(landisutils:::.scenario_template_digest(fs::path(root, "does-not-exist"))),
+    "neither a directory nor a file"
+  )
+  expect_warning(
+    expect_null(landisutils:::.scenario_template_digest(fs::dir_create(fs::path(root, "empty")))),
+    "contains no files"
+  )
 })
 
 test_that("calibrate_dynamic_fire() writes checkpoint artefacts and a full trajectory when checkpointing", {
