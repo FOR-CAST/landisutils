@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.142</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.143</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,6 +41,14 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.143" id="landisutils-00143">landisutils 0.0.143<a class="anchor" aria-label="anchor" href="#landisutils-00143"></a></h2>
+<ul><li>
+<code><a href="../reference/growth_structure_cell_curves.html">growth_structure_cell_curves()</a></code> orders the <code>composition</code> label by the OLDEST cohort rather than alphabetically, so <code>Hw+Ba</code> and <code>Ba+Hw</code> are different mixtures instead of the same one. They are not interchangeable: measured on the Gitanyow landscape, the <code>Ba+Hw</code> pool carried 14,555 communities against 1,256 for <code>Hw+Ba</code>, so the single alphabetical panel was an average over two populations differing more than tenfold in extent. Ties break alphabetically, so equal starting ages give a deterministic order.</li>
+<li>A new <code>oldest_species</code> column records which species the cell’s oldest cohort belongs to, carried through <code><a href="../reference/growth_structure_summary.html">growth_structure_summary()</a></code> and <code><a href="../reference/growth_structure_cohort_table.html">growth_structure_cohort_table()</a></code>.</li>
+<li>
+<code><a href="../reference/plot_growth_structures.html">plot_growth_structures()</a></code> selects a species’ panels on <code>oldest_species</code> instead of on mere presence, so a structure appears in exactly ONE species’ figure and the focal species always leads its own labels. Selecting on presence drew every mixture in both species’ figures as the same panel, which read as a duplicate. A summary built before <code>oldest_species</code> existed still plots, with the previous behaviour.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.142" id="landisutils-00142">landisutils 0.0.142<a class="anchor" aria-label="anchor" href="#landisutils-00142"></a></h2>
 <ul><li>new FPSM output helpers <code><a href="../reference/read_fps_raw_out.html">read_fps_raw_out()</a></code>, <code><a href="../reference/fps_pools.html">fps_pools()</a></code>, <code><a href="../reference/fps_stocks_by_pool.html">fps_stocks_by_pool()</a></code>, <code><a href="../reference/write_fps_raw_out_parquet.html">write_fps_raw_out_parquet()</a></code> and <code><a href="../reference/open_fps_raw_out_dataset.html">open_fps_raw_out_dataset()</a></code>, the counterparts to the ForCS <code>log_Summary</code> helpers and following the same read / atomic-publish / union-dataset shape.</li>

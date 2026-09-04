@@ -40,8 +40,8 @@ matching) and `start_age` (the oldest cohort the cell begins with).
 
 This reduces to one row per (cell, timestep) and attaches the cell's
 composition: how many cohorts it carries and which modelled species, as
-a sorted `+`-separated label so that `A+B` and `B+A` are the same
-mixture.
+a `+`-separated label ordered OLDEST cohort first, so that `A+B` and
+`B+A` are different mixtures rather than the same one.
 
 ## See also
 

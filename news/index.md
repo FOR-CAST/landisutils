@@ -1,5 +1,29 @@
 # Changelog
 
+## landisutils 0.0.143
+
+- [`growth_structure_cell_curves()`](https://for-cast.github.io/landisutils/reference/growth_structure_cell_curves.md)
+  orders the `composition` label by the OLDEST cohort rather than
+  alphabetically, so `Hw+Ba` and `Ba+Hw` are different mixtures instead
+  of the same one. They are not interchangeable: measured on the
+  Gitanyow landscape, the `Ba+Hw` pool carried 14,555 communities
+  against 1,256 for `Hw+Ba`, so the single alphabetical panel was an
+  average over two populations differing more than tenfold in extent.
+  Ties break alphabetically, so equal starting ages give a deterministic
+  order.
+- A new `oldest_species` column records which species the cell’s oldest
+  cohort belongs to, carried through
+  [`growth_structure_summary()`](https://for-cast.github.io/landisutils/reference/growth_structure_summary.md)
+  and
+  [`growth_structure_cohort_table()`](https://for-cast.github.io/landisutils/reference/growth_structure_cohort_table.md).
+- [`plot_growth_structures()`](https://for-cast.github.io/landisutils/reference/plot_growth_structures.md)
+  selects a species’ panels on `oldest_species` instead of on mere
+  presence, so a structure appears in exactly ONE species’ figure and
+  the focal species always leads its own labels. Selecting on presence
+  drew every mixture in both species’ figures as the same panel, which
+  read as a duplicate. A summary built before `oldest_species` existed
+  still plots, with the previous behaviour.
+
 ## landisutils 0.0.142
 
 - new FPSM output helpers
