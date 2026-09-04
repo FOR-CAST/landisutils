@@ -101,4 +101,9 @@ failure mode that is otherwise silent or obscure:
 [`landis_find_docker()`](https://for-cast.github.io/landisutils/reference/landis_find_docker.md)
 
 Other FPSM helpers:
-[`fps_output_files()`](https://for-cast.github.io/landisutils/reference/fps_output_files.md)
+[`fps_output_files()`](https://for-cast.github.io/landisutils/reference/fps_output_files.md),
+[`fps_pools()`](https://for-cast.github.io/landisutils/reference/fps_pools.md),
+[`fps_stocks_by_pool()`](https://for-cast.github.io/landisutils/reference/fps_stocks_by_pool.md),
+[`open_fps_raw_out_dataset()`](https://for-cast.github.io/landisutils/reference/open_fps_raw_out_dataset.md),
+[`read_fps_raw_out()`](https://for-cast.github.io/landisutils/reference/read_fps_raw_out.md),
+[`write_fps_raw_out_parquet()`](https://for-cast.github.io/landisutils/reference/write_fps_raw_out_parquet.md)

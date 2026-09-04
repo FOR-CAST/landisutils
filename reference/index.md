@@ -231,8 +231,15 @@
 - [`fps_output_files()`](https://for-cast.github.io/landisutils/reference/fps_output_files.md)
   : Files FPSM writes into its working directory
 
+- [`fps_pools()`](https://for-cast.github.io/landisutils/reference/fps_pools.md)
+  : Summarise FPSM output into annual carbon stocks and atmospheric
+  emissions
+
 - [`fps_run_docker()`](https://for-cast.github.io/landisutils/reference/fps_run_docker.md)
   : Run the Forest Product Sector Module in a Docker container
+
+- [`fps_stocks_by_pool()`](https://for-cast.github.io/landisutils/reference/fps_stocks_by_pool.md)
+  : Annual FPSM stocks broken out by pool
 
 - [`georef_landis_raster()`](https://for-cast.github.io/landisutils/reference/georef_landis_raster.md)
   : Attach CRS and extent from a template to a LANDIS-II raster
@@ -615,6 +622,9 @@
 
   Open the ForCS `log_Summary` Arrow dataset for one or more scenarios
 
+- [`open_fps_raw_out_dataset()`](https://for-cast.github.io/landisutils/reference/open_fps_raw_out_dataset.md)
+  : Open the FPSM raw-output Arrow dataset for one or more scenarios
+
 - [`parse_dynamic_fire_logs()`](https://for-cast.github.io/landisutils/reference/parse_dynamic_fire_logs.md)
   : Parse a Dynamic Fire run's event and summary logs
 
@@ -824,6 +834,11 @@
 
   Read ForCS `log_Summary.csv` files for one scenario (all replicates)
 
+- [`read_fps_raw_out()`](https://for-cast.github.io/landisutils/reference/read_fps_raw_out.md)
+  :
+
+  Read one or more FPSM `FPS_raw_out.csv` files
+
 - [`read_growth_scoring()`](https://for-cast.github.io/landisutils/reference/read_growth_scoring.md)
   : Read the per-species scoring controls
 
@@ -912,6 +927,9 @@
   :
 
   Write one replicate's ForCS `log_Summary` to a partitioned parquet
+
+- [`write_fps_raw_out_parquet()`](https://for-cast.github.io/landisutils/reference/write_fps_raw_out_parquet.md)
+  : Write one replicate's FPSM raw output to a partitioned parquet
 
 - [`write_growth_review_bundle()`](https://for-cast.github.io/landisutils/reference/write_growth_review_bundle.md)
   : Write a standalone calibration review bundle

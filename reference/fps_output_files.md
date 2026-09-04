@@ -16,4 +16,9 @@ Character vector of file names.
 ## See also
 
 Other FPSM helpers:
-[`fps_run_docker()`](https://for-cast.github.io/landisutils/reference/fps_run_docker.md)
+[`fps_pools()`](https://for-cast.github.io/landisutils/reference/fps_pools.md),
+[`fps_run_docker()`](https://for-cast.github.io/landisutils/reference/fps_run_docker.md),
+[`fps_stocks_by_pool()`](https://for-cast.github.io/landisutils/reference/fps_stocks_by_pool.md),
+[`open_fps_raw_out_dataset()`](https://for-cast.github.io/landisutils/reference/open_fps_raw_out_dataset.md),
+[`read_fps_raw_out()`](https://for-cast.github.io/landisutils/reference/read_fps_raw_out.md),
+[`write_fps_raw_out_parquet()`](https://for-cast.github.io/landisutils/reference/write_fps_raw_out_parquet.md)
