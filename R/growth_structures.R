@@ -33,9 +33,25 @@ read_landscape_cohort_structures <- function(path) {
 ## `Hw` for one cohort, `Hw x3` for three -- so that a single-cohort cell keeps
 ## the bare species code and the label stays short however many age classes a
 ## cell carries.
-.growth_composition_label <- function(species) {
+## Species present, ordered by the OLDEST cohort each contributes, descending.
+## Alphabetical tiebreak, so two species starting at the same age give a
+## deterministic order rather than one that depends on row order.
+.growth_species_by_age <- function(species, age) {
+  oldest <- vapply(split(age, species), max, numeric(1))
+  names(oldest)[order(-oldest, names(oldest))]
+}
+
+.growth_composition_label <- function(species, age = NULL) {
   n <- table(species)
-  nm <- sort(names(n))
+  ## Ordered oldest-first when ages are supplied, so `Hw+Ba` reads as "hemlock
+  ## the older cohort, amabilis fir the younger" and is a DIFFERENT stand from
+  ## `Ba+Hw`. Those two were previously collapsed by sorting alphabetically, and
+  ## on this landscape they are not interchangeable: the `Ba+Hw` pool carried
+  ## 14,555 communities against 1,256 for `Hw+Ba`, so the pooled panel was an
+  ## average over two populations differing more than tenfold in extent.
+  ## Falls back to alphabetical without ages, which is what a caller reducing a
+  ## table that has none will get.
+  nm <- if (is.null(age)) sort(names(n)) else .growth_species_by_age(species, age)
   paste(ifelse(n[nm] > 1L, paste0(nm, " x", as.integer(n[nm])), nm), collapse = "+")
 }
 
@@ -48,7 +64,8 @@ read_landscape_cohort_structures <- function(path) {
 #'
 #' This reduces to one row per (cell, timestep) and attaches the cell's
 #' composition: how many cohorts it carries and which modelled species, as a
-#' sorted `+`-separated label so that `A+B` and `B+A` are the same mixture.
+#' `+`-separated label ordered OLDEST cohort first, so that `A+B` and `B+A`
+#' are different mixtures rather than the same one.
 #'
 #' @param curves A tibble of structure-run curves, carrying at least `batch`,
 #'   `map_code`, `species`, `cohort_age`, `age` and `aboveground_c_mg_ha`. An
@@ -89,7 +106,12 @@ growth_structure_cell_curves <- function(curves, biomass = c("cell", "cohort")) 
       ## structure design is capped on species and not cohorts -- repeating the
       ## name per cohort gives a 255-character label on a landscape whose cells
       ## carry a dozen age classes, which is unusable as a facet strip.
-      composition = .growth_composition_label(.data$species),
+      composition = .growth_composition_label(.data$species, .data$cohort_age),
+      ## Which species the cell's oldest cohort belongs to. This is what
+      ## `plot_growth_structures()` selects a species' panels on, so that a
+      ## structure appears in exactly ONE species' figure instead of once per
+      ## species it contains.
+      oldest_species = .growth_species_by_age(.data$species, .data$cohort_age)[[1L]],
       ## The species actually present, for matching and counting. `composition`
       ## is a display label and must not be parsed for this.
       species_set = paste(sort(unique(.data$species)), collapse = "+"),
@@ -167,7 +189,12 @@ growth_structure_summary <- function(cells, min_cells = 25L, start_age_breaks = 
   variant <- intersect("variant", names(cells))
   ## `species_set` is a function of `composition`, so adding it changes no
   ## grouping -- it only keeps the column, which the plot needs to match species.
-  by_comp <- c("composition", intersect("species_set", names(cells)), variant, strat)
+  by_comp <- c(
+    "composition",
+    intersect(c("species_set", "oldest_species"), names(cells)),
+    variant,
+    strat
+  )
 
   keep <- cells |>
     dplyr::summarise(
@@ -212,7 +239,12 @@ growth_structure_summary <- function(cells, min_cells = 25L, start_age_breaks = 
 #' @export
 growth_structure_cohort_table <- function(cells, curves = NULL) {
   variant <- intersect("variant", names(cells))
-  by_comp <- c(variant, "composition", intersect("species_set", names(cells)), "n_cohorts")
+  by_comp <- c(
+    variant,
+    "composition",
+    intersect(c("species_set", "oldest_species"), names(cells)),
+    "n_cohorts"
+  )
 
   out <- cells |>
     dplyr::summarise(
@@ -287,10 +319,21 @@ growth_structure_cohort_table <- function(cells, curves = NULL) {
 #' @export
 plot_growth_structures <- function(summary, species, x_max = 100, max_panels = NULL) {
   .need("ggplot2", "Plotting stand structures")
-  ## Matched on the species SET, never on the display label, which carries
-  ## counts and would not match a bare species code.
-  match_col <- if ("species_set" %in% names(summary)) "species_set" else "composition"
-  d <- dplyr::filter(summary, grepl(paste0("(^|\\+)", species, "($|\\+)"), .data[[match_col]]))
+  ## Selected on the OLDEST cohort's species, so each structure appears in
+  ## exactly one species' figure and the focal species always leads its own
+  ## panel labels. Selecting on mere presence put every mixture in both species'
+  ## figures as the same panel, which read as a duplicate and hid that `Ba+Hw`
+  ## and `Hw+Ba` are different stands.
+  ##
+  ## Falls back to matching the species SET -- never the display label, which
+  ## carries counts and would not match a bare species code -- so a summary
+  ## built before `oldest_species` existed still plots, with the old behaviour.
+  d <- if ("oldest_species" %in% names(summary)) {
+    dplyr::filter(summary, .data$oldest_species == species)
+  } else {
+    match_col <- if ("species_set" %in% names(summary)) "species_set" else "composition"
+    dplyr::filter(summary, grepl(paste0("(^|\\+)", species, "($|\\+)"), .data[[match_col]]))
+  }
   if (nrow(d) == 0L) {
     return(NULL)
   }

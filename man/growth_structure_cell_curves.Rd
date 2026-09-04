@@ -33,7 +33,8 @@ repeated and any naive aggregation counts it twice.
 \details{
 This reduces to one row per (cell, timestep) and attaches the cell's
 composition: how many cohorts it carries and which modelled species, as a
-sorted \code{+}-separated label so that \code{A+B} and \code{B+A} are the same mixture.
+\code{+}-separated label ordered OLDEST cohort first, so that \code{A+B} and \code{B+A}
+are different mixtures rather than the same one.
 }
 \seealso{
 Other growth calibration helpers:
