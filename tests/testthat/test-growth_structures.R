@@ -23,7 +23,7 @@ test_that("growth_structure_cell_curves() keys on (batch, map_code), not map_cod
   cells <- growth_structure_cell_curves(structure_curves())
 
   ## Merging the two batches would give one cell of 4 cohorts labelled Aa+Aa+Aa+Bb.
-  expect_equal(sort(unique(cells$composition)), c("Aa x2", "Aa+Bb"))
+  expect_equal(sort(unique(cells$composition)), c("Aa x2", "Bb+Aa"))
   expect_equal(max(cells$n_cohorts), 2L)
 })
 
@@ -48,7 +48,7 @@ test_that("growth_structure_summary() drops compositions with too few cells", {
   expect_equal(nrow(growth_structure_summary(cells, min_cells = 25L)), 0L)
   expect_equal(
     sort(unique(growth_structure_summary(cells, min_cells = 1L)$composition)),
-    c("Aa x2", "Aa+Bb")
+    c("Aa x2", "Bb+Aa")
   )
 })
 
@@ -58,7 +58,17 @@ test_that("growth_structure_summary() reports the band across cells", {
 
   expect_named(
     s,
-    c("composition", "species_set", "n_cohorts", "age", "n_cells", "lower", "median", "upper"),
+    c(
+      "composition",
+      "species_set",
+      "oldest_species",
+      "n_cohorts",
+      "age",
+      "n_cells",
+      "lower",
+      "median",
+      "upper"
+    ),
     ignore.order = TRUE
   )
   expect_equal(s$median[s$composition == "Aa x2"], 9)
@@ -72,7 +82,7 @@ test_that("growth_structure_cohort_table() reports cohort ages only when given t
   with <- growth_structure_cohort_table(cells, curves)
 
   expect_false("cohort_age_min" %in% names(without))
-  expect_equal(with$cohort_age_min[with$composition == "Aa+Bb"], 10L)
+  expect_equal(with$cohort_age_min[with$composition == "Bb+Aa"], 10L)
   expect_equal(with$cohort_age_max[with$composition == "Aa x2"], 70L)
 })
 
@@ -119,12 +129,13 @@ test_that("plot_growth_structures() separates an age structure from a mixture", 
   cells <- growth_structure_cell_curves(structure_curves())
   s <- growth_structure_summary(cells, min_cells = 1L)
 
-  p <- plot_growth_structures(s, "Aa", x_max = 10)
-  ## The legend must distinguish the three kinds, not collapse them.
-  expect_setequal(
-    unique(ggplot2::ggplot_build(p)$plot$data$kind),
-    c("one species, multiple cohorts", "multiple species")
-  )
+  ## Each structure now appears in exactly one species' figure, so the two
+  ## kinds are split across them: `Aa x2` under Aa, `Bb+Aa` under Bb.
+  kinds <- unlist(lapply(c("Aa", "Bb"), function(sp) {
+    unique(ggplot2::ggplot_build(plot_growth_structures(s, sp, x_max = 10))$plot$data$kind)
+  }))
+  ## The legend must distinguish the kinds, not collapse them.
+  expect_setequal(kinds, c("one species, multiple cohorts", "multiple species"))
 })
 
 
@@ -263,4 +274,63 @@ test_that("plot_growth_structures() colours by starting-age class when the summa
   ## Within a panel the composition is constant, so `kind` would say nothing;
   ## and the band is suppressed rather than drawn once per class.
   expect_false(any(vapply(p$layers, function(l) inherits(l$geom, "GeomRibbon"), logical(1))))
+})
+
+test_that("growth_structure_cell_curves() orders the composition oldest cohort first", {
+  cells <- growth_structure_cell_curves(structure_curves())
+
+  ## The mixed cell is Aa at 10 and Bb at 30, so Bb leads and `Aa+Bb` would be
+  ## a different stand: the alphabetical label collapsed the two.
+  expect_equal(unique(cells$composition[cells$batch == 1L]), "Bb+Aa")
+  expect_equal(unique(cells$oldest_species[cells$batch == 1L]), "Bb")
+  expect_equal(unique(cells$oldest_species[cells$batch == 2L]), "Aa")
+})
+
+test_that("growth_structure_cell_curves() breaks ties in the composition alphabetically", {
+  curves <- structure_curves()
+  ## Equal starting ages: order must not depend on row order.
+  curves$cohort_age[curves$batch == 1L] <- 30L
+  forward <- growth_structure_cell_curves(curves)
+  reversed <- growth_structure_cell_curves(curves[rev(seq_len(nrow(curves))), ])
+
+  expect_equal(unique(forward$composition[forward$batch == 1L]), "Aa+Bb")
+  expect_equal(
+    unique(reversed$composition[reversed$batch == 1L]),
+    unique(forward$composition[forward$batch == 1L])
+  )
+})
+
+test_that("plot_growth_structures() draws a structure under its oldest species only", {
+  skip_if_not_installed("ggplot2")
+  cells <- growth_structure_cell_curves(structure_curves())
+  s <- growth_structure_summary(cells, min_cells = 1L)
+
+  ## `Bb+Aa` contains Aa, but Bb is older, so it belongs to Bb's figure alone.
+  ## Selecting on presence drew it in both, as the same panel.
+  expect_equal(
+    unique(
+      ggplot2::ggplot_build(plot_growth_structures(s, "Aa", x_max = 10))$plot$data$composition
+    ),
+    "Aa x2"
+  )
+  expect_equal(
+    unique(
+      ggplot2::ggplot_build(plot_growth_structures(s, "Bb", x_max = 10))$plot$data$composition
+    ),
+    "Bb+Aa"
+  )
+})
+
+test_that("plot_growth_structures() falls back to presence without an oldest_species column", {
+  skip_if_not_installed("ggplot2")
+  cells <- growth_structure_cell_curves(structure_curves())
+  s <- growth_structure_summary(cells, min_cells = 1L)
+  s$oldest_species <- NULL
+
+  ## A summary stored before the column existed still plots, the old way: Aa is
+  ## present in both compositions, so both are drawn.
+  drawn <- unique(
+    ggplot2::ggplot_build(plot_growth_structures(s, "Aa", x_max = 10))$plot$data$composition
+  )
+  expect_setequal(drawn, c("Aa x2", "Bb+Aa"))
 })

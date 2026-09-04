@@ -328,10 +328,12 @@ plot_growth_structures <- function(summary, species, x_max = 100, max_panels = N
   ## Falls back to matching the species SET -- never the display label, which
   ## carries counts and would not match a bare species code -- so a summary
   ## built before `oldest_species` existed still plots, with the old behaviour.
+  ## Defined unconditionally: `n_species` below counts species off this column
+  ## whichever branch selected the rows.
+  match_col <- if ("species_set" %in% names(summary)) "species_set" else "composition"
   d <- if ("oldest_species" %in% names(summary)) {
     dplyr::filter(summary, .data$oldest_species == species)
   } else {
-    match_col <- if ("species_set" %in% names(summary)) "species_set" else "composition"
     dplyr::filter(summary, grepl(paste0("(^|\\+)", species, "($|\\+)"), .data[[match_col]]))
   }
   if (nrow(d) == 0L) {
