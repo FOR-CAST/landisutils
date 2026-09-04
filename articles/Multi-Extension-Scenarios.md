@@ -362,7 +362,7 @@ scen <- scenario(
 )
 
 scen$path
-#> /tmp/RtmpVLEvUP/example_MultiExt_35da7dcde324
+#> /tmp/RtmpDh7STF/example_MultiExt_355645361388
 ```
 
 ## Inspect the generated scenario file
