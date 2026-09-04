@@ -1,5 +1,14 @@
 # Changelog
 
+## landisutils 0.0.144
+
+- [`plot_growth_candidate()`](https://for-cast.github.io/landisutils/reference/plot_growth_candidate.md)
+  omits the binned points’ white outline in density mode rather than
+  passing `colour = NULL`. A NULL fixed aesthetic still reaches the
+  layer, so ggplot2 reported “Ignoring empty aesthetic: `colour`” on
+  every density-mode build; the series is mapped on colour there and
+  wants no fixed outline at all.
+
 ## landisutils 0.0.143
 
 - [`growth_structure_cell_curves()`](https://for-cast.github.io/landisutils/reference/growth_structure_cell_curves.md)
