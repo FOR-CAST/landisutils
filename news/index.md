@@ -1,5 +1,23 @@
 # Changelog
 
+## landisutils 0.0.148
+
+- [`loss_from_stats()`](https://for-cast.github.io/landisutils/reference/loss_from_stats.md)
+  validates `weights` instead of trusting it, closing the same class of
+  silent wrong answer as the `lambda_obs` guard in 0.0.147. Passing
+  `weights = NULL` left the internal weight vector at its zero
+  initialisation – `w[names(NULL)] <- NULL` is a no-op – so the weighted
+  total collapsed to 0 while every component was computed correctly,
+  with no error and no warning. An unknown weight name was worse: it
+  GREW the weight vector past the component vector, and the multiply
+  then recycled across mismatched pairs, applying one component’s weight
+  to another. Both now error, as does an unnamed or NA weight. The known
+  component names are defined once as an internal constant shared with
+  [`calibrate_dynamic_fire()`](https://for-cast.github.io/landisutils/reference/calibrate_dynamic_fire.md)’s
+  `cfg$weights` check, so the two cannot drift apart – they did once
+  before, when `size_tail` existed for four releases without being
+  whitelisted and was silently stripped from every `cfg$weights`.
+
 ## landisutils 0.0.147
 
 - [`loss_from_stats()`](https://for-cast.github.io/landisutils/reference/loss_from_stats.md)

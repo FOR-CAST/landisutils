@@ -216,6 +216,26 @@ one of those omission categories.
   over made-up examples. PnET-Succession is the exception: it has no
   `testings/` directory upstream, so its test references
   `deploy/examples/biomass-Pnet-succession-example-v8` instead.
+- **Never insert a top-level object immediately above a function**: a
+  roxygen block sits ABOVE the thing it documents, so inserting a helper
+  or constant directly before `foo <- function(...)` drops it between
+  `foo`’s block and `foo` itself. roxygen2 then attaches the block to
+  the INTERPOSED object, which (a) EXPORTS it if the block has `@export`
+  – so a private helper becomes API – and (b) DELETES `man/foo.Rd`, so a
+  public function silently loses its documentation. Neither shows up as
+  an error; `devtools::document()` reports “Writing dot-myhelper.Rd” and
+  moves on, and the only downstream signal is an `R CMD check` WARNING
+  about a dangling `\link{}` from whatever cross-referenced `foo`. This
+  is easy to do repeatedly (it happened twice in one session, to
+  `.drop_initial_timestep()` and `.LOSS_COMPONENTS`) because the diff
+  looks purely local and the tests still pass. Put file-local internal
+  helpers and constants in
+  [R/utils.R](https://for-cast.github.io/landisutils/R/utils.R) next to
+  [`.need()`](https://for-cast.github.io/landisutils/reference/dot-need.md),
+  or at minimum below the closing brace of a function rather than above
+  the next one. After adding one, check `git status man/` for an
+  unexpected `dot-*.Rd` and for a deleted `.Rd` you did not intend to
+  touch.
 - **Suggests-only packages must be guarded with
   [`.need()`](https://for-cast.github.io/landisutils/reference/dot-need.md)**:
   `arrow`, `ggplot2`, `ggalluvial` and `cffdrs` are deliberately in
