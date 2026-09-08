@@ -29,6 +29,7 @@ make_calibration_stats <- function(n_reps = 2L) {
     observed = list(
       primary = list(
         n_fires_by_year = data.frame(year = 1:5, n = c(2L, 9L, 1L, 12L, 4L)),
+        lambda_obs = 5.6,
         fire_sizes_ha = c(1, 3, 9, 40, 800, 20000),
         area_by_fuel_ha = data.frame(base = c("Conifer", "Deciduous"), area_ha = c(9000, 500)),
         severity_dist = c("1" = 0.18, "2" = 0.18, "3" = 0.53, "4" = 0.055, "5" = 0.055)
@@ -152,4 +153,54 @@ test_that("malformed inputs are rejected with a useful message", {
   stats <- make_calibration_stats()
   stats$observed$primary$severity_dist <- NULL
   expect_snapshot(error = TRUE, plot_calibration_severity(stats))
+})
+
+test_that("the summary log's Time 0 row never reaches the count rate or the plot", {
+  skip_if_not_installed("ggplot2")
+  stats <- make_calibration_stats()
+  ## simulate a pre-fix cached payload: prepend the initial-state row every rep used to carry
+  with0 <- stats
+  with0$reps <- lapply(with0$reps, function(r) {
+    r$n_fires_by_year <- rbind(data.frame(year = 0L, n_fires = 0L), r$n_fires_by_year)
+    r
+  })
+
+  clean <- unlist(lapply(stats$reps, function(r) r$n_fires_by_year$n_fires))
+  p0 <- plot_calibration_fire_counts(with0)
+  p1 <- plot_calibration_fire_counts(stats)
+  expect_equal(sort(p0$data$n[p0$data$source == "simulated"]), sort(clean))
+  expect_equal(p0$data, p1$data)
+  ## absolute, not just path-vs-path: the failure mode is a wrong NUMBER, so pin the mean to the
+  ## known mean over years 1..N. Comparing the two paths alone would pass if both were broken.
+  expect_equal(mean(p0$data$n[p0$data$source == "simulated"]), mean(clean))
+  expect_false(any(p0$data$n[p0$data$source == "simulated"] == 0))
+
+  ## and the loss must score the same rate either way -- the row is not a year
+  w <- c(count = 1, size = 0, size_tail = 0, area_fuel = 0, severity = 0)
+  l0 <- loss_from_stats(with0$reps, with0$observed, weights = w)
+  l1 <- loss_from_stats(stats$reps, stats$observed, weights = w)
+  expect_equal(l0$components[["count"]], l1$components[["count"]])
+  ## and pin it to the rate computed by hand over years 1..N only
+  rate <- mean(vapply(stats$reps, function(r) mean(r$n_fires_by_year$n_fires), numeric(1)))
+  expected <- abs(rate - stats$observed$primary$lambda_obs) /
+    stats::sd(stats$observed$primary$n_fires_by_year$n)
+  expect_equal(l0$components[["count"]], expected)
+})
+
+test_that(".drop_initial_timestep() is idempotent and safe on odd input", {
+  d <- data.frame(year = 0:3, n_fires = c(0L, 5L, 6L, 7L))
+  once <- landisutils:::.drop_initial_timestep(d)
+  expect_equal(once$year, 1:3)
+  expect_equal(landisutils:::.drop_initial_timestep(once), once)
+  expect_null(landisutils:::.drop_initial_timestep(NULL))
+  empty <- d[0, ]
+  expect_equal(landisutils:::.drop_initial_timestep(empty), empty)
+  no_year <- data.frame(n_fires = 1:3)
+  expect_equal(landisutils:::.drop_initial_timestep(no_year), no_year)
+})
+
+test_that("loss_from_stats() refuses a missing lambda_obs instead of misaligning components", {
+  stats <- make_calibration_stats()
+  stats$observed$primary$lambda_obs <- NULL
+  expect_snapshot(error = TRUE, loss_from_stats(stats$reps, stats$observed))
 })

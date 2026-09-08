@@ -54,3 +54,11 @@
       Error:
       ! `stats$observed$primary` is missing: severity_dist.
 
+# loss_from_stats() refuses a missing lambda_obs instead of misaligning components
+
+    Code
+      loss_from_stats(stats$reps, stats$observed)
+    Condition
+      Error:
+      ! `observed$primary$lambda_obs` must be a single finite number; loss_from_stats() cannot score the count component without it.
+

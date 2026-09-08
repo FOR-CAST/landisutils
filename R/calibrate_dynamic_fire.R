@@ -97,6 +97,7 @@ calibration_par_names <- function() {
 #' @family Dynamic Fire calibration helpers
 #'
 #' @export
+
 parse_dynamic_fire_logs <- function(rep_dir, pixel_area_ha = 1.0) {
   stopifnot(fs::dir_exists(rep_dir), is.numeric(pixel_area_ha), pixel_area_ha > 0)
   event_path <- fs::path(rep_dir, "fire", "dynamic-fire-event-log.csv")
@@ -111,7 +112,8 @@ parse_dynamic_fire_logs <- function(rep_dir, pixel_area_ha = 1.0) {
   n_fires_by_year <- summary_df |>
     dplyr::group_by(year = as.integer(.data$Time)) |>
     dplyr::summarise(n_fires = sum(.data$NumberFires, na.rm = TRUE), .groups = "drop") |>
-    dplyr::arrange(.data$year)
+    dplyr::arrange(.data$year) |>
+    .drop_initial_timestep()
 
   if (nrow(events) > 0L) {
     events_tbl <- tibble::tibble(
@@ -430,11 +432,30 @@ loss_from_stats <- function(
   stopifnot(is.list(reps), length(reps) >= 1L, is.list(observed))
   primary <- observed$primary %||% observed$fru59
   stopifnot(!is.null(primary))
+  ## `lambda_obs` must be a finite scalar, and this has to be checked rather than assumed. If it is
+  ## absent, `L_count` below evaluates to numeric(0); `c(count = numeric(0), size = ...)` then DROPS
+  ## the element instead of erroring, so `components` comes back one short, its names shift, and
+  ## `w * components` multiplies mismatched pairs -- a silently wrong total behind nothing louder
+  ## than a recycling warning.
+  if (
+    !is.numeric(primary$lambda_obs) ||
+      length(primary$lambda_obs) != 1L ||
+      !is.finite(primary$lambda_obs)
+  ) {
+    stop(
+      "`observed$primary$lambda_obs` must be a single finite number; ",
+      "loss_from_stats() cannot score the count component without it.",
+      call. = FALSE
+    )
+  }
 
   ## L_count: pool simulated annual counts per rep, compare mean to observed lambda
   n_fires_per_year_per_rep <- vapply(
     reps,
-    function(r) sum(r$n_fires_by_year$n_fires) / max(1L, nrow(r$n_fires_by_year)),
+    function(r) {
+      d <- .drop_initial_timestep(r$n_fires_by_year)
+      sum(d$n_fires) / max(1L, nrow(d))
+    },
     numeric(1)
   )
   obs_n <- primary$n_fires_by_year$n
@@ -529,6 +550,7 @@ loss_from_stats <- function(
     area_fuel = L_area_fuel,
     severity = L_severity
   )
+  stopifnot(length(components) == 5L, !anyNA(names(components)))
   w <- stats::setNames(rep(0, length(components)), names(components))
   w[names(weights)] <- weights
   total <- sum(w * components)
@@ -699,9 +721,25 @@ loss_from_stats <- function(
 #' Each row of `fuel_type_table` carries a `Base` column (one of `"Conifer"`,
 #' `"ConiferPlantation"`, `"Deciduous"`, `"Slash"`, `"Open"`) and an `IgnProb`
 #' column. This multiplies `IgnProb` row-wise by the matching `IgnProb_<base>`
-#' entry in the calibrated parameter vector. Defaults in [defaultFuelTypeTable()]
-#' are mostly 1.0 (with `D1 = 0.5`), so a candidate range of `[0, 1.5]` directly
-#' scales the relative ignition weighting.
+#' entry in the calibrated parameter vector.
+#'
+#' @section Multipliers above `1 / default` are inert:
+#' LANDIS-II requires `IgnProb` in `[0, 1]`, so the product is clamped to that
+#' range. The defaults in [defaultFuelTypeTable()] are 1.0 for every base except
+#' `Deciduous` (`D1`), which is 0.5. A `Conifer` multiplier above 1.0 is
+#' therefore clamped away entirely, and a `Deciduous` multiplier of 2.0 maps to
+#' exactly the ceiling. Useful search bounds are `[0, 1]` for the 1.0 defaults
+#' and `[0, 2]` for `Deciduous`; anything wider searches a flat region.
+#'
+#' This matters when reading a finished calibration. A multiplier that comes
+#' back pinned at such a bound is **not** an estimate that wanted more room --
+#' it is saturation, meaning the objective wanted more fire than the maximum
+#' ignition probability can deliver. Widening the bound is a no-op. The
+#' remaining lever is `NumFires` in the fire-size table, which is a fixed input
+#' derived from the observed record rather than a calibrated parameter, so a
+#' pinned multiplier is a signal to check the count target and the objective --
+#' start with whether the simulated annual rate is being computed over the right
+#' number of years -- rather than to re-run with a wider box.
 #'
 #' @param fuel_type_table data.frame from [defaultFuelTypeTable()]. Must have
 #'   `Base` and `IgnProb` columns.
@@ -2312,6 +2350,25 @@ sim_mock <- function(
 #' the new run's objective. You therefore do not need to clear `out_dir` by hand
 #' after a config change; only the population geometry (par count / bounds / `NP`)
 #' and the loss config must be stable for a resume to take effect.
+#'
+#' What the fingerprint does NOT cover is the loss COMPUTATION. It digests the
+#' calibration's inputs, not the code that turns them into a number, and not the
+#' package version. So a change to how a component is calculated leaves the
+#' fingerprint byte-identical, the cache is accepted rather than rejected, and a
+#' post-change run is served pre-change losses for every parameter vector it has
+#' seen before -- silently, and mixed in with correctly computed ones.
+#'
+#' Deleting `checkpoint.rds` is NOT sufficient to get a clean slate: the memoized
+#' losses live in the trial-trace and `worker_*.csv` files, which
+#' `.augment_eval_cache()` folds in separately and RECURSIVELY from `out_dir`.
+#' After any release that changes a loss component, start the next calibration
+#' with `resume = "never"`, which skips that step entirely.
+#'
+#' The honest framing is that the fingerprint is a cheap guard against obviously
+#' mismatched reuse, not a correctness guarantee in either direction. It has been
+#' reported as too SENSITIVE (rejecting a valid resume after a cosmetic template
+#' rebuild) and, as above, as not sensitive ENOUGH. Both follow from digesting
+#' inputs rather than the computation.
 #'
 #' @param observed_targets_path Character. Path to the `.rds` from
 #'   [save_observed_fire_targets()].

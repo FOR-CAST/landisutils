@@ -48,6 +48,14 @@ test_that("parse_dynamic_fire_logs() reads sample event + summary logs", {
   )
   expect_s3_class(parsed$n_fires_by_year, "tbl_df")
   expect_named(parsed$n_fires_by_year, c("year", "n_fires"))
+  ## The sample log spans Time 0-6 and its Time 0 row is LANDIS's initial state, not a simulated
+  ## year. It must not survive parsing: left in, it is an extra row in the rate denominator and an
+  ## extra zero in every count distribution. The fixture has carried that row all along and nothing
+  ## asserted on it, which is how a 16x error in the count component sat behind a green suite --
+  ## every OTHER fixture is modelled on sim_mock(), which correctly starts at year 1.
+  expect_equal(min(parsed$n_fires_by_year$year), 1L)
+  expect_equal(nrow(parsed$n_fires_by_year), 6L)
+  expect_false(0L %in% parsed$n_fires_by_year$year)
   ## sample has 4 events; sizes column is DamagedSites
   expect_equal(parsed$n_events, 4L)
   expect_equal(parsed$total_sites_burned, 538L + 4L + 50L + 4L)

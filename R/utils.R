@@ -208,3 +208,23 @@ yesno <- function(x) {
 truefalse <- function(x) {
   ifelse(yesno(x) == "yes", "true", "false")
 }
+
+## Drop the Dynamic Fire summary log's initial timestep.
+##
+## The summary log reports Time 0 -- the landscape's initial state, written before any disturbance
+## -- and it necessarily carries zero fires. Left in, `n_fires_by_year` has `sim_years + 1` rows and
+## that row does damage twice: it is a spurious year in every rate denominator (understating the
+## simulated annual rate by sim_years/(sim_years+1), which is 9% on a 10-year trial), and a spurious
+## zero in every plotted distribution. The plotting harm scales with how far a zero sits from the
+## mean, so it is worst exactly where the fire regime is most active: on a landscape averaging ~28
+## fires/yr one such zero per replicate cut the plotted standard deviation nearly in half.
+##
+## Applied at the parser so the row never reaches a consumer, AND defensively in the consumers, so
+## that summaries CACHED before this fix are corrected on read rather than silently scoring wrong.
+## Idempotent: filtering a table that has no Time 0 row is a no-op.
+.drop_initial_timestep <- function(x) {
+  if (is.null(x) || !is.data.frame(x) || nrow(x) == 0L || !("year" %in% names(x))) {
+    return(x)
+  }
+  x[!is.na(x$year) & x$year > 0L, , drop = FALSE]
+}

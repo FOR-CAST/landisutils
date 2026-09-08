@@ -20,10 +20,28 @@ A copy of \code{fuel_type_table} with \code{IgnProb} updated.
 Each row of \code{fuel_type_table} carries a \code{Base} column (one of \code{"Conifer"},
 \code{"ConiferPlantation"}, \code{"Deciduous"}, \code{"Slash"}, \code{"Open"}) and an \code{IgnProb}
 column. This multiplies \code{IgnProb} row-wise by the matching \verb{IgnProb_<base>}
-entry in the calibrated parameter vector. Defaults in \code{\link[=defaultFuelTypeTable]{defaultFuelTypeTable()}}
-are mostly 1.0 (with \code{D1 = 0.5}), so a candidate range of \verb{[0, 1.5]} directly
-scales the relative ignition weighting.
+entry in the calibrated parameter vector.
 }
+\section{Multipliers above \code{1 / default} are inert}{
+
+LANDIS-II requires \code{IgnProb} in \verb{[0, 1]}, so the product is clamped to that
+range. The defaults in \code{\link[=defaultFuelTypeTable]{defaultFuelTypeTable()}} are 1.0 for every base except
+\code{Deciduous} (\code{D1}), which is 0.5. A \code{Conifer} multiplier above 1.0 is
+therefore clamped away entirely, and a \code{Deciduous} multiplier of 2.0 maps to
+exactly the ceiling. Useful search bounds are \verb{[0, 1]} for the 1.0 defaults
+and \verb{[0, 2]} for \code{Deciduous}; anything wider searches a flat region.
+
+This matters when reading a finished calibration. A multiplier that comes
+back pinned at such a bound is \strong{not} an estimate that wanted more room --
+it is saturation, meaning the objective wanted more fire than the maximum
+ignition probability can deliver. Widening the bound is a no-op. The
+remaining lever is \code{NumFires} in the fire-size table, which is a fixed input
+derived from the observed record rather than a calibrated parameter, so a
+pinned multiplier is a signal to check the count target and the objective --
+start with whether the simulated annual rate is being computed over the right
+number of years -- rather than to re-run with a wider box.
+}
+
 \seealso{
 Other Dynamic Fire calibration helpers:
 \code{\link[=apply_calibrated_hi_prop]{apply_calibrated_hi_prop()}},

@@ -322,7 +322,9 @@ plot_calibration_fire_counts <- function(stats, bins = 24L) {
   .need("ggplot2", "plot_calibration_fire_counts()")
   .check_calibration_stats(stats, need = "n_fires_by_year")
   obs <- stats$observed$primary$n_fires_by_year$n
-  sim <- unlist(lapply(stats$reps, function(r) r$n_fires_by_year$n_fires))
+  ## drop the summary log's Time 0 row: it is the initial state, always zero fires, and one spurious
+  ## zero per replicate both shifts the mean down and (where counts are large) collapses the spread
+  sim <- unlist(lapply(stats$reps, function(r) .drop_initial_timestep(r$n_fires_by_year)$n_fires))
   df <- rbind(data.frame(source = "observed", n = obs), data.frame(source = "simulated", n = sim))
   means <- data.frame(source = c("observed", "simulated"), n = c(mean(obs), mean(sim)))
   pal <- calibration_plot_palette()
