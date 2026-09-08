@@ -216,6 +216,38 @@ one of those omission categories.
   over made-up examples. PnET-Succession is the exception: it has no
   `testings/` directory upstream, so its test references
   `deploy/examples/biomass-Pnet-succession-example-v8` instead.
+- **Suggests-only packages must be guarded with
+  [`.need()`](https://for-cast.github.io/landisutils/reference/dot-need.md)**:
+  `arrow`, `ggplot2`, `ggalluvial` and `cffdrs` are deliberately in
+  `Suggests`, not `Imports` — most consumers write LANDIS-II configs and
+  run the model without ever reading a parquet dataset or drawing a
+  figure, and `arrow` alone is 99 MB. Any function that calls into one
+  of them must therefore check for it first, via **`.need(pkg, what)`**
+  ([R/utils.R](https://for-cast.github.io/landisutils/R/utils.R)): `pkg`
+  is a character vector of package names, `what` names the caller for
+  the error message
+  (e.g. `.need("ggplot2", "plot_calibration_severity()")`), and it
+  errors listing every missing package with an
+  [`install.packages()`](https://rdrr.io/r/utils/install.packages.html)
+  hint. Put the call at the top of the function body, in the same
+  top-level function that makes the `pkg::` call — not in a caller. This
+  is enforced statically by
+  [tests/testthat/test-suggests_guards.R](https://for-cast.github.io/landisutils/tests/testthat/test-suggests_guards.R),
+  which scans `R/` for `<pkg>::` and requires a `.need(...)` or
+  [`requireNamespace(...)`](https://rdrr.io/r/base/ns-load.html) naming
+  that package inside the enclosing function; it strips comments first,
+  so roxygen prose mentioning
+  [`arrow::open_dataset()`](https://arrow.apache.org/docs/r/reference/open_dataset.html)
+  does not count. A second test asserts none of the four has quietly
+  returned to `Imports`. A private helper reached from exactly one
+  guarded exported function may be listed in that file’s `.guard_exempt`
+  instead, but prefer guarding it — a shared helper reached from many
+  exported functions (e.g. a plotting theme) should just call
+  [`.need()`](https://for-cast.github.io/landisutils/reference/dot-need.md)
+  itself. The defect this prevents is invisible to `R CMD check` and to
+  every unit test run on a machine that happens to have the package
+  installed; it surfaces only for a user who does not, as “there is no
+  package called ‘arrow’” thrown from deep in the call stack.
 - **Raster pixel types LANDIS-II can read**: LANDIS-II opens every map
   through `Landis.RasterIO.Gdal.GdalInputRaster.NewInputBand`, which
   accepts **only GDAL `Byte`, `Int16`, `Int32`, `Float32` and

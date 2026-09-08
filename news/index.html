@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.145</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.146</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,6 +41,18 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.146" id="landisutils-00146">landisutils 0.0.146<a class="anchor" aria-label="anchor" href="#landisutils-00146"></a></h2>
+<ul><li>A family of diagnostic plots for a Dynamic Fire calibration, built on the objects the package already produces: <code><a href="../reference/plot_calibration_convergence.html">plot_calibration_convergence()</a></code>, <code><a href="../reference/plot_calibration_loss.html">plot_calibration_loss()</a></code>, <code><a href="../reference/plot_calibration_fire_sizes.html">plot_calibration_fire_sizes()</a></code>, <code><a href="../reference/plot_calibration_fire_counts.html">plot_calibration_fire_counts()</a></code>, <code><a href="../reference/plot_calibration_area_by_fuel.html">plot_calibration_area_by_fuel()</a></code>, <code><a href="../reference/plot_calibration_severity.html">plot_calibration_severity()</a></code> and <code><a href="../reference/plot_calibration_severity_by_size.html">plot_calibration_severity_by_size()</a></code>. Each returns a ggplot object rather than writing a file, and the titles are descriptive rather than conclusory – what a given gap means is a property of the landscape being calibrated, not of this package, so the interpretation stays with the caller. ggplot2 remains in Suggests; the plots check for it and fail with a clear message when it is absent.</li>
+<li>
+<code><a href="../reference/calibration_events.html">calibration_events()</a></code> pools the per-replicate fire-event logs into one data frame and adds each event’s burned area in hectares. It also documents that the event log’s <code>MeanSeverity</code> and <code>DamagedSites</code> are not on the same denominator, which is why the former can fall below 1.</li>
+<li>
+<code><a href="../reference/calibration_plot_palette.html">calibration_plot_palette()</a></code> exposes the colour roles the plots use, with checked per-role overrides (an unknown role is an error rather than a silent no-op). The defaults are separated for colour vision against each other and against the plot surface.</li>
+<li>
+<code><a href="../reference/plot_calibration_severity.html">plot_calibration_severity()</a></code> gains <code>weight_by</code>, because the choice is not cosmetic. The objective’s severity term counts fire EVENTS – one vote per fire, whatever its size – while an observed severity reference is almost always a share of burned AREA. Where severity rises with fire size, the two summaries of the same simulation can disagree about the DIRECTION of the error and not merely its size, so <code>weight_by = "area"</code> is the like-for-like comparison against an area-weighted reference; <code>"events"</code> is the default because it reproduces what was actually scored. Neither recovers within-fire variation, since both summarise a fire by its mean.</li>
+<li>
+<code><a href="../reference/plot_calibration_severity_by_size.html">plot_calibration_severity_by_size()</a></code> plots each simulated fire’s size against its severity and returns the per-size-class share of fires, share of area and mean severity as a <code>size_summary</code> attribute – the evidence for whether <code>weight_by</code> matters on a given landscape.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.145" id="landisutils-00145">landisutils 0.0.145<a class="anchor" aria-label="anchor" href="#landisutils-00145"></a></h2>
 <ul><li>

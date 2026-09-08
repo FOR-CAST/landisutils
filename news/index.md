@@ -1,5 +1,50 @@
 # Changelog
 
+## landisutils 0.0.146
+
+- A family of diagnostic plots for a Dynamic Fire calibration, built on
+  the objects the package already produces:
+  [`plot_calibration_convergence()`](https://for-cast.github.io/landisutils/reference/plot_calibration_convergence.md),
+  [`plot_calibration_loss()`](https://for-cast.github.io/landisutils/reference/plot_calibration_loss.md),
+  [`plot_calibration_fire_sizes()`](https://for-cast.github.io/landisutils/reference/plot_calibration_fire_sizes.md),
+  [`plot_calibration_fire_counts()`](https://for-cast.github.io/landisutils/reference/plot_calibration_fire_counts.md),
+  [`plot_calibration_area_by_fuel()`](https://for-cast.github.io/landisutils/reference/plot_calibration_area_by_fuel.md),
+  [`plot_calibration_severity()`](https://for-cast.github.io/landisutils/reference/plot_calibration_severity.md)
+  and
+  [`plot_calibration_severity_by_size()`](https://for-cast.github.io/landisutils/reference/plot_calibration_severity_by_size.md).
+  Each returns a ggplot object rather than writing a file, and the
+  titles are descriptive rather than conclusory – what a given gap means
+  is a property of the landscape being calibrated, not of this package,
+  so the interpretation stays with the caller. ggplot2 remains in
+  Suggests; the plots check for it and fail with a clear message when it
+  is absent.
+- [`calibration_events()`](https://for-cast.github.io/landisutils/reference/calibration_events.md)
+  pools the per-replicate fire-event logs into one data frame and adds
+  each event’s burned area in hectares. It also documents that the event
+  log’s `MeanSeverity` and `DamagedSites` are not on the same
+  denominator, which is why the former can fall below 1.
+- [`calibration_plot_palette()`](https://for-cast.github.io/landisutils/reference/calibration_plot_palette.md)
+  exposes the colour roles the plots use, with checked per-role
+  overrides (an unknown role is an error rather than a silent no-op).
+  The defaults are separated for colour vision against each other and
+  against the plot surface.
+- [`plot_calibration_severity()`](https://for-cast.github.io/landisutils/reference/plot_calibration_severity.md)
+  gains `weight_by`, because the choice is not cosmetic. The objective’s
+  severity term counts fire EVENTS – one vote per fire, whatever its
+  size – while an observed severity reference is almost always a share
+  of burned AREA. Where severity rises with fire size, the two summaries
+  of the same simulation can disagree about the DIRECTION of the error
+  and not merely its size, so `weight_by = "area"` is the like-for-like
+  comparison against an area-weighted reference; `"events"` is the
+  default because it reproduces what was actually scored. Neither
+  recovers within-fire variation, since both summarise a fire by its
+  mean.
+- [`plot_calibration_severity_by_size()`](https://for-cast.github.io/landisutils/reference/plot_calibration_severity_by_size.md)
+  plots each simulated fire’s size against its severity and returns the
+  per-size-class share of fires, share of area and mean severity as a
+  `size_summary` attribute – the evidence for whether `weight_by`
+  matters on a given landscape.
+
 ## landisutils 0.0.145
 
 - [`plot_growth_candidate()`](https://for-cast.github.io/landisutils/reference/plot_growth_candidate.md)

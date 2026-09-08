@@ -343,8 +343,14 @@ scenario(
 - [`calibrate_dynamic_fire()`](https://for-cast.github.io/landisutils/reference/calibrate_dynamic_fire.md)
   : DEoptim driver for Dynamic Fire calibration
 
+- [`calibration_events()`](https://for-cast.github.io/landisutils/reference/calibration_events.md)
+  : Pool the per-replicate fire-event logs
+
 - [`calibration_par_names()`](https://for-cast.github.io/landisutils/reference/calibration_par_names.md)
   : Canonical parameter names for the Dynamic Fire calibration vector
+
+- [`calibration_plot_palette()`](https://for-cast.github.io/landisutils/reference/calibration_plot_palette.md)
+  : Colour roles for the calibration diagnostic plots
 
 - [`climr_ensemble_8`](https://for-cast.github.io/landisutils/reference/climr_ensemble_8.md)
   : bcgov-recommended eight-member climr GCM ensemble
@@ -822,6 +828,27 @@ scenario(
 
   Patch a `dynamic-fire.txt` in place with candidate calibration
   parameters
+
+- [`plot_calibration_area_by_fuel()`](https://for-cast.github.io/landisutils/reference/plot_calibration_area_by_fuel.md)
+  : Plot observed against simulated area burned by base fuel type
+
+- [`plot_calibration_convergence()`](https://for-cast.github.io/landisutils/reference/plot_calibration_convergence.md)
+  : Plot the DEoptim search trace
+
+- [`plot_calibration_fire_counts()`](https://for-cast.github.io/landisutils/reference/plot_calibration_fire_counts.md)
+  : Plot observed against simulated annual fire counts
+
+- [`plot_calibration_fire_sizes()`](https://for-cast.github.io/landisutils/reference/plot_calibration_fire_sizes.md)
+  : Plot observed against simulated fire sizes
+
+- [`plot_calibration_loss()`](https://for-cast.github.io/landisutils/reference/plot_calibration_loss.md)
+  : Plot the weighted contribution of each objective component
+
+- [`plot_calibration_severity()`](https://for-cast.github.io/landisutils/reference/plot_calibration_severity.md)
+  : Plot observed against simulated burn-severity classes
+
+- [`plot_calibration_severity_by_size()`](https://for-cast.github.io/landisutils/reference/plot_calibration_severity_by_size.md)
+  : Plot simulated fire size against fire severity
 
 - [`plot_growth_calibration()`](https://for-cast.github.io/landisutils/reference/plot_growth_calibration.md)
   : Plot a species' growth curve against its references
