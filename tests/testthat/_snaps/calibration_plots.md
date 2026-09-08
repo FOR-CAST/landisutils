@@ -62,3 +62,35 @@
       Error:
       ! `observed$primary$lambda_obs` must be a single finite number; loss_from_stats() cannot score the count component without it.
 
+# loss_from_stats() refuses weights that would silently misalign
+
+    Code
+      loss_from_stats(stats$reps, stats$observed, weights = NULL)
+    Condition
+      Error:
+      ! `weights` must be a non-empty, fully named, non-NA numeric vector over: count, size, size_tail, area_fuel, severity.
+
+---
+
+    Code
+      loss_from_stats(stats$reps, stats$observed, weights = c(1, 1))
+    Condition
+      Error:
+      ! `weights` must be a non-empty, fully named, non-NA numeric vector over: count, size, size_tail, area_fuel, severity.
+
+---
+
+    Code
+      loss_from_stats(stats$reps, stats$observed, weights = c(cnt = 2, size = 1))
+    Condition
+      Error:
+      ! unknown loss weight(s): cnt. Known components: count, size, size_tail, area_fuel, severity.
+
+---
+
+    Code
+      loss_from_stats(stats$reps, stats$observed, weights = c(count = NA_real_))
+    Condition
+      Error:
+      ! `weights` must be a non-empty, fully named, non-NA numeric vector over: count, size, size_tail, area_fuel, severity.
+

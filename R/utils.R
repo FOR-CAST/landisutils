@@ -228,3 +228,9 @@ truefalse <- function(x) {
   }
   x[!is.na(x$year) & x$year > 0L, , drop = FALSE]
 }
+
+## The five components `loss_from_stats()` scores, in the order it assembles them. Defined once so
+## the weight validation there and the `cfg$weights` check in `calibrate_dynamic_fire()` cannot drift
+## apart -- they did once before, when `size_tail` existed for four releases without being added to
+## the whitelist and was silently stripped from every cfg$weights.
+.LOSS_COMPONENTS <- c("count", "size", "size_tail", "area_fuel", "severity")

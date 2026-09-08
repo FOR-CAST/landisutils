@@ -424,6 +424,7 @@ default_severity_prior_sturtevant2009 <- function() {
 #' @family Dynamic Fire calibration helpers
 #'
 #' @export
+
 loss_from_stats <- function(
   reps,
   observed,
@@ -432,6 +433,38 @@ loss_from_stats <- function(
   stopifnot(is.list(reps), length(reps) >= 1L, is.list(observed))
   primary <- observed$primary %||% observed$fru59
   stopifnot(!is.null(primary))
+  ## `weights` must be a NAMED numeric vector over a subset of the known components. Neither half is
+  ## paranoia. Passing NULL leaves `w` at its zero initialisation, since `w[names(NULL)] <- NULL` is
+  ## a no-op, so the total collapses to 0 while every component is computed correctly -- a wrong
+  ## answer with no signal at all. An unknown name is worse: `w[names(weights)] <- weights` GROWS
+  ## `w` past `components`, and the multiply then recycles across mismatched pairs. Both are the
+  ## same family as the `lambda_obs` case below.
+  if (
+    !is.numeric(weights) ||
+      length(weights) == 0L ||
+      is.null(names(weights)) ||
+      !all(nzchar(names(weights))) ||
+      anyNA(weights)
+  ) {
+    stop(
+      "`weights` must be a non-empty, fully named, non-NA numeric vector over: ",
+      paste(.LOSS_COMPONENTS, collapse = ", "),
+      ".",
+      call. = FALSE
+    )
+  }
+  unknown_w <- setdiff(names(weights), .LOSS_COMPONENTS)
+  if (length(unknown_w) > 0L) {
+    stop(
+      "unknown loss weight(s): ",
+      paste(unknown_w, collapse = ", "),
+      ". Known components: ",
+      paste(.LOSS_COMPONENTS, collapse = ", "),
+      ".",
+      call. = FALSE
+    )
+  }
+
   ## `lambda_obs` must be a finite scalar, and this has to be checked rather than assumed. If it is
   ## absent, `L_count` below evaluates to numeric(0); `c(count = numeric(0), size = ...)` then DROPS
   ## the element instead of erroring, so `components` comes back one short, its names shift, and
@@ -550,7 +583,7 @@ loss_from_stats <- function(
     area_fuel = L_area_fuel,
     severity = L_severity
   )
-  stopifnot(length(components) == 5L, !anyNA(names(components)))
+  stopifnot(identical(names(components), .LOSS_COMPONENTS))
   w <- stats::setNames(rep(0, length(components)), names(components))
   w[names(weights)] <- weights
   total <- sum(w * components)
@@ -2105,7 +2138,7 @@ sim_mock <- function(
   ## v0.0.51 but missing from this whitelist until v0.0.55, which silently
   ## stripped it from every cfg$weights and ran calibrations with the tail
   ## term effectively disabled.
-  .known_weights <- c("count", "size", "size_tail", "area_fuel", "severity")
+  .known_weights <- .LOSS_COMPONENTS
   w <- cfg$weights %||% c(count = 1, size = 1, size_tail = 1, area_fuel = 0, severity = 0)
   if (all(w == 0)) {
     stop(

@@ -204,3 +204,34 @@ test_that("loss_from_stats() refuses a missing lambda_obs instead of misaligning
   stats$observed$primary$lambda_obs <- NULL
   expect_snapshot(error = TRUE, loss_from_stats(stats$reps, stats$observed))
 })
+
+test_that("loss_from_stats() refuses weights that would silently misalign", {
+  stats <- make_calibration_stats()
+  ## NULL leaves `w` at its zero initialisation, so the total collapses to 0 while every component
+  ## is computed correctly -- the failure this guard exists for.
+  expect_snapshot(error = TRUE, loss_from_stats(stats$reps, stats$observed, weights = NULL))
+  expect_snapshot(error = TRUE, loss_from_stats(stats$reps, stats$observed, weights = c(1, 1)))
+  ## an unknown name GROWS `w` past `components`, and the multiply then recycles
+  expect_snapshot(
+    error = TRUE,
+    loss_from_stats(stats$reps, stats$observed, weights = c(cnt = 2, size = 1))
+  )
+  expect_snapshot(
+    error = TRUE,
+    loss_from_stats(stats$reps, stats$observed, weights = c(count = NA_real_))
+  )
+})
+
+test_that("loss_from_stats() weights a subset without touching the others", {
+  stats <- make_calibration_stats()
+  full <- loss_from_stats(
+    stats$reps,
+    stats$observed,
+    weights = c(count = 1, size = 1, size_tail = 1, area_fuel = 1, severity = 1)
+  )
+  just_count <- loss_from_stats(stats$reps, stats$observed, weights = c(count = 1))
+  ## components never depend on the weights; only the total does
+  expect_equal(just_count$components, full$components)
+  expect_equal(just_count$total, unname(full$components[["count"]]))
+  expect_named(just_count$weights, .LOSS_COMPONENTS)
+})
