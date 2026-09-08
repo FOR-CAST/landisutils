@@ -13,7 +13,7 @@ on.exit() regardless of success / error / interrupt."><meta property="og:image" 
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.146</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.147</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -208,6 +208,22 @@ successive calibrations with different weights or observations does NOT poison
 the new run's objective. You therefore do not need to clear <code>out_dir</code> by hand
 after a config change; only the population geometry (par count / bounds / <code>NP</code>)
 and the loss config must be stable for a resume to take effect.</p>
+<p>What the fingerprint does NOT cover is the loss COMPUTATION. It digests the
+calibration's inputs, not the code that turns them into a number, and not the
+package version. So a change to how a component is calculated leaves the
+fingerprint byte-identical, the cache is accepted rather than rejected, and a
+post-change run is served pre-change losses for every parameter vector it has
+seen before – silently, and mixed in with correctly computed ones.</p>
+<p>Deleting <code>checkpoint.rds</code> is NOT sufficient to get a clean slate: the memoized
+losses live in the trial-trace and <code>worker_*.csv</code> files, which
+<code>.augment_eval_cache()</code> folds in separately and RECURSIVELY from <code>out_dir</code>.
+After any release that changes a loss component, start the next calibration
+with <code>resume = "never"</code>, which skips that step entirely.</p>
+<p>The honest framing is that the fingerprint is a cheap guard against obviously
+mismatched reuse, not a correctness guarantee in either direction. It has been
+reported as too SENSITIVE (rejecting a valid resume after a cosmetic template
+rebuild) and, as above, as not sensitive ENOUGH. Both follow from digesting
+inputs rather than the computation.</p>
 </div>
 
     </div>

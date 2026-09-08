@@ -4,10 +4,6 @@ Each row of `fuel_type_table` carries a `Base` column (one of
 `"Conifer"`, `"ConiferPlantation"`, `"Deciduous"`, `"Slash"`, `"Open"`)
 and an `IgnProb` column. This multiplies `IgnProb` row-wise by the
 matching `IgnProb_<base>` entry in the calibrated parameter vector.
-Defaults in
-[`defaultFuelTypeTable()`](https://for-cast.github.io/landisutils/reference/defaultFuelTypeTable.md)
-are mostly 1.0 (with `D1 = 0.5`), so a candidate range of `[0, 1.5]`
-directly scales the relative ignition weighting.
 
 ## Usage
 
@@ -32,6 +28,28 @@ apply_calibrated_ignprob(fuel_type_table, calibrated_fire_params)
 ## Value
 
 A copy of `fuel_type_table` with `IgnProb` updated.
+
+## Multipliers above `1 / default` are inert
+
+LANDIS-II requires `IgnProb` in `[0, 1]`, so the product is clamped to
+that range. The defaults in
+[`defaultFuelTypeTable()`](https://for-cast.github.io/landisutils/reference/defaultFuelTypeTable.md)
+are 1.0 for every base except `Deciduous` (`D1`), which is 0.5. A
+`Conifer` multiplier above 1.0 is therefore clamped away entirely, and a
+`Deciduous` multiplier of 2.0 maps to exactly the ceiling. Useful search
+bounds are `[0, 1]` for the 1.0 defaults and `[0, 2]` for `Deciduous`;
+anything wider searches a flat region.
+
+This matters when reading a finished calibration. A multiplier that
+comes back pinned at such a bound is **not** an estimate that wanted
+more room – it is saturation, meaning the objective wanted more fire
+than the maximum ignition probability can deliver. Widening the bound is
+a no-op. The remaining lever is `NumFires` in the fire-size table, which
+is a fixed input derived from the observed record rather than a
+calibrated parameter, so a pinned multiplier is a signal to check the
+count target and the objective – start with whether the simulated annual
+rate is being computed over the right number of years – rather than to
+re-run with a wider box.
 
 ## See also
 

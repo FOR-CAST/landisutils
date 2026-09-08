@@ -186,6 +186,28 @@ objective. You therefore do not need to clear `out_dir` by hand after a
 config change; only the population geometry (par count / bounds / `NP`)
 and the loss config must be stable for a resume to take effect.
 
+What the fingerprint does NOT cover is the loss COMPUTATION. It digests
+the calibration's inputs, not the code that turns them into a number,
+and not the package version. So a change to how a component is
+calculated leaves the fingerprint byte-identical, the cache is accepted
+rather than rejected, and a post-change run is served pre-change losses
+for every parameter vector it has seen before – silently, and mixed in
+with correctly computed ones.
+
+Deleting `checkpoint.rds` is NOT sufficient to get a clean slate: the
+memoized losses live in the trial-trace and `worker_*.csv` files, which
+`.augment_eval_cache()` folds in separately and RECURSIVELY from
+`out_dir`. After any release that changes a loss component, start the
+next calibration with `resume = "never"`, which skips that step
+entirely.
+
+The honest framing is that the fingerprint is a cheap guard against
+obviously mismatched reuse, not a correctness guarantee in either
+direction. It has been reported as too SENSITIVE (rejecting a valid
+resume after a cosmetic template rebuild) and, as above, as not
+sensitive ENOUGH. Both follow from digesting inputs rather than the
+computation.
+
 ## See also
 
 Other Dynamic Fire calibration helpers:
