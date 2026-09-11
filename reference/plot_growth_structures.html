@@ -13,7 +13,7 @@ cohorts compete for light."><meta property="og:image" content="https://for-cast.
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.148</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.149</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -57,7 +57,13 @@ cohorts compete for light.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">plot_growth_structures</span><span class="op">(</span><span class="va">summary</span>, <span class="va">species</span>, x_max <span class="op">=</span> <span class="fl">100</span>, max_panels <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">plot_growth_structures</span><span class="op">(</span></span>
+<span>  <span class="va">summary</span>,</span>
+<span>  <span class="va">species</span>,</span>
+<span>  x_max <span class="op">=</span> <span class="fl">100</span>,</span>
+<span>  max_panels <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  regen_flags <span class="op">=</span> <span class="cn">NULL</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -84,6 +90,18 @@ a handful of compositions. Where cells carry many age classes a species can
 appear in over a hundred, and a facet per composition renders as unreadable
 slivers with truncated strips. What was dropped is stated in the subtitle
 rather than left implied.</p></dd>
+
+
+<dt id="arg-regen-flags">regen_flags<a class="anchor" aria-label="anchor" href="#arg-regen-flags"></a></dt>
+<dd><p>Named character vector, or <code>NULL</code> (the default). Names are
+species codes; values name a regeneration mechanism that CANNOT operate in
+the runs behind <code>summary</code> – typically serotiny or resprouting,
+both of which LANDIS-II arms only from a disturbance-caused cohort death, in
+a run carrying no disturbance extension. Panels whose composition holds a
+named species are marked, and the marker is explained in the caption. Needs
+the <code>species_set</code> column to match on; without it the flags are ignored with
+a warning, since <code>composition</code> is a display label and parsing it would
+mis-read <code>Hw x2</code> as a species named <code>Hw x2</code>.</p></dd>
 
 </dl></div>
     <div class="section level2">

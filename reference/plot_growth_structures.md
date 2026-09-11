@@ -8,7 +8,13 @@ never let two cohorts compete for light.
 ## Usage
 
 ``` r
-plot_growth_structures(summary, species, x_max = 100, max_panels = NULL)
+plot_growth_structures(
+  summary,
+  species,
+  x_max = 100,
+  max_panels = NULL,
+  regen_flags = NULL
+)
 ```
 
 ## Arguments
@@ -35,6 +41,19 @@ plot_growth_structures(summary, species, x_max = 100, max_panels = NULL)
   can appear in over a hundred, and a facet per composition renders as
   unreadable slivers with truncated strips. What was dropped is stated
   in the subtitle rather than left implied.
+
+- regen_flags:
+
+  Named character vector, or `NULL` (the default). Names are species
+  codes; values name a regeneration mechanism that CANNOT operate in the
+  runs behind `summary` – typically serotiny or resprouting, both of
+  which LANDIS-II arms only from a disturbance-caused cohort death, in a
+  run carrying no disturbance extension. Panels whose composition holds
+  a named species are marked, and the marker is explained in the
+  caption. Needs the `species_set` column to match on; without it the
+  flags are ignored with a warning, since `composition` is a display
+  label and parsing it would mis-read `Hw x2` as a species named
+  `Hw x2`.
 
 ## Value
 

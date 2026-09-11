@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.148</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.149</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,6 +41,11 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.149" id="landisutils-00149">landisutils 0.0.149<a class="anchor" aria-label="anchor" href="#landisutils-00149"></a></h2>
+<ul><li>
+<code><a href="../reference/plot_growth_structures.html">plot_growth_structures()</a></code> gains <code>regen_flags</code>, which marks the panels whose composition holds a species whose extra regeneration pathway cannot operate in the runs being plotted, and names the mechanism in the caption. LANDIS-II arms serotiny and resprouting ONLY from a disturbance-caused cohort death: <code>CheckForPostFireRegen()</code> and <code>CheckForResprouting()</code> are reachable only where the succession extension sees <code>disturbanceType != null</code>, and a cohort dying of longevity passes <code>null</code>. A calibration landscape that registers no disturbance extension therefore runs a serotinous or sprouting species with that pathway permanently inert, which is invisible in a carbon trajectory – the reader sees a species that “should” come back after fire, and no fire – and was being carried in the calling project’s prose, which a figure shared on its own does not travel with. Matching is on <code>species_set</code> and never on <code>composition</code>, which is a display label that would read <code>Hw x2</code> as a species named <code>Hw x2</code>; without that column the flags are ignored with a warning rather than mis-applied. Only the flagged species a figure actually shows are named, so the caption cannot send a reader looking for a panel that is not there.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.148" id="landisutils-00148">landisutils 0.0.148<a class="anchor" aria-label="anchor" href="#landisutils-00148"></a></h2>
 <ul><li>
