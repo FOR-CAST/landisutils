@@ -306,6 +306,15 @@ growth_structure_cohort_table <- function(cells, curves = NULL) {
 #' @param summary A tibble from [growth_structure_summary()].
 #' @param species Character. Modelled species code to plot.
 #' @param x_max Numeric or `NULL`. Clip the data to this simulation year.
+#' @param regen_flags Named character vector, or `NULL` (the default). Names are
+#'   species codes; values name a regeneration mechanism that CANNOT operate in
+#'   the runs behind `summary` -- typically serotiny or resprouting,
+#'   both of which LANDIS-II arms only from a disturbance-caused cohort death, in
+#'   a run carrying no disturbance extension. Panels whose composition holds a
+#'   named species are marked, and the marker is explained in the caption. Needs
+#'   the `species_set` column to match on; without it the flags are ignored with
+#'   a warning, since `composition` is a display label and parsing it would
+#'   mis-read `Hw x2` as a species named `Hw x2`.
 #' @param max_panels Integer or `NULL`. Keep only this many compositions, those
 #'   with the most cells behind them. `NULL` (the default) keeps all, which is
 #'   right when cells hold at most a couple of cohorts and a species appears in
@@ -317,7 +326,13 @@ growth_structure_cohort_table <- function(cells, curves = NULL) {
 #' @return A ggplot, or `NULL` when the species appears in no composition.
 #' @family growth calibration helpers
 #' @export
-plot_growth_structures <- function(summary, species, x_max = 100, max_panels = NULL) {
+plot_growth_structures <- function(
+  summary,
+  species,
+  x_max = 100,
+  max_panels = NULL,
+  regen_flags = NULL
+) {
   .need("ggplot2", "Plotting stand structures")
   ## Selected on the OLDEST cohort's species, so each structure appears in
   ## exactly one species' figure and the focal species always leads its own
@@ -388,6 +403,31 @@ plot_growth_structures <- function(summary, species, x_max = 100, max_panels = N
     ) |>
     dplyr::inner_join(lab_n, by = "composition") |>
     dplyr::mutate(label = paste0(.data$composition, "  (", .data$n, " cells)"))
+  ## Which of the flagged species this figure actually shows. An inert
+  ## regeneration pathway is invisible in a trajectory -- the reader sees a
+  ## species that "should" come back after fire, and no fire -- so it is marked
+  ## on the panels it applies to rather than left to the caller's prose, which a
+  ## figure shared on its own does not carry.
+  shown_flags <- character(0)
+  if (length(regen_flags)) {
+    if (is.null(names(regen_flags)) || !all(nzchar(names(regen_flags)))) {
+      stop("`regen_flags` must be a NAMED vector of species code = mechanism", call. = FALSE)
+    }
+    if (!"species_set" %in% names(d)) {
+      warning(
+        "`regen_flags` ignored: `summary` has no `species_set` column to match on",
+        call. = FALSE
+      )
+    } else {
+      sets <- strsplit(d$species_set, "+", fixed = TRUE)
+      hit <- vapply(sets, \(x) any(x %in% names(regen_flags)), logical(1))
+      shown_flags <- intersect(names(regen_flags), unlist(sets[hit]))
+      ## An ASCII asterisk, not a dagger: the strip is rendered by whatever
+      ## graphics device the caller saves through, and a missing glyph there is a
+      ## silent box rather than an error.
+      d$label[hit] <- paste0(d$label[hit], " *")
+    }
+  }
   ## Ribbons only without a comparison. Overlapping translucent bands read as a
   ## further colour and hide each other, which is true of two variants and much
   ## truer of seven or eight starting-age classes.
@@ -464,7 +504,16 @@ plot_growth_structures <- function(summary, species, x_max = 100, max_panels = N
       fill = NULL,
       ## Only when a linetype is actually mapped: labelling an aesthetic no layer
       ## uses makes ggplot2 warn "Ignoring unknown labels" on every build.
-      linetype = if (has_variant) "Variant"
+      linetype = if (has_variant) "Variant",
+      caption = if (length(shown_flags)) {
+        paste0(
+          "* this composition holds a species whose extra regeneration pathway is ",
+          "disturbance-triggered (",
+          paste0(shown_flags, ": ", regen_flags[shown_flags], collapse = "; "),
+          ").\nThese runs carry no disturbance, so that pathway never fires and ",
+          "recruitment is by seeding alone."
+        )
+      }
     ) +
     ## One row: eight classes wrapped over two rows push the panels up and cost
     ## more height than the legend saves.
@@ -472,5 +521,11 @@ plot_growth_structures <- function(summary, species, x_max = 100, max_panels = N
       colour = if (has_strata) ggplot2::guide_legend(nrow = 1) else ggplot2::waiver()
     ) +
     ggplot2::theme_bw() +
-    ggplot2::theme(legend.position = "bottom")
+    ggplot2::theme(
+      legend.position = "bottom",
+      ## Under the y axis with the rest of the reading order, not bottom-right
+      ## where ggplot2 puts it and where it reads as a source note rather than
+      ## as the panel marker's explanation.
+      plot.caption = ggplot2::element_text(hjust = 0)
+    )
 }

@@ -334,3 +334,71 @@ test_that("plot_growth_structures() falls back to presence without an oldest_spe
   )
   expect_setequal(drawn, c("Aa x2", "Bb+Aa"))
 })
+
+## Compositions carrying distinct species sets, for the regen-flag tests below.
+flag_summary <- function() {
+  tibble::tibble(
+    composition = rep(c("Aa x2", "Aa+Bb", "Aa+Cc"), each = 2L),
+    species_set = rep(c("Aa", "Aa+Bb", "Aa+Cc"), each = 2L),
+    n_cohorts = 2L,
+    age = rep(c(1L, 2L), times = 3L),
+    n_cells = 10L,
+    lower = 1,
+    median = 2,
+    upper = 3
+  )
+}
+
+test_that("plot_growth_structures() marks only the panels holding a flagged species", {
+  skip_if_not_installed("ggplot2")
+  p <- plot_growth_structures(flag_summary(), "Aa", x_max = NULL, regen_flags = c(Bb = "serotiny"))
+  marked <- unique(p$data$label[grepl("Bb", p$data$composition)])
+  unmarked <- unique(p$data$label[!grepl("Bb", p$data$composition)])
+
+  expect_true(all(grepl("\\*$", marked)))
+  expect_false(any(grepl("\\*$", unmarked)))
+})
+
+test_that("plot_growth_structures() names the flagged mechanism, and only the ones shown", {
+  skip_if_not_installed("ggplot2")
+  ## `Dd` is flagged but appears in no composition, so naming it in the caption
+  ## would send the reader looking for a panel that is not there.
+  p <- plot_growth_structures(
+    flag_summary(),
+    "Aa",
+    x_max = NULL,
+    regen_flags = c(Bb = "serotiny", Dd = "resprouting")
+  )
+
+  expect_match(p$labels$caption, "Bb: serotiny", fixed = TRUE)
+  expect_no_match(p$labels$caption, "Dd", fixed = TRUE)
+})
+
+test_that("plot_growth_structures() adds no caption when no panel is flagged", {
+  skip_if_not_installed("ggplot2")
+  p <- plot_growth_structures(flag_summary(), "Aa", x_max = NULL, regen_flags = c(Zz = "serotiny"))
+
+  expect_null(p$labels$caption)
+  expect_false(any(grepl("\\*$", p$data$label)))
+})
+
+test_that("plot_growth_structures() rejects unnamed regen_flags", {
+  skip_if_not_installed("ggplot2")
+  expect_error(
+    plot_growth_structures(flag_summary(), "Aa", x_max = NULL, regen_flags = "serotiny"),
+    "NAMED vector"
+  )
+})
+
+test_that("plot_growth_structures() will not parse a display label for species", {
+  skip_if_not_installed("ggplot2")
+  ## Without `species_set` there is nothing safe to match on: `composition` is a
+  ## display label, so `Aa x2` would read as a species called `Aa x2`.
+  s <- dplyr::select(flag_summary(), -"species_set")
+
+  expect_warning(
+    p <- plot_growth_structures(s, "Aa", x_max = NULL, regen_flags = c(Bb = "serotiny")),
+    "no `species_set` column"
+  )
+  expect_null(p$labels$caption)
+})

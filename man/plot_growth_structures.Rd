@@ -4,7 +4,13 @@
 \alias{plot_growth_structures}
 \title{Plot mixtures against monocultures for one species}
 \usage{
-plot_growth_structures(summary, species, x_max = 100, max_panels = NULL)
+plot_growth_structures(
+  summary,
+  species,
+  x_max = 100,
+  max_panels = NULL,
+  regen_flags = NULL
+)
 }
 \arguments{
 \item{summary}{A tibble from \code{\link[=growth_structure_summary]{growth_structure_summary()}}.}
@@ -20,6 +26,16 @@ a handful of compositions. Where cells carry many age classes a species can
 appear in over a hundred, and a facet per composition renders as unreadable
 slivers with truncated strips. What was dropped is stated in the subtitle
 rather than left implied.}
+
+\item{regen_flags}{Named character vector, or \code{NULL} (the default). Names are
+species codes; values name a regeneration mechanism that CANNOT operate in
+the runs behind \code{summary} -- typically serotiny or resprouting,
+both of which LANDIS-II arms only from a disturbance-caused cohort death, in
+a run carrying no disturbance extension. Panels whose composition holds a
+named species are marked, and the marker is explained in the caption. Needs
+the \code{species_set} column to match on; without it the flags are ignored with
+a warning, since \code{composition} is a display label and parsing it would
+mis-read \verb{Hw x2} as a species named \verb{Hw x2}.}
 }
 \value{
 A ggplot, or \code{NULL} when the species appears in no composition.
