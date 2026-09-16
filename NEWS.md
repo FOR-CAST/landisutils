@@ -1,3 +1,16 @@
+# landisutils 0.0.150
+
+* `tar_landis()`'s replicate input hash no longer depends on the collation locale of the R process
+  computing it. It sorted dependency paths with `sort()`, which collates with ICU in UTF-8 locales
+  and by bytes under C/POSIX, so a worker in a different locale from the one that wrote
+  `log/input_hash.json` re-simulated a finished replicate. The hash and the skip check now live in
+  the exported `landis_input_hash()` and `landis_rep_is_current()`; hashes written by earlier
+  versions are still accepted, so upgrading does not re-run completed replicates (it does change
+  every `tar_landis()` command once, so `targets` re-dispatches each replicate, which then skips).
+  Reproducing an ICU-sorted legacy hash unsets the `LC_ALL` environment variable and sets
+  `LC_COLLATE` for the duration of the sort, because R collates by bytes while either pins `C`,
+  whatever `Sys.setlocale()` says.
+
 # landisutils 0.0.149
 
 * `plot_growth_structures()` gains `regen_flags`, which marks the panels whose composition holds a species whose extra regeneration pathway cannot operate in the runs being plotted, and names the mechanism in the caption. LANDIS-II arms serotiny and resprouting ONLY from a disturbance-caused cohort death: `CheckForPostFireRegen()` and `CheckForResprouting()` are reachable only where the succession extension sees `disturbanceType != null`, and a cohort dying of longevity passes `null`. A calibration landscape that registers no disturbance extension therefore runs a serotinous or sprouting species with that pathway permanently inert, which is invisible in a carbon trajectory -- the reader sees a species that "should" come back after fire, and no fire -- and was being carried in the calling project's prose, which a figure shared on its own does not travel with. Matching is on `species_set` and never on `composition`, which is a display label that would read `Hw x2` as a species named `Hw x2`; without that column the flags are ignored with a warning rather than mis-applied. Only the flagged species a figure actually shows are named, so the caption cannot send a reader looking for a panel that is not there.

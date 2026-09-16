@@ -21,13 +21,32 @@ testthat::test_that("tar_landis() embeds hash-based skip check in command", {
 
   ## Hash sidecar path is named
   testthat::expect_match(cmd_chr, "input_hash\\.json", fixed = FALSE)
-  ## Per-file md5 + sha1 digest are computed
-  testthat::expect_match(cmd_chr, "tools::md5sum", fixed = TRUE)
-  testthat::expect_match(cmd_chr, 'algo = "sha1"', fixed = TRUE)
-  ## Skip check actually compares saved vs current hash
-  testthat::expect_match(cmd_chr, "identical(.saved_hash, .input_hash)", fixed = TRUE)
+  ## The input hash is computed from the current inputs
+  testthat::expect_match(cmd_chr, ".input_hash <- landisutils::landis_input_hash(", fixed = TRUE)
+  ## Skip check compares the saved hash against the current inputs
+  testthat::expect_match(cmd_chr, "landisutils::landis_rep_is_current(", fixed = TRUE)
   ## Hash is written via jsonlite after a successful run
   testthat::expect_match(cmd_chr, "jsonlite::write_json", fixed = TRUE)
+})
+
+testthat::test_that("tar_landis() delegates the input hash and skip check to exported functions", {
+  testthat::skip_if_not_installed("targets")
+
+  ## a minimal tar_landis() invocation that returns a tar_target_raw
+  tgt <- landisutils::tar_landis(
+    name = test_run,
+    scenario_dir = "fake/scenario",
+    rep_index = 1L,
+    deps = list("fake/scenario/scenario.txt"),
+    method = "local",
+    base_seed = 12345L
+  )
+
+  cmd_chr <- deparse(tgt$command$expr, width.cutoff = 500L) |> paste(collapse = "\n")
+
+  testthat::expect_match(cmd_chr, "landisutils::landis_input_hash(", fixed = TRUE)
+  testthat::expect_match(cmd_chr, "landisutils::landis_rep_is_current(", fixed = TRUE)
+  testthat::expect_no_match(cmd_chr, "sort(.dep_files)", fixed = TRUE)
 })
 
 testthat::test_that("tar_landis(force = TRUE) bakes the force flag into the skip check", {
@@ -42,9 +61,9 @@ testthat::test_that("tar_landis(force = TRUE) bakes the force flag into the skip
     force = TRUE
   )
   cmd_chr <- deparse(forced$command$expr, width.cutoff = 500L) |> paste(collapse = "\n")
-  ## When force = TRUE the literal value TRUE is baked into the
-  ## "!isTRUE(...)" guard, short-circuiting the skip check.
-  testthat::expect_match(cmd_chr, "isTRUE(TRUE)", fixed = TRUE)
+  ## When force = TRUE the literal value TRUE is baked into the skip check's
+  ## `force` argument, so the replicate is never counted as current.
+  testthat::expect_match(cmd_chr, "landis_rep_is_current\\([^)]*force = TRUE\\)")
 
   ## And the unforced default is the opposite
   unforced <- landisutils::tar_landis(
@@ -55,7 +74,7 @@ testthat::test_that("tar_landis(force = TRUE) bakes the force flag into the skip
     method = "local"
   )
   cmd_chr2 <- deparse(unforced$command$expr, width.cutoff = 500L) |> paste(collapse = "\n")
-  testthat::expect_match(cmd_chr2, "isTRUE(FALSE)", fixed = TRUE)
+  testthat::expect_match(cmd_chr2, "landis_rep_is_current\\([^)]*force = FALSE\\)")
 })
 
 testthat::test_that("tar_landis(method = 'docker') forwards post_completion_timeout_sec", {

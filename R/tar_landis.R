@@ -1267,11 +1267,12 @@ landis_archive_rep <- function(run_dir, final_dir, max_tries = 5L, backoff_sec =
 #'   `cross(landis_run_name, landis_run_output_rep_index)`.
 #'   Passed directly to [targets::tar_target_raw()].
 #' @param force Logical (default `FALSE`). When `FALSE`, `tar_landis()` skips
-#'   the actual `landis_run_*()` call if the rep dir already contains a
-#'   completed `Landis-log.txt` *and* a `log/input_hash.json` sidecar whose
-#'   recorded hash matches the current inputs (per-input-file MD5 + `base_seed`
-#'   + `rep_index` + `scenario_file`). When `TRUE`, the skip check is bypassed
-#'   and LANDIS-II is invoked unconditionally.
+#'   the actual `landis_run_*()` call if [landis_rep_is_current()] finds that
+#'   the rep dir already contains a completed `Landis-log.txt` *and* a
+#'   `log/input_hash.json` sidecar whose recorded hash matches the current
+#'   inputs (per-input-file MD5 + `base_seed` + `rep_index` + `scenario_file`;
+#'   see [landis_input_hash()]). When `TRUE`, the skip check is bypassed and
+#'   LANDIS-II is invoked unconditionally.
 #' @param cpu_limit,mem_limit,mem_margin Passed to [landis_run_docker()] when
 #'   `method = "docker"`. See that function's documentation for semantics;
 #'   defaults are `2`, `"8g"`, and `1.5` respectively. No effect for
@@ -1441,29 +1442,31 @@ tar_landis <- function(
   ## even though outputs nominally exist on disk -- which fixes the case where
   ## an output-existence-only skip check let stale outputs through after
   ## upstream invalidation.
+  ## The hash orders input paths by bytes, so it does not depend on the worker's
+  ## collation locale (landis_input_hash()). The skip check also accepts the
+  ## locale-sorted hashes written by landisutils 0.0.149 and earlier
+  ## (landis_rep_is_current()), so replicates finished before an upgrade are not
+  ## re-simulated. Both live in exported functions rather than inline, so later
+  ## changes to them do not rewrite every target's command.
   hash_expr <- bquote({
     .hash_file <- file.path(.final_rep_dir, "log", "input_hash.json")
-    .input_hash <- digest::digest(
-      list(
-        files = vapply(sort(.dep_files), tools::md5sum, character(1L)),
-        base_seed = .(base_seed_val),
-        rep_index = .rep_idx,
-        scenario_file = .(scenario_file)
-      ),
-      algo = "sha1"
+    .input_hash <- landisutils::landis_input_hash(
+      .dep_files,
+      base_seed = .(base_seed_val),
+      rep_index = .rep_idx,
+      scenario_file = .(scenario_file)
     )
   })
   skip_check_expr <- bquote({
     .landis_log <- file.path(.final_rep_dir, "Landis-log.txt")
-    .saved_hash <- if (file.exists(.hash_file)) {
-      tryCatch(jsonlite::fromJSON(.hash_file)$input_hash, error = function(e) NA_character_)
-    } else {
-      NA_character_
-    }
-    .already_done <- !isTRUE(.(force_val)) &&
-      file.exists(.landis_log) &&
-      any(grepl("Model run is complete", readLines(.landis_log, warn = FALSE))) &&
-      identical(.saved_hash, .input_hash)
+    .already_done <- landisutils::landis_rep_is_current(
+      .final_rep_dir,
+      .dep_files,
+      base_seed = .(base_seed_val),
+      rep_index = .rep_idx,
+      scenario_file = .(scenario_file),
+      force = .(force_val)
+    )
   })
   ## Stage + run one replicate, then persist its input hash and move the
   ## completed rep from scratch to its final (tracked) home. Shared by the
