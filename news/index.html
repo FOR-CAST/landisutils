@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.149</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.150</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,6 +41,11 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.150" id="landisutils-00150">landisutils 0.0.150<a class="anchor" aria-label="anchor" href="#landisutils-00150"></a></h2>
+<ul><li>
+<code><a href="../reference/tar_landis.html">tar_landis()</a></code>’s replicate input hash no longer depends on the collation locale of the R process computing it. It sorted dependency paths with <code><a href="https://rdrr.io/r/base/sort.html" class="external-link">sort()</a></code>, which collates with ICU in UTF-8 locales and by bytes under C/POSIX, so a worker in a different locale from the one that wrote <code>log/input_hash.json</code> re-simulated a finished replicate. The hash and the skip check now live in the exported <code><a href="../reference/landis_input_hash.html">landis_input_hash()</a></code> and <code><a href="../reference/landis_rep_is_current.html">landis_rep_is_current()</a></code>; hashes written by earlier versions are still accepted, so upgrading does not re-run completed replicates (it does change every <code><a href="../reference/tar_landis.html">tar_landis()</a></code> command once, so <code>targets</code> re-dispatches each replicate, which then skips). Reproducing an ICU-sorted legacy hash unsets the <code>LC_ALL</code> environment variable and sets <code>LC_COLLATE</code> for the duration of the sort, because R collates by bytes while either pins <code>C</code>, whatever <code><a href="https://rdrr.io/r/base/locales.html" class="external-link">Sys.setlocale()</a></code> says.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.149" id="landisutils-00149">landisutils 0.0.149<a class="anchor" aria-label="anchor" href="#landisutils-00149"></a></h2>
 <ul><li>

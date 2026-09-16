@@ -1,5 +1,27 @@
 # Changelog
 
+## landisutils 0.0.150
+
+- [`tar_landis()`](https://for-cast.github.io/landisutils/reference/tar_landis.md)’s
+  replicate input hash no longer depends on the collation locale of the
+  R process computing it. It sorted dependency paths with
+  [`sort()`](https://rdrr.io/r/base/sort.html), which collates with ICU
+  in UTF-8 locales and by bytes under C/POSIX, so a worker in a
+  different locale from the one that wrote `log/input_hash.json`
+  re-simulated a finished replicate. The hash and the skip check now
+  live in the exported
+  [`landis_input_hash()`](https://for-cast.github.io/landisutils/reference/landis_input_hash.md)
+  and
+  [`landis_rep_is_current()`](https://for-cast.github.io/landisutils/reference/landis_rep_is_current.md);
+  hashes written by earlier versions are still accepted, so upgrading
+  does not re-run completed replicates (it does change every
+  [`tar_landis()`](https://for-cast.github.io/landisutils/reference/tar_landis.md)
+  command once, so `targets` re-dispatches each replicate, which then
+  skips). Reproducing an ICU-sorted legacy hash unsets the `LC_ALL`
+  environment variable and sets `LC_COLLATE` for the duration of the
+  sort, because R collates by bytes while either pins `C`, whatever
+  [`Sys.setlocale()`](https://rdrr.io/r/base/locales.html) says.
+
 ## landisutils 0.0.149
 
 - [`plot_growth_structures()`](https://for-cast.github.io/landisutils/reference/plot_growth_structures.md)

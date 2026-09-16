@@ -122,13 +122,15 @@ tar_landis(
 - force:
 
   Logical (default `FALSE`). When `FALSE`, `tar_landis()` skips the
-  actual `landis_run_*()` call if the rep dir already contains a
-  completed `Landis-log.txt` *and* a `log/input_hash.json` sidecar whose
-  recorded hash matches the current inputs (per-input-file MD5 +
-  `base_seed`
-
-  - `rep_index` + `scenario_file`). When `TRUE`, the skip check is
-    bypassed and LANDIS-II is invoked unconditionally.
+  actual `landis_run_*()` call if
+  [`landis_rep_is_current()`](https://for-cast.github.io/landisutils/reference/landis_rep_is_current.md)
+  finds that the rep dir already contains a completed `Landis-log.txt`
+  *and* a `log/input_hash.json` sidecar whose recorded hash matches the
+  current inputs (per-input-file MD5 + `base_seed` + `rep_index` +
+  `scenario_file`; see
+  [`landis_input_hash()`](https://for-cast.github.io/landisutils/reference/landis_input_hash.md)).
+  When `TRUE`, the skip check is bypassed and LANDIS-II is invoked
+  unconditionally.
 
 - cpu_limit, mem_limit, mem_margin:
 

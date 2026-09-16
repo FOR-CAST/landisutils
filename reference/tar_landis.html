@@ -11,7 +11,7 @@ replicate's output files."><meta property="og:image" content="https://for-cast.g
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.149</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.150</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -167,11 +167,12 @@ current registry. Defaults to <code>FALSE</code>. No effect for <code>method = "
 
 <dt id="arg-force">force<a class="anchor" aria-label="anchor" href="#arg-force"></a></dt>
 <dd><p>Logical (default <code>FALSE</code>). When <code>FALSE</code>, <code>tar_landis()</code> skips
-the actual <code>landis_run_*()</code> call if the rep dir already contains a
-completed <code>Landis-log.txt</code> <em>and</em> a <code>log/input_hash.json</code> sidecar whose
-recorded hash matches the current inputs (per-input-file MD5 + <code>base_seed</code></p><ul><li><p><code>rep_index</code> + <code>scenario_file</code>). When <code>TRUE</code>, the skip check is bypassed
-and LANDIS-II is invoked unconditionally.</p></li>
-</ul></dd>
+the actual <code>landis_run_*()</code> call if <code><a href="landis_rep_is_current.html">landis_rep_is_current()</a></code> finds that
+the rep dir already contains a completed <code>Landis-log.txt</code> <em>and</em> a
+<code>log/input_hash.json</code> sidecar whose recorded hash matches the current
+inputs (per-input-file MD5 + <code>base_seed</code> + <code>rep_index</code> + <code>scenario_file</code>;
+see <code><a href="landis_input_hash.html">landis_input_hash()</a></code>). When <code>TRUE</code>, the skip check is bypassed and
+LANDIS-II is invoked unconditionally.</p></dd>
 
 
 <dt id="arg-cpu-limit-mem-limit-mem-margin">cpu_limit, mem_limit, mem_margin<a class="anchor" aria-label="anchor" href="#arg-cpu-limit-mem-limit-mem-margin"></a></dt>

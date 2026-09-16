@@ -285,10 +285,12 @@
 <url><loc>https://for-cast.github.io/landisutils/reference/landis_find.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/landis_find_docker.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/landis_image_info.html</loc></url>
+<url><loc>https://for-cast.github.io/landisutils/reference/landis_input_hash.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/landis_pool_exec.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/landis_pool_restart_one.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/landis_pool_start.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/landis_pool_stop.html</loc></url>
+<url><loc>https://for-cast.github.io/landisutils/reference/landis_rep_is_current.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/landis_replicate.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/landis_run.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/landis_run_docker.html</loc></url>

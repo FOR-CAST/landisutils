@@ -770,6 +770,9 @@ scenario(
 - [`landis_image_info()`](https://for-cast.github.io/landisutils/reference/landis_image_info.md)
   : Read the LANDIS-II Docker image reference used for a run
 
+- [`landis_input_hash()`](https://for-cast.github.io/landisutils/reference/landis_input_hash.md)
+  : Input hash of one LANDIS-II replicate
+
 - [`landis_pool_exec()`](https://for-cast.github.io/landisutils/reference/landis_pool_exec.md)
   : Execute a command in one of the warm-pool containers
 
@@ -781,6 +784,9 @@ scenario(
 
 - [`landis_pool_stop()`](https://for-cast.github.io/landisutils/reference/landis_pool_stop.md)
   : Stop and remove all containers in a warm Docker pool
+
+- [`landis_rep_is_current()`](https://for-cast.github.io/landisutils/reference/landis_rep_is_current.md)
+  : Is a LANDIS-II replicate already complete for these inputs?
 
 - [`landis_replicate()`](https://for-cast.github.io/landisutils/reference/landis_replicate.md)
   : Create replicate directories for a LANDIS-II scenario
