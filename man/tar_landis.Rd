@@ -90,13 +90,12 @@ running so the digest captured in \code{log/docker_image.log} reflects the
 current registry. Defaults to \code{FALSE}. No effect for \code{method = "local"}.}
 
 \item{force}{Logical (default \code{FALSE}). When \code{FALSE}, \code{tar_landis()} skips
-the actual \verb{landis_run_*()} call if the rep dir already contains a
-completed \code{Landis-log.txt} \emph{and} a \code{log/input_hash.json} sidecar whose
-recorded hash matches the current inputs (per-input-file MD5 + \code{base_seed}
-\itemize{
-\item \code{rep_index} + \code{scenario_file}). When \code{TRUE}, the skip check is bypassed
-and LANDIS-II is invoked unconditionally.
-}}
+the actual \verb{landis_run_*()} call if \code{\link[=landis_rep_is_current]{landis_rep_is_current()}} finds that
+the rep dir already contains a completed \code{Landis-log.txt} \emph{and} a
+\code{log/input_hash.json} sidecar whose recorded hash matches the current
+inputs (per-input-file MD5 + \code{base_seed} + \code{rep_index} + \code{scenario_file};
+see \code{\link[=landis_input_hash]{landis_input_hash()}}). When \code{TRUE}, the skip check is bypassed and
+LANDIS-II is invoked unconditionally.}
 
 \item{cpu_limit, mem_limit, mem_margin}{Passed to \code{\link[=landis_run_docker]{landis_run_docker()}} when
 \code{method = "docker"}. See that function's documentation for semantics;

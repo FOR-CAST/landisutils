@@ -1,6 +1,6 @@
 Package: landisutils
 Title: Utilities for Running LANDIS-II Simulations
-Version: 0.0.149
+Version: 0.0.150
 Authors@R: 
     person(c("Alex", "M"), "Chubaty", , "achubaty@for-cast.ca", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0001-7146-8135"))
@@ -136,6 +136,7 @@ Collate:
     'initial_communities.R'
     'landis.R'
     'landis_datatype.R'
+    'landis_input_hash.R'
     'landis_results.R'
     'landis_stream.R'
     'landis_version.R'
