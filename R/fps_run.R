@@ -80,6 +80,34 @@ fps_output_files <- function() {
   invisible(TRUE)
 }
 
+## FPSM writes both real problems and one benign note into `FPS_log.txt`.
+##
+## Only the substitution note is benign: substitution reports a displacement
+## benefit and moves no carbon between pools, so a missing factor changes no
+## reported stock or flux. Every other message FPSM can write means carbon was
+## dropped ("No proportions found ..."), misallocated ("Allocated <> Available
+## ...", "Mismatch in pool allocations ..."), or met a combination it does not
+## implement.
+##
+## Deliberately fail-closed: anything not matched here counts as serious, so a
+## message added by a future FPSM release cannot be waved through silently.
+.fps_benign_log_patterns <- c("^No substitution factors found")
+
+## Split FPSM's log into benign notes and real problems.
+##
+## @param lines Character vector, the contents of `FPS_log.txt`.
+## @returns List with `benign` and `serious` character vectors.
+## @noRd
+.fps_log_problems <- function(lines) {
+  lines <- lines[nzchar(trimws(lines))]
+  benign <- Reduce(
+    `|`,
+    lapply(.fps_benign_log_patterns, function(p) grepl(p, trimws(lines))),
+    init = rep(FALSE, length(lines))
+  )
+  list(benign = lines[benign], serious = lines[!benign])
+}
+
 #' Run the Forest Product Sector Module in a Docker container
 #'
 #' Runs FPSM over one directory containing a configuration file and the two ForCS
@@ -96,9 +124,12 @@ fps_output_files <- function() {
 #' * each flux log's header must still match the positions FPSM indexes (see
 #'   `.fps_flux_columns`), because FPSM performs no header validation and would
 #'   otherwise read a reordered column as the wrong quantity.
-#' * on completion, a non-empty `FPS_log.txt` is treated as an error by default.
-#'   That file collects the *non-fatal* problems FPSM detects, which include carbon that
-#'   was never allocated to any pool, so a silent run is the only acceptable one.
+#' * on completion, `FPS_log.txt` is checked. That file collects the *non-fatal*
+#'   problems FPSM detects, most of which mean carbon was dropped, misallocated
+#'   or met a combination FPSM does not implement. One message is benign and is
+#'   reported without failing the run: a missing substitution factor, because
+#'   substitution is a side calculation that moves no carbon between pools. Any
+#'   other message fails the run, including one this package does not recognise.
 #'
 #' @param run_dir Character. Directory holding the configuration and flux logs;
 #'   bind-mounted as the container working directory.
@@ -116,7 +147,8 @@ fps_output_files <- function() {
 #' @param cpu_limit,mem_limit Resource caps. FPSM is single-threaded and peaks
 #'   well under 64 MB even on a 400-year replicate, so the defaults are generous.
 #'   `NULL` or `Inf` omits the corresponding flag.
-#' @param error_on_log Logical. Fail when `FPS_log.txt` is non-empty.
+#' @param error_on_log Logical. Fail when `FPS_log.txt` reports a problem that
+#'   is not known to be benign.
 #' @param check_headers Logical. Perform the flux-log header assertion.
 #'
 #' @returns Character vector of paths to the files in [fps_output_files()], in
@@ -290,19 +322,30 @@ fps_run_docker <- function(
     )
   }
 
-  ## -- post-flight: FPSM's own non-fatal problem log must be empty.
+  ## -- post-flight: FPSM's own non-fatal problem log.
   log_path <- fs::path(run_dir, "FPS_log.txt")
-  log_lines <- readLines(log_path, warn = FALSE)
-  log_lines <- log_lines[nzchar(trimws(log_lines))]
-  if (length(log_lines) > 0L) {
+  problems <- .fps_log_problems(readLines(log_path, warn = FALSE))
+
+  if (length(problems$benign) > 0L) {
+    message(
+      "FPSM reported ",
+      length(problems$benign),
+      " benign message(s) in ",
+      log_path,
+      ", which move no carbon:\n  ",
+      paste(utils::head(problems$benign, 5L), collapse = "\n  ")
+    )
+  }
+
+  if (length(problems$serious) > 0L) {
     msg <- paste0(
       "FPSM reported ",
-      length(log_lines),
-      " non-fatal problem(s) in ",
+      length(problems$serious),
+      " problem(s) in ",
       log_path,
-      ". These include carbon that was not allocated to any pool, so the run is ",
-      "not trustworthy:\n  ",
-      paste(utils::head(log_lines, 10L), collapse = "\n  ")
+      ". These mean carbon was dropped, misallocated, or met a combination FPSM ",
+      "does not implement, so the run is not trustworthy:\n  ",
+      paste(utils::head(problems$serious, 10L), collapse = "\n  ")
     )
     if (isTRUE(error_on_log)) stop(msg, call. = FALSE) else warning(msg, call. = FALSE)
   }

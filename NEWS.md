@@ -1,3 +1,7 @@
+# landisutils 0.0.152
+
+* `fps_run_docker()` no longer fails on every non-empty `FPS_log.txt`. FPSM writes one benign message there, a missing substitution factor, which moves no carbon between pools; it is now reported without failing the run. Every other message still fails, including one this package does not recognise, so a message added by a future FPSM release cannot be waved through. The previous behaviour would have failed the first harvesting run against parameters whose substitution table does not cover every primary product, with an error saying carbon had been lost when none had.
+
 # landisutils 0.0.151
 
 * New script `inst/scripts/verify_candidate_loss.R` rescores a calibrating project's stored `run_calibration_validation()` result under a candidate landisutils branch, tag or sha beside the installed version, and reports which loss components moved. The candidate is installed into a temporary library and each version is scored in its own R process, so neither the project library nor any checkout changes. Use it to measure what a loss-code change does to a calibration before adopting the release.

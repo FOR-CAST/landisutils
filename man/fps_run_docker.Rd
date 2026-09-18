@@ -41,7 +41,8 @@ reflects the registry rather than a possibly stale local copy.}
 well under 64 MB even on a 400-year replicate, so the defaults are generous.
 \code{NULL} or \code{Inf} omits the corresponding flag.}
 
-\item{error_on_log}{Logical. Fail when \code{FPS_log.txt} is non-empty.}
+\item{error_on_log}{Logical. Fail when \code{FPS_log.txt} reports a problem that
+is not known to be benign.}
 
 \item{check_headers}{Logical. Perform the flux-log header assertion.}
 }
@@ -65,9 +66,12 @@ called \code{log_FluxDOM.csv}, which works on Windows and aborts on Linux.
 \item each flux log's header must still match the positions FPSM indexes (see
 \code{.fps_flux_columns}), because FPSM performs no header validation and would
 otherwise read a reordered column as the wrong quantity.
-\item on completion, a non-empty \code{FPS_log.txt} is treated as an error by default.
-That file collects the \emph{non-fatal} problems FPSM detects, which include carbon that
-was never allocated to any pool, so a silent run is the only acceptable one.
+\item on completion, \code{FPS_log.txt} is checked. That file collects the \emph{non-fatal}
+problems FPSM detects, most of which mean carbon was dropped, misallocated
+or met a combination FPSM does not implement. One message is benign and is
+reported without failing the run: a missing substitution factor, because
+substitution is a side calculation that moves no carbon between pools. Any
+other message fails the run, including one this package does not recognise.
 }
 }
 \seealso{

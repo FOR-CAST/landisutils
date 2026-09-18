@@ -120,3 +120,34 @@ test_that("no image and no option is an error", {
   withr::local_options(landisutils.fps.image = NULL)
   expect_error(fps_run_docker(d), "no FPSM image")
 })
+
+test_that("a missing substitution factor is benign, and anything else is not", {
+  lines <- c(
+    "No substitution factors found for year: 1, market: 300, product: 105",
+    "",
+    "  No substitution factors found for year: 2, market: 300, product: 106",
+    "No proportions found for Forest To Mills, year: 3, Man Unit: 1, SpeciesGroup: 99, File: 1",
+    "Allocated <> Available in Mill To Primary, year: 4, product: 104"
+  )
+  res <- .fps_log_problems(lines)
+
+  expect_length(res$benign, 2L)
+  expect_length(res$serious, 2L)
+  expect_match(res$serious, "No proportions found|Allocated <> Available", all = TRUE)
+})
+
+test_that("an unrecognised message counts as serious, not benign", {
+  ## Fail-closed: a message added by a future FPSM release must not be waved
+  ## through just because this package has not been taught about it.
+  res <- .fps_log_problems("Some message a later FPSM release introduces")
+
+  expect_length(res$benign, 0L)
+  expect_length(res$serious, 1L)
+})
+
+test_that("an empty log yields no problems of either kind", {
+  res <- .fps_log_problems(c("", "   "))
+
+  expect_length(res$benign, 0L)
+  expect_length(res$serious, 0L)
+})
