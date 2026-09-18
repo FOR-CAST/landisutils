@@ -64,7 +64,8 @@ fps_run_docker(
 
 - error_on_log:
 
-  Logical. Fail when `FPS_log.txt` is non-empty.
+  Logical. Fail when `FPS_log.txt` reports a problem that is not known
+  to be benign.
 
 - check_headers:
 
@@ -90,10 +91,13 @@ failure mode that is otherwise silent or obscure:
   (see `.fps_flux_columns`), because FPSM performs no header validation
   and would otherwise read a reordered column as the wrong quantity.
 
-- on completion, a non-empty `FPS_log.txt` is treated as an error by
-  default. That file collects the *non-fatal* problems FPSM detects,
-  which include carbon that was never allocated to any pool, so a silent
-  run is the only acceptable one.
+- on completion, `FPS_log.txt` is checked. That file collects the
+  *non-fatal* problems FPSM detects, most of which mean carbon was
+  dropped, misallocated or met a combination FPSM does not implement.
+  One message is benign and is reported without failing the run: a
+  missing substitution factor, because substitution is a side
+  calculation that moves no carbon between pools. Any other message
+  fails the run, including one this package does not recognise.
 
 ## See also
 

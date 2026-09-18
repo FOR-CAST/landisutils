@@ -13,7 +13,7 @@ run needs its own directory."><meta property="og:image" content="https://for-cas
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.151</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.152</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -113,7 +113,8 @@ well under 64 MB even on a 400-year replicate, so the defaults are generous.
 
 
 <dt id="arg-error-on-log">error_on_log<a class="anchor" aria-label="anchor" href="#arg-error-on-log"></a></dt>
-<dd><p>Logical. Fail when <code>FPS_log.txt</code> is non-empty.</p></dd>
+<dd><p>Logical. Fail when <code>FPS_log.txt</code> reports a problem that
+is not known to be benign.</p></dd>
 
 
 <dt id="arg-check-headers">check_headers<a class="anchor" aria-label="anchor" href="#arg-check-headers"></a></dt>
@@ -134,9 +135,12 @@ called <code>log_FluxDOM.csv</code>, which works on Windows and aborts on Linux.
 <li><p>each flux log's header must still match the positions FPSM indexes (see
 <code>.fps_flux_columns</code>), because FPSM performs no header validation and would
 otherwise read a reordered column as the wrong quantity.</p></li>
-<li><p>on completion, a non-empty <code>FPS_log.txt</code> is treated as an error by default.
-That file collects the <em>non-fatal</em> problems FPSM detects, which include carbon that
-was never allocated to any pool, so a silent run is the only acceptable one.</p></li>
+<li><p>on completion, <code>FPS_log.txt</code> is checked. That file collects the <em>non-fatal</em>
+problems FPSM detects, most of which mean carbon was dropped, misallocated
+or met a combination FPSM does not implement. One message is benign and is
+reported without failing the run: a missing substitution factor, because
+substitution is a side calculation that moves no carbon between pools. Any
+other message fails the run, including one this package does not recognise.</p></li>
 </ul></div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
