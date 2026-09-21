@@ -431,6 +431,26 @@ loss_from_stats <- function(
   weights = c(count = 1, size = 1, size_tail = 1, area_fuel = 0, severity = 0)
 ) {
   stopifnot(is.list(reps), length(reps) >= 1L, is.list(observed))
+  ## `is.list(reps)` is satisfied by a list holding NULLs, and that is not a theoretical gap:
+  ## `parallel::mclapply()` returns NULL for a replicate whose child process died, so a caller
+  ## that only tested for `try-error` hands one straight to us. Scoring it fails deep in the
+  ## component arithmetic with "missing value where TRUE/FALSE needed", which points at this
+  ## function rather than at the dead replicate. Same family as the `weights` and `lambda_obs`
+  ## checks below: cheap to test here, expensive to diagnose later.
+  bad_reps <- which(!vapply(reps, is.list, logical(1)))
+  if (length(bad_reps) > 0L) {
+    stop(
+      "`reps` must be a list of per-replicate summary lists; element(s) ",
+      paste(bad_reps, collapse = ", "),
+      " are not (",
+      paste(
+        unique(vapply(reps[bad_reps], function(x) class(x)[[1L]], character(1))),
+        collapse = ", "
+      ),
+      "). A NULL element usually means a parallel replicate's process died without returning.",
+      call. = FALSE
+    )
+  }
   primary <- observed$primary %||% observed$fru59
   stopifnot(!is.null(primary))
   ## `weights` must be a NAMED numeric vector over a subset of the known components. Neither half is
@@ -3353,6 +3373,65 @@ calibrate_dynamic_fire <- function(observed_targets_path, scenario_template, cfg
 ## from the BC_HRV / gitanyow-partial-harvest report-pipeline templates;
 ## succession-backend-agnostic.
 
+## Fail loudly on any replicate a parallel map did not return properly.
+##
+## `parallel::mclapply()` reports a failed replicate in one of TWO ways, and testing for only
+## one of them is how a failure gets past its caller. A replicate whose R code raises comes back
+## as a `try-error`. A replicate whose CHILD PROCESS DIES -- OOM-killed, segfault, a container
+## fault taking the worker with it -- comes back as NULL, accompanied by nothing but a
+## "parallel jobs did not deliver results" warning, which is easy to lose in a long log.
+##
+## Measured: of one killed child and one erroring child, a `try-error`-only test caught one.
+## The surviving NULL reached `loss_from_stats()` and failed deep in the component arithmetic
+## with "missing value where TRUE/FALSE needed", naming neither the replicate nor the cause.
+## Kept separate from `run_calibration_validation()` so both branches can be tested without
+## Docker, since that function starts a container pool before it maps anything.
+.stop_on_failed_reps <- function(reps, n_reps, fn = "run_calibration_validation") {
+  errored <- vapply(reps, inherits, logical(1), "try-error")
+  died <- vapply(reps, is.null, logical(1))
+  if (!any(errored) && !any(died)) {
+    return(invisible(NULL))
+  }
+  parts <- character(0)
+  if (any(errored)) {
+    first <- which(errored)[1L]
+    parts <- c(
+      parts,
+      sprintf(
+        "%d errored (first error, replicate %d: %s)",
+        sum(errored),
+        first,
+        conditionMessage(attr(reps[[first]], "condition"))
+      )
+    )
+  }
+  if (any(died)) {
+    parts <- c(
+      parts,
+      sprintf(
+        paste0(
+          "%d returned no result at all (replicate(s) %s): the forked child process died ",
+          "rather than raising, so look for an OOM kill, a segfault or a container fault ",
+          "rather than an R error"
+        ),
+        sum(died),
+        paste(which(died), collapse = ", ")
+      )
+    )
+  }
+  stop(
+    sprintf(
+      "%s: %d of %d validation replicate(s) failed; %s",
+      fn,
+      sum(errored | died),
+      n_reps,
+      paste(parts, collapse = "; ")
+    ),
+    call. = FALSE
+  )
+}
+
+
 #' Re-simulate at the calibrated parameter vector for goodness-of-fit plots
 #'
 #' Runs `n_reps` replicate Dynamic Fire simulations at the calibrated
@@ -3451,20 +3530,7 @@ run_calibration_validation <- function(
   } else {
     lapply(seq_len(n_reps_i), run_rep)
   }
-  ## `mclapply()` substitutes a `try-error` for any replicate that failed; surface
-  ## those rather than letting a malformed `reps` reach `loss_from_stats()`.
-  failed <- which(vapply(reps, inherits, logical(1), "try-error"))
-  if (length(failed)) {
-    stop(
-      sprintf(
-        "run_calibration_validation: %d of %d validation replicate(s) failed; first error: %s",
-        length(failed),
-        n_reps_i,
-        conditionMessage(attr(reps[[failed[1]]], "condition"))
-      ),
-      call. = FALSE
-    )
-  }
+  .stop_on_failed_reps(reps, n_reps_i)
 
   observed <- readRDS(observed_targets_path)
   loss <- loss_from_stats(reps = reps, observed = observed, weights = cfg$weights)

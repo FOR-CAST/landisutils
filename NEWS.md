@@ -1,3 +1,7 @@
+# landisutils 0.0.153
+
+* `run_calibration_validation()` now fails with a message that names the failed replicates when a validation replicate's process dies. `parallel::mclapply()` reports a replicate that raised an R error as a `try-error`, but one whose child process was killed comes back as `NULL` with only a warning; the guard tested for the first and not the second, so a dead replicate reached `loss_from_stats()` and surfaced there as "missing value where TRUE/FALSE needed", naming neither the replicate nor the cause. The error now distinguishes the two modes and points at an OOM kill, a segfault or a container fault rather than at an R error. `loss_from_stats()` also rejects a `reps` list holding a non-list element, so any caller that maps replicates in parallel gets the same clear failure.
+
 # landisutils 0.0.152
 
 * `fps_run_docker()` no longer fails on every non-empty `FPS_log.txt`. FPSM writes one benign message there, a missing substitution factor, which moves no carbon between pools; it is now reported without failing the run. Every other message still fails, including one this package does not recognise, so a message added by a future FPSM release cannot be waved through. The previous behaviour would have failed the first harvesting run against parameters whose substitution table does not cover every primary product, with an error saying carbon had been lost when none had.

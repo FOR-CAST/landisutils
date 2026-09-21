@@ -2340,3 +2340,70 @@ test_that("apply_calibrated_ignprob() still clamps to the [0, 1] LANDIS-II range
   tbl <- data.frame(Base = "Conifer", IgnProb = 0.9)
   expect_equal(apply_calibrated_ignprob(tbl, c(IgnProb_Conifer = 2.0))$IgnProb, 1.0)
 })
+
+test_that(".stop_on_failed_reps() catches a replicate that DIED as well as one that errored", {
+  ## The premise, measured rather than assumed: mclapply reports the two failure modes
+  ## differently, and a `try-error`-only test sees only one of them.
+  ok <- list(n_fires_by_year = tibble::tibble(year = 1L, n_fires = 0L), fire_sizes_ha = numeric(0))
+  errored <- try(stop("replicate blew up"), silent = TRUE)
+
+  expect_silent(.stop_on_failed_reps(list(ok, ok), 2L))
+
+  ## A dead child comes back NULL. This is the case that used to slip through.
+  expect_error(
+    .stop_on_failed_reps(list(ok, NULL, ok), 3L),
+    "1 returned no result at all \\(replicate\\(s\\) 2\\)"
+  )
+  expect_error(.stop_on_failed_reps(list(ok, NULL), 2L), "OOM kill")
+
+  ## An R-level error still reports its message.
+  expect_error(.stop_on_failed_reps(list(errored, ok), 2L), "replicate blew up")
+
+  ## Both together: the count is the union, and both modes are described.
+  err <- tryCatch(.stop_on_failed_reps(list(errored, NULL, ok, NULL), 4L), error = function(e) {
+    conditionMessage(e)
+  })
+  expect_match(err, "3 of 4 validation replicate\\(s\\) failed")
+  expect_match(err, "1 errored")
+  expect_match(err, "2 returned no result at all \\(replicate\\(s\\) 2, 4\\)")
+})
+
+test_that("mclapply() really does return NULL for a child that dies", {
+  ## Documents the premise the guard above rests on. If a future R release reported a dead
+  ## child differently, this fails and the guard needs revisiting.
+  skip_on_os("windows") ## mclapply is fork-only
+  res <- suppressWarnings(parallel::mclapply(
+    1:2,
+    function(i) {
+      if (i == 1L) {
+        tools::pskill(Sys.getpid(), tools::SIGKILL)
+      }
+      "ok"
+    },
+    mc.cores = 2,
+    mc.preschedule = FALSE
+  ))
+  ## NULL, not a try-error -- which is exactly why a try-error-only guard missed it.
+  expect_null(res[[1L]])
+  expect_identical(res[[2L]], "ok")
+})
+
+test_that("loss_from_stats() refuses a reps list holding a dead replicate", {
+  observed <- list(
+    fru59 = list(
+      lambda_obs = 0.3,
+      n_fires_by_year = tibble::tibble(year = 1:10, n = rep(1L, 10)),
+      fire_sizes_ha = c(1, 5, 20)
+    )
+  )
+  rep1 <- list(
+    n_fires_by_year = tibble::tibble(year = 1:10, n_fires = rep(0L, 10)),
+    fire_sizes_ha = numeric(0)
+  )
+  ## Previously this reached the component arithmetic and failed with "missing value where
+  ## TRUE/FALSE needed", which pointed at this function rather than at the dead replicate.
+  expect_error(loss_from_stats(list(rep1, NULL), observed), "element\\(s\\) 2 are not")
+  expect_error(loss_from_stats(list(NULL), observed), "process died without returning")
+  ## The valid case is unaffected.
+  expect_true(is.finite(loss_from_stats(list(rep1), observed)$total))
+})
