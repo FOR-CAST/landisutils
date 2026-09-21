@@ -1,5 +1,24 @@
 # Changelog
 
+## landisutils 0.0.153
+
+- [`run_calibration_validation()`](https://for-cast.github.io/landisutils/reference/run_calibration_validation.md)
+  now fails with a message that names the failed replicates when a
+  validation replicate’s process dies.
+  [`parallel::mclapply()`](https://rdrr.io/r/parallel/mclapply.html)
+  reports a replicate that raised an R error as a `try-error`, but one
+  whose child process was killed comes back as `NULL` with only a
+  warning; the guard tested for the first and not the second, so a dead
+  replicate reached
+  [`loss_from_stats()`](https://for-cast.github.io/landisutils/reference/loss_from_stats.md)
+  and surfaced there as “missing value where TRUE/FALSE needed”, naming
+  neither the replicate nor the cause. The error now distinguishes the
+  two modes and points at an OOM kill, a segfault or a container fault
+  rather than at an R error.
+  [`loss_from_stats()`](https://for-cast.github.io/landisutils/reference/loss_from_stats.md)
+  also rejects a `reps` list holding a non-list element, so any caller
+  that maps replicates in parallel gets the same clear failure.
+
 ## landisutils 0.0.152
 
 - [`fps_run_docker()`](https://for-cast.github.io/landisutils/reference/fps_run_docker.md)

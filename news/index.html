@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.152</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.153</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,6 +41,11 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.153" id="landisutils-00153">landisutils 0.0.153<a class="anchor" aria-label="anchor" href="#landisutils-00153"></a></h2>
+<ul><li>
+<code><a href="../reference/run_calibration_validation.html">run_calibration_validation()</a></code> now fails with a message that names the failed replicates when a validation replicate’s process dies. <code><a href="https://rdrr.io/r/parallel/mclapply.html" class="external-link">parallel::mclapply()</a></code> reports a replicate that raised an R error as a <code>try-error</code>, but one whose child process was killed comes back as <code>NULL</code> with only a warning; the guard tested for the first and not the second, so a dead replicate reached <code><a href="../reference/loss_from_stats.html">loss_from_stats()</a></code> and surfaced there as “missing value where TRUE/FALSE needed”, naming neither the replicate nor the cause. The error now distinguishes the two modes and points at an OOM kill, a segfault or a container fault rather than at an R error. <code><a href="../reference/loss_from_stats.html">loss_from_stats()</a></code> also rejects a <code>reps</code> list holding a non-list element, so any caller that maps replicates in parallel gets the same clear failure.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.152" id="landisutils-00152">landisutils 0.0.152<a class="anchor" aria-label="anchor" href="#landisutils-00152"></a></h2>
 <ul><li>
