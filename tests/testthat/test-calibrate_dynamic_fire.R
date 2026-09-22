@@ -1,10 +1,10 @@
 ## Tests for the Dynamic Fire calibration pure-data helpers (Phase 8a).
 ## Fixtures under inst/testdata/ are sampled from real LANDIS-II rep01 outputs.
 
-test_that("calibration_par_names() is the canonical 9-entry vector", {
+test_that("calibration_par_names() is the canonical 10-entry vector", {
   nm <- calibration_par_names()
   expect_type(nm, "character")
-  expect_length(nm, 9L)
+  expect_length(nm, 10L)
   expect_setequal(
     nm,
     c(
@@ -16,7 +16,8 @@ test_that("calibration_par_names() is the canonical 9-entry vector", {
       "IgnProb_ConiferPlantation",
       "IgnProb_Deciduous",
       "IgnProb_Slash",
-      "IgnProb_Open"
+      "IgnProb_Open",
+      "NumFires"
     )
   )
 })
@@ -400,6 +401,35 @@ test_that("patch_fire_config() rewrites SeverityCalibrationFactor / HiProp / Ign
     }
   }
   expect_true(all(emitted >= 0 & emitted <= 1))
+})
+
+test_that("patch_fire_config() writes a calibrated NumFires into the fire-size table", {
+  scenario_dir <- withr::local_tempdir()
+  fs::file_copy(
+    system.file("testdata", "dynamic-fire-sample.txt", package = "landisutils"),
+    fs::path(scenario_dir, "dynamic-fire.txt")
+  )
+
+  patched <- readLines(patch_fire_config(scenario_dir, c(NumFires = 1.75)))
+  fs_hdr <- grep(">>\\s+Fire Sizes", patched)
+  i <- fs_hdr + 1L
+  while (grepl("^[[:space:]]*>>", patched[i]) || !nzchar(trimws(patched[i]))) {
+    i <- i + 1L
+  }
+  parts <- strsplit(trimws(patched[i]), "\\s+")[[1]]
+
+  ## NumFires is the last of the row's 16 fields; nothing else moves.
+  expect_length(parts, 16L)
+  expect_equal(as.numeric(parts[16L]), 1.75)
+  expect_equal(as.numeric(parts[8L]), 0.50)
+})
+
+test_that("apply_calibrated_num_fires() replaces the rate only when it is calibrated", {
+  fst <- data.frame(EcoCode = 1L, EcoName = "TEST", NumFires = 0.87)
+
+  expect_equal(apply_calibrated_num_fires(fst, c(NumFires = 2.4))$NumFires, 2.4)
+  ## A vector without it leaves the observed rate in place.
+  expect_equal(apply_calibrated_num_fires(fst, c(SeverityCalibrationFactor = 1))$NumFires, 0.87)
 })
 
 test_that("patch_fire_config() rejects par_vec with wrong names", {
@@ -948,8 +978,9 @@ test_that("calibrate_dynamic_fire() runs end-to-end with sim_mock (no Docker)", 
       "pool_digest"
     )
   )
-  expect_equal(length(res$best_params), 9L)
-  expect_setequal(names(res$best_params), calibration_par_names())
+  ## The searched set is whatever cfg's bounds name, not the whole catalogue.
+  expect_equal(length(res$best_params), length(cfg$lower))
+  expect_setequal(names(res$best_params), names(cfg$lower))
   expect_true(is.finite(res$objective))
   expect_true(fs::file_exists(res$trace_path))
   ## No pool was started (mock simulator)
@@ -1056,8 +1087,8 @@ test_that("calibrate_dynamic_fire() rejects unknown simulator names", {
   writeLines("x", scen_txt)
   out_dir <- withr::local_tempdir()
   cfg <- list(
-    lower = setNames(rep(0, 9), calibration_par_names()),
-    upper = setNames(rep(1, 9), calibration_par_names()),
+    lower = setNames(rep(0, length(calibration_par_names())), calibration_par_names()),
+    upper = setNames(rep(1, length(calibration_par_names())), calibration_par_names()),
     NP = 4L,
     itermax = 1L,
     n_reps = 1L,
@@ -1324,9 +1355,10 @@ test_that("L_severity contributes 0 when severity_dist is NULL", {
 
 .make_default_cfg <- function() {
   list(
-    lower = stats::setNames(rep(0, 9), calibration_par_names()),
-    upper = stats::setNames(rep(1, 9), calibration_par_names()),
-    NP = 90L, ## = 10 * 9 to avoid the NP-advisory message in expect_silent()
+    lower = stats::setNames(rep(0, length(calibration_par_names())), calibration_par_names()),
+    upper = stats::setNames(rep(1, length(calibration_par_names())), calibration_par_names()),
+    ## 10 * npar, so the NP advisory stays quiet in expect_silent()
+    NP = 10L * length(calibration_par_names()),
     itermax = 10L,
     n_reps = 1L,
     sim_years = 5L,
@@ -1837,7 +1869,7 @@ test_that("eval cache round-trips a trial-trace row at full precision (fingerpri
   par_names <- calibration_par_names()
   dir <- withr::local_tempdir()
   tt <- fs::dir_create(fs::path(dir, "trial_trace_20260101_000000"))
-  pv <- stats::setNames(c(1.234567890123, 0.5, 0.25, 0.1, 1, 1, 1, 1, 1), par_names)
+  pv <- stats::setNames(c(1.234567890123, rep(1, length(par_names) - 1L)), par_names)
   comps <- c(count = 1, size = 1, size_tail = 0, area_fuel = 0, severity = 0)
   landisutils:::.write_trial_trace_row(
     tt,
@@ -2025,11 +2057,11 @@ test_that("calibrate_dynamic_fire() archives a fingerprint-mismatched checkpoint
   out_dir <- withr::local_tempdir()
   saveRDS(
     list(
-      pop = matrix(0.5, 6, 9),
+      pop = matrix(0.5, 6, length(calibration_par_names())),
       fingerprint = "not-a-match",
       gens_done = 1L,
       bestval_history = 1,
-      best_mem = rep(0.5, 9),
+      best_mem = rep(0.5, length(calibration_par_names())),
       best_val = 1,
       par_names = calibration_par_names()
     ),
@@ -2061,12 +2093,12 @@ test_that("calibrate_dynamic_fire() archives a checkpoint whose loss-config fing
   )
   saveRDS(
     list(
-      pop = matrix(0.5, cfg$NP, 9),
+      pop = matrix(0.5, cfg$NP, length(calibration_par_names())),
       fingerprint = pop_fp,
       eval_fingerprint = "stale-loss-config",
       gens_done = 1L,
       bestval_history = 1,
-      best_mem = rep(0.5, 9),
+      best_mem = rep(0.5, length(calibration_par_names())),
       best_val = 1,
       par_names = calibration_par_names()
     ),

@@ -50,6 +50,7 @@ goodness-of-fit that \code{\link[=calibrate_dynamic_fire]{calibrate_dynamic_fire
 Other Dynamic Fire calibration helpers:
 \code{\link[=apply_calibrated_hi_prop]{apply_calibrated_hi_prop()}},
 \code{\link[=apply_calibrated_ignprob]{apply_calibrated_ignprob()}},
+\code{\link[=apply_calibrated_num_fires]{apply_calibrated_num_fires()}},
 \code{\link[=bc_fuel_code_to_base]{bc_fuel_code_to_base()}},
 \code{\link[=build_calibration_scenario_template]{build_calibration_scenario_template()}},
 \code{\link[=build_calibration_spinup_scenario]{build_calibration_spinup_scenario()}},

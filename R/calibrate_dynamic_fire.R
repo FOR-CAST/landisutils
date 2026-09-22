@@ -17,7 +17,7 @@ NULL
 #' Callers building `lower` / `upper` bounds, or passing candidate vectors to
 #' [patch_fire_config()], must match this exact set.
 #'
-#' @returns Character vector of length 9.
+#' @returns Character vector of length 10.
 #'
 #' @family Dynamic Fire calibration helpers
 #'
@@ -32,7 +32,8 @@ calibration_par_names <- function() {
     "IgnProb_ConiferPlantation",
     "IgnProb_Deciduous",
     "IgnProb_Slash",
-    "IgnProb_Open"
+    "IgnProb_Open",
+    "NumFires"
   )
 }
 
@@ -285,7 +286,7 @@ patch_fire_config <- function(scenario_dir, par_vec) {
     )
   }
 
-  ## 2. FireSizesTable HiProp columns (8 / 11 / 14)
+  ## 2. FireSizesTable HiProp columns (8 / 11 / 14) and NumFires (16)
   fs_hdr <- grep(">>\\s+Fire Sizes", lines)
   if (length(fs_hdr) != 1L) {
     stop("Could not locate FireSizesTable header in ", fire_txt, call. = FALSE)
@@ -305,6 +306,12 @@ patch_fire_config <- function(scenario_dir, par_vec) {
       }
       if ("FallHiProp" %in% names(par_vec)) {
         parts[14L] <- sprintf("%g", par_vec[["FallHiProp"]])
+      }
+      ## NumFires is the LAST column, and the ecoregion row has 16 fields once
+      ## OpenFuelIndex is counted -- patched only when the row is that long, so a table
+      ## written without it is left alone rather than gaining a stray field.
+      if ("NumFires" %in% names(par_vec) && length(parts) >= 16L) {
+        parts[16L] <- sprintf("%g", par_vec[["NumFires"]])
       }
       lines[i] <- paste(parts, collapse = "    ")
     }
@@ -788,11 +795,13 @@ loss_from_stats <- function(
 #' back pinned at such a bound is **not** an estimate that wanted more room --
 #' it is saturation, meaning the objective wanted more fire than the maximum
 #' ignition probability can deliver. Widening the bound is a no-op. The
-#' remaining lever is `NumFires` in the fire-size table, which is a fixed input
-#' derived from the observed record rather than a calibrated parameter, so a
-#' pinned multiplier is a signal to check the count target and the objective --
-#' start with whether the simulated annual rate is being computed over the right
-#' number of years -- rather than to re-run with a wider box.
+#' lever to reach for instead is `NumFires`, the ignition rate itself: an
+#' ignition becomes a fire only if the initiation probability of the fuel on its
+#' cell allows it, so a rate taken from a count of observed FIRES is
+#' systematically low as a count of ignitions. Search it, applying the result
+#' with [apply_calibrated_num_fires()], and check the count target too --
+#' starting with whether the simulated annual rate is computed over the right
+#' number of years.
 #'
 #' @param fuel_type_table data.frame from [defaultFuelTypeTable()]. Must have
 #'   `Base` and `IgnProb` columns.
@@ -868,6 +877,38 @@ apply_calibrated_hi_prop <- function(fire_size_table, calibrated_fire_params) {
     if (col %in% names(calibrated_fire_params)) {
       fire_size_table[[col]] <- calibrated_fire_params[[col]]
     }
+  }
+  fire_size_table
+}
+
+
+#' Overwrite FireSizesTable `NumFires` with a calibrated ignition rate
+#'
+#' Replaces `NumFires` in every row of `fire_size_table` when the calibrated vector carries it,
+#' and leaves the table alone when it does not. `NumFires` is the Poisson mean number of
+#' IGNITIONS per year for the ecoregion, each of which becomes a fire only if the initiation
+#' probability of the fuel on its cell says so, so it is not the same quantity as an observed
+#' count of fires.
+#'
+#' @param fire_size_table data.frame with a `NumFires` column, as a project's
+#'   `make_fire_size_table()`-equivalent produces.
+#' @param calibrated_fire_params Named numeric vector. Used only if it holds `NumFires`.
+#'
+#' @returns A copy of `fire_size_table`, with `NumFires` replaced where calibrated.
+#'
+#' @family Dynamic Fire calibration helpers
+#' @family Dynamic Fire helpers
+#'
+#' @export
+apply_calibrated_num_fires <- function(fire_size_table, calibrated_fire_params) {
+  stopifnot(
+    is.data.frame(fire_size_table),
+    "NumFires" %in% names(fire_size_table),
+    is.numeric(calibrated_fire_params),
+    !is.null(names(calibrated_fire_params))
+  )
+  if ("NumFires" %in% names(calibrated_fire_params)) {
+    fire_size_table$NumFires <- calibrated_fire_params[["NumFires"]]
   }
   fire_size_table
 }

@@ -1,5 +1,7 @@
 # landisutils 0.0.154
 
+* `calibration_par_names()` gains `NumFires`, and `patch_fire_config()` writes it into the fire-size table, so the ignition rate can be calibrated. The Dynamic Fire System defines `NumFires` as the mean number of IGNITIONS per year, each of which becomes a fire only if the initiation probability of the fuel on its cell allows it, so a rate taken from a count of observed fires is systematically low as a count of ignitions. New `apply_calibrated_num_fires()` applies a calibrated rate to a production fire-size table, and leaves the table alone when the vector does not carry one.
+
 * New `observed_fire_sizes()` returns one size per ignition point: the point's own `SIZE_HA`, or the `SIZE_HA` of a same-year perimeter polygon that contains it. This is the rule `save_observed_fire_targets()` already used for the calibration's size target, now exported so that a fire-size distribution fitted from the same record uses the same sizes. Fitting to points and polygons bound as separate rows counts every mapped fire twice.
 
 # landisutils 0.0.153

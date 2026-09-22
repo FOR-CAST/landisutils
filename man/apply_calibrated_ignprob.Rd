@@ -35,16 +35,19 @@ This matters when reading a finished calibration. A multiplier that comes
 back pinned at such a bound is \strong{not} an estimate that wanted more room --
 it is saturation, meaning the objective wanted more fire than the maximum
 ignition probability can deliver. Widening the bound is a no-op. The
-remaining lever is \code{NumFires} in the fire-size table, which is a fixed input
-derived from the observed record rather than a calibrated parameter, so a
-pinned multiplier is a signal to check the count target and the objective --
-start with whether the simulated annual rate is being computed over the right
-number of years -- rather than to re-run with a wider box.
+lever to reach for instead is \code{NumFires}, the ignition rate itself: an
+ignition becomes a fire only if the initiation probability of the fuel on its
+cell allows it, so a rate taken from a count of observed FIRES is
+systematically low as a count of ignitions. Search it, applying the result
+with \code{\link[=apply_calibrated_num_fires]{apply_calibrated_num_fires()}}, and check the count target too --
+starting with whether the simulated annual rate is computed over the right
+number of years.
 }
 
 \seealso{
 Other Dynamic Fire calibration helpers:
 \code{\link[=apply_calibrated_hi_prop]{apply_calibrated_hi_prop()}},
+\code{\link[=apply_calibrated_num_fires]{apply_calibrated_num_fires()}},
 \code{\link[=bc_fuel_code_to_base]{bc_fuel_code_to_base()}},
 \code{\link[=build_calibration_scenario_template]{build_calibration_scenario_template()}},
 \code{\link[=build_calibration_spinup_scenario]{build_calibration_spinup_scenario()}},
@@ -66,6 +69,7 @@ Other Dynamic Fire calibration helpers:
 Other Dynamic Fire helpers:
 \code{\link{DynamicFire}},
 \code{\link[=apply_calibrated_hi_prop]{apply_calibrated_hi_prop()}},
+\code{\link[=apply_calibrated_num_fires]{apply_calibrated_num_fires()}},
 \code{\link[=defaultFuelTypeTable]{defaultFuelTypeTable()}},
 \code{\link[=insertBuildUpIndex]{insertBuildUpIndex()}},
 \code{\link[=insertFireSizesTable]{insertFireSizesTable()}},

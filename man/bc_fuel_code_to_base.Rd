@@ -27,6 +27,7 @@ their own mapping vector to \code{\link[=save_observed_fire_targets]{save_observ
 Other Dynamic Fire calibration helpers:
 \code{\link[=apply_calibrated_hi_prop]{apply_calibrated_hi_prop()}},
 \code{\link[=apply_calibrated_ignprob]{apply_calibrated_ignprob()}},
+\code{\link[=apply_calibrated_num_fires]{apply_calibrated_num_fires()}},
 \code{\link[=build_calibration_scenario_template]{build_calibration_scenario_template()}},
 \code{\link[=build_calibration_spinup_scenario]{build_calibration_spinup_scenario()}},
 \code{\link[=calibrate_dynamic_fire]{calibrate_dynamic_fire()}},
