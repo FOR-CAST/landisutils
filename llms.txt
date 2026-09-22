@@ -304,6 +304,11 @@ scenario(
 - [`apply_calibrated_ignprob()`](https://for-cast.github.io/landisutils/reference/apply_calibrated_ignprob.md)
   : Apply per-base-fuel-type IgnProb multipliers to a FuelTypeTable
 
+- [`apply_calibrated_num_fires()`](https://for-cast.github.io/landisutils/reference/apply_calibrated_num_fires.md)
+  :
+
+  Overwrite FireSizesTable `NumFires` with a calibrated ignition rate
+
 - [`assemble_climate_library_file()`](https://for-cast.github.io/landisutils/reference/assemble_climate_library_file.md)
   : Assemble LANDIS-II Climate Library wide-format table from a BioSIM
   Arrow dataset
@@ -773,6 +778,9 @@ scenario(
 - [`landis_input_hash()`](https://for-cast.github.io/landisutils/reference/landis_input_hash.md)
   : Input hash of one LANDIS-II replicate
 
+- [`landis_overstory_mortality_share()`](https://for-cast.github.io/landisutils/reference/landis_overstory_mortality_share.md)
+  : Share of burned area that lost its dominant cohort
+
 - [`landis_pool_exec()`](https://for-cast.github.io/landisutils/reference/landis_pool_exec.md)
   : Execute a command in one of the warm-pool containers
 
@@ -812,6 +820,10 @@ scenario(
 
 - [`loss_from_stats()`](https://for-cast.github.io/landisutils/reference/loss_from_stats.md)
   : Compute the calibration loss from N replicate trial outputs
+
+- [`observed_fire_sizes()`](https://for-cast.github.io/landisutils/reference/observed_fire_sizes.md)
+  : Observed per-fire sizes: one per ignition point, upgraded to mapped
+  area
 
 - [`open_forcs_log_summary_dataset()`](https://for-cast.github.io/landisutils/reference/open_forcs_log_summary_dataset.md)
   :

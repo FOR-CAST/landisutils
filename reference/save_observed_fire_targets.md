@@ -22,6 +22,7 @@ save_observed_fire_targets(
   secondary_label = "secondary",
   fuel_code_to_base = bc_fuel_code_to_base(),
   severity_dist = NULL,
+  mortality_share = NULL,
   min_size_ha = 1
 )
 ```
@@ -36,12 +37,13 @@ save_observed_fire_targets(
 - primary_polys:
 
   SpatVector or NULL. Fire perimeter polygons for the primary ecoregion.
-  When supplied, `fire_sizes_ha` is drawn from the polys' `SIZE_HA`
-  (e.g. NBAC's `ADJ_HA`) and `area_by_fuel_ha` is computed by
-  rasterising the polys against `fuel_types_rast`. When NULL,
-  `fire_sizes_ha` falls back to the points' `SIZE_HA` (NFDB
-  agency-reported sizes) and `area_by_fuel_ha` is NULL on the primary
-  summary.
+  When supplied, a point's size is replaced by the `SIZE_HA` (e.g.
+  NBAC's `ADJ_HA`) of a same-year polygon containing it (see
+  [`observed_fire_sizes()`](https://for-cast.github.io/landisutils/reference/observed_fire_sizes.md)),
+  and `area_by_fuel_ha` is computed by rasterising the polys against
+  `fuel_types_rast`. When NULL, `fire_sizes_ha` is the points' own
+  `SIZE_HA` (NFDB agency-reported sizes) and `area_by_fuel_ha` is NULL
+  on the primary summary.
 
 - fire_years:
 
@@ -85,6 +87,17 @@ save_observed_fire_targets(
   contributes 0). For a literature-prior default, see
   [`default_severity_prior_sturtevant2009()`](https://for-cast.github.io/landisutils/reference/default_severity_prior_sturtevant2009.md).
 
+- mortality_share:
+
+  Numeric scalar or NULL. Observed share of burned area that lost its
+  dominant cohorts – a high-mortality burn-severity class expressed as a
+  proportion of assessed burned area. Stored on the primary summary and
+  consumed by
+  [`loss_from_stats()`](https://for-cast.github.io/landisutils/reference/loss_from_stats.md)'s
+  `mortality` component, which compares it with
+  [`landis_overstory_mortality_share()`](https://for-cast.github.io/landisutils/reference/landis_overstory_mortality_share.md)
+  per replicate. NULL leaves that component at 0.
+
 - min_size_ha:
 
   Numeric scalar. Minimum fire size (ha) retained in `fire_sizes_ha`.
@@ -120,8 +133,10 @@ Per ecoregion (`primary_ecoregion`, `secondary_ecoregion`):
 - Fire counts come from NFDB IGNITION POINTS (one row = one ignition).
   NFDB polygons are sparser (only mapped for larger fires).
 
-- Fire sizes come from NFDB points' `SIZE_HA` column (zeros dropped to
-  keep the lognormal-flavoured size distribution positive).
+- Fire sizes come from
+  [`observed_fire_sizes()`](https://for-cast.github.io/landisutils/reference/observed_fire_sizes.md):
+  one per ignition point, its own `SIZE_HA` unless a same-year perimeter
+  polygon contains it, then the polygon's `SIZE_HA`.
 
 - `area_by_fuel_ha` is computed for the PRIMARY ecoregion only via
   polygon overlay on `fuel_types_rast`. `fuel_types_rast` covers the
@@ -134,6 +149,7 @@ Per ecoregion (`primary_ecoregion`, `secondary_ecoregion`):
 Other Dynamic Fire calibration helpers:
 [`apply_calibrated_hi_prop()`](https://for-cast.github.io/landisutils/reference/apply_calibrated_hi_prop.md),
 [`apply_calibrated_ignprob()`](https://for-cast.github.io/landisutils/reference/apply_calibrated_ignprob.md),
+[`apply_calibrated_num_fires()`](https://for-cast.github.io/landisutils/reference/apply_calibrated_num_fires.md),
 [`bc_fuel_code_to_base()`](https://for-cast.github.io/landisutils/reference/bc_fuel_code_to_base.md),
 [`build_calibration_scenario_template()`](https://for-cast.github.io/landisutils/reference/build_calibration_scenario_template.md),
 [`build_calibration_spinup_scenario()`](https://for-cast.github.io/landisutils/reference/build_calibration_spinup_scenario.md),
@@ -141,7 +157,9 @@ Other Dynamic Fire calibration helpers:
 [`calibration_par_names()`](https://for-cast.github.io/landisutils/reference/calibration_par_names.md),
 [`dedup_community_snapshot()`](https://for-cast.github.io/landisutils/reference/dedup_community_snapshot.md),
 [`default_severity_prior_sturtevant2009()`](https://for-cast.github.io/landisutils/reference/default_severity_prior_sturtevant2009.md),
+[`landis_overstory_mortality_share()`](https://for-cast.github.io/landisutils/reference/landis_overstory_mortality_share.md),
 [`loss_from_stats()`](https://for-cast.github.io/landisutils/reference/loss_from_stats.md),
+[`observed_fire_sizes()`](https://for-cast.github.io/landisutils/reference/observed_fire_sizes.md),
 [`parse_dynamic_fire_logs()`](https://for-cast.github.io/landisutils/reference/parse_dynamic_fire_logs.md),
 [`patch_fire_config()`](https://for-cast.github.io/landisutils/reference/patch_fire_config.md),
 [`run_calibration_spinup()`](https://for-cast.github.io/landisutils/reference/run_calibration_spinup.md),

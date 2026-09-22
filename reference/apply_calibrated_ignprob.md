@@ -44,17 +44,20 @@ This matters when reading a finished calibration. A multiplier that
 comes back pinned at such a bound is **not** an estimate that wanted
 more room – it is saturation, meaning the objective wanted more fire
 than the maximum ignition probability can deliver. Widening the bound is
-a no-op. The remaining lever is `NumFires` in the fire-size table, which
-is a fixed input derived from the observed record rather than a
-calibrated parameter, so a pinned multiplier is a signal to check the
-count target and the objective – start with whether the simulated annual
-rate is being computed over the right number of years – rather than to
-re-run with a wider box.
+a no-op. The lever to reach for instead is `NumFires`, the ignition rate
+itself: an ignition becomes a fire only if the initiation probability of
+the fuel on its cell allows it, so a rate taken from a count of observed
+FIRES is systematically low as a count of ignitions. Search it, applying
+the result with
+[`apply_calibrated_num_fires()`](https://for-cast.github.io/landisutils/reference/apply_calibrated_num_fires.md),
+and check the count target too – starting with whether the simulated
+annual rate is computed over the right number of years.
 
 ## See also
 
 Other Dynamic Fire calibration helpers:
 [`apply_calibrated_hi_prop()`](https://for-cast.github.io/landisutils/reference/apply_calibrated_hi_prop.md),
+[`apply_calibrated_num_fires()`](https://for-cast.github.io/landisutils/reference/apply_calibrated_num_fires.md),
 [`bc_fuel_code_to_base()`](https://for-cast.github.io/landisutils/reference/bc_fuel_code_to_base.md),
 [`build_calibration_scenario_template()`](https://for-cast.github.io/landisutils/reference/build_calibration_scenario_template.md),
 [`build_calibration_spinup_scenario()`](https://for-cast.github.io/landisutils/reference/build_calibration_spinup_scenario.md),
@@ -62,7 +65,9 @@ Other Dynamic Fire calibration helpers:
 [`calibration_par_names()`](https://for-cast.github.io/landisutils/reference/calibration_par_names.md),
 [`dedup_community_snapshot()`](https://for-cast.github.io/landisutils/reference/dedup_community_snapshot.md),
 [`default_severity_prior_sturtevant2009()`](https://for-cast.github.io/landisutils/reference/default_severity_prior_sturtevant2009.md),
+[`landis_overstory_mortality_share()`](https://for-cast.github.io/landisutils/reference/landis_overstory_mortality_share.md),
 [`loss_from_stats()`](https://for-cast.github.io/landisutils/reference/loss_from_stats.md),
+[`observed_fire_sizes()`](https://for-cast.github.io/landisutils/reference/observed_fire_sizes.md),
 [`parse_dynamic_fire_logs()`](https://for-cast.github.io/landisutils/reference/parse_dynamic_fire_logs.md),
 [`patch_fire_config()`](https://for-cast.github.io/landisutils/reference/patch_fire_config.md),
 [`run_calibration_spinup()`](https://for-cast.github.io/landisutils/reference/run_calibration_spinup.md),
@@ -75,6 +80,7 @@ Other Dynamic Fire calibration helpers:
 Other Dynamic Fire helpers:
 [`DynamicFire`](https://for-cast.github.io/landisutils/reference/DynamicFire.md),
 [`apply_calibrated_hi_prop()`](https://for-cast.github.io/landisutils/reference/apply_calibrated_hi_prop.md),
+[`apply_calibrated_num_fires()`](https://for-cast.github.io/landisutils/reference/apply_calibrated_num_fires.md),
 [`defaultFuelTypeTable()`](https://for-cast.github.io/landisutils/reference/defaultFuelTypeTable.md),
 [`insertBuildUpIndex()`](https://for-cast.github.io/landisutils/reference/insertBuildUpIndex.md),
 [`insertFireSizesTable()`](https://for-cast.github.io/landisutils/reference/insertFireSizesTable.md),

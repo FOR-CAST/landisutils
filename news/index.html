@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.153</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.154</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,6 +41,12 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.154" id="landisutils-00154">landisutils 0.0.154<a class="anchor" aria-label="anchor" href="#landisutils-00154"></a></h2>
+<ul><li><p>New loss component <code>mortality</code>, with <code><a href="../reference/landis_overstory_mortality_share.html">landis_overstory_mortality_share()</a></code> behind it: the share of a replicate’s burned cells whose dominant cohort was killed, from the severity maps, the initial communities, the species tolerances and the fire damage table. It exists because the <code>severity</code> component compares quantities on different scales – an observed burn-severity class measures vegetation change, while the extension’s severity classes are crown fraction burned, and the two disagree wherever fire kills the canopy from the ground without crowning. <code><a href="../reference/save_observed_fire_targets.html">save_observed_fire_targets()</a></code> gains <code>mortality_share</code> to carry the observed side. Existing calibrations are unaffected: without an observed share the component contributes 0.</p></li>
+<li><p><code><a href="../reference/calibration_par_names.html">calibration_par_names()</a></code> gains <code>NumFires</code>, and <code><a href="../reference/patch_fire_config.html">patch_fire_config()</a></code> writes it into the fire-size table, so the ignition rate can be calibrated. The Dynamic Fire System defines <code>NumFires</code> as the mean number of IGNITIONS per year, each of which becomes a fire only if the initiation probability of the fuel on its cell allows it, so a rate taken from a count of observed fires is systematically low as a count of ignitions. New <code><a href="../reference/apply_calibrated_num_fires.html">apply_calibrated_num_fires()</a></code> applies a calibrated rate to a production fire-size table, and leaves the table alone when the vector does not carry one.</p></li>
+<li><p>New <code><a href="../reference/observed_fire_sizes.html">observed_fire_sizes()</a></code> returns one size per ignition point: the point’s own <code>SIZE_HA</code>, or the <code>SIZE_HA</code> of a same-year perimeter polygon that contains it. This is the rule <code><a href="../reference/save_observed_fire_targets.html">save_observed_fire_targets()</a></code> already used for the calibration’s size target, now exported so that a fire-size distribution fitted from the same record uses the same sizes. Fitting to points and polygons bound as separate rows counts every mapped fire twice.</p></li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.153" id="landisutils-00153">landisutils 0.0.153<a class="anchor" aria-label="anchor" href="#landisutils-00153"></a></h2>
 <ul><li>

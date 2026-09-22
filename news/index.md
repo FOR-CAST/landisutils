@@ -1,5 +1,46 @@
 # Changelog
 
+## landisutils 0.0.154
+
+- New loss component `mortality`, with
+  [`landis_overstory_mortality_share()`](https://for-cast.github.io/landisutils/reference/landis_overstory_mortality_share.md)
+  behind it: the share of a replicate’s burned cells whose dominant
+  cohort was killed, from the severity maps, the initial communities,
+  the species tolerances and the fire damage table. It exists because
+  the `severity` component compares quantities on different scales – an
+  observed burn-severity class measures vegetation change, while the
+  extension’s severity classes are crown fraction burned, and the two
+  disagree wherever fire kills the canopy from the ground without
+  crowning.
+  [`save_observed_fire_targets()`](https://for-cast.github.io/landisutils/reference/save_observed_fire_targets.md)
+  gains `mortality_share` to carry the observed side. Existing
+  calibrations are unaffected: without an observed share the component
+  contributes 0.
+
+- [`calibration_par_names()`](https://for-cast.github.io/landisutils/reference/calibration_par_names.md)
+  gains `NumFires`, and
+  [`patch_fire_config()`](https://for-cast.github.io/landisutils/reference/patch_fire_config.md)
+  writes it into the fire-size table, so the ignition rate can be
+  calibrated. The Dynamic Fire System defines `NumFires` as the mean
+  number of IGNITIONS per year, each of which becomes a fire only if the
+  initiation probability of the fuel on its cell allows it, so a rate
+  taken from a count of observed fires is systematically low as a count
+  of ignitions. New
+  [`apply_calibrated_num_fires()`](https://for-cast.github.io/landisutils/reference/apply_calibrated_num_fires.md)
+  applies a calibrated rate to a production fire-size table, and leaves
+  the table alone when the vector does not carry one.
+
+- New
+  [`observed_fire_sizes()`](https://for-cast.github.io/landisutils/reference/observed_fire_sizes.md)
+  returns one size per ignition point: the point’s own `SIZE_HA`, or the
+  `SIZE_HA` of a same-year perimeter polygon that contains it. This is
+  the rule
+  [`save_observed_fire_targets()`](https://for-cast.github.io/landisutils/reference/save_observed_fire_targets.md)
+  already used for the calibration’s size target, now exported so that a
+  fire-size distribution fitted from the same record uses the same
+  sizes. Fitting to points and polygons bound as separate rows counts
+  every mapped fire twice.
+
 ## landisutils 0.0.153
 
 - [`run_calibration_validation()`](https://for-cast.github.io/landisutils/reference/run_calibration_validation.md)

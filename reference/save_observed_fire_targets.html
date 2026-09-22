@@ -13,7 +13,7 @@ can read it from disk without terra/sf in their environments."><meta property="o
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.153</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.154</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -69,6 +69,7 @@ can read it from disk without terra/sf in their environments.</p>
 <span>  secondary_label <span class="op">=</span> <span class="st">"secondary"</span>,</span>
 <span>  fuel_code_to_base <span class="op">=</span> <span class="fu"><a href="bc_fuel_code_to_base.html">bc_fuel_code_to_base</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  severity_dist <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  mortality_share <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  min_size_ha <span class="op">=</span> <span class="fl">1</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -84,11 +85,12 @@ ecoregion (the LANDIS simulation extent). Required.</p></dd>
 
 <dt id="arg-primary-polys">primary_polys<a class="anchor" aria-label="anchor" href="#arg-primary-polys"></a></dt>
 <dd><p>SpatVector or NULL. Fire perimeter polygons for the
-primary ecoregion. When supplied, <code>fire_sizes_ha</code> is drawn from the
-polys' <code>SIZE_HA</code> (e.g. NBAC's <code>ADJ_HA</code>) and <code>area_by_fuel_ha</code> is computed
-by rasterising the polys against <code>fuel_types_rast</code>. When NULL,
-<code>fire_sizes_ha</code> falls back to the points' <code>SIZE_HA</code> (NFDB agency-reported
-sizes) and <code>area_by_fuel_ha</code> is NULL on the primary summary.</p></dd>
+primary ecoregion. When supplied, a point's size is replaced by the
+<code>SIZE_HA</code> (e.g. NBAC's <code>ADJ_HA</code>) of a same-year polygon containing it (see
+<code><a href="observed_fire_sizes.html">observed_fire_sizes()</a></code>), and <code>area_by_fuel_ha</code> is computed by rasterising
+the polys against <code>fuel_types_rast</code>. When NULL, <code>fire_sizes_ha</code> is the
+points' own <code>SIZE_HA</code> (NFDB agency-reported sizes) and <code>area_by_fuel_ha</code> is
+NULL on the primary summary.</p></dd>
 
 
 <dt id="arg-fire-years">fire_years<a class="anchor" aria-label="anchor" href="#arg-fire-years"></a></dt>
@@ -132,6 +134,14 @@ contributes 0). For a literature-prior default, see
 <code><a href="default_severity_prior_sturtevant2009.html">default_severity_prior_sturtevant2009()</a></code>.</p></dd>
 
 
+<dt id="arg-mortality-share">mortality_share<a class="anchor" aria-label="anchor" href="#arg-mortality-share"></a></dt>
+<dd><p>Numeric scalar or NULL. Observed share of burned area that lost its
+dominant cohorts – a high-mortality burn-severity class expressed as a proportion of assessed
+burned area. Stored on the primary summary and consumed by <code><a href="loss_from_stats.html">loss_from_stats()</a></code>'s <code>mortality</code>
+component, which compares it with <code><a href="landis_overstory_mortality_share.html">landis_overstory_mortality_share()</a></code> per replicate. NULL
+leaves that component at 0.</p></dd>
+
+
 <dt id="arg-min-size-ha">min_size_ha<a class="anchor" aria-label="anchor" href="#arg-min-size-ha"></a></dt>
 <dd><p>Numeric scalar. Minimum fire size (ha) retained in
 <code>fire_sizes_ha</code>. Defaults to <code>1.0</code>: NFDB systematically under-reports
@@ -157,8 +167,9 @@ weight 0 in Tier 1).</p></li>
 severity matching is implemented.</p></li>
 </ul><p>Per ecoregion (<code>primary_ecoregion</code>, <code>secondary_ecoregion</code>):</p><ul><li><p>Fire counts come from NFDB IGNITION POINTS (one row = one ignition).
 NFDB polygons are sparser (only mapped for larger fires).</p></li>
-<li><p>Fire sizes come from NFDB points' <code>SIZE_HA</code> column (zeros dropped to
-keep the lognormal-flavoured size distribution positive).</p></li>
+<li><p>Fire sizes come from <code><a href="observed_fire_sizes.html">observed_fire_sizes()</a></code>: one per ignition
+point, its own <code>SIZE_HA</code> unless a same-year perimeter polygon
+contains it, then the polygon's <code>SIZE_HA</code>.</p></li>
 <li><p><code>area_by_fuel_ha</code> is computed for the PRIMARY ecoregion only via
 polygon overlay on <code>fuel_types_rast</code>. <code>fuel_types_rast</code> covers the
 LANDIS simulation domain; secondary-ecoregion polygons typically
@@ -170,6 +181,7 @@ misleading (it would just be the primary value over again).</p></li>
     <div class="dont-index"><p>Other Dynamic Fire calibration helpers:
 <code><a href="apply_calibrated_hi_prop.html">apply_calibrated_hi_prop()</a></code>,
 <code><a href="apply_calibrated_ignprob.html">apply_calibrated_ignprob()</a></code>,
+<code><a href="apply_calibrated_num_fires.html">apply_calibrated_num_fires()</a></code>,
 <code><a href="bc_fuel_code_to_base.html">bc_fuel_code_to_base()</a></code>,
 <code><a href="build_calibration_scenario_template.html">build_calibration_scenario_template()</a></code>,
 <code><a href="build_calibration_spinup_scenario.html">build_calibration_spinup_scenario()</a></code>,
@@ -177,7 +189,9 @@ misleading (it would just be the primary value over again).</p></li>
 <code><a href="calibration_par_names.html">calibration_par_names()</a></code>,
 <code><a href="dedup_community_snapshot.html">dedup_community_snapshot()</a></code>,
 <code><a href="default_severity_prior_sturtevant2009.html">default_severity_prior_sturtevant2009()</a></code>,
+<code><a href="landis_overstory_mortality_share.html">landis_overstory_mortality_share()</a></code>,
 <code><a href="loss_from_stats.html">loss_from_stats()</a></code>,
+<code><a href="observed_fire_sizes.html">observed_fire_sizes()</a></code>,
 <code><a href="parse_dynamic_fire_logs.html">parse_dynamic_fire_logs()</a></code>,
 <code><a href="patch_fire_config.html">patch_fire_config()</a></code>,
 <code><a href="run_calibration_spinup.html">run_calibration_spinup()</a></code>,

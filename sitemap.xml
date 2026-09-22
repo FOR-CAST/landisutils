@@ -51,6 +51,7 @@
 <url><loc>https://for-cast.github.io/landisutils/reference/appendPercent.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/apply_calibrated_hi_prop.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/apply_calibrated_ignprob.html</loc></url>
+<url><loc>https://for-cast.github.io/landisutils/reference/apply_calibrated_num_fires.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/assemble_climate_library_file.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/assemble_climate_library_file_monthly.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/assemble_climate_library_file_monthly_climr.html</loc></url>
@@ -286,6 +287,7 @@
 <url><loc>https://for-cast.github.io/landisutils/reference/landis_find_docker.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/landis_image_info.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/landis_input_hash.html</loc></url>
+<url><loc>https://for-cast.github.io/landisutils/reference/landis_overstory_mortality_share.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/landis_pool_exec.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/landis_pool_restart_one.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/landis_pool_start.html</loc></url>
@@ -300,6 +302,7 @@
 <url><loc>https://for-cast.github.io/landisutils/reference/landisutils-package.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/leading_species.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/loss_from_stats.html</loc></url>
+<url><loc>https://for-cast.github.io/landisutils/reference/observed_fire_sizes.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/open_forcs_log_summary_dataset.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/open_fps_raw_out_dataset.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/parse_dynamic_fire_logs.html</loc></url>
