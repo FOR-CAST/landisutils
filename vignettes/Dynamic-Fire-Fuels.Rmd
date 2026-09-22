@@ -110,11 +110,13 @@ fuel_types <- tibble::tribble(
           8 , "Deciduous"         ,       0 ,     300 , list("acerrubr", "acersacc", "betualle", "fraxamer", "poputrem", "betupapy", "querelli", "querrubr", "tiliamer")
 )
 
+## Each row is a fuel type index, how long that fuel persists after the disturbance, and what
+## triggers it: a harvest prescription name, or a FireSeverityN / WindSeverityN keyword.
 disturb_conv <- tibble::tribble(
-  ~Fuel , ~Type , ~Duration       , ~Prescription    ,
-     14 ,    20 , "WindSeverity3" , "AspenClearcut"  ,
-     13 ,    20 , "WindSeverity4" , "MaxAgeClearcut" ,
-     15 ,    20 , "WindSeverity5" , ""
+  ~Fuel , ~Duration , ~Prescription    ,
+     14 ,        20 , "WindSeverity3"  ,
+     13 ,        20 , "MaxAgeClearcut" ,
+     15 ,        20 , "WindSeverity5"
 )
 ```
 
