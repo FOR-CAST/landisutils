@@ -1066,9 +1066,10 @@ build_pnet_all_extension <- function(scen_dir, allowed_classes) {
             2 , "Conifer"   ,       0 ,     500 , list("piceglau", "abiebals")                                                                         ,
             8 , "Deciduous" ,       0 ,     300 , list("acerrubr", "acersacc", "betualle", "fraxamer", "poputrem", "querelli", "querrubr", "tiliamer")
   )
+  ## Fuel type index, how long it persists, and the trigger (user guide 2.8).
   duf_disturb_conv <- tibble::tribble(
-    ~Fuel , ~Type , ~Duration       , ~Prescription    ,
-       14 ,    20 , "WindSeverity3" , "MaxAgeClearcut"
+    ~Fuel , ~Duration , ~Prescription     ,
+       14 ,        20 , "WindSeverity3"
   )
   ext_duf <- DynamicFuels$new(
     path = scen_dir,
@@ -1698,8 +1699,7 @@ build_necn_dynamic_fire <- function(scen_dir, allowed_classes) {
     EcoregionTable = data.frame(FuelType = integer(0), Ecoregion = character(0)),
     DisturbanceConversionTable = data.frame(
       Fuel = integer(0),
-      Type = integer(0),
-      Duration = character(0),
+      Duration = integer(0),
       Prescription = character(0)
     )
   )
