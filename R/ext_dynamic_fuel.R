@@ -161,10 +161,15 @@ DynamicFuels <- R6Class(
       if (missing(value)) {
         return(private$.DisturbanceConversionTable)
       } else {
+        ## THREE fields, not four: the Dynamic Fuels user guide (2.8) gives the row as fuel
+        ## type index, duration in years, and either a harvest prescription name or a
+        ## `FireSeverityN` / `WindSeverityN` keyword. The four-column form came from reading
+        ## the written header's "Fuel Type" as two columns, and survived because the table was
+        ## only ever empty -- the first project to populate it could not write a config at all.
         stopifnot(
           is.data.frame(value),
-          ncol(value) == 4,
-          identical(colnames(value), c("Fuel", "Type", "Duration", "Prescription"))
+          ncol(value) == 3,
+          identical(colnames(value), c("Fuel", "Duration", "Prescription"))
         )
         private$.DisturbanceConversionTable <- value
       }
@@ -340,7 +345,8 @@ prepDisturbanceConversionTable <- function() {
 #' Specify Dynamic Fuel Extension's Disturbance Conversion Table
 #'
 #' @param df data.frame corresponding to `DisturbanceConversionTable`, with columns:
-#'   `Fuel` (int), `Type` (int), `Duration` (int), and `Prescription` (char).
+#'   `Fuel` (int, the fuel type index), `Duration` (int, years) and `Prescription` (char, a
+#'   harvest prescription name or a `FireSeverityN` / `WindSeverityN` keyword).
 #'
 #' @template return_insert
 #'
@@ -349,8 +355,8 @@ prepDisturbanceConversionTable <- function() {
 insertDisturbanceConversionTable <- function(df) {
   c(
     glue::glue("DisturbanceConversionTable"),
-    glue::glue(">> Fuel  Type    Duration    Prescription"),
-    glue::glue(">> ----  ---    --------    ------------"),
+    glue::glue(">> Fuel Type    Duration    Prescription"),
+    glue::glue(">> ---------    --------    ------------"),
     apply(df, 1, function(x) {
       glue::glue_collapse(x, sep = "    ")
     }),

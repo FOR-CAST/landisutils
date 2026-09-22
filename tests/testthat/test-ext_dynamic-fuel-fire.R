@@ -99,11 +99,13 @@ testthat::test_that("Dynamic Fuel & Fire inputs are properly created", {
             8 , "Deciduous"         ,       0 ,     300 , list("acerrubr", "acersacc", "betualle", "fraxamer", "poputrem", "betupapy", "querelli", "querrubr", "tiliamer")
   )
 
+  ## Three fields per the user guide (2.8): fuel type index, duration in years, and the
+  ## trigger -- a harvest prescription name or a FireSeverityN / WindSeverityN keyword.
   disturb_conv <- tibble::tribble(
-    ~Fuel , ~Type , ~Duration       , ~Prescription    ,
-       14 ,    20 , "WindSeverity3" , "AspenClearcut"  ,
-       13 ,    20 , "WindSeverity4" , "MaxAgeClearcut" ,
-       15 ,    20 , "WindSeverity5" , ""
+    ~Fuel , ~Duration , ~Prescription    ,
+       14 ,        20 , "WindSeverity3"  ,
+       13 ,        20 , "MaxAgeClearcut" ,
+       15 ,        20 , "WindSeverity5"
   )
 
   ## create the dynamic fuels extension config object

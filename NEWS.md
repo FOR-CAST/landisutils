@@ -1,3 +1,7 @@
+# landisutils 0.0.155
+
+* `DynamicFuels`'s `DisturbanceConversionTable` now takes the three columns the Dynamic Fuels user guide (2.8) specifies -- fuel type index, duration in years, and either a harvest prescription name or a `FireSeverityN` / `WindSeverityN` keyword -- instead of four. The four-column form came from reading the written header's "Fuel Type" as two columns, and survived because the table had only ever been empty: the first project to populate it could not write a config at all.
+
 # landisutils 0.0.154
 
 * New loss component `mortality`, with `landis_overstory_mortality_share()` behind it: the share of a replicate's burned cells whose dominant cohort was killed, from the severity maps, the initial communities, the species tolerances and the fire damage table. It exists because the `severity` component compares quantities on different scales -- an observed burn-severity class measures vegetation change, while the extension's severity classes are crown fraction burned, and the two disagree wherever fire kills the canopy from the ground without crowning. `save_observed_fire_targets()` gains `mortality_share` to carry the observed side. Existing calibrations are unaffected: without an observed share the component contributes 0.
