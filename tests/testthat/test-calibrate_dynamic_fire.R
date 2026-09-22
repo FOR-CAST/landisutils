@@ -1,10 +1,10 @@
 ## Tests for the Dynamic Fire calibration pure-data helpers (Phase 8a).
 ## Fixtures under inst/testdata/ are sampled from real LANDIS-II rep01 outputs.
 
-test_that("calibration_par_names() is the canonical 9-entry vector", {
+test_that("calibration_par_names() is the canonical 10-entry vector", {
   nm <- calibration_par_names()
   expect_type(nm, "character")
-  expect_length(nm, 9L)
+  expect_length(nm, 10L)
   expect_setequal(
     nm,
     c(
@@ -16,7 +16,8 @@ test_that("calibration_par_names() is the canonical 9-entry vector", {
       "IgnProb_ConiferPlantation",
       "IgnProb_Deciduous",
       "IgnProb_Slash",
-      "IgnProb_Open"
+      "IgnProb_Open",
+      "NumFires"
     )
   )
 })
@@ -43,7 +44,8 @@ test_that("parse_dynamic_fire_logs() reads sample event + summary logs", {
       "events",
       "total_sites_burned",
       "n_events",
-      "area_by_fuel_ha"
+      "area_by_fuel_ha",
+      "overstory_mortality"
     )
   )
   expect_s3_class(parsed$n_fires_by_year, "tbl_df")
@@ -402,6 +404,35 @@ test_that("patch_fire_config() rewrites SeverityCalibrationFactor / HiProp / Ign
   expect_true(all(emitted >= 0 & emitted <= 1))
 })
 
+test_that("patch_fire_config() writes a calibrated NumFires into the fire-size table", {
+  scenario_dir <- withr::local_tempdir()
+  fs::file_copy(
+    system.file("testdata", "dynamic-fire-sample.txt", package = "landisutils"),
+    fs::path(scenario_dir, "dynamic-fire.txt")
+  )
+
+  patched <- readLines(patch_fire_config(scenario_dir, c(NumFires = 1.75)))
+  fs_hdr <- grep(">>\\s+Fire Sizes", patched)
+  i <- fs_hdr + 1L
+  while (grepl("^[[:space:]]*>>", patched[i]) || !nzchar(trimws(patched[i]))) {
+    i <- i + 1L
+  }
+  parts <- strsplit(trimws(patched[i]), "\\s+")[[1]]
+
+  ## NumFires is the last of the row's 16 fields; nothing else moves.
+  expect_length(parts, 16L)
+  expect_equal(as.numeric(parts[16L]), 1.75)
+  expect_equal(as.numeric(parts[8L]), 0.50)
+})
+
+test_that("apply_calibrated_num_fires() replaces the rate only when it is calibrated", {
+  fst <- data.frame(EcoCode = 1L, EcoName = "TEST", NumFires = 0.87)
+
+  expect_equal(apply_calibrated_num_fires(fst, c(NumFires = 2.4))$NumFires, 2.4)
+  ## A vector without it leaves the observed rate in place.
+  expect_equal(apply_calibrated_num_fires(fst, c(SeverityCalibrationFactor = 1))$NumFires, 0.87)
+})
+
 test_that("patch_fire_config() rejects par_vec with wrong names", {
   scenario_dir <- withr::local_tempdir()
   fs::file_copy(
@@ -509,7 +540,10 @@ test_that("loss_from_stats() Tier 1 returns finite count + size components", {
   )
   loss <- loss_from_stats(list(rep1), observed)
   expect_named(loss, c("total", "components", "weights"))
-  expect_named(loss$components, c("count", "size", "size_tail", "area_fuel", "severity"))
+  expect_named(
+    loss$components,
+    c("count", "size", "size_tail", "area_fuel", "severity", "mortality")
+  )
   expect_true(is.finite(loss$total))
   expect_true(loss$components[["count"]] >= 0)
   expect_true(loss$components[["size"]] >= 0 && loss$components[["size"]] <= 1)
@@ -667,6 +701,116 @@ test_that("save_observed_fire_targets() backfills NBAC with NFDB (year-aligned p
   ## Expected: pt1 SIZE_HA upgraded 5 -> 25 (NBAC swap); pt2 keeps 50;
   ## pt3 keeps 7 (year mismatch); pt4 keeps 12 (pre-NBAC).
   expect_equal(p$fire_sizes_ha, sort(c(25.0, 50.0, 7.0, 12.0)))
+})
+
+## A minimal replicate directory: one row of cells, so the reader's vertical flip cannot
+## reorder them, plus the five files the mortality calculation reads.
+.mk_mortality_rep <- function(severity, env = parent.frame()) {
+  dir <- withr::local_tempdir(.local_envir = env)
+  fs::dir_create(fs::path(dir, "fire"))
+  fs::file_copy(
+    system.file("testdata", "dynamic-fire-sample.txt", package = "landisutils"),
+    fs::path(dir, "dynamic-fire.txt")
+  )
+  writeLines(
+    c(
+      "LandisData  \"Species\"",
+      ">> SpeciesCode  Longevity  SexualMaturity",
+      "   Hw      650      20       50      1398      0.0       0        0      none",
+      "   At      200      10       30       200      0.0       0        0      resprout"
+    ),
+    fs::path(dir, "species.txt")
+  )
+  utils::write.csv(
+    data.frame(SpeciesCode = c("Hw", "At"), FireTolerance = c(1L, 1L)),
+    fs::path(dir, "DynamicFire_Spp_Table.csv"),
+    row.names = FALSE
+  )
+  ## Map code 1's dominant cohort is young (300 of 650 years), code 2's is old (640).
+  utils::write.csv(
+    data.frame(
+      MapCode = c(1L, 1L, 2L),
+      SpeciesName = c("Hw", "At", "Hw"),
+      CohortAge = c(300L, 10L, 640L),
+      CohortBiomass = c(100, 5, 100)
+    ),
+    fs::path(dir, "initial-communities.csv"),
+    row.names = FALSE
+  )
+  ic <- terra::rast(nrows = 1, ncols = 4, xmin = 0, xmax = 4, ymin = 0, ymax = 1)
+  terra::values(ic) <- c(1L, 1L, 2L, 2L)
+  terra::writeRaster(ic, fs::path(dir, "initial-communities.tif"), datatype = "INT2S")
+  for (i in seq_along(severity)) {
+    sv <- terra::rast(ic)
+    terra::values(sv) <- severity[[i]]
+    terra::writeRaster(sv, fs::path(dir, "fire", sprintf("severity-%d.tif", i)), datatype = "INT2S")
+  }
+  dir
+}
+
+test_that("landis_overstory_mortality_share() counts cells that lost their dominant cohort", {
+  ## Severity map values are severity + 2, so 3 is class 1 and 1 is active-but-unburned.
+  ## Class 1 minus tolerance 1 = 0, which the damage table caps at 85 % of longevity: map code
+  ## 1's dominant cohort (46 %) dies, code 2's (98 %) survives.
+  dir <- .mk_mortality_rep(list(c(3L, 3L, 3L, 1L)))
+  m <- landis_overstory_mortality_share(dir)
+
+  expect_equal(m$burned_cells, 3L)
+  expect_equal(m$high_cells, 2L)
+  expect_equal(m$share, 2 / 3)
+})
+
+test_that("landis_overstory_mortality_share() kills everything at severity 5", {
+  ## The extension kills all cohorts at severity 5 whatever their tolerance, so the old cohort
+  ## that survived class 1 dies here.
+  dir <- .mk_mortality_rep(list(c(1L, 1L, 7L, 7L)))
+  m <- landis_overstory_mortality_share(dir)
+
+  expect_equal(m$burned_cells, 2L)
+  expect_equal(m$share, 1)
+})
+
+test_that("landis_overstory_mortality_share() returns NULL without severity maps", {
+  dir <- .mk_mortality_rep(list())
+  expect_null(landis_overstory_mortality_share(dir))
+})
+
+test_that("the mortality loss component is the relative gap to the observed share", {
+  reps <- list(
+    list(overstory_mortality = list(burned_cells = 10L, high_cells = 4L, share = 0.4)),
+    list(overstory_mortality = list(burned_cells = 10L, high_cells = 6L, share = 0.6))
+  )
+  obs <- list(primary = list(lambda_obs = 1, n_fires_by_year = NULL, mortality_share = 0.25))
+  w <- c(count = 0, size = 0, size_tail = 0, area_fuel = 0, severity = 0, mortality = 1)
+
+  ## mean(0.4, 0.6) = 0.5 against 0.25 observed
+  expect_equal(loss_from_stats(reps, obs, weights = w)$components[["mortality"]], 1)
+
+  ## No observed share means the component cannot be computed, so it contributes nothing.
+  obs$primary$mortality_share <- NULL
+  expect_equal(loss_from_stats(reps, obs, weights = w)$components[["mortality"]], 0)
+})
+
+test_that("observed_fire_sizes() gives one size per point, upgraded by same-year polygons", {
+  crs <- "EPSG:3005"
+  pts <- terra::vect(
+    data.frame(
+      lon = c(250, 750, 750),
+      lat = c(250, 750, 250),
+      YEAR = c(2010L, 2015L, 2010L),
+      SIZE_HA = c(5.0, 50.0, 0.5)
+    ),
+    geom = c("lon", "lat"),
+    crs = crs
+  )
+  poly <- terra::vect("POLYGON ((200 200, 400 200, 400 400, 200 400, 200 200))", crs = crs)
+  poly$YEAR <- 2010L
+  poly$SIZE_HA <- 25.0
+
+  ## The mapped fire takes the polygon's size and is counted once, not twice.
+  expect_equal(observed_fire_sizes(pts, poly), c(0.5, 25.0, 50.0))
+  expect_equal(observed_fire_sizes(pts), c(0.5, 5.0, 50.0))
+  expect_equal(observed_fire_sizes(pts, poly, min_size_ha = 1), c(25.0, 50.0))
 })
 
 test_that("save_observed_fire_targets() falls back to points' SIZE_HA when polys are not supplied", {
@@ -926,8 +1070,9 @@ test_that("calibrate_dynamic_fire() runs end-to-end with sim_mock (no Docker)", 
       "pool_digest"
     )
   )
-  expect_equal(length(res$best_params), 9L)
-  expect_setequal(names(res$best_params), calibration_par_names())
+  ## The searched set is whatever cfg's bounds name, not the whole catalogue.
+  expect_equal(length(res$best_params), length(cfg$lower))
+  expect_setequal(names(res$best_params), names(cfg$lower))
   expect_true(is.finite(res$objective))
   expect_true(fs::file_exists(res$trace_path))
   ## No pool was started (mock simulator)
@@ -1034,8 +1179,8 @@ test_that("calibrate_dynamic_fire() rejects unknown simulator names", {
   writeLines("x", scen_txt)
   out_dir <- withr::local_tempdir()
   cfg <- list(
-    lower = setNames(rep(0, 9), calibration_par_names()),
-    upper = setNames(rep(1, 9), calibration_par_names()),
+    lower = setNames(rep(0, length(calibration_par_names())), calibration_par_names()),
+    upper = setNames(rep(1, length(calibration_par_names())), calibration_par_names()),
     NP = 4L,
     itermax = 1L,
     n_reps = 1L,
@@ -1302,9 +1447,10 @@ test_that("L_severity contributes 0 when severity_dist is NULL", {
 
 .make_default_cfg <- function() {
   list(
-    lower = stats::setNames(rep(0, 9), calibration_par_names()),
-    upper = stats::setNames(rep(1, 9), calibration_par_names()),
-    NP = 90L, ## = 10 * 9 to avoid the NP-advisory message in expect_silent()
+    lower = stats::setNames(rep(0, length(calibration_par_names())), calibration_par_names()),
+    upper = stats::setNames(rep(1, length(calibration_par_names())), calibration_par_names()),
+    ## 10 * npar, so the NP advisory stays quiet in expect_silent()
+    NP = 10L * length(calibration_par_names()),
     itermax = 10L,
     n_reps = 1L,
     sim_years = 5L,
@@ -1815,7 +1961,7 @@ test_that("eval cache round-trips a trial-trace row at full precision (fingerpri
   par_names <- calibration_par_names()
   dir <- withr::local_tempdir()
   tt <- fs::dir_create(fs::path(dir, "trial_trace_20260101_000000"))
-  pv <- stats::setNames(c(1.234567890123, 0.5, 0.25, 0.1, 1, 1, 1, 1, 1), par_names)
+  pv <- stats::setNames(c(1.234567890123, rep(1, length(par_names) - 1L)), par_names)
   comps <- c(count = 1, size = 1, size_tail = 0, area_fuel = 0, severity = 0)
   landisutils:::.write_trial_trace_row(
     tt,
@@ -2003,11 +2149,11 @@ test_that("calibrate_dynamic_fire() archives a fingerprint-mismatched checkpoint
   out_dir <- withr::local_tempdir()
   saveRDS(
     list(
-      pop = matrix(0.5, 6, 9),
+      pop = matrix(0.5, 6, length(calibration_par_names())),
       fingerprint = "not-a-match",
       gens_done = 1L,
       bestval_history = 1,
-      best_mem = rep(0.5, 9),
+      best_mem = rep(0.5, length(calibration_par_names())),
       best_val = 1,
       par_names = calibration_par_names()
     ),
@@ -2039,12 +2185,12 @@ test_that("calibrate_dynamic_fire() archives a checkpoint whose loss-config fing
   )
   saveRDS(
     list(
-      pop = matrix(0.5, cfg$NP, 9),
+      pop = matrix(0.5, cfg$NP, length(calibration_par_names())),
       fingerprint = pop_fp,
       eval_fingerprint = "stale-loss-config",
       gens_done = 1L,
       bestval_history = 1,
-      best_mem = rep(0.5, 9),
+      best_mem = rep(0.5, length(calibration_par_names())),
       best_val = 1,
       par_names = calibration_par_names()
     ),

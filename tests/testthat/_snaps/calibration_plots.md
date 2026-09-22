@@ -68,7 +68,7 @@
       loss_from_stats(stats$reps, stats$observed, weights = NULL)
     Condition
       Error:
-      ! `weights` must be a non-empty, fully named, non-NA numeric vector over: count, size, size_tail, area_fuel, severity.
+      ! `weights` must be a non-empty, fully named, non-NA numeric vector over: count, size, size_tail, area_fuel, severity, mortality.
 
 ---
 
@@ -76,7 +76,7 @@
       loss_from_stats(stats$reps, stats$observed, weights = c(1, 1))
     Condition
       Error:
-      ! `weights` must be a non-empty, fully named, non-NA numeric vector over: count, size, size_tail, area_fuel, severity.
+      ! `weights` must be a non-empty, fully named, non-NA numeric vector over: count, size, size_tail, area_fuel, severity, mortality.
 
 ---
 
@@ -84,7 +84,7 @@
       loss_from_stats(stats$reps, stats$observed, weights = c(cnt = 2, size = 1))
     Condition
       Error:
-      ! unknown loss weight(s): cnt. Known components: count, size, size_tail, area_fuel, severity.
+      ! unknown loss weight(s): cnt. Known components: count, size, size_tail, area_fuel, severity, mortality.
 
 ---
 
@@ -92,5 +92,5 @@
       loss_from_stats(stats$reps, stats$observed, weights = c(count = NA_real_))
     Condition
       Error:
-      ! `weights` must be a non-empty, fully named, non-NA numeric vector over: count, size, size_tail, area_fuel, severity.
+      ! `weights` must be a non-empty, fully named, non-NA numeric vector over: count, size, size_tail, area_fuel, severity, mortality.
 

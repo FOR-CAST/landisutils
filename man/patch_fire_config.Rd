@@ -35,6 +35,7 @@ of the template so trials don't collide.
 Other Dynamic Fire calibration helpers:
 \code{\link[=apply_calibrated_hi_prop]{apply_calibrated_hi_prop()}},
 \code{\link[=apply_calibrated_ignprob]{apply_calibrated_ignprob()}},
+\code{\link[=apply_calibrated_num_fires]{apply_calibrated_num_fires()}},
 \code{\link[=bc_fuel_code_to_base]{bc_fuel_code_to_base()}},
 \code{\link[=build_calibration_scenario_template]{build_calibration_scenario_template()}},
 \code{\link[=build_calibration_spinup_scenario]{build_calibration_spinup_scenario()}},
@@ -42,7 +43,9 @@ Other Dynamic Fire calibration helpers:
 \code{\link[=calibration_par_names]{calibration_par_names()}},
 \code{\link[=dedup_community_snapshot]{dedup_community_snapshot()}},
 \code{\link[=default_severity_prior_sturtevant2009]{default_severity_prior_sturtevant2009()}},
+\code{\link[=landis_overstory_mortality_share]{landis_overstory_mortality_share()}},
 \code{\link[=loss_from_stats]{loss_from_stats()}},
+\code{\link[=observed_fire_sizes]{observed_fire_sizes()}},
 \code{\link[=parse_dynamic_fire_logs]{parse_dynamic_fire_logs()}},
 \code{\link[=run_calibration_spinup]{run_calibration_spinup()}},
 \code{\link[=run_calibration_validation]{run_calibration_validation()}},

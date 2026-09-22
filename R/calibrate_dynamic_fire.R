@@ -17,7 +17,7 @@ NULL
 #' Callers building `lower` / `upper` bounds, or passing candidate vectors to
 #' [patch_fire_config()], must match this exact set.
 #'
-#' @returns Character vector of length 9.
+#' @returns Character vector of length 10.
 #'
 #' @family Dynamic Fire calibration helpers
 #'
@@ -32,7 +32,8 @@ calibration_par_names <- function() {
     "IgnProb_ConiferPlantation",
     "IgnProb_Deciduous",
     "IgnProb_Slash",
-    "IgnProb_Open"
+    "IgnProb_Open",
+    "NumFires"
   )
 }
 
@@ -141,8 +142,183 @@ parse_dynamic_fire_logs <- function(rep_dir, pixel_area_ha = 1.0) {
     events = events_tbl,
     total_sites_burned = sum(events_tbl$sites),
     n_events = nrow(events_tbl),
-    area_by_fuel_ha = .read_burned_area_by_fuel(rep_dir, pixel_area_ha)
+    area_by_fuel_ha = .read_burned_area_by_fuel(rep_dir, pixel_area_ha),
+    ## NULL from a mock simulator, or from a rep that kept no severity maps.
+    overstory_mortality = landis_overstory_mortality_share(rep_dir)
   )
+}
+
+#' Share of burned area that lost its dominant cohort
+#'
+#' The proportion of a replicate's burned cells in which the cohort holding the most biomass was
+#' killed. This is the model-side counterpart of a field burn-severity class defined by mortality
+#' of the structurally dominant vegetation, and unlike the extension's own severity classes -- which
+#' are crown fraction burned -- it is comparable with an observed mortality measure. In a forest
+#' that burns hot at ground level without crowning, the two disagree by construction.
+#'
+#' Everything needed is in the replicate directory, because a run is a copy of its scenario:
+#' \itemize{
+#'   \item `fire/severity-{t}.tif` -- the severity map per timestep. The Dynamic Fire encoding is
+#'         0 inactive, 1 active and unburned, 2 burned with no cohort damaged, and severity + 2 for
+#'         a damaged cell, so a cell's severity class is its map value MINUS TWO.
+#'   \item `initial-communities.csv` / `.tif` -- the cohorts on each cell.
+#'   \item `species.txt` -- longevity, which the damage table's age thresholds are shares of.
+#'   \item `DynamicFire_Spp_Table.csv` -- each species' fire tolerance.
+#'   \item `dynamic-fire.txt` -- the `FireDamageTable`, mapping severity minus tolerance to the
+#'         oldest cohort killed, as a percentage of longevity.
+#' }
+#'
+#' A cohort dies when severity is 5 (the extension kills everything at that severity, whatever the
+#' tolerance) or when its age is at or below that percentage of its species' longevity. Composition
+#' is read at time zero, so a cell that burns twice in one replicate is scored on its original
+#' cohorts; in a calibration run, where succession is frozen, only reburns are affected.
+#'
+#' @param rep_dir Character. Path to the replicate directory.
+#'
+#' @returns A list with `burned_cells`, `high_cells` and `share` (NA when nothing burned), or NULL
+#'   when the replicate holds no severity maps or is missing one of the files above.
+#'
+#' @family Dynamic Fire calibration helpers
+#'
+#' @export
+landis_overstory_mortality_share <- function(rep_dir) {
+  stopifnot(fs::dir_exists(rep_dir))
+  fire_dir <- fs::path(rep_dir, "fire")
+  if (!fs::dir_exists(fire_dir)) {
+    return(NULL)
+  }
+  sev_files <- fs::dir_ls(fire_dir, regexp = "severity-\\d+\\.tif$", type = "file")
+  ic_csv <- fs::path(rep_dir, "initial-communities.csv")
+  ic_tif <- fs::path(rep_dir, "initial-communities.tif")
+  spp_csv <- fs::path(rep_dir, "DynamicFire_Spp_Table.csv")
+  spp_txt <- fs::path(rep_dir, "species.txt")
+  fire_txt <- fs::path(rep_dir, "dynamic-fire.txt")
+  if (
+    length(sev_files) == 0L || !all(fs::file_exists(c(ic_csv, ic_tif, spp_csv, spp_txt, fire_txt)))
+  ) {
+    return(NULL)
+  }
+
+  tol <- .read_fire_tolerance(spp_csv)
+  longevity <- .read_species_longevity(spp_txt)
+  damage <- .read_fire_damage_table(fire_txt)
+
+  ## Per map code, the age of the dominant cohort as a share of its species' longevity, and that
+  ## species' tolerance -- all the severity-independent part of the decision, computed once.
+  ic <- utils::read.csv(ic_csv)
+  stopifnot(all(c("MapCode", "SpeciesName", "CohortAge", "CohortBiomass") %in% names(ic)))
+  ic <- ic[ic$SpeciesName %in% names(tol) & ic$SpeciesName %in% names(longevity), , drop = FALSE]
+  if (nrow(ic) == 0L) {
+    return(NULL)
+  }
+  ic <- ic[order(ic$MapCode, -ic$CohortBiomass), , drop = FALSE]
+  dom <- ic[!duplicated(ic$MapCode), , drop = FALSE]
+  dom$age_share <- 100 * dom$CohortAge / longevity[dom$SpeciesName]
+  dom$tol <- tol[dom$SpeciesName]
+
+  ic_r <- read_landis_raster(as.character(ic_tif))
+  codes <- terra::values(ic_r, mat = FALSE)
+
+  burned_cells <- 0L
+  high_cells <- 0L
+  for (f in as.character(sev_files)) {
+    sev <- terra::values(read_landis_raster(f), mat = FALSE)
+    burned <- which(!is.na(sev) & sev >= 2)
+    if (length(burned) == 0L) {
+      next
+    }
+    burned_cells <- burned_cells + length(burned)
+    ## Severity class from the map value, and the oldest cohort that class kills on this cell.
+    class <- sev[burned] - 2L
+    idx <- match(codes[burned], dom$MapCode)
+    ok <- !is.na(idx)
+    if (!any(ok)) {
+      next
+    }
+    diff <- class[ok] - dom$tol[idx[ok]]
+    killed_to <- .damage_age_pct(damage, diff)
+    high_cells <- high_cells + sum(class[ok] >= 5 | dom$age_share[idx[ok]] <= killed_to)
+  }
+  list(
+    burned_cells = burned_cells,
+    high_cells = high_cells,
+    share = if (burned_cells > 0L) high_cells / burned_cells else NA_real_
+  )
+}
+
+## Species fire tolerances from a Dynamic Fire `Species_CSV_File` (internal).
+.read_fire_tolerance <- function(path) {
+  df <- utils::read.csv(path)
+  stopifnot(all(c("SpeciesCode", "FireTolerance") %in% names(df)))
+  stats::setNames(as.numeric(df$FireTolerance), trimws(as.character(df$SpeciesCode)))
+}
+
+## Longevity per species from a LANDIS-II core `species.txt` (internal). Data rows are the
+## non-comment lines after the LandisData header; the first two fields are the code and longevity.
+.read_species_longevity <- function(path) {
+  lines <- readLines(path, warn = FALSE)
+  lines <- trimws(lines)
+  lines <- lines[nzchar(lines) & !startsWith(lines, ">>") & !startsWith(lines, "LandisData")]
+  parts <- strsplit(lines, "[[:space:]]+")
+  keep <- vapply(
+    parts,
+    function(x) length(x) >= 2L && !is.na(suppressWarnings(as.numeric(x[2L]))),
+    logical(1)
+  )
+  parts <- parts[keep]
+  stats::setNames(
+    vapply(parts, function(x) as.numeric(x[2L]), numeric(1)),
+    vapply(parts, function(x) x[1L], character(1))
+  )
+}
+
+## The FireDamageTable of a `dynamic-fire.txt` (internal): the oldest cohort killed, as a percent
+## of longevity, for each severity-minus-tolerance difference.
+.read_fire_damage_table <- function(path) {
+  lines <- readLines(path, warn = FALSE)
+  hdr <- grep("^FireDamageTable", trimws(lines))
+  stopifnot(length(hdr) == 1L)
+  out <- list(pct = numeric(0), diff = numeric(0))
+  i <- hdr + 1L
+  while (i <= length(lines)) {
+    ln <- trimws(lines[i])
+    i <- i + 1L
+    if (startsWith(ln, ">>") || !nzchar(ln)) {
+      if (length(out$pct) > 0L && !nzchar(ln)) {
+        break
+      }
+      next
+    }
+    if (grepl("^[A-Za-z]", ln)) {
+      break
+    }
+    parts <- strsplit(ln, "[[:space:]]+")[[1]]
+    if (length(parts) < 2L) {
+      next
+    }
+    pct <- suppressWarnings(as.numeric(sub("%$", "", parts[1L])))
+    dif <- suppressWarnings(as.numeric(parts[2L]))
+    if (is.na(pct) || is.na(dif)) {
+      next
+    }
+    out$pct <- c(out$pct, pct)
+    out$diff <- c(out$diff, dif)
+  }
+  stopifnot(length(out$pct) >= 1L)
+  ord <- order(out$diff)
+  list(pct = out$pct[ord], diff = out$diff[ord])
+}
+
+## The oldest cohort killed (percent of longevity) at each severity-minus-tolerance difference
+## (internal). Below the table's smallest difference nothing is killed; at or above its largest,
+## everything is.
+.damage_age_pct <- function(damage, diff) {
+  out <- numeric(length(diff))
+  hit <- findInterval(diff, damage$diff)
+  out[hit == 0L] <- 0
+  keep <- hit > 0L
+  out[keep] <- damage$pct[hit[keep]]
+  out
 }
 
 #' Per-rep cell-based burn area by fuel code (internal)
@@ -255,11 +431,11 @@ patch_fire_config <- function(scenario_dir, par_vec) {
     all(names(par_vec) %in% calibration_par_names())
   )
   ## A SUBSET is allowed, and an absent name means "leave the template's value alone". Requiring
-  ## all nine forced every calibration to search dimensions that may be degenerate for the fire
-  ## regime at hand: with FMC capped at 120% outside the summer dip, SpFMCLo == SpFMCHi and
-  ## FallFMCLo == FallFMCHi, so SpHiProp and FallHiProp cannot change any outcome and were two
-  ## dimensions of pure noise -- visible as candidates that differed only in those values scoring
-  ## byte-identical losses.
+  ## all nine forced every calibration to search every dimension, including ones a project sets
+  ## from data instead -- a HiProp is the share of a season's fires in its high-FMC part, which the
+  ## fire record gives directly -- and ones that are degenerate for its fire regime: where a
+  ## season's FMCLo equals its FMCHi, its HiProp cannot change any outcome, and candidates
+  ## differing only in it score byte-identical losses.
   fire_txt <- fs::path(scenario_dir, "dynamic-fire.txt")
   if (!fs::file_exists(fire_txt)) {
     stop("dynamic-fire.txt not found in ", scenario_dir, call. = FALSE)
@@ -285,7 +461,7 @@ patch_fire_config <- function(scenario_dir, par_vec) {
     )
   }
 
-  ## 2. FireSizesTable HiProp columns (8 / 11 / 14)
+  ## 2. FireSizesTable HiProp columns (8 / 11 / 14) and NumFires (16)
   fs_hdr <- grep(">>\\s+Fire Sizes", lines)
   if (length(fs_hdr) != 1L) {
     stop("Could not locate FireSizesTable header in ", fire_txt, call. = FALSE)
@@ -305,6 +481,12 @@ patch_fire_config <- function(scenario_dir, par_vec) {
       }
       if ("FallHiProp" %in% names(par_vec)) {
         parts[14L] <- sprintf("%g", par_vec[["FallHiProp"]])
+      }
+      ## NumFires is the LAST column, and the ecoregion row has 16 fields once
+      ## OpenFuelIndex is counted -- patched only when the row is that long, so a table
+      ## written without it is left alone rather than gaining a stray field.
+      if ("NumFires" %in% names(par_vec) && length(parts) >= 16L) {
+        parts[16L] <- sprintf("%g", par_vec[["NumFires"]])
       }
       lines[i] <- paste(parts, collapse = "    ")
     }
@@ -596,12 +778,36 @@ loss_from_stats <- function(
     0.0
   }
 
+  ## Mortality: the share of burned area that lost its dominant cohort, against the same share
+  ## observed. Unlike `severity`, both sides measure mortality, so they are comparable in a forest
+  ## where fire kills the canopy from the ground without crowning. Relative absolute difference,
+  ## which keeps it on the same scale as `count`.
+  L_mortality <- if (is.null(primary$mortality_share) || is.na(primary$mortality_share)) {
+    0.0
+  } else {
+    sim <- vapply(
+      reps,
+      function(r) {
+        m <- r$overstory_mortality
+        if (is.null(m) || is.na(m$share)) NA_real_ else as.numeric(m$share)
+      },
+      numeric(1)
+    )
+    if (all(is.na(sim))) {
+      0.0
+    } else {
+      obs <- as.numeric(primary$mortality_share)
+      abs(mean(sim, na.rm = TRUE) - obs) / max(obs, .Machine$double.eps)
+    }
+  }
+
   components <- c(
     count = L_count,
     size = L_size,
     size_tail = L_size_tail,
     area_fuel = L_area_fuel,
-    severity = L_severity
+    severity = L_severity,
+    mortality = L_mortality
   )
   stopifnot(identical(names(components), .LOSS_COMPONENTS))
   w <- stats::setNames(rep(0, length(components)), names(components))
@@ -788,11 +994,13 @@ loss_from_stats <- function(
 #' back pinned at such a bound is **not** an estimate that wanted more room --
 #' it is saturation, meaning the objective wanted more fire than the maximum
 #' ignition probability can deliver. Widening the bound is a no-op. The
-#' remaining lever is `NumFires` in the fire-size table, which is a fixed input
-#' derived from the observed record rather than a calibrated parameter, so a
-#' pinned multiplier is a signal to check the count target and the objective --
-#' start with whether the simulated annual rate is being computed over the right
-#' number of years -- rather than to re-run with a wider box.
+#' lever to reach for instead is `NumFires`, the ignition rate itself: an
+#' ignition becomes a fire only if the initiation probability of the fuel on its
+#' cell allows it, so a rate taken from a count of observed FIRES is
+#' systematically low as a count of ignitions. Search it, applying the result
+#' with [apply_calibrated_num_fires()], and check the count target too --
+#' starting with whether the simulated annual rate is computed over the right
+#' number of years.
 #'
 #' @param fuel_type_table data.frame from [defaultFuelTypeTable()]. Must have
 #'   `Base` and `IgnProb` columns.
@@ -873,6 +1081,38 @@ apply_calibrated_hi_prop <- function(fire_size_table, calibrated_fire_params) {
 }
 
 
+#' Overwrite FireSizesTable `NumFires` with a calibrated ignition rate
+#'
+#' Replaces `NumFires` in every row of `fire_size_table` when the calibrated vector carries it,
+#' and leaves the table alone when it does not. `NumFires` is the Poisson mean number of
+#' IGNITIONS per year for the ecoregion, each of which becomes a fire only if the initiation
+#' probability of the fuel on its cell says so, so it is not the same quantity as an observed
+#' count of fires.
+#'
+#' @param fire_size_table data.frame with a `NumFires` column, as a project's
+#'   `make_fire_size_table()`-equivalent produces.
+#' @param calibrated_fire_params Named numeric vector. Used only if it holds `NumFires`.
+#'
+#' @returns A copy of `fire_size_table`, with `NumFires` replaced where calibrated.
+#'
+#' @family Dynamic Fire calibration helpers
+#' @family Dynamic Fire helpers
+#'
+#' @export
+apply_calibrated_num_fires <- function(fire_size_table, calibrated_fire_params) {
+  stopifnot(
+    is.data.frame(fire_size_table),
+    "NumFires" %in% names(fire_size_table),
+    is.numeric(calibrated_fire_params),
+    !is.null(names(calibrated_fire_params))
+  )
+  if ("NumFires" %in% names(calibrated_fire_params)) {
+    fire_size_table$NumFires <- calibrated_fire_params[["NumFires"]]
+  }
+  fire_size_table
+}
+
+
 ## Phase 8b: observed-target builder ------------------------------------------------------------
 
 #' Default fuel-code -> base-fuel-type mapping (BC FUEL_TYPE_CD factor levels)
@@ -912,6 +1152,99 @@ bc_fuel_code_to_base <- function() {
   )
 }
 
+#' Observed per-fire sizes: one per ignition point, upgraded to mapped area
+#'
+#' One size per ignition point. Each point keeps its own `SIZE_HA` unless a
+#' perimeter polygon from the SAME calendar year contains it, in which case the
+#' polygon's `SIZE_HA` replaces it. For NFDB points and NBAC perimeters, this
+#' keeps NFDB's full sample (pre-1972 fires, and small fires NBAC does not map)
+#' while taking NBAC's satellite-derived area wherever a fire was mapped.
+#'
+#' This is the fire-size rule behind [save_observed_fire_targets()]'s
+#' `fire_sizes_ha`. It is exported so that anything else derived from the same
+#' fire record -- such as a fitted fire-size distribution -- uses the same sizes
+#' as the calibration's size target, rather than a second rule that can drift
+#' from it. Binding points and polygons as separate rows instead would count
+#' every mapped fire twice.
+#'
+#' @param points SpatVector. Ignition points with `SIZE_HA` and `YEAR` columns.
+#' @param polys SpatVector or NULL. Perimeter polygons with `SIZE_HA` and `YEAR`
+#'   columns. NULL keeps every point's own size.
+#' @param min_size_ha Numeric scalar. Sizes below this, and missing sizes, are
+#'   dropped. Default `0` keeps every positive and zero size.
+#'
+#' @returns Numeric vector of sizes (ha), sorted ascending; at most one element
+#'   per point.
+#'
+#' @family Dynamic Fire calibration helpers
+#'
+#' @export
+observed_fire_sizes <- function(points, polys = NULL, min_size_ha = 0) {
+  stopifnot(
+    inherits(points, "SpatVector"),
+    is.null(polys) || inherits(polys, "SpatVector"),
+    is.numeric(min_size_ha),
+    length(min_size_ha) == 1L,
+    min_size_ha >= 0
+  )
+  pts <- as.data.frame(points)
+  plys <- if (is.null(polys)) data.frame() else as.data.frame(polys)
+  pts_year <- pts[["YEAR"]]
+
+  sizes_raw <- pts[["SIZE_HA"]]
+  if (
+    nrow(plys) > 0L &&
+      "SIZE_HA" %in% colnames(plys) &&
+      "YEAR" %in% colnames(plys) &&
+      "YEAR" %in% colnames(pts)
+  ) {
+    ## terra::extract(<polys>, <points>) returns one row per point with the
+    ## intersecting polygon's attributes; ID = point index, NA where no
+    ## polygon contains the point. When a point intersects multiple
+    ## polygons (rare), extract returns multiple rows -- we accept the
+    ## last-write-wins assignment because all matches are valid year-aligned
+    ## polygons for that point.
+    poly_attrs <- tryCatch(terra::extract(polys, points), error = function(e) NULL)
+    if (
+      !is.null(poly_attrs) &&
+        nrow(poly_attrs) > 0L &&
+        "SIZE_HA" %in% colnames(poly_attrs) &&
+        "YEAR" %in% colnames(poly_attrs) &&
+        "id.y" %in% colnames(poly_attrs)
+    ) {
+      ## terra >= 1.7-29 uses `id.y` for the point row index; older versions
+      ## used `ID`. Support both.
+      pt_idx_col <- "id.y"
+    } else if (
+      !is.null(poly_attrs) &&
+        nrow(poly_attrs) > 0L &&
+        "SIZE_HA" %in% colnames(poly_attrs) &&
+        "YEAR" %in% colnames(poly_attrs) &&
+        "ID" %in% colnames(poly_attrs)
+    ) {
+      pt_idx_col <- "ID"
+    } else {
+      pt_idx_col <- NA_character_
+    }
+    if (!is.na(pt_idx_col)) {
+      pt_idx <- as.integer(poly_attrs[[pt_idx_col]])
+      poly_yr <- poly_attrs[["YEAR"]]
+      poly_size <- poly_attrs[["SIZE_HA"]]
+      valid <- !is.na(pt_idx) &
+        pt_idx >= 1L &
+        pt_idx <= nrow(pts) &
+        !is.na(poly_yr) &
+        !is.na(poly_size) &
+        !is.na(pts_year[pt_idx]) &
+        poly_yr == pts_year[pt_idx]
+      if (any(valid)) {
+        sizes_raw[pt_idx[valid]] <- poly_size[valid]
+      }
+    }
+  }
+  sort(sizes_raw[!is.na(sizes_raw) & sizes_raw >= min_size_ha])
+}
+
 #' Save observed fire-regime targets (NFDB-derived) for calibration loss
 #'
 #' Pre-computes per-ecoregion observed summaries that downstream calibration
@@ -933,8 +1266,9 @@ bc_fuel_code_to_base <- function() {
 #' \itemize{
 #'   \item Fire counts come from NFDB IGNITION POINTS (one row = one ignition).
 #'         NFDB polygons are sparser (only mapped for larger fires).
-#'   \item Fire sizes come from NFDB points' `SIZE_HA` column (zeros dropped to
-#'         keep the lognormal-flavoured size distribution positive).
+#'   \item Fire sizes come from [observed_fire_sizes()]: one per ignition
+#'         point, its own `SIZE_HA` unless a same-year perimeter polygon
+#'         contains it, then the polygon's `SIZE_HA`.
 #'   \item `area_by_fuel_ha` is computed for the PRIMARY ecoregion only via
 #'         polygon overlay on `fuel_types_rast`. `fuel_types_rast` covers the
 #'         LANDIS simulation domain; secondary-ecoregion polygons typically
@@ -945,11 +1279,12 @@ bc_fuel_code_to_base <- function() {
 #' @param primary_points SpatVector. NFDB ignition points for the primary
 #'   ecoregion (the LANDIS simulation extent). Required.
 #' @param primary_polys SpatVector or NULL. Fire perimeter polygons for the
-#'   primary ecoregion. When supplied, `fire_sizes_ha` is drawn from the
-#'   polys' `SIZE_HA` (e.g. NBAC's `ADJ_HA`) and `area_by_fuel_ha` is computed
-#'   by rasterising the polys against `fuel_types_rast`. When NULL,
-#'   `fire_sizes_ha` falls back to the points' `SIZE_HA` (NFDB agency-reported
-#'   sizes) and `area_by_fuel_ha` is NULL on the primary summary.
+#'   primary ecoregion. When supplied, a point's size is replaced by the
+#'   `SIZE_HA` (e.g. NBAC's `ADJ_HA`) of a same-year polygon containing it (see
+#'   [observed_fire_sizes()]), and `area_by_fuel_ha` is computed by rasterising
+#'   the polys against `fuel_types_rast`. When NULL, `fire_sizes_ha` is the
+#'   points' own `SIZE_HA` (NFDB agency-reported sizes) and `area_by_fuel_ha` is
+#'   NULL on the primary summary.
 #' @param secondary_points,secondary_polys SpatVector or NULL. Same, for an
 #'   optional regional-context ecoregion. `area_by_fuel_ha` is NOT computed
 #'   for the secondary (see Details).
@@ -969,6 +1304,11 @@ bc_fuel_code_to_base <- function() {
 #'   `L_severity` component. NULL = skip severity calibration (the loss
 #'   contributes 0). For a literature-prior default, see
 #'   [default_severity_prior_sturtevant2009()].
+#' @param mortality_share Numeric scalar or NULL. Observed share of burned area that lost its
+#'   dominant cohorts -- a high-mortality burn-severity class expressed as a proportion of assessed
+#'   burned area. Stored on the primary summary and consumed by `loss_from_stats()`'s `mortality`
+#'   component, which compares it with [landis_overstory_mortality_share()] per replicate. NULL
+#'   leaves that component at 0.
 #' @param min_size_ha Numeric scalar. Minimum fire size (ha) retained in
 #'   `fire_sizes_ha`. Defaults to `1.0`: NFDB systematically under-reports
 #'   sub-1-ha fires (agencies don't document every spot fire) and NBAC's
@@ -996,6 +1336,7 @@ save_observed_fire_targets <- function(
   secondary_label = "secondary",
   fuel_code_to_base = bc_fuel_code_to_base(),
   severity_dist = NULL,
+  mortality_share = NULL,
   min_size_ha = 1.0
 ) {
   stopifnot(
@@ -1017,7 +1358,12 @@ save_observed_fire_targets <- function(
     length(path) == 1L,
     is.character(fuel_code_to_base),
     !is.null(names(fuel_code_to_base)),
-    is.null(severity_dist) || (is.numeric(severity_dist) && !is.null(names(severity_dist)))
+    is.null(severity_dist) || (is.numeric(severity_dist) && !is.null(names(severity_dist))),
+    is.null(mortality_share) ||
+      (is.numeric(mortality_share) &&
+        length(mortality_share) == 1L &&
+        mortality_share >= 0 &&
+        mortality_share <= 1)
   )
 
   fs::dir_create(dirname(path))
@@ -1047,65 +1393,12 @@ save_observed_fire_targets <- function(
     ##     (NBAC's MAFM pipeline has a threshold around its
     ##     30-m Landsat detection floor);
     ## both of which biased the obs size distribution toward larger fires.
-    sizes_raw <- pts[["SIZE_HA"]]
-    if (
-      nrow(plys) > 0L &&
-        "SIZE_HA" %in% colnames(plys) &&
-        "YEAR" %in% colnames(plys) &&
-        "YEAR" %in% colnames(pts) &&
-        !is.null(points_sv) &&
-        !is.null(polys_sv)
-    ) {
-      ## terra::extract(<polys>, <points>) returns one row per point with the
-      ## intersecting polygon's attributes; ID = point index, NA where no
-      ## polygon contains the point. When a point intersects multiple
-      ## polygons (rare), extract returns multiple rows -- we accept the
-      ## last-write-wins assignment because all matches are valid year-aligned
-      ## NBAC polygons for that point.
-      poly_attrs <- tryCatch(terra::extract(polys_sv, points_sv), error = function(e) NULL)
-      if (
-        !is.null(poly_attrs) &&
-          nrow(poly_attrs) > 0L &&
-          "SIZE_HA" %in% colnames(poly_attrs) &&
-          "YEAR" %in% colnames(poly_attrs) &&
-          "id.y" %in% colnames(poly_attrs)
-      ) {
-        ## terra >= 1.7-29 uses `id.y` for the point row index; older versions
-        ## used `ID`. Support both.
-        pt_idx_col <- "id.y"
-      } else if (
-        !is.null(poly_attrs) &&
-          nrow(poly_attrs) > 0L &&
-          "SIZE_HA" %in% colnames(poly_attrs) &&
-          "YEAR" %in% colnames(poly_attrs) &&
-          "ID" %in% colnames(poly_attrs)
-      ) {
-        pt_idx_col <- "ID"
-      } else {
-        pt_idx_col <- NA_character_
-      }
-      if (!is.na(pt_idx_col)) {
-        pt_idx <- as.integer(poly_attrs[[pt_idx_col]])
-        poly_yr <- poly_attrs[["YEAR"]]
-        poly_size <- poly_attrs[["SIZE_HA"]]
-        valid <- !is.na(pt_idx) &
-          pt_idx >= 1L &
-          pt_idx <= nrow(pts) &
-          !is.na(poly_yr) &
-          !is.na(poly_size) &
-          !is.na(pts_year[pt_idx]) &
-          poly_yr == pts_year[pt_idx]
-        if (any(valid)) {
-          sizes_raw[pt_idx[valid]] <- poly_size[valid]
-        }
-      }
-    }
     ## Drop sub-`min_size_ha` fires: NFDB/NBAC are effectively left-censored
     ## at ~1 ha (small fires systematically under-reported); without this
     ## floor the KS comparison compares the sim's full distribution against
     ## a truncated observed distribution. `loss_from_stats()` applies the
     ## same truncation to `sim_sizes` symmetrically via `observed$min_size_ha`.
-    fire_sizes_ha <- sort(sizes_raw[!is.na(sizes_raw) & sizes_raw >= min_size_ha])
+    fire_sizes_ha <- observed_fire_sizes(points_sv, polys_sv, min_size_ha = min_size_ha)
 
     if (isTRUE(compute_area_by_fuel) && !is.null(polys_sv) && nrow(plys) > 0L) {
       poly_mask <- terra::rasterize(polys_sv, fuel_types_rast, background = NA, field = 1)
@@ -1139,12 +1432,14 @@ save_observed_fire_targets <- function(
       n_fires_by_year = n_fires_by_year,
       fire_sizes_ha = fire_sizes_ha,
       area_by_fuel_ha = area_by_fuel_ha,
-      severity_dist = NULL ## set on the primary summary below if a prior was passed
+      severity_dist = NULL, ## set on the primary summary below if a prior was passed
+      mortality_share = NULL ## likewise
     )
   }
 
   primary <- .summarise(primary_points, primary_polys, primary_label, compute_area_by_fuel = TRUE)
   primary$severity_dist <- severity_dist
+  primary$mortality_share <- mortality_share
   secondary <- if (!is.null(secondary_points)) {
     .summarise(secondary_points, secondary_polys, secondary_label, compute_area_by_fuel = FALSE)
   } else {
@@ -1170,7 +1465,7 @@ save_observed_fire_targets <- function(
     computed_at = Sys.time(),
     notes = c(
       "Fire counts come from NFDB ignition points (one row = one ignition).",
-      "Fire sizes are NFDB point SIZE_HA values (zeros dropped).",
+      "Fire sizes: one per ignition point, upgraded to a same-year containing polygon's SIZE_HA.",
       "area_by_fuel_ha is computed for the primary ecoregion only (LANDIS sim extent).",
       paste(
         "severity_dist on primary is",
@@ -2521,10 +2816,10 @@ calibrate_dynamic_fire <- function(observed_targets_path, scenario_template, cfg
   observed <- readRDS(observed_targets_path)
   ## The SEARCHED parameters are whichever `cfg$lower` / `cfg$upper` name, in a stable order -- not
   ## necessarily all of `calibration_par_names()`. Requiring the full set (the former
-  ## `setequal(...)`) forced every calibration to search dimensions that can be degenerate for the
-  ## fire regime at hand: with FMC capped at 120% outside the summer dip, SpFMCLo == SpFMCHi and
-  ## FallFMCLo == FallFMCHi, so SpHiProp and FallHiProp cannot move any outcome. `patch_fire_config()`
-  ## leaves an unnamed field at its template value, so a subset is well defined end to end.
+  ## `setequal(...)`) forced every calibration to search dimensions that a project sets from data,
+  ## or that are degenerate for its fire regime (a season whose FMCLo equals its FMCHi leaves its
+  ## HiProp unable to move any outcome). `patch_fire_config()` leaves an unnamed field at its
+  ## template value, so a subset is well defined end to end.
   stopifnot(
     !is.null(names(cfg$lower)),
     !is.null(names(cfg$upper)),
