@@ -255,11 +255,11 @@ patch_fire_config <- function(scenario_dir, par_vec) {
     all(names(par_vec) %in% calibration_par_names())
   )
   ## A SUBSET is allowed, and an absent name means "leave the template's value alone". Requiring
-  ## all nine forced every calibration to search dimensions that may be degenerate for the fire
-  ## regime at hand: with FMC capped at 120% outside the summer dip, SpFMCLo == SpFMCHi and
-  ## FallFMCLo == FallFMCHi, so SpHiProp and FallHiProp cannot change any outcome and were two
-  ## dimensions of pure noise -- visible as candidates that differed only in those values scoring
-  ## byte-identical losses.
+  ## all nine forced every calibration to search every dimension, including ones a project sets
+  ## from data instead -- a HiProp is the share of a season's fires in its high-FMC part, which the
+  ## fire record gives directly -- and ones that are degenerate for its fire regime: where a
+  ## season's FMCLo equals its FMCHi, its HiProp cannot change any outcome, and candidates
+  ## differing only in it score byte-identical losses.
   fire_txt <- fs::path(scenario_dir, "dynamic-fire.txt")
   if (!fs::file_exists(fire_txt)) {
     stop("dynamic-fire.txt not found in ", scenario_dir, call. = FALSE)
@@ -912,6 +912,99 @@ bc_fuel_code_to_base <- function() {
   )
 }
 
+#' Observed per-fire sizes: one per ignition point, upgraded to mapped area
+#'
+#' One size per ignition point. Each point keeps its own `SIZE_HA` unless a
+#' perimeter polygon from the SAME calendar year contains it, in which case the
+#' polygon's `SIZE_HA` replaces it. For NFDB points and NBAC perimeters, this
+#' keeps NFDB's full sample (pre-1972 fires, and small fires NBAC does not map)
+#' while taking NBAC's satellite-derived area wherever a fire was mapped.
+#'
+#' This is the fire-size rule behind [save_observed_fire_targets()]'s
+#' `fire_sizes_ha`. It is exported so that anything else derived from the same
+#' fire record -- such as a fitted fire-size distribution -- uses the same sizes
+#' as the calibration's size target, rather than a second rule that can drift
+#' from it. Binding points and polygons as separate rows instead would count
+#' every mapped fire twice.
+#'
+#' @param points SpatVector. Ignition points with `SIZE_HA` and `YEAR` columns.
+#' @param polys SpatVector or NULL. Perimeter polygons with `SIZE_HA` and `YEAR`
+#'   columns. NULL keeps every point's own size.
+#' @param min_size_ha Numeric scalar. Sizes below this, and missing sizes, are
+#'   dropped. Default `0` keeps every positive and zero size.
+#'
+#' @returns Numeric vector of sizes (ha), sorted ascending; at most one element
+#'   per point.
+#'
+#' @family Dynamic Fire calibration helpers
+#'
+#' @export
+observed_fire_sizes <- function(points, polys = NULL, min_size_ha = 0) {
+  stopifnot(
+    inherits(points, "SpatVector"),
+    is.null(polys) || inherits(polys, "SpatVector"),
+    is.numeric(min_size_ha),
+    length(min_size_ha) == 1L,
+    min_size_ha >= 0
+  )
+  pts <- as.data.frame(points)
+  plys <- if (is.null(polys)) data.frame() else as.data.frame(polys)
+  pts_year <- pts[["YEAR"]]
+
+  sizes_raw <- pts[["SIZE_HA"]]
+  if (
+    nrow(plys) > 0L &&
+      "SIZE_HA" %in% colnames(plys) &&
+      "YEAR" %in% colnames(plys) &&
+      "YEAR" %in% colnames(pts)
+  ) {
+    ## terra::extract(<polys>, <points>) returns one row per point with the
+    ## intersecting polygon's attributes; ID = point index, NA where no
+    ## polygon contains the point. When a point intersects multiple
+    ## polygons (rare), extract returns multiple rows -- we accept the
+    ## last-write-wins assignment because all matches are valid year-aligned
+    ## polygons for that point.
+    poly_attrs <- tryCatch(terra::extract(polys, points), error = function(e) NULL)
+    if (
+      !is.null(poly_attrs) &&
+        nrow(poly_attrs) > 0L &&
+        "SIZE_HA" %in% colnames(poly_attrs) &&
+        "YEAR" %in% colnames(poly_attrs) &&
+        "id.y" %in% colnames(poly_attrs)
+    ) {
+      ## terra >= 1.7-29 uses `id.y` for the point row index; older versions
+      ## used `ID`. Support both.
+      pt_idx_col <- "id.y"
+    } else if (
+      !is.null(poly_attrs) &&
+        nrow(poly_attrs) > 0L &&
+        "SIZE_HA" %in% colnames(poly_attrs) &&
+        "YEAR" %in% colnames(poly_attrs) &&
+        "ID" %in% colnames(poly_attrs)
+    ) {
+      pt_idx_col <- "ID"
+    } else {
+      pt_idx_col <- NA_character_
+    }
+    if (!is.na(pt_idx_col)) {
+      pt_idx <- as.integer(poly_attrs[[pt_idx_col]])
+      poly_yr <- poly_attrs[["YEAR"]]
+      poly_size <- poly_attrs[["SIZE_HA"]]
+      valid <- !is.na(pt_idx) &
+        pt_idx >= 1L &
+        pt_idx <= nrow(pts) &
+        !is.na(poly_yr) &
+        !is.na(poly_size) &
+        !is.na(pts_year[pt_idx]) &
+        poly_yr == pts_year[pt_idx]
+      if (any(valid)) {
+        sizes_raw[pt_idx[valid]] <- poly_size[valid]
+      }
+    }
+  }
+  sort(sizes_raw[!is.na(sizes_raw) & sizes_raw >= min_size_ha])
+}
+
 #' Save observed fire-regime targets (NFDB-derived) for calibration loss
 #'
 #' Pre-computes per-ecoregion observed summaries that downstream calibration
@@ -933,8 +1026,9 @@ bc_fuel_code_to_base <- function() {
 #' \itemize{
 #'   \item Fire counts come from NFDB IGNITION POINTS (one row = one ignition).
 #'         NFDB polygons are sparser (only mapped for larger fires).
-#'   \item Fire sizes come from NFDB points' `SIZE_HA` column (zeros dropped to
-#'         keep the lognormal-flavoured size distribution positive).
+#'   \item Fire sizes come from [observed_fire_sizes()]: one per ignition
+#'         point, its own `SIZE_HA` unless a same-year perimeter polygon
+#'         contains it, then the polygon's `SIZE_HA`.
 #'   \item `area_by_fuel_ha` is computed for the PRIMARY ecoregion only via
 #'         polygon overlay on `fuel_types_rast`. `fuel_types_rast` covers the
 #'         LANDIS simulation domain; secondary-ecoregion polygons typically
@@ -945,11 +1039,12 @@ bc_fuel_code_to_base <- function() {
 #' @param primary_points SpatVector. NFDB ignition points for the primary
 #'   ecoregion (the LANDIS simulation extent). Required.
 #' @param primary_polys SpatVector or NULL. Fire perimeter polygons for the
-#'   primary ecoregion. When supplied, `fire_sizes_ha` is drawn from the
-#'   polys' `SIZE_HA` (e.g. NBAC's `ADJ_HA`) and `area_by_fuel_ha` is computed
-#'   by rasterising the polys against `fuel_types_rast`. When NULL,
-#'   `fire_sizes_ha` falls back to the points' `SIZE_HA` (NFDB agency-reported
-#'   sizes) and `area_by_fuel_ha` is NULL on the primary summary.
+#'   primary ecoregion. When supplied, a point's size is replaced by the
+#'   `SIZE_HA` (e.g. NBAC's `ADJ_HA`) of a same-year polygon containing it (see
+#'   [observed_fire_sizes()]), and `area_by_fuel_ha` is computed by rasterising
+#'   the polys against `fuel_types_rast`. When NULL, `fire_sizes_ha` is the
+#'   points' own `SIZE_HA` (NFDB agency-reported sizes) and `area_by_fuel_ha` is
+#'   NULL on the primary summary.
 #' @param secondary_points,secondary_polys SpatVector or NULL. Same, for an
 #'   optional regional-context ecoregion. `area_by_fuel_ha` is NOT computed
 #'   for the secondary (see Details).
@@ -1047,65 +1142,12 @@ save_observed_fire_targets <- function(
     ##     (NBAC's MAFM pipeline has a threshold around its
     ##     30-m Landsat detection floor);
     ## both of which biased the obs size distribution toward larger fires.
-    sizes_raw <- pts[["SIZE_HA"]]
-    if (
-      nrow(plys) > 0L &&
-        "SIZE_HA" %in% colnames(plys) &&
-        "YEAR" %in% colnames(plys) &&
-        "YEAR" %in% colnames(pts) &&
-        !is.null(points_sv) &&
-        !is.null(polys_sv)
-    ) {
-      ## terra::extract(<polys>, <points>) returns one row per point with the
-      ## intersecting polygon's attributes; ID = point index, NA where no
-      ## polygon contains the point. When a point intersects multiple
-      ## polygons (rare), extract returns multiple rows -- we accept the
-      ## last-write-wins assignment because all matches are valid year-aligned
-      ## NBAC polygons for that point.
-      poly_attrs <- tryCatch(terra::extract(polys_sv, points_sv), error = function(e) NULL)
-      if (
-        !is.null(poly_attrs) &&
-          nrow(poly_attrs) > 0L &&
-          "SIZE_HA" %in% colnames(poly_attrs) &&
-          "YEAR" %in% colnames(poly_attrs) &&
-          "id.y" %in% colnames(poly_attrs)
-      ) {
-        ## terra >= 1.7-29 uses `id.y` for the point row index; older versions
-        ## used `ID`. Support both.
-        pt_idx_col <- "id.y"
-      } else if (
-        !is.null(poly_attrs) &&
-          nrow(poly_attrs) > 0L &&
-          "SIZE_HA" %in% colnames(poly_attrs) &&
-          "YEAR" %in% colnames(poly_attrs) &&
-          "ID" %in% colnames(poly_attrs)
-      ) {
-        pt_idx_col <- "ID"
-      } else {
-        pt_idx_col <- NA_character_
-      }
-      if (!is.na(pt_idx_col)) {
-        pt_idx <- as.integer(poly_attrs[[pt_idx_col]])
-        poly_yr <- poly_attrs[["YEAR"]]
-        poly_size <- poly_attrs[["SIZE_HA"]]
-        valid <- !is.na(pt_idx) &
-          pt_idx >= 1L &
-          pt_idx <= nrow(pts) &
-          !is.na(poly_yr) &
-          !is.na(poly_size) &
-          !is.na(pts_year[pt_idx]) &
-          poly_yr == pts_year[pt_idx]
-        if (any(valid)) {
-          sizes_raw[pt_idx[valid]] <- poly_size[valid]
-        }
-      }
-    }
     ## Drop sub-`min_size_ha` fires: NFDB/NBAC are effectively left-censored
     ## at ~1 ha (small fires systematically under-reported); without this
     ## floor the KS comparison compares the sim's full distribution against
     ## a truncated observed distribution. `loss_from_stats()` applies the
     ## same truncation to `sim_sizes` symmetrically via `observed$min_size_ha`.
-    fire_sizes_ha <- sort(sizes_raw[!is.na(sizes_raw) & sizes_raw >= min_size_ha])
+    fire_sizes_ha <- observed_fire_sizes(points_sv, polys_sv, min_size_ha = min_size_ha)
 
     if (isTRUE(compute_area_by_fuel) && !is.null(polys_sv) && nrow(plys) > 0L) {
       poly_mask <- terra::rasterize(polys_sv, fuel_types_rast, background = NA, field = 1)
@@ -1170,7 +1212,7 @@ save_observed_fire_targets <- function(
     computed_at = Sys.time(),
     notes = c(
       "Fire counts come from NFDB ignition points (one row = one ignition).",
-      "Fire sizes are NFDB point SIZE_HA values (zeros dropped).",
+      "Fire sizes: one per ignition point, upgraded to a same-year containing polygon's SIZE_HA.",
       "area_by_fuel_ha is computed for the primary ecoregion only (LANDIS sim extent).",
       paste(
         "severity_dist on primary is",
@@ -2521,10 +2563,10 @@ calibrate_dynamic_fire <- function(observed_targets_path, scenario_template, cfg
   observed <- readRDS(observed_targets_path)
   ## The SEARCHED parameters are whichever `cfg$lower` / `cfg$upper` name, in a stable order -- not
   ## necessarily all of `calibration_par_names()`. Requiring the full set (the former
-  ## `setequal(...)`) forced every calibration to search dimensions that can be degenerate for the
-  ## fire regime at hand: with FMC capped at 120% outside the summer dip, SpFMCLo == SpFMCHi and
-  ## FallFMCLo == FallFMCHi, so SpHiProp and FallHiProp cannot move any outcome. `patch_fire_config()`
-  ## leaves an unnamed field at its template value, so a subset is well defined end to end.
+  ## `setequal(...)`) forced every calibration to search dimensions that a project sets from data,
+  ## or that are degenerate for its fire regime (a season whose FMCLo equals its FMCHi leaves its
+  ## HiProp unable to move any outcome). `patch_fire_config()` leaves an unnamed field at its
+  ## template value, so a subset is well defined end to end.
   stopifnot(
     !is.null(names(cfg$lower)),
     !is.null(names(cfg$upper)),

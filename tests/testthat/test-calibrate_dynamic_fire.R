@@ -669,6 +669,28 @@ test_that("save_observed_fire_targets() backfills NBAC with NFDB (year-aligned p
   expect_equal(p$fire_sizes_ha, sort(c(25.0, 50.0, 7.0, 12.0)))
 })
 
+test_that("observed_fire_sizes() gives one size per point, upgraded by same-year polygons", {
+  crs <- "EPSG:3005"
+  pts <- terra::vect(
+    data.frame(
+      lon = c(250, 750, 750),
+      lat = c(250, 750, 250),
+      YEAR = c(2010L, 2015L, 2010L),
+      SIZE_HA = c(5.0, 50.0, 0.5)
+    ),
+    geom = c("lon", "lat"),
+    crs = crs
+  )
+  poly <- terra::vect("POLYGON ((200 200, 400 200, 400 400, 200 400, 200 200))", crs = crs)
+  poly$YEAR <- 2010L
+  poly$SIZE_HA <- 25.0
+
+  ## The mapped fire takes the polygon's size and is counted once, not twice.
+  expect_equal(observed_fire_sizes(pts, poly), c(0.5, 25.0, 50.0))
+  expect_equal(observed_fire_sizes(pts), c(0.5, 5.0, 50.0))
+  expect_equal(observed_fire_sizes(pts, poly, min_size_ha = 1), c(25.0, 50.0))
+})
+
 test_that("save_observed_fire_targets() falls back to points' SIZE_HA when polys are not supplied", {
   ## Same synthetic landscape as the main payload-shape test, but with NO
   ## polygon input -- exercises the fallback branch in `.summarise()`.

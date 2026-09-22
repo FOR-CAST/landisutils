@@ -1,3 +1,7 @@
+# landisutils 0.0.154
+
+* New `observed_fire_sizes()` returns one size per ignition point: the point's own `SIZE_HA`, or the `SIZE_HA` of a same-year perimeter polygon that contains it. This is the rule `save_observed_fire_targets()` already used for the calibration's size target, now exported so that a fire-size distribution fitted from the same record uses the same sizes. Fitting to points and polygons bound as separate rows counts every mapped fire twice.
+
 # landisutils 0.0.153
 
 * `run_calibration_validation()` now fails with a message that names the failed replicates when a validation replicate's process dies. `parallel::mclapply()` reports a replicate that raised an R error as a `try-error`, but one whose child process was killed comes back as `NULL` with only a warning; the guard tested for the first and not the second, so a dead replicate reached `loss_from_stats()` and surfaced there as "missing value where TRUE/FALSE needed", naming neither the replicate nor the cause. The error now distinguishes the two modes and points at an OOM kill, a segfault or a container fault rather than at an R error. `loss_from_stats()` also rejects a `reps` list holding a non-list element, so any caller that maps replicates in parallel gets the same clear failure.
