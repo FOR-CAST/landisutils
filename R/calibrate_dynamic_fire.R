@@ -142,8 +142,183 @@ parse_dynamic_fire_logs <- function(rep_dir, pixel_area_ha = 1.0) {
     events = events_tbl,
     total_sites_burned = sum(events_tbl$sites),
     n_events = nrow(events_tbl),
-    area_by_fuel_ha = .read_burned_area_by_fuel(rep_dir, pixel_area_ha)
+    area_by_fuel_ha = .read_burned_area_by_fuel(rep_dir, pixel_area_ha),
+    ## NULL from a mock simulator, or from a rep that kept no severity maps.
+    overstory_mortality = landis_overstory_mortality_share(rep_dir)
   )
+}
+
+#' Share of burned area that lost its dominant cohort
+#'
+#' The proportion of a replicate's burned cells in which the cohort holding the most biomass was
+#' killed. This is the model-side counterpart of a field burn-severity class defined by mortality
+#' of the structurally dominant vegetation, and unlike the extension's own severity classes -- which
+#' are crown fraction burned -- it is comparable with an observed mortality measure. In a forest
+#' that burns hot at ground level without crowning, the two disagree by construction.
+#'
+#' Everything needed is in the replicate directory, because a run is a copy of its scenario:
+#' \itemize{
+#'   \item `fire/severity-{t}.tif` -- the severity map per timestep. The Dynamic Fire encoding is
+#'         0 inactive, 1 active and unburned, 2 burned with no cohort damaged, and severity + 2 for
+#'         a damaged cell, so a cell's severity class is its map value MINUS TWO.
+#'   \item `initial-communities.csv` / `.tif` -- the cohorts on each cell.
+#'   \item `species.txt` -- longevity, which the damage table's age thresholds are shares of.
+#'   \item `DynamicFire_Spp_Table.csv` -- each species' fire tolerance.
+#'   \item `dynamic-fire.txt` -- the `FireDamageTable`, mapping severity minus tolerance to the
+#'         oldest cohort killed, as a percentage of longevity.
+#' }
+#'
+#' A cohort dies when severity is 5 (the extension kills everything at that severity, whatever the
+#' tolerance) or when its age is at or below that percentage of its species' longevity. Composition
+#' is read at time zero, so a cell that burns twice in one replicate is scored on its original
+#' cohorts; in a calibration run, where succession is frozen, only reburns are affected.
+#'
+#' @param rep_dir Character. Path to the replicate directory.
+#'
+#' @returns A list with `burned_cells`, `high_cells` and `share` (NA when nothing burned), or NULL
+#'   when the replicate holds no severity maps or is missing one of the files above.
+#'
+#' @family Dynamic Fire calibration helpers
+#'
+#' @export
+landis_overstory_mortality_share <- function(rep_dir) {
+  stopifnot(fs::dir_exists(rep_dir))
+  fire_dir <- fs::path(rep_dir, "fire")
+  if (!fs::dir_exists(fire_dir)) {
+    return(NULL)
+  }
+  sev_files <- fs::dir_ls(fire_dir, regexp = "severity-\\d+\\.tif$", type = "file")
+  ic_csv <- fs::path(rep_dir, "initial-communities.csv")
+  ic_tif <- fs::path(rep_dir, "initial-communities.tif")
+  spp_csv <- fs::path(rep_dir, "DynamicFire_Spp_Table.csv")
+  spp_txt <- fs::path(rep_dir, "species.txt")
+  fire_txt <- fs::path(rep_dir, "dynamic-fire.txt")
+  if (
+    length(sev_files) == 0L || !all(fs::file_exists(c(ic_csv, ic_tif, spp_csv, spp_txt, fire_txt)))
+  ) {
+    return(NULL)
+  }
+
+  tol <- .read_fire_tolerance(spp_csv)
+  longevity <- .read_species_longevity(spp_txt)
+  damage <- .read_fire_damage_table(fire_txt)
+
+  ## Per map code, the age of the dominant cohort as a share of its species' longevity, and that
+  ## species' tolerance -- all the severity-independent part of the decision, computed once.
+  ic <- utils::read.csv(ic_csv)
+  stopifnot(all(c("MapCode", "SpeciesName", "CohortAge", "CohortBiomass") %in% names(ic)))
+  ic <- ic[ic$SpeciesName %in% names(tol) & ic$SpeciesName %in% names(longevity), , drop = FALSE]
+  if (nrow(ic) == 0L) {
+    return(NULL)
+  }
+  ic <- ic[order(ic$MapCode, -ic$CohortBiomass), , drop = FALSE]
+  dom <- ic[!duplicated(ic$MapCode), , drop = FALSE]
+  dom$age_share <- 100 * dom$CohortAge / longevity[dom$SpeciesName]
+  dom$tol <- tol[dom$SpeciesName]
+
+  ic_r <- read_landis_raster(as.character(ic_tif))
+  codes <- terra::values(ic_r, mat = FALSE)
+
+  burned_cells <- 0L
+  high_cells <- 0L
+  for (f in as.character(sev_files)) {
+    sev <- terra::values(read_landis_raster(f), mat = FALSE)
+    burned <- which(!is.na(sev) & sev >= 2)
+    if (length(burned) == 0L) {
+      next
+    }
+    burned_cells <- burned_cells + length(burned)
+    ## Severity class from the map value, and the oldest cohort that class kills on this cell.
+    class <- sev[burned] - 2L
+    idx <- match(codes[burned], dom$MapCode)
+    ok <- !is.na(idx)
+    if (!any(ok)) {
+      next
+    }
+    diff <- class[ok] - dom$tol[idx[ok]]
+    killed_to <- .damage_age_pct(damage, diff)
+    high_cells <- high_cells + sum(class[ok] >= 5 | dom$age_share[idx[ok]] <= killed_to)
+  }
+  list(
+    burned_cells = burned_cells,
+    high_cells = high_cells,
+    share = if (burned_cells > 0L) high_cells / burned_cells else NA_real_
+  )
+}
+
+## Species fire tolerances from a Dynamic Fire `Species_CSV_File` (internal).
+.read_fire_tolerance <- function(path) {
+  df <- utils::read.csv(path)
+  stopifnot(all(c("SpeciesCode", "FireTolerance") %in% names(df)))
+  stats::setNames(as.numeric(df$FireTolerance), trimws(as.character(df$SpeciesCode)))
+}
+
+## Longevity per species from a LANDIS-II core `species.txt` (internal). Data rows are the
+## non-comment lines after the LandisData header; the first two fields are the code and longevity.
+.read_species_longevity <- function(path) {
+  lines <- readLines(path, warn = FALSE)
+  lines <- trimws(lines)
+  lines <- lines[nzchar(lines) & !startsWith(lines, ">>") & !startsWith(lines, "LandisData")]
+  parts <- strsplit(lines, "[[:space:]]+")
+  keep <- vapply(
+    parts,
+    function(x) length(x) >= 2L && !is.na(suppressWarnings(as.numeric(x[2L]))),
+    logical(1)
+  )
+  parts <- parts[keep]
+  stats::setNames(
+    vapply(parts, function(x) as.numeric(x[2L]), numeric(1)),
+    vapply(parts, function(x) x[1L], character(1))
+  )
+}
+
+## The FireDamageTable of a `dynamic-fire.txt` (internal): the oldest cohort killed, as a percent
+## of longevity, for each severity-minus-tolerance difference.
+.read_fire_damage_table <- function(path) {
+  lines <- readLines(path, warn = FALSE)
+  hdr <- grep("^FireDamageTable", trimws(lines))
+  stopifnot(length(hdr) == 1L)
+  out <- list(pct = numeric(0), diff = numeric(0))
+  i <- hdr + 1L
+  while (i <= length(lines)) {
+    ln <- trimws(lines[i])
+    i <- i + 1L
+    if (startsWith(ln, ">>") || !nzchar(ln)) {
+      if (length(out$pct) > 0L && !nzchar(ln)) {
+        break
+      }
+      next
+    }
+    if (grepl("^[A-Za-z]", ln)) {
+      break
+    }
+    parts <- strsplit(ln, "[[:space:]]+")[[1]]
+    if (length(parts) < 2L) {
+      next
+    }
+    pct <- suppressWarnings(as.numeric(sub("%$", "", parts[1L])))
+    dif <- suppressWarnings(as.numeric(parts[2L]))
+    if (is.na(pct) || is.na(dif)) {
+      next
+    }
+    out$pct <- c(out$pct, pct)
+    out$diff <- c(out$diff, dif)
+  }
+  stopifnot(length(out$pct) >= 1L)
+  ord <- order(out$diff)
+  list(pct = out$pct[ord], diff = out$diff[ord])
+}
+
+## The oldest cohort killed (percent of longevity) at each severity-minus-tolerance difference
+## (internal). Below the table's smallest difference nothing is killed; at or above its largest,
+## everything is.
+.damage_age_pct <- function(damage, diff) {
+  out <- numeric(length(diff))
+  hit <- findInterval(diff, damage$diff)
+  out[hit == 0L] <- 0
+  keep <- hit > 0L
+  out[keep] <- damage$pct[hit[keep]]
+  out
 }
 
 #' Per-rep cell-based burn area by fuel code (internal)
@@ -603,12 +778,36 @@ loss_from_stats <- function(
     0.0
   }
 
+  ## Mortality: the share of burned area that lost its dominant cohort, against the same share
+  ## observed. Unlike `severity`, both sides measure mortality, so they are comparable in a forest
+  ## where fire kills the canopy from the ground without crowning. Relative absolute difference,
+  ## which keeps it on the same scale as `count`.
+  L_mortality <- if (is.null(primary$mortality_share) || is.na(primary$mortality_share)) {
+    0.0
+  } else {
+    sim <- vapply(
+      reps,
+      function(r) {
+        m <- r$overstory_mortality
+        if (is.null(m) || is.na(m$share)) NA_real_ else as.numeric(m$share)
+      },
+      numeric(1)
+    )
+    if (all(is.na(sim))) {
+      0.0
+    } else {
+      obs <- as.numeric(primary$mortality_share)
+      abs(mean(sim, na.rm = TRUE) - obs) / max(obs, .Machine$double.eps)
+    }
+  }
+
   components <- c(
     count = L_count,
     size = L_size,
     size_tail = L_size_tail,
     area_fuel = L_area_fuel,
-    severity = L_severity
+    severity = L_severity,
+    mortality = L_mortality
   )
   stopifnot(identical(names(components), .LOSS_COMPONENTS))
   w <- stats::setNames(rep(0, length(components)), names(components))
@@ -1105,6 +1304,11 @@ observed_fire_sizes <- function(points, polys = NULL, min_size_ha = 0) {
 #'   `L_severity` component. NULL = skip severity calibration (the loss
 #'   contributes 0). For a literature-prior default, see
 #'   [default_severity_prior_sturtevant2009()].
+#' @param mortality_share Numeric scalar or NULL. Observed share of burned area that lost its
+#'   dominant cohorts -- a high-mortality burn-severity class expressed as a proportion of assessed
+#'   burned area. Stored on the primary summary and consumed by `loss_from_stats()`'s `mortality`
+#'   component, which compares it with [landis_overstory_mortality_share()] per replicate. NULL
+#'   leaves that component at 0.
 #' @param min_size_ha Numeric scalar. Minimum fire size (ha) retained in
 #'   `fire_sizes_ha`. Defaults to `1.0`: NFDB systematically under-reports
 #'   sub-1-ha fires (agencies don't document every spot fire) and NBAC's
@@ -1132,6 +1336,7 @@ save_observed_fire_targets <- function(
   secondary_label = "secondary",
   fuel_code_to_base = bc_fuel_code_to_base(),
   severity_dist = NULL,
+  mortality_share = NULL,
   min_size_ha = 1.0
 ) {
   stopifnot(
@@ -1153,7 +1358,12 @@ save_observed_fire_targets <- function(
     length(path) == 1L,
     is.character(fuel_code_to_base),
     !is.null(names(fuel_code_to_base)),
-    is.null(severity_dist) || (is.numeric(severity_dist) && !is.null(names(severity_dist)))
+    is.null(severity_dist) || (is.numeric(severity_dist) && !is.null(names(severity_dist))),
+    is.null(mortality_share) ||
+      (is.numeric(mortality_share) &&
+        length(mortality_share) == 1L &&
+        mortality_share >= 0 &&
+        mortality_share <= 1)
   )
 
   fs::dir_create(dirname(path))
@@ -1222,12 +1432,14 @@ save_observed_fire_targets <- function(
       n_fires_by_year = n_fires_by_year,
       fire_sizes_ha = fire_sizes_ha,
       area_by_fuel_ha = area_by_fuel_ha,
-      severity_dist = NULL ## set on the primary summary below if a prior was passed
+      severity_dist = NULL, ## set on the primary summary below if a prior was passed
+      mortality_share = NULL ## likewise
     )
   }
 
   primary <- .summarise(primary_points, primary_polys, primary_label, compute_area_by_fuel = TRUE)
   primary$severity_dist <- severity_dist
+  primary$mortality_share <- mortality_share
   secondary <- if (!is.null(secondary_points)) {
     .summarise(secondary_points, secondary_polys, secondary_label, compute_area_by_fuel = FALSE)
   } else {

@@ -32,6 +32,7 @@ Other Dynamic Fire calibration helpers:
 \code{\link[=calibration_par_names]{calibration_par_names()}},
 \code{\link[=dedup_community_snapshot]{dedup_community_snapshot()}},
 \code{\link[=default_severity_prior_sturtevant2009]{default_severity_prior_sturtevant2009()}},
+\code{\link[=landis_overstory_mortality_share]{landis_overstory_mortality_share()}},
 \code{\link[=loss_from_stats]{loss_from_stats()}},
 \code{\link[=observed_fire_sizes]{observed_fire_sizes()}},
 \code{\link[=parse_dynamic_fire_logs]{parse_dynamic_fire_logs()}},

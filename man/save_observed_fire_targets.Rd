@@ -16,6 +16,7 @@ save_observed_fire_targets(
   secondary_label = "secondary",
   fuel_code_to_base = bc_fuel_code_to_base(),
   severity_dist = NULL,
+  mortality_share = NULL,
   min_size_ha = 1
 )
 }
@@ -57,6 +58,12 @@ on the primary-ecoregion summary; consumed by \code{loss_from_stats()}'s
 \code{L_severity} component. NULL = skip severity calibration (the loss
 contributes 0). For a literature-prior default, see
 \code{\link[=default_severity_prior_sturtevant2009]{default_severity_prior_sturtevant2009()}}.}
+
+\item{mortality_share}{Numeric scalar or NULL. Observed share of burned area that lost its
+dominant cohorts -- a high-mortality burn-severity class expressed as a proportion of assessed
+burned area. Stored on the primary summary and consumed by \code{loss_from_stats()}'s \code{mortality}
+component, which compares it with \code{\link[=landis_overstory_mortality_share]{landis_overstory_mortality_share()}} per replicate. NULL
+leaves that component at 0.}
 
 \item{min_size_ha}{Numeric scalar. Minimum fire size (ha) retained in
 \code{fire_sizes_ha}. Defaults to \code{1.0}: NFDB systematically under-reports
@@ -113,6 +120,7 @@ Other Dynamic Fire calibration helpers:
 \code{\link[=calibration_par_names]{calibration_par_names()}},
 \code{\link[=dedup_community_snapshot]{dedup_community_snapshot()}},
 \code{\link[=default_severity_prior_sturtevant2009]{default_severity_prior_sturtevant2009()}},
+\code{\link[=landis_overstory_mortality_share]{landis_overstory_mortality_share()}},
 \code{\link[=loss_from_stats]{loss_from_stats()}},
 \code{\link[=observed_fire_sizes]{observed_fire_sizes()}},
 \code{\link[=parse_dynamic_fire_logs]{parse_dynamic_fire_logs()}},

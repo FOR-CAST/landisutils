@@ -44,7 +44,8 @@ test_that("parse_dynamic_fire_logs() reads sample event + summary logs", {
       "events",
       "total_sites_burned",
       "n_events",
-      "area_by_fuel_ha"
+      "area_by_fuel_ha",
+      "overstory_mortality"
     )
   )
   expect_s3_class(parsed$n_fires_by_year, "tbl_df")
@@ -539,7 +540,10 @@ test_that("loss_from_stats() Tier 1 returns finite count + size components", {
   )
   loss <- loss_from_stats(list(rep1), observed)
   expect_named(loss, c("total", "components", "weights"))
-  expect_named(loss$components, c("count", "size", "size_tail", "area_fuel", "severity"))
+  expect_named(
+    loss$components,
+    c("count", "size", "size_tail", "area_fuel", "severity", "mortality")
+  )
   expect_true(is.finite(loss$total))
   expect_true(loss$components[["count"]] >= 0)
   expect_true(loss$components[["size"]] >= 0 && loss$components[["size"]] <= 1)
@@ -697,6 +701,94 @@ test_that("save_observed_fire_targets() backfills NBAC with NFDB (year-aligned p
   ## Expected: pt1 SIZE_HA upgraded 5 -> 25 (NBAC swap); pt2 keeps 50;
   ## pt3 keeps 7 (year mismatch); pt4 keeps 12 (pre-NBAC).
   expect_equal(p$fire_sizes_ha, sort(c(25.0, 50.0, 7.0, 12.0)))
+})
+
+## A minimal replicate directory: one row of cells, so the reader's vertical flip cannot
+## reorder them, plus the five files the mortality calculation reads.
+.mk_mortality_rep <- function(severity, env = parent.frame()) {
+  dir <- withr::local_tempdir(.local_envir = env)
+  fs::dir_create(fs::path(dir, "fire"))
+  fs::file_copy(
+    system.file("testdata", "dynamic-fire-sample.txt", package = "landisutils"),
+    fs::path(dir, "dynamic-fire.txt")
+  )
+  writeLines(
+    c(
+      "LandisData  \"Species\"",
+      ">> SpeciesCode  Longevity  SexualMaturity",
+      "   Hw      650      20       50      1398      0.0       0        0      none",
+      "   At      200      10       30       200      0.0       0        0      resprout"
+    ),
+    fs::path(dir, "species.txt")
+  )
+  utils::write.csv(
+    data.frame(SpeciesCode = c("Hw", "At"), FireTolerance = c(1L, 1L)),
+    fs::path(dir, "DynamicFire_Spp_Table.csv"),
+    row.names = FALSE
+  )
+  ## Map code 1's dominant cohort is young (300 of 650 years), code 2's is old (640).
+  utils::write.csv(
+    data.frame(
+      MapCode = c(1L, 1L, 2L),
+      SpeciesName = c("Hw", "At", "Hw"),
+      CohortAge = c(300L, 10L, 640L),
+      CohortBiomass = c(100, 5, 100)
+    ),
+    fs::path(dir, "initial-communities.csv"),
+    row.names = FALSE
+  )
+  ic <- terra::rast(nrows = 1, ncols = 4, xmin = 0, xmax = 4, ymin = 0, ymax = 1)
+  terra::values(ic) <- c(1L, 1L, 2L, 2L)
+  terra::writeRaster(ic, fs::path(dir, "initial-communities.tif"), datatype = "INT2S")
+  for (i in seq_along(severity)) {
+    sv <- terra::rast(ic)
+    terra::values(sv) <- severity[[i]]
+    terra::writeRaster(sv, fs::path(dir, "fire", sprintf("severity-%d.tif", i)), datatype = "INT2S")
+  }
+  dir
+}
+
+test_that("landis_overstory_mortality_share() counts cells that lost their dominant cohort", {
+  ## Severity map values are severity + 2, so 3 is class 1 and 1 is active-but-unburned.
+  ## Class 1 minus tolerance 1 = 0, which the damage table caps at 85 % of longevity: map code
+  ## 1's dominant cohort (46 %) dies, code 2's (98 %) survives.
+  dir <- .mk_mortality_rep(list(c(3L, 3L, 3L, 1L)))
+  m <- landis_overstory_mortality_share(dir)
+
+  expect_equal(m$burned_cells, 3L)
+  expect_equal(m$high_cells, 2L)
+  expect_equal(m$share, 2 / 3)
+})
+
+test_that("landis_overstory_mortality_share() kills everything at severity 5", {
+  ## The extension kills all cohorts at severity 5 whatever their tolerance, so the old cohort
+  ## that survived class 1 dies here.
+  dir <- .mk_mortality_rep(list(c(1L, 1L, 7L, 7L)))
+  m <- landis_overstory_mortality_share(dir)
+
+  expect_equal(m$burned_cells, 2L)
+  expect_equal(m$share, 1)
+})
+
+test_that("landis_overstory_mortality_share() returns NULL without severity maps", {
+  dir <- .mk_mortality_rep(list())
+  expect_null(landis_overstory_mortality_share(dir))
+})
+
+test_that("the mortality loss component is the relative gap to the observed share", {
+  reps <- list(
+    list(overstory_mortality = list(burned_cells = 10L, high_cells = 4L, share = 0.4)),
+    list(overstory_mortality = list(burned_cells = 10L, high_cells = 6L, share = 0.6))
+  )
+  obs <- list(primary = list(lambda_obs = 1, n_fires_by_year = NULL, mortality_share = 0.25))
+  w <- c(count = 0, size = 0, size_tail = 0, area_fuel = 0, severity = 0, mortality = 1)
+
+  ## mean(0.4, 0.6) = 0.5 against 0.25 observed
+  expect_equal(loss_from_stats(reps, obs, weights = w)$components[["mortality"]], 1)
+
+  ## No observed share means the component cannot be computed, so it contributes nothing.
+  obs$primary$mortality_share <- NULL
+  expect_equal(loss_from_stats(reps, obs, weights = w)$components[["mortality"]], 0)
 })
 
 test_that("observed_fire_sizes() gives one size per point, upgraded by same-year polygons", {
