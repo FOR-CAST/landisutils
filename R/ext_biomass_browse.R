@@ -72,7 +72,8 @@ BiomassBrowse <- R6Class(
     #' @param SitePrefMapNames,SiteForageMapNames,SiteHSIMapNames,SitePopulationMapNames,BiomassRemovedMapNames
     #'   (Optional) Character. Output filename patterns; each must contain
     #'   `{timestep}` (§4.2.21).
-    #' @param LogFile Character. Relative path to the events CSV log
+    #' @param LogFile Character. Relative path to the events CSV log.
+    #'   Defaults to `browse/browse-log.csv` inside the scenario directory.
     #'   (§4.2.22).
     initialize = function(
       path,
@@ -102,7 +103,7 @@ BiomassBrowse <- R6Class(
       SiteHSIMapNames = NULL,
       SitePopulationMapNames = NULL,
       BiomassRemovedMapNames = NULL,
-      LogFile = "browse/browse-log.csv"
+      LogFile = NULL
     ) {
       stopifnot(!is.null(path))
 
@@ -148,7 +149,11 @@ BiomassBrowse <- R6Class(
       self$SiteHSIMapNames <- SiteHSIMapNames
       self$SitePopulationMapNames <- SitePopulationMapNames
       self$BiomassRemovedMapNames <- BiomassRemovedMapNames
-      self$LogFile <- LogFile
+      ## Full paths, not bare relative ones: the active bindings below store
+      ## `.relPath(value, self$path)`, so a bare "dir/file.csv" default would be made
+      ## relative a SECOND time and land outside the scenario directory (mirrors
+      ## `BiomassHarvest`). Passing the full path round-trips to "dir/file.csv".
+      self$LogFile <- LogFile %||% file.path(self$path, "browse", "browse-log.csv")
     },
 
     #' @description Write extension inputs to disk
