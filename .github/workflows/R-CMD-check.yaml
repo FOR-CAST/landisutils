@@ -1,13 +1,29 @@
 # Workflow derived from https://github.com/r-lib/actions/tree/v2/examples
 # Need help debugging build failures? Start at https://github.com/r-lib/actions#where-to-find-help
+#
+# Two deliberate departures from that example, both marked below:
+#   * `development` is a checked branch. Work lands there first and reaches `main` by pull request,
+#     so without it a push to `development` ran nothing at all and the first check of a change was
+#     the pull request that proposed merging it.
+#   * a concurrency group, because the branch above takes many small pushes and each one would
+#     otherwise queue a fresh five-platform matrix while the previous one was still running.
 on:
   push:
-    branches: [main, master]
+    branches: [main, master, development]
   pull_request:
 
 name: R-CMD-check.yaml
 
 permissions: read-all
+
+concurrency:
+  # One run per ref. A pull request and a push to its source branch are separate refs, so a branch
+  # with an open pull request still gets both -- that is the cost of checking the branch itself.
+  group: ${{ github.workflow }}-${{ github.ref }}
+  # Superseded runs are cancelled everywhere EXCEPT `main`, where each commit should keep its own
+  # finished result: a cancelled run there reads as a failure in the history rather than as a
+  # newer push having overtaken it.
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
   R-CMD-check:
@@ -38,7 +54,6 @@ jobs:
         with:
           r-version: ${{ matrix.config.r }}
           http-user-agent: ${{ matrix.config.http-user-agent }}
-          use-public-rspm: true
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:

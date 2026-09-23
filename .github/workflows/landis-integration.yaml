@@ -1,15 +1,26 @@
 ## Run package-generated LANDIS-II scenario files through the official
 ## LANDIS-II v8 console (in an ephemeral docker container) to verify the file
 ## format/syntax, beyond what `R CMD check` can validate.
+##
+## `development` is checked as well as `main`, for the same reason `R-CMD-check.yaml` is: work
+## lands there first and reaches `main` by pull request, so without it a change to a config writer
+## was first exercised against a real console by the request to merge it. This is the workflow that
+## catches a scenario file the console rejects, which `R CMD check` cannot see at all.
 
 on:
   push:
-    branches: [main, master]
+    branches: [main, master, development]
   pull_request:
 
 name: landis-integration.yaml
 
 permissions: read-all
+
+concurrency:
+  # One run per ref; see the note in `R-CMD-check.yaml`. `main` is exempt from cancellation so each
+  # commit there keeps its own finished result.
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
   landis-integration:
@@ -33,7 +44,6 @@ jobs:
       - uses: r-lib/actions/setup-r@v2
         with:
           r-version: 'release'
-          use-public-rspm: true
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
