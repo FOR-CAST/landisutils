@@ -2,7 +2,7 @@
 % Please edit documentation in R/calibrate_dynamic_fire.R
 \name{apply_calibrated_num_fires}
 \alias{apply_calibrated_num_fires}
-\title{Overwrite FireSizesTable \code{NumFires} with a calibrated ignition rate}
+\title{Apply a calibrated ignition rate to a FireSizesTable}
 \usage{
 apply_calibrated_num_fires(fire_size_table, calibrated_fire_params)
 }
@@ -10,17 +10,30 @@ apply_calibrated_num_fires(fire_size_table, calibrated_fire_params)
 \item{fire_size_table}{data.frame with a \code{NumFires} column, as a project's
 \code{make_fire_size_table()}-equivalent produces.}
 
-\item{calibrated_fire_params}{Named numeric vector. Used only if it holds \code{NumFires}.}
+\item{calibrated_fire_params}{Named numeric vector. Used only if it holds \code{NumFires} or
+\code{NumFiresMultiplier}.}
 }
 \value{
-A copy of \code{fire_size_table}, with \code{NumFires} replaced where calibrated.
+A copy of \code{fire_size_table}, with \code{NumFires} replaced or scaled where calibrated.
 }
 \description{
-Replaces \code{NumFires} in every row of \code{fire_size_table} when the calibrated vector carries it,
-and leaves the table alone when it does not. \code{NumFires} is the Poisson mean number of
-IGNITIONS per year for the ecoregion, each of which becomes a fire only if the initiation
-probability of the fuel on its cell says so, so it is not the same quantity as an observed
-count of fires.
+\code{NumFires} is the Poisson mean number of IGNITIONS per year for the ecoregion, each of which
+becomes a fire only if the initiation probability of the fuel on its cell says so, so it is not
+the same quantity as an observed count of fires.
+}
+\details{
+Two calibrated forms, and they are alternatives:
+\itemize{
+\item \code{NumFires} replaces the rate in every row with one value. Right where the rate is a
+property of the landscape as a whole.
+\item \code{NumFiresMultiplier} scales each row's own rate by a common factor, so ecoregions that
+differ in ignition rate keep their relative structure. Right where the rate is measured
+per ecoregion and the correction being fitted -- the gap between a count of observed
+fires and a count of ignitions -- applies to all of them alike.
+}
+
+Supplying both is an error rather than a composition, and a vector carrying neither leaves the
+table alone.
 }
 \seealso{
 Other Dynamic Fire calibration helpers:

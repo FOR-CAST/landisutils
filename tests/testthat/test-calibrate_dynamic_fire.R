@@ -1,10 +1,15 @@
 ## Tests for the Dynamic Fire calibration pure-data helpers (Phase 8a).
 ## Fixtures under inst/testdata/ are sampled from real LANDIS-II rep01 outputs.
 
-test_that("calibration_par_names() is the canonical 11-entry vector", {
+## calibration_par_names() is a CATALOGUE: `NumFires` and `NumFiresMultiplier` are alternative ways
+## to express the same ignition rate, so no one calibration may carry both. Fixtures that want
+## "every searchable parameter" take the multiplier out; the multiplier has its own tests above.
+.searchable_par_names <- function() setdiff(calibration_par_names(), "NumFiresMultiplier")
+
+test_that("calibration_par_names() is the canonical 12-entry vector", {
   nm <- calibration_par_names()
   expect_type(nm, "character")
-  expect_length(nm, 11L)
+  expect_length(nm, 12L)
   expect_setequal(
     nm,
     c(
@@ -18,6 +23,7 @@ test_that("calibration_par_names() is the canonical 11-entry vector", {
       "IgnProb_Slash",
       "IgnProb_Open",
       "NumFires",
+      "NumFiresMultiplier",
       "DamageAgeMultiplier"
     )
   )
@@ -434,6 +440,114 @@ test_that("apply_calibrated_num_fires() replaces the rate only when it is calibr
   expect_equal(apply_calibrated_num_fires(fst, c(SeverityCalibrationFactor = 1))$NumFires, 0.87)
 })
 
+## A multi-ecoregion FireSizesTable, because the whole point of the multiplier is what it does to
+## rates that DIFFER between ecoregions -- a single-row fixture cannot tell the two forms apart.
+.multi_zone_fire_txt <- function(dir) {
+  writeLines(
+    c(
+      "SeverityCalibrationFactor    1",
+      "",
+      ">>   Fire Sizes",
+      ">> EcoCode EcoName Mu Sigma Max SpFMCLo SpFMCHi SpHiProp SumFMCLo SumFMCHi SumHiProp FallFMCLo FallFMCHi FallHiProp OpenFuelIndex NumFires",
+      "1    FRT10    4.67    2.10    4139    117    120    0.5    88    119    0.5    120    120    0.5    14    0.5",
+      "2    FRT12    3.78    2.79    410352    118    120    0.5    88    119    0.5    120    120    0.5    14    16",
+      "",
+      "FuelTypeTable",
+      ">> Index Base Surface IgnProb a b c q BUI maxBE CBH",
+      "1    Conifer    C1    1.0    1    2    3    4    5    6    7"
+    ),
+    file.path(dir, "dynamic-fire.txt")
+  )
+  dir
+}
+
+.num_fires <- function(dir_or_path) {
+  p <- if (fs::is_dir(dir_or_path)) file.path(dir_or_path, "dynamic-fire.txt") else dir_or_path
+  ln <- readLines(p)
+  rows <- grep("^[0-9]+ +FRT", ln, value = TRUE)
+  vapply(
+    rows,
+    function(r) as.numeric(strsplit(trimws(r), "\\s+")[[1]][16L]),
+    numeric(1),
+    USE.NAMES = FALSE
+  )
+}
+
+test_that("patch_fire_config() scales each ecoregion's own rate by NumFiresMultiplier", {
+  d <- .multi_zone_fire_txt(withr::local_tempdir())
+  expect_equal(.num_fires(d), c(0.5, 16))
+
+  patched <- patch_fire_config(d, c(NumFiresMultiplier = 1.5))
+
+  expect_equal(.num_fires(patched), c(0.75, 24))
+  ## the ratio between ecoregions survives, which is what the absolute form destroys
+  expect_equal(.num_fires(patched)[2L] / .num_fires(patched)[1L], 32)
+})
+
+test_that("patch_fire_config()'s absolute NumFires flattens the ecoregions, as documented", {
+  d <- .multi_zone_fire_txt(withr::local_tempdir())
+
+  expect_equal(.num_fires(patch_fire_config(d, c(NumFires = 3))), c(3, 3))
+})
+
+test_that("scaling a trial is deterministic rather than compounding across trials", {
+  ## patch_fire_config() patches in place and callers pass a fresh copy of the template per trial,
+  ## so the same multiplier must give the same rate however many trials have been run.
+  a <- patch_fire_config(.multi_zone_fire_txt(withr::local_tempdir()), c(NumFiresMultiplier = 2))
+  b <- patch_fire_config(.multi_zone_fire_txt(withr::local_tempdir()), c(NumFiresMultiplier = 2))
+
+  expect_equal(.num_fires(a), .num_fires(b))
+  expect_equal(.num_fires(a), c(1, 32))
+})
+
+test_that("apply_calibrated_num_fires() scales a production table by the multiplier", {
+  fst <- data.frame(EcoCode = 1:4, NumFires = c(0.5733333, 16.9733333, 8.2133333, 2))
+
+  out <- apply_calibrated_num_fires(fst, c(NumFiresMultiplier = 1.25))
+
+  expect_equal(out$NumFires, fst$NumFires * 1.25)
+  ## and the relative structure, stated as the property rather than as four numbers
+  expect_equal(out$NumFires / sum(out$NumFires), fst$NumFires / sum(fst$NumFires))
+})
+
+test_that("a multiplier of 1 is an identity, so an uncalibrated run is unchanged", {
+  fst <- data.frame(EcoCode = 1:2, NumFires = c(0.5, 16))
+
+  expect_equal(apply_calibrated_num_fires(fst, c(NumFiresMultiplier = 1))$NumFires, c(0.5, 16))
+  expect_equal(
+    apply_calibrated_num_fires(fst, c(SeverityCalibrationFactor = 1))$NumFires,
+    c(0.5, 16)
+  )
+})
+
+test_that("the two ignition-rate forms cannot be calibrated together", {
+  fst <- data.frame(EcoCode = 1L, NumFires = 0.87)
+  both <- c(NumFires = 2, NumFiresMultiplier = 1.5)
+
+  expect_error(apply_calibrated_num_fires(fst, both), "cannot both be calibrated")
+  expect_error(
+    patch_fire_config(.multi_zone_fire_txt(withr::local_tempdir()), both),
+    "cannot both be calibrated"
+  )
+})
+
+test_that("NumFiresMultiplier rejects a multiplier that is not a non-negative number", {
+  fst <- data.frame(EcoCode = 1L, NumFires = 0.87)
+
+  expect_error(apply_calibrated_num_fires(fst, c(NumFiresMultiplier = -1)), "non-negative")
+  expect_error(apply_calibrated_num_fires(fst, c(NumFiresMultiplier = Inf)), "non-negative")
+  expect_error(apply_calibrated_num_fires(fst, c(NumFiresMultiplier = NA_real_)), "non-negative")
+})
+
+test_that("NumFiresMultiplier is a calibratable parameter name", {
+  expect_true("NumFiresMultiplier" %in% calibration_par_names())
+  ## patch_fire_config() rejects anything outside that set, so the two must agree
+  expect_silent(patch_fire_config(
+    .multi_zone_fire_txt(withr::local_tempdir()),
+    c(NumFiresMultiplier = 1)
+  ))
+})
+
 test_that("patch_fire_config() scales the damage table's age column, leaving the severities", {
   scenario_dir <- withr::local_tempdir()
   fs::file_copy(
@@ -504,10 +618,9 @@ test_that("apply_calibrated_damage_age() agrees with the config patch it mirrors
     integer(1)
   )
 
-  from_df <- apply_calibrated_damage_age(
-    defaultFireDamageTable(),
-    c(DamageAgeMultiplier = 0.37)
-  )[[1L]]
+  from_df <- apply_calibrated_damage_age(defaultFireDamageTable(), c(DamageAgeMultiplier = 0.37))[[
+    1L
+  ]]
 
   expect_equal(from_text, from_df)
 })
@@ -1270,8 +1383,8 @@ test_that("calibrate_dynamic_fire() rejects unknown simulator names", {
   writeLines("x", scen_txt)
   out_dir <- withr::local_tempdir()
   cfg <- list(
-    lower = setNames(rep(0, length(calibration_par_names())), calibration_par_names()),
-    upper = setNames(rep(1, length(calibration_par_names())), calibration_par_names()),
+    lower = setNames(rep(0, length(.searchable_par_names())), .searchable_par_names()),
+    upper = setNames(rep(1, length(.searchable_par_names())), .searchable_par_names()),
     NP = 4L,
     itermax = 1L,
     n_reps = 1L,
@@ -1538,10 +1651,10 @@ test_that("L_severity contributes 0 when severity_dist is NULL", {
 
 .make_default_cfg <- function() {
   list(
-    lower = stats::setNames(rep(0, length(calibration_par_names())), calibration_par_names()),
-    upper = stats::setNames(rep(1, length(calibration_par_names())), calibration_par_names()),
+    lower = stats::setNames(rep(0, length(.searchable_par_names())), .searchable_par_names()),
+    upper = stats::setNames(rep(1, length(.searchable_par_names())), .searchable_par_names()),
     ## 10 * npar, so the NP advisory stays quiet in expect_silent()
-    NP = 10L * length(calibration_par_names()),
+    NP = 10L * length(.searchable_par_names()),
     itermax = 10L,
     n_reps = 1L,
     sim_years = 5L,
@@ -1562,7 +1675,7 @@ test_that("pre-flight: lower >= upper errors with the offending parameter names"
   expect_error(
     landisutils:::.preflight_calibrate(
       cfg = cfg,
-      par_names = calibration_par_names(),
+      par_names = .searchable_par_names(),
       template_dir = .make_min_template_dir(),
       observed = .make_min_observed(),
       scratch_root = withr::local_tempdir()
@@ -1577,7 +1690,7 @@ test_that("pre-flight: NP < 4 errors", {
   expect_error(
     landisutils:::.preflight_calibrate(
       cfg = cfg,
-      par_names = calibration_par_names(),
+      par_names = .searchable_par_names(),
       template_dir = .make_min_template_dir(),
       observed = .make_min_observed(),
       scratch_root = withr::local_tempdir()
@@ -1592,7 +1705,7 @@ test_that("pre-flight: all-zero weights errors", {
   expect_error(
     landisutils:::.preflight_calibrate(
       cfg = cfg,
-      par_names = calibration_par_names(),
+      par_names = .searchable_par_names(),
       template_dir = .make_min_template_dir(),
       observed = .make_min_observed(),
       scratch_root = withr::local_tempdir()
@@ -1608,7 +1721,7 @@ test_that("pre-flight: missing scenario template files surfaces a clear error", 
   expect_error(
     landisutils:::.preflight_calibrate(
       cfg = cfg,
-      par_names = calibration_par_names(),
+      par_names = .searchable_par_names(),
       template_dir = bad_dir,
       observed = .make_min_observed(),
       scratch_root = withr::local_tempdir()
@@ -1623,7 +1736,7 @@ test_that("pre-flight: observed payload missing $primary errors", {
   expect_error(
     landisutils:::.preflight_calibrate(
       cfg = cfg,
-      par_names = calibration_par_names(),
+      par_names = .searchable_par_names(),
       template_dir = .make_min_template_dir(),
       observed = bad_obs,
       scratch_root = withr::local_tempdir()
@@ -1638,7 +1751,7 @@ test_that("pre-flight: severity weight > 0 with NULL severity_dist warns", {
   expect_warning(
     landisutils:::.preflight_calibrate(
       cfg = cfg,
-      par_names = calibration_par_names(),
+      par_names = .searchable_par_names(),
       template_dir = .make_min_template_dir(),
       observed = .make_min_observed(),
       scratch_root = withr::local_tempdir()
@@ -1651,7 +1764,7 @@ test_that("pre-flight: passes cleanly with a fully-populated minimal config", {
   cfg <- .make_default_cfg()
   expect_silent(landisutils:::.preflight_calibrate(
     cfg = cfg,
-    par_names = calibration_par_names(),
+    par_names = .searchable_par_names(),
     template_dir = .make_min_template_dir(),
     observed = .make_min_observed(),
     scratch_root = withr::local_tempdir()
@@ -1670,7 +1783,7 @@ test_that("pre-flight: accepts size_tail as a known weight component (regression
   cfg$weights <- c(count = 1, size = 1, size_tail = 1, area_fuel = 0, severity = 0)
   expect_silent(landisutils:::.preflight_calibrate(
     cfg = cfg,
-    par_names = calibration_par_names(),
+    par_names = .searchable_par_names(),
     template_dir = .make_min_template_dir(),
     observed = .make_min_observed(),
     scratch_root = withr::local_tempdir()
@@ -1683,7 +1796,7 @@ test_that("pre-flight: genuinely-unknown weight names still trigger the unrecogn
   expect_warning(
     landisutils:::.preflight_calibrate(
       cfg = cfg,
-      par_names = calibration_par_names(),
+      par_names = .searchable_par_names(),
       template_dir = .make_min_template_dir(),
       observed = .make_min_observed(),
       scratch_root = withr::local_tempdir()
@@ -2165,6 +2278,21 @@ test_that(".scenario_template_digest() tracks file CONTENTS, not names or mtimes
   )
 })
 
+test_that("calibrate_dynamic_fire() refuses a config that bounds both ignition-rate forms", {
+  skip_if_not_installed("DEoptim")
+  fx <- .mk_ckpt_fixture()
+  cfg <- .mk_ckpt_cfg()
+  ## the default fixture already bounds NumFires, so adding the multiplier makes it carry both
+  cfg$lower[["NumFiresMultiplier"]] <- 0.5
+  cfg$upper[["NumFiresMultiplier"]] <- 2
+
+  ## refused on the CONFIG, before any simulation starts, rather than once per trial
+  expect_error(
+    calibrate_dynamic_fire(fx$obs_path, fx$scen_txt, cfg, withr::local_tempdir()),
+    "cannot both be calibrated"
+  )
+})
+
 test_that("calibrate_dynamic_fire() writes checkpoint artefacts and a full trajectory when checkpointing", {
   skip_if_not_installed("DEoptim")
   fx <- .mk_ckpt_fixture()
@@ -2196,7 +2324,7 @@ test_that("calibrate_dynamic_fire() writes checkpoint artefacts and a full traje
   ## anytime best-params written every block and left as an artefact
   so_far <- readRDS(fs::path(out_dir, "best_params_so_far.rds"))
   expect_equal(so_far$gens_done, 3L)
-  expect_setequal(names(so_far$best_params), calibration_par_names())
+  expect_setequal(names(so_far$best_params), .searchable_par_names())
 })
 
 test_that("calibrate_dynamic_fire() checkpoints on interruption and resumes to completion", {
@@ -2240,13 +2368,13 @@ test_that("calibrate_dynamic_fire() archives a fingerprint-mismatched checkpoint
   out_dir <- withr::local_tempdir()
   saveRDS(
     list(
-      pop = matrix(0.5, 6, length(calibration_par_names())),
+      pop = matrix(0.5, 6, length(.searchable_par_names())),
       fingerprint = "not-a-match",
       gens_done = 1L,
       bestval_history = 1,
-      best_mem = rep(0.5, length(calibration_par_names())),
+      best_mem = rep(0.5, length(.searchable_par_names())),
       best_val = 1,
-      par_names = calibration_par_names()
+      par_names = .searchable_par_names()
     ),
     fs::path(out_dir, "checkpoint.rds")
   )
@@ -2271,19 +2399,19 @@ test_that("calibrate_dynamic_fire() archives a checkpoint whose loss-config fing
   ## gate alone would have resumed it) but whose loss-config fingerprint does not
   ## -- the scenario the fix guards against: same bounds/NP, changed weights/obs.
   pop_fp <- digest::digest(
-    list(calibration_par_names(), as.numeric(cfg$lower), as.numeric(cfg$upper), as.integer(cfg$NP)),
+    list(.searchable_par_names(), as.numeric(cfg$lower), as.numeric(cfg$upper), as.integer(cfg$NP)),
     algo = "xxhash64"
   )
   saveRDS(
     list(
-      pop = matrix(0.5, cfg$NP, length(calibration_par_names())),
+      pop = matrix(0.5, cfg$NP, length(.searchable_par_names())),
       fingerprint = pop_fp,
       eval_fingerprint = "stale-loss-config",
       gens_done = 1L,
       bestval_history = 1,
-      best_mem = rep(0.5, length(calibration_par_names())),
+      best_mem = rep(0.5, length(.searchable_par_names())),
       best_val = 1,
-      par_names = calibration_par_names()
+      par_names = .searchable_par_names()
     ),
     fs::path(out_dir, "checkpoint.rds")
   )
@@ -2355,7 +2483,7 @@ test_that("cfg$retries reaches landis_pool_exec and defaults to fail-fast", {
   fake_pool <- structure(list(names = "c1", scratch_root = scratch), class = "landis_pool")
   suppressMessages(try(
     sim_landis(
-      par_vec = stats::setNames(rep(0.5, length(calibration_par_names())), calibration_par_names()),
+      par_vec = stats::setNames(rep(0.5, length(.searchable_par_names())), .searchable_par_names()),
       paths = list(scenario_template = tmpl, scratch_root = scratch),
       sim_years = 1L,
       base_seed = 1L,

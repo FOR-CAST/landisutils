@@ -17,7 +17,13 @@ NULL
 #' Callers building `lower` / `upper` bounds, or passing candidate vectors to
 #' [patch_fire_config()], must match this exact set.
 #'
-#' @returns Character vector of length 11.
+#' @section A catalogue, not a parameter set:
+#' Two entries are alternative ways to express the same quantity: `NumFires` gives every fire
+#' ecoregion one ignition rate, `NumFiresMultiplier` scales each ecoregion's own. A calibration
+#' carrying both would have two parameters for one degree of freedom, so it is refused. Anything
+#' building "the full set" from this vector should drop one of the two.
+#'
+#' @returns Character vector of length 12.
 #'
 #' @family Dynamic Fire calibration helpers
 #'
@@ -34,8 +40,50 @@ calibration_par_names <- function() {
     "IgnProb_Slash",
     "IgnProb_Open",
     "NumFires",
+    "NumFiresMultiplier",
     "DamageAgeMultiplier"
   )
+}
+
+## The two ignition-rate parameters are alternatives, not companions (internal).
+##
+## `NumFires` sets every fire ecoregion's rate to one value; `NumFiresMultiplier` scales each
+## ecoregion's own rate by a common factor. A landscape whose ecoregions carry markedly different
+## rates -- 0.57/yr in one and 17/yr in another is a real case -- loses that structure entirely
+## under the first and keeps it under the second. Carrying both is ambiguous rather than additive,
+## so it is refused where a caller first supplies them.
+.check_num_fires_params <- function(nms) {
+  if (all(c("NumFires", "NumFiresMultiplier") %in% nms)) {
+    stop(
+      "`NumFires` and `NumFiresMultiplier` cannot both be calibrated: the first sets every fire ",
+      "ecoregion's ignition rate to one value, the second scales each ecoregion's own rate.",
+      call. = FALSE
+    )
+  }
+  invisible(nms)
+}
+
+## Scale ignition rates (internal).
+##
+## Shared by `patch_fire_config()`, which rewrites a calibration trial's config text, and
+## `apply_calibrated_num_fires()`, which rewrites a production table, so the two cannot drift.
+## The rate is a Poisson mean, so it is not rounded.
+.scale_num_fires <- function(rates, mult) {
+  if (!is.numeric(mult) || length(mult) != 1L || !is.finite(mult) || mult < 0) {
+    stop(
+      "NumFiresMultiplier must be a non-negative finite number, not ",
+      paste(format(mult), collapse = ", "),
+      call. = FALSE
+    )
+  }
+  if (anyNA(rates)) {
+    stop(
+      "cannot scale an ignition rate that is not a number; the FireSizesTable's NumFires column ",
+      "holds a missing or unparseable value",
+      call. = FALSE
+    )
+  }
+  rates * mult
 }
 
 ## Safe read of one calibrated parameter, with a default when it is not being calibrated.
@@ -245,8 +293,7 @@ landis_overstory_mortality_share <- function(rep_dir) {
     damaged <- class[ok] >= 1L
     diff <- class[ok] - dom$tol[idx[ok]]
     killed_to <- .damage_age_pct(damage, diff)
-    high_cells <- high_cells +
-      sum(damaged & (class[ok] >= 5 | dom$age_share[idx[ok]] <= killed_to))
+    high_cells <- high_cells + sum(damaged & (class[ok] >= 5 | dom$age_share[idx[ok]] <= killed_to))
   }
   list(
     burned_cells = burned_cells,
@@ -416,6 +463,10 @@ landis_overstory_mortality_share <- function(rep_dir) {
 #'   \item `FireSizesTable` data rows: columns 8 (`SpHiProp`), 11 (`SumHiProp`),
 #'         14 (`FallHiProp`) replaced. Shared across all ecoregion rows --
 #'         per-ecoregion HiProp calibration would require 6 params not 3.
+#'   \item `FireSizesTable` column 16 (`NumFires`): replaced by `NumFires`, or
+#'         multiplied by `NumFiresMultiplier`. The two are alternatives -- the
+#'         first gives every ecoregion the same rate, the second preserves the
+#'         rates' relative structure -- and supplying both is an error.
 #'   \item `FuelTypeTable` data rows: column 4 (`IgnProb`) is multiplied by the
 #'         base-type-specific candidate (e.g., `IgnProb_Conifer` for `Base == "Conifer"`).
 #'         Default IgnProbs are mostly 1.0 (D1 = 0.5), so candidate range `[0, 1.5]`
@@ -446,6 +497,7 @@ patch_fire_config <- function(scenario_dir, par_vec) {
     length(par_vec) > 0L,
     all(names(par_vec) %in% calibration_par_names())
   )
+  .check_num_fires_params(names(par_vec))
   ## A SUBSET is allowed, and an absent name means "leave the template's value alone". Requiring
   ## all nine forced every calibration to search every dimension, including ones a project sets
   ## from data instead -- a HiProp is the share of a season's fires in its high-FMC part, which the
@@ -501,8 +553,21 @@ patch_fire_config <- function(scenario_dir, par_vec) {
       ## NumFires is the LAST column, and the ecoregion row has 16 fields once
       ## OpenFuelIndex is counted -- patched only when the row is that long, so a table
       ## written without it is left alone rather than gaining a stray field.
+      ##
+      ## The multiplier scales the row's OWN rate, so a landscape whose ecoregions differ in
+      ## ignition rate keeps that structure; the absolute form replaces every row alike. Both are
+      ## applied to a fresh copy of the template (see the note above), so scaling is deterministic
+      ## across trials rather than compounding.
       if ("NumFires" %in% names(par_vec) && length(parts) >= 16L) {
         parts[16L] <- sprintf("%g", par_vec[["NumFires"]])
+      } else if ("NumFiresMultiplier" %in% names(par_vec) && length(parts) >= 16L) {
+        parts[16L] <- sprintf(
+          "%g",
+          .scale_num_fires(
+            suppressWarnings(as.numeric(parts[16L])),
+            par_vec[["NumFiresMultiplier"]]
+          )
+        )
       }
       lines[i] <- paste(parts, collapse = "    ")
     }
@@ -575,7 +640,9 @@ patch_fire_config <- function(scenario_dir, par_vec) {
       )
     }
     k <- dt_hdr + 1L
-    while (k <= length(lines) && (grepl("^[[:space:]]*>>", lines[k]) || !nzchar(trimws(lines[k])))) {
+    while (
+      k <= length(lines) && (grepl("^[[:space:]]*>>", lines[k]) || !nzchar(trimws(lines[k])))
+    ) {
       k <- k + 1L
     }
     ## Row indices and the percentages they carry, so the whole column can be rescaled at once
@@ -1063,10 +1130,11 @@ loss_from_stats <- function(
 #' back pinned at such a bound is **not** an estimate that wanted more room --
 #' it is saturation, meaning the objective wanted more fire than the maximum
 #' ignition probability can deliver. Widening the bound is a no-op. The
-#' lever to reach for instead is `NumFires`, the ignition rate itself: an
-#' ignition becomes a fire only if the initiation probability of the fuel on its
-#' cell allows it, so a rate taken from a count of observed FIRES is
-#' systematically low as a count of ignitions. Search it, applying the result
+#' lever to reach for instead is the ignition rate itself: an ignition becomes a
+#' fire only if the initiation probability of the fuel on its cell allows it, so
+#' a rate taken from a count of observed FIRES is systematically low as a count
+#' of ignitions. Search `NumFires`, or `NumFiresMultiplier` where the rate varies
+#' by ecoregion and that variation should survive the fit, applying the result
 #' with [apply_calibrated_num_fires()], and check the count target too --
 #' starting with whether the simulated annual rate is computed over the right
 #' number of years.
@@ -1150,19 +1218,31 @@ apply_calibrated_hi_prop <- function(fire_size_table, calibrated_fire_params) {
 }
 
 
-#' Overwrite FireSizesTable `NumFires` with a calibrated ignition rate
+#' Apply a calibrated ignition rate to a FireSizesTable
 #'
-#' Replaces `NumFires` in every row of `fire_size_table` when the calibrated vector carries it,
-#' and leaves the table alone when it does not. `NumFires` is the Poisson mean number of
-#' IGNITIONS per year for the ecoregion, each of which becomes a fire only if the initiation
-#' probability of the fuel on its cell says so, so it is not the same quantity as an observed
-#' count of fires.
+#' `NumFires` is the Poisson mean number of IGNITIONS per year for the ecoregion, each of which
+#' becomes a fire only if the initiation probability of the fuel on its cell says so, so it is not
+#' the same quantity as an observed count of fires.
+#'
+#' Two calibrated forms, and they are alternatives:
+#' \itemize{
+#'   \item `NumFires` replaces the rate in every row with one value. Right where the rate is a
+#'         property of the landscape as a whole.
+#'   \item `NumFiresMultiplier` scales each row's own rate by a common factor, so ecoregions that
+#'         differ in ignition rate keep their relative structure. Right where the rate is measured
+#'         per ecoregion and the correction being fitted -- the gap between a count of observed
+#'         fires and a count of ignitions -- applies to all of them alike.
+#' }
+#'
+#' Supplying both is an error rather than a composition, and a vector carrying neither leaves the
+#' table alone.
 #'
 #' @param fire_size_table data.frame with a `NumFires` column, as a project's
 #'   `make_fire_size_table()`-equivalent produces.
-#' @param calibrated_fire_params Named numeric vector. Used only if it holds `NumFires`.
+#' @param calibrated_fire_params Named numeric vector. Used only if it holds `NumFires` or
+#'   `NumFiresMultiplier`.
 #'
-#' @returns A copy of `fire_size_table`, with `NumFires` replaced where calibrated.
+#' @returns A copy of `fire_size_table`, with `NumFires` replaced or scaled where calibrated.
 #'
 #' @family Dynamic Fire calibration helpers
 #' @family Dynamic Fire helpers
@@ -1175,8 +1255,14 @@ apply_calibrated_num_fires <- function(fire_size_table, calibrated_fire_params) 
     is.numeric(calibrated_fire_params),
     !is.null(names(calibrated_fire_params))
   )
+  .check_num_fires_params(names(calibrated_fire_params))
   if ("NumFires" %in% names(calibrated_fire_params)) {
     fire_size_table$NumFires <- calibrated_fire_params[["NumFires"]]
+  } else if ("NumFiresMultiplier" %in% names(calibrated_fire_params)) {
+    fire_size_table$NumFires <- .scale_num_fires(
+      fire_size_table$NumFires,
+      calibrated_fire_params[["NumFiresMultiplier"]]
+    )
   }
   fire_size_table
 }
@@ -2967,6 +3053,7 @@ calibrate_dynamic_fire <- function(observed_targets_path, scenario_template, cfg
     setequal(names(cfg$lower), names(cfg$upper)),
     all(names(cfg$lower) %in% calibration_par_names())
   )
+  .check_num_fires_params(names(cfg$lower))
   ## Order by calibration_par_names() so the vector layout is stable across runs regardless of the
   ## order the caller happened to write the bounds in.
   par_names <- calibration_par_names()[calibration_par_names() %in% names(cfg$lower)]
