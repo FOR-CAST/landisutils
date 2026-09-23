@@ -28,7 +28,9 @@ OriginalFire <- R6Class(
     #' @param FireDamageTable `data.frame`.
     #' @param MapNames Character. File pattern for writing outputs to disk.
     #' @param LogFile Character. Relative file path.
+    #'   Defaults to `fire/log.csv` inside the scenario directory.
     #' @param SummaryLogFile Character. Relative file path.
+    #'   Defaults to `fire/summary-log.csv` inside the scenario directory.
     initialize = function(
       path,
       Timestep = NULL,
@@ -40,8 +42,8 @@ OriginalFire <- R6Class(
       WindCurveTable = NULL,
       FireDamageTable = NULL,
       MapNames = NULL,
-      LogFile = "fire/log.csv",
-      SummaryLogFile = "fire/summary-log.csv"
+      LogFile = NULL,
+      SummaryLogFile = NULL
     ) {
       stopifnot(!is.null(path))
 
@@ -62,8 +64,12 @@ OriginalFire <- R6Class(
       self$WindCurveTable <- WindCurveTable
       self$FireDamageTable <- FireDamageTable
       self$MapNames <- MapNames %||% MapNames("severity", "fire", self$path)
-      self$LogFile <- LogFile
-      self$SummaryLogFile <- SummaryLogFile
+      ## Full paths, not bare relative ones: the active bindings below store
+      ## `.relPath(value, self$path)`, so a bare "dir/file.csv" default would be made
+      ## relative a SECOND time and land outside the scenario directory (mirrors
+      ## `BiomassHarvest`). Passing the full path round-trips to "dir/file.csv".
+      self$LogFile <- LogFile %||% file.path(self$path, "fire", "log.csv")
+      self$SummaryLogFile <- SummaryLogFile %||% file.path(self$path, "fire", "summary-log.csv")
     },
 
     #' @description Write extension inputs to disk

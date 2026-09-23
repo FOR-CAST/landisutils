@@ -43,6 +43,7 @@ LinearWind <- R6Class(
     #' @param SeverityMapNames Character. File pattern for wind severity output maps;
     #'   must contain the literal `{timestep}` placeholder.
     #' @param LogFile Character. Relative file path.
+    #'   Defaults to `linearwind/log.csv` inside the scenario directory.
     initialize = function(
       path,
       Timestep = NULL,
@@ -63,7 +64,7 @@ LinearWind <- R6Class(
       WindSeverities = NULL,
       IntensityMapNames = NULL,
       SeverityMapNames = NULL,
-      LogFile = "linearwind/log.csv"
+      LogFile = NULL
     ) {
       stopifnot(!is.null(path))
 
@@ -94,7 +95,11 @@ LinearWind <- R6Class(
       self$IntensityMapNames <- IntensityMapNames %||%
         MapNames("intensity", "linearwind", self$path)
       self$SeverityMapNames <- SeverityMapNames %||% MapNames("severity", "linearwind", self$path)
-      self$LogFile <- LogFile
+      ## Full paths, not bare relative ones: the active bindings below store
+      ## `.relPath(value, self$path)`, so a bare "dir/file.csv" default would be made
+      ## relative a SECOND time and land outside the scenario directory (mirrors
+      ## `BiomassHarvest`). Passing the full path round-trips to "dir/file.csv".
+      self$LogFile <- LogFile %||% file.path(self$path, "linearwind", "log.csv")
     },
 
     #' @description Write extension inputs to disk

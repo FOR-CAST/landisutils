@@ -24,6 +24,7 @@ ClimateBDA <- R6Class(
     #' @param BDPMapNames (Optional) Character. BDP output map filename pattern;
     #'   must contain the literal `{agentName}` and `{timestep}` placeholders.
     #' @param LogFile Character. Relative file path for the BDA CSV log.
+    #'   Defaults to `bda/bda-log.csv` inside the scenario directory.
     initialize = function(
       path,
       Timestep = NULL,
@@ -32,7 +33,7 @@ ClimateBDA <- R6Class(
       SRDMapNames = NULL,
       NRDMapNames = NULL,
       BDPMapNames = NULL,
-      LogFile = "bda/bda-log.csv"
+      LogFile = NULL
     ) {
       stopifnot(!is.null(path))
 
@@ -50,7 +51,11 @@ ClimateBDA <- R6Class(
       self$SRDMapNames <- SRDMapNames
       self$NRDMapNames <- NRDMapNames
       self$BDPMapNames <- BDPMapNames
-      self$LogFile <- LogFile
+      ## Full paths, not bare relative ones: the active bindings below store
+      ## `.relPath(value, self$path)`, so a bare "dir/file.csv" default would be made
+      ## relative a SECOND time and land outside the scenario directory (mirrors
+      ## `BiomassHarvest`). Passing the full path round-trips to "dir/file.csv".
+      self$LogFile <- LogFile %||% file.path(self$path, "bda", "bda-log.csv")
     },
 
     #' @param value `BDAAgent` object to append to `$Agents`.

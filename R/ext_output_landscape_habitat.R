@@ -50,6 +50,8 @@ OutputLandscapeHabitat <- R6Class(
     #'   species log files; must contain the literal placeholder
     #'   `{species-name}`.
     #' @param LogFile Character. Relative file path for the main log.
+    #'   Defaults to `output/landscape-habitat/landscape_habitat_log.csv` inside the
+    #'   scenario directory.
     initialize = function(
       path,
       Timestep = NULL,
@@ -65,7 +67,7 @@ OutputLandscapeHabitat <- R6Class(
       DistanceVarMapFileNames = NULL,
       SpeciesMapFileNames = NULL,
       SpeciesLogFileNames = NULL,
-      LogFile = "output/landscape-habitat/landscape_habitat_log.csv"
+      LogFile = NULL
     ) {
       stopifnot(!is.null(path))
 
@@ -95,7 +97,12 @@ OutputLandscapeHabitat <- R6Class(
         "output/landscape-habitat/habitat-{species-name}-{timestep}.tif"
       self$SpeciesLogFileNames <- SpeciesLogFileNames %||%
         "output/landscape-habitat/{species-name}_log.csv"
-      self$LogFile <- LogFile
+      ## Full paths, not bare relative ones: the active bindings below store
+      ## `.relPath(value, self$path)`, so a bare "dir/file.csv" default would be made
+      ## relative a SECOND time and land outside the scenario directory (mirrors
+      ## `BiomassHarvest`). Passing the full path round-trips to "dir/file.csv".
+      self$LogFile <- LogFile %||%
+        file.path(self$path, "output", "landscape-habitat", "landscape_habitat_log.csv")
     },
 
     #' @description Write extension inputs to disk

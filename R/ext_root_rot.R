@@ -49,9 +49,11 @@ RootRot <- R6Class(
     #' @param SpeciesBiomassRemovedMapName (Optional) Character. Per-species
     #'   biomass-removed output raster pattern; must contain both `{species}`
     #'   and `{timestep}`.
-    #' @param EventLog (Optional) Character. Relative file path for the events
+    #' @param EventLog (Optional) Character. Relative file path for the events.
+    #'   Defaults to `rootrot/events.csv` inside the scenario directory.
     #'   CSV log; pass `NULL` to disable.
-    #' @param SummaryLog (Optional) Character. Relative file path for the
+    #' @param SummaryLog (Optional) Character. Relative file path for the.
+    #'   Defaults to `rootrot/summary.csv` inside the scenario directory.
     #'   summary CSV log; pass `NULL` to disable.
     initialize = function(
       path,
@@ -71,8 +73,8 @@ RootRot <- R6Class(
       LethalTempMapName = NULL,
       TotalBiomassRemovedMapName = NULL,
       SpeciesBiomassRemovedMapName = NULL,
-      EventLog = "rootrot/events.csv",
-      SummaryLog = "rootrot/summary.csv"
+      EventLog = NULL,
+      SummaryLog = NULL
     ) {
       stopifnot(!is.null(path))
 
@@ -110,8 +112,12 @@ RootRot <- R6Class(
         "rootrot/BiomassRemoved-{timestep}.img"
       self$SpeciesBiomassRemovedMapName <- SpeciesBiomassRemovedMapName %||%
         "rootrot/BiomassRemoved-{species}-{timestep}.img"
-      self$EventLog <- EventLog
-      self$SummaryLog <- SummaryLog
+      ## Full paths, not bare relative ones: the active bindings below store
+      ## `.relPath(value, self$path)`, so a bare "dir/file.csv" default would be made
+      ## relative a SECOND time and land outside the scenario directory (mirrors
+      ## `BiomassHarvest`). Passing the full path round-trips to "dir/file.csv".
+      self$EventLog <- EventLog %||% file.path(self$path, "rootrot", "events.csv")
+      self$SummaryLog <- SummaryLog %||% file.path(self$path, "rootrot", "summary.csv")
     },
 
     #' @description Write extension inputs to disk
