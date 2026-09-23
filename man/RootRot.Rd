@@ -126,8 +126,8 @@ are NOT included here; they are discovered by \code{\link[=tar_landis]{tar_landi
   LethalTempMapName = NULL,
   TotalBiomassRemovedMapName = NULL,
   SpeciesBiomassRemovedMapName = NULL,
-  EventLog = "rootrot/events.csv",
-  SummaryLog = "rootrot/summary.csv"
+  EventLog = NULL,
+  SummaryLog = NULL
 )}
     \if{html}{\out{</div>}}
   }
@@ -162,9 +162,11 @@ removed output raster pattern; must contain \code{{timestep}}.}
       \item{\code{SpeciesBiomassRemovedMapName}}{(Optional) Character. Per-species
 biomass-removed output raster pattern; must contain both \code{{species}}
 and \code{{timestep}}.}
-      \item{\code{EventLog}}{(Optional) Character. Relative file path for the events
+      \item{\code{EventLog}}{(Optional) Character. Relative file path for the events.
+Defaults to \code{rootrot/events.csv} inside the scenario directory.
 CSV log; pass \code{NULL} to disable.}
-      \item{\code{SummaryLog}}{(Optional) Character. Relative file path for the
+      \item{\code{SummaryLog}}{(Optional) Character. Relative file path for the.
+Defaults to \code{rootrot/summary.csv} inside the scenario directory.
 summary CSV log; pass \code{NULL} to disable.}
     }
     \if{html}{\out{</div>}}

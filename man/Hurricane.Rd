@@ -114,7 +114,7 @@ are NOT included here; they are discovered by \code{\link[=tar_landis]{tar_landi
   ExposureMaps = NULL,
   WindSpeedVulnerabilities = list(),
   MapNames = NULL,
-  LogFile = "hurricane/hurricane-log.csv",
+  LogFile = NULL,
   WindReductionTableCSV = NULL
 )}
     \if{html}{\out{</div>}}
@@ -149,7 +149,8 @@ sub-objects (see \code{\link[=windSpeedVulnerability]{windSpeedVulnerability()}}
       \item{\code{MapNames}}{Character. Output filename pattern; must contain
 the literal \code{{timestep}}. Including \code{{stormNumber}} is recommended
 so per-storm maps within a timestep do not overwrite one another.}
-      \item{\code{LogFile}}{Character. Relative file path for the CSV log.}
+      \item{\code{LogFile}}{Character. Relative file path for the CSV log.
+Defaults to \code{hurricane/hurricane-log.csv} inside the scenario directory.}
       \item{\code{WindReductionTableCSV}}{Optional character. Relative path to a
 wind-reduction-factor CSV (links to the Output Cohort Statistics
 \code{Evenness} calculation). Omit to disable structure-based wind-speed

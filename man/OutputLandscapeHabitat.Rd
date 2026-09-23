@@ -106,7 +106,7 @@ are NOT included here; they are discovered by \code{\link[=tar_landis]{tar_landi
   DistanceVarMapFileNames = NULL,
   SpeciesMapFileNames = NULL,
   SpeciesLogFileNames = NULL,
-  LogFile = "output/landscape-habitat/landscape_habitat_log.csv"
+  LogFile = NULL
 )}
     \if{html}{\out{</div>}}
   }
@@ -150,7 +150,9 @@ species-model maps; must contain the literal placeholders
       \item{\code{SpeciesLogFileNames}}{(Optional) Character. Output template for
 species log files; must contain the literal placeholder
 \code{{species-name}}.}
-      \item{\code{LogFile}}{Character. Relative file path for the main log.}
+      \item{\code{LogFile}}{Character. Relative file path for the main log.
+Defaults to \code{output/landscape-habitat/landscape_habitat_log.csv} inside the
+scenario directory.}
     }
     \if{html}{\out{</div>}}
   }

@@ -119,7 +119,7 @@ are NOT included here; they are discovered by \code{\link[=tar_landis]{tar_landi
   WindSeverities = NULL,
   IntensityMapNames = NULL,
   SeverityMapNames = NULL,
-  LogFile = "linearwind/log.csv"
+  LogFile = NULL
 )}
     \if{html}{\out{</div>}}
   }
@@ -156,7 +156,8 @@ with primary direction \verb{N-S, NE-SW, E-W, SE-NW}; must sum to 100.}
 must contain the literal \code{{timestep}} placeholder.}
       \item{\code{SeverityMapNames}}{Character. File pattern for wind severity output maps;
 must contain the literal \code{{timestep}} placeholder.}
-      \item{\code{LogFile}}{Character. Relative file path.}
+      \item{\code{LogFile}}{Character. Relative file path.
+Defaults to \code{linearwind/log.csv} inside the scenario directory.}
     }
     \if{html}{\out{</div>}}
   }
