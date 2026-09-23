@@ -27,15 +27,17 @@ OriginalWind <- R6Class(
     #' @param MapNames Character. File pattern for writing outputs to disk;
     #'   must contain `{timestep}`.
     #' @param SummaryLogFile Character. Relative file path.
+    #'   Defaults to `wind/summary-log.csv` inside the scenario directory.
     #' @param EventLogFile Character. Relative file path.
+    #'   Defaults to `wind/event-log.csv` inside the scenario directory.
     initialize = function(
       path,
       Timestep = NULL,
       WindEventParametersTable = NULL,
       WindSeverities = NULL,
       MapNames = NULL,
-      SummaryLogFile = "wind/summary-log.csv",
-      EventLogFile = "wind/event-log.csv"
+      SummaryLogFile = NULL,
+      EventLogFile = NULL
     ) {
       stopifnot(!is.null(path))
 
@@ -51,8 +53,12 @@ OriginalWind <- R6Class(
       self$WindEventParametersTable <- WindEventParametersTable
       self$WindSeverities <- WindSeverities %||% defaultWindSeverities()
       self$MapNames <- MapNames %||% MapNames("severity", "wind", self$path)
-      self$SummaryLogFile <- SummaryLogFile
-      self$EventLogFile <- EventLogFile
+      ## Full paths, not bare relative ones: the active bindings below store
+      ## `.relPath(value, self$path)`, so a bare "dir/file.csv" default would be made
+      ## relative a SECOND time and land outside the scenario directory (mirrors
+      ## `BiomassHarvest`). Passing the full path round-trips to "dir/file.csv".
+      self$SummaryLogFile <- SummaryLogFile %||% file.path(self$path, "wind", "summary-log.csv")
+      self$EventLogFile <- EventLogFile %||% file.path(self$path, "wind", "event-log.csv")
     },
 
     #' @description Write extension inputs to disk

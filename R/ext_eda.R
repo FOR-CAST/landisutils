@@ -20,13 +20,14 @@ EDA <- R6Class(
     #' @param MORTMapNames (Optional) Character. Mortality output map filename
     #'   pattern; must contain the literal `{agentName}` and `{timestep}` placeholders.
     #' @param LogFile Character. Relative file path for the EDA CSV log.
+    #'   Defaults to `eda/eda-log.csv` inside the scenario directory.
     initialize = function(
       path,
       Timestep = NULL,
       Agents = list(),
       MapNames = NULL,
       MORTMapNames = NULL,
-      LogFile = "eda/eda-log.csv"
+      LogFile = NULL
     ) {
       stopifnot(!is.null(path))
 
@@ -42,7 +43,11 @@ EDA <- R6Class(
       self$Agents <- Agents
       self$MapNames <- MapNames %||% "eda/{agentName}-{timestep}.tif"
       self$MORTMapNames <- MORTMapNames %||% "eda/{agentName}-MORT-{timestep}.tif"
-      self$LogFile <- LogFile
+      ## Full paths, not bare relative ones: the active bindings below store
+      ## `.relPath(value, self$path)`, so a bare "dir/file.csv" default would be made
+      ## relative a SECOND time and land outside the scenario directory (mirrors
+      ## `BiomassHarvest`). Passing the full path round-trips to "dir/file.csv".
+      self$LogFile <- LogFile %||% file.path(self$path, "eda", "eda-log.csv")
     },
 
     #' @param value `EDAAgent` object to append to `$Agents`.

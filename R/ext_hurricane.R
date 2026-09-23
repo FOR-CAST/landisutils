@@ -41,6 +41,7 @@ Hurricane <- R6Class(
     #'   the literal `{timestep}`. Including `{stormNumber}` is recommended
     #'   so per-storm maps within a timestep do not overwrite one another.
     #' @param LogFile Character. Relative file path for the CSV log.
+    #'   Defaults to `hurricane/hurricane-log.csv` inside the scenario directory.
     #' @param WindReductionTableCSV Optional character. Relative path to a
     #'   wind-reduction-factor CSV (links to the Output Cohort Statistics
     #'   `Evenness` calculation). Omit to disable structure-based wind-speed
@@ -64,7 +65,7 @@ Hurricane <- R6Class(
       ExposureMaps = NULL,
       WindSpeedVulnerabilities = list(),
       MapNames = NULL,
-      LogFile = "hurricane/hurricane-log.csv",
+      LogFile = NULL,
       WindReductionTableCSV = NULL
     ) {
       stopifnot(!is.null(path))
@@ -94,7 +95,11 @@ Hurricane <- R6Class(
       self$ExposureMaps <- ExposureMaps
       self$WindSpeedVulnerabilities <- WindSpeedVulnerabilities
       self$MapNames <- MapNames %||% "hurricane/max-windspeed-{timestep}-{stormNumber}.tif"
-      self$LogFile <- LogFile
+      ## Full paths, not bare relative ones: the active bindings below store
+      ## `.relPath(value, self$path)`, so a bare "dir/file.csv" default would be made
+      ## relative a SECOND time and land outside the scenario directory (mirrors
+      ## `BiomassHarvest`). Passing the full path round-trips to "dir/file.csv".
+      self$LogFile <- LogFile %||% file.path(self$path, "hurricane", "hurricane-log.csv")
       self$WindReductionTableCSV <- WindReductionTableCSV
     },
 
