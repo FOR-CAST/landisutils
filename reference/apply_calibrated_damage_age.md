@@ -1,63 +1,49 @@
-# Apply per-base-fuel-type IgnProb multipliers to a FuelTypeTable
+# Scale a fire damage table's cohort ages by a calibrated multiplier
 
-Each row of `fuel_type_table` carries a `Base` column (one of
-`"Conifer"`, `"ConiferPlantation"`, `"Deciduous"`, `"Slash"`, `"Open"`)
-and an `IgnProb` column. This multiplies `IgnProb` row-wise by the
-matching `IgnProb_<base>` entry in the calibrated parameter vector.
+Multiplies the cohort-age column of `fire_damage_table` by
+`DamageAgeMultiplier` when the calibrated vector carries it, and leaves
+the table alone when it does not. This is the production-side
+counterpart of the same scaling
+[`patch_fire_config()`](https://for-cast.github.io/landisutils/reference/patch_fire_config.md)
+applies to a calibration trial, so a calibrated table reaches the
+simulations it was fitted for.
 
 ## Usage
 
 ``` r
-apply_calibrated_ignprob(fuel_type_table, calibrated_fire_params)
+apply_calibrated_damage_age(fire_damage_table, calibrated_fire_params)
 ```
 
 ## Arguments
 
-- fuel_type_table:
+- fire_damage_table:
 
-  data.frame from
-  [`defaultFuelTypeTable()`](https://for-cast.github.io/landisutils/reference/defaultFuelTypeTable.md).
-  Must have `Base` and `IgnProb` columns.
+  data.frame whose FIRST column is the cohort age as a percentage of
+  longevity, as
+  [`defaultFireDamageTable()`](https://for-cast.github.io/landisutils/reference/defaultFireDamageTable.md)
+  returns.
 
 - calibrated_fire_params:
 
-  Named numeric vector. Must include the five `IgnProb_<base>` entries
-  from
-  [`calibration_par_names()`](https://for-cast.github.io/landisutils/reference/calibration_par_names.md).
+  Named numeric vector. Used only if it holds `DamageAgeMultiplier`.
 
 ## Value
 
-A copy of `fuel_type_table` with `IgnProb` updated.
+A copy of `fire_damage_table` with the age column scaled where
+calibrated.
 
-## Multipliers above `1 / default` are inert
+## Details
 
-LANDIS-II requires `IgnProb` in `[0, 1]`, so the product is clamped to
-that range. The defaults in
-[`defaultFuelTypeTable()`](https://for-cast.github.io/landisutils/reference/defaultFuelTypeTable.md)
-are 1.0 for every base except `Deciduous` (`D1`), which is 0.5. A
-`Conifer` multiplier above 1.0 is therefore clamped away entirely, and a
-`Deciduous` multiplier of 2.0 maps to exactly the ceiling. Useful search
-bounds are `[0, 1]` for the 1.0 defaults and `[0, 2]` for `Deciduous`;
-anything wider searches a flat region.
-
-This matters when reading a finished calibration. A multiplier that
-comes back pinned at such a bound is **not** an estimate that wanted
-more room – it is saturation, meaning the objective wanted more fire
-than the maximum ignition probability can deliver. Widening the bound is
-a no-op. The lever to reach for instead is `NumFires`, the ignition rate
-itself: an ignition becomes a fire only if the initiation probability of
-the fuel on its cell allows it, so a rate taken from a count of observed
-FIRES is systematically low as a count of ignitions. Search it, applying
-the result with
-[`apply_calibrated_num_fires()`](https://for-cast.github.io/landisutils/reference/apply_calibrated_num_fires.md),
-and check the count target too – starting with whether the simulated
-annual rate is computed over the right number of years.
+The paired severity-minus-tolerance column is never touched: the user
+guide (2.16.3) requires an integer there, so it offers only a few
+reachable outcomes and is not a fittable quantity, whereas the age
+column is a percentage of longevity (2.16.2) and scales continuously.
 
 ## See also
 
 Other Dynamic Fire calibration helpers:
-[`apply_calibrated_damage_age()`](https://for-cast.github.io/landisutils/reference/apply_calibrated_damage_age.md),
 [`apply_calibrated_hi_prop()`](https://for-cast.github.io/landisutils/reference/apply_calibrated_hi_prop.md),
+[`apply_calibrated_ignprob()`](https://for-cast.github.io/landisutils/reference/apply_calibrated_ignprob.md),
 [`apply_calibrated_num_fires()`](https://for-cast.github.io/landisutils/reference/apply_calibrated_num_fires.md),
 [`bc_fuel_code_to_base()`](https://for-cast.github.io/landisutils/reference/bc_fuel_code_to_base.md),
 [`build_calibration_scenario_template()`](https://for-cast.github.io/landisutils/reference/build_calibration_scenario_template.md),
@@ -80,8 +66,8 @@ Other Dynamic Fire calibration helpers:
 
 Other Dynamic Fire helpers:
 [`DynamicFire`](https://for-cast.github.io/landisutils/reference/DynamicFire.md),
-[`apply_calibrated_damage_age()`](https://for-cast.github.io/landisutils/reference/apply_calibrated_damage_age.md),
 [`apply_calibrated_hi_prop()`](https://for-cast.github.io/landisutils/reference/apply_calibrated_hi_prop.md),
+[`apply_calibrated_ignprob()`](https://for-cast.github.io/landisutils/reference/apply_calibrated_ignprob.md),
 [`apply_calibrated_num_fires()`](https://for-cast.github.io/landisutils/reference/apply_calibrated_num_fires.md),
 [`defaultFuelTypeTable()`](https://for-cast.github.io/landisutils/reference/defaultFuelTypeTable.md),
 [`insertBuildUpIndex()`](https://for-cast.github.io/landisutils/reference/insertBuildUpIndex.md),

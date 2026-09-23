@@ -13,6 +13,13 @@ Surgical text replacements:
   `Base == "Conifer"`). Default IgnProbs are mostly 1.0 (D1 = 0.5), so
   candidate range `[0, 1.5]` directly scales the relative-weighting.
 
+- `FireDamageTable` cohort-age column multiplied by
+  `DamageAgeMultiplier`, rounded to whole percentages and forced
+  strictly increasing. The paired severity-minus-tolerance column must
+  be an integer, so it is left alone: shifting it offers only a few
+  reachable outcomes and cannot be fitted, whereas the age column is a
+  percentage of longevity and scales smoothly.
+
 ## Usage
 
 ``` r
@@ -42,6 +49,7 @@ copy of the template so trials don't collide.
 ## See also
 
 Other Dynamic Fire calibration helpers:
+[`apply_calibrated_damage_age()`](https://for-cast.github.io/landisutils/reference/apply_calibrated_damage_age.md),
 [`apply_calibrated_hi_prop()`](https://for-cast.github.io/landisutils/reference/apply_calibrated_hi_prop.md),
 [`apply_calibrated_ignprob()`](https://for-cast.github.io/landisutils/reference/apply_calibrated_ignprob.md),
 [`apply_calibrated_num_fires()`](https://for-cast.github.io/landisutils/reference/apply_calibrated_num_fires.md),

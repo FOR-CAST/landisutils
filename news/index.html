@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.155</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.156</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,6 +41,12 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.156" id="landisutils-00156">landisutils 0.0.156<a class="anchor" aria-label="anchor" href="#landisutils-00156"></a></h2>
+<ul><li><p><code><a href="../reference/calibration_par_names.html">calibration_par_names()</a></code> gains <code>DamageAgeMultiplier</code>, and <code><a href="../reference/patch_fire_config.html">patch_fire_config()</a></code> scales the <code>FireDamageTable</code>’s cohort-age column by it, so the damage table can be calibrated. The paired severity-minus-tolerance column is deliberately left alone: the user guide (2.16.3) requires an integer there, which gives only a few reachable mortality levels and cannot be fitted, while the age column is a percentage of longevity (2.16.2) and scales smoothly. Scaled values are rounded to whole percentages and forced strictly increasing, since a row that does not exceed its predecessor can never be reached.</p></li>
+<li><p>New <code><a href="../reference/apply_calibrated_damage_age.html">apply_calibrated_damage_age()</a></code> applies a calibrated <code>DamageAgeMultiplier</code> to a production fire damage table, so a fitted table reaches the simulations it was fitted for; it leaves the table alone when the vector does not carry one. It and <code><a href="../reference/patch_fire_config.html">patch_fire_config()</a></code> share the scaling, so the calibration trial and the production config cannot drift apart.</p></li>
+<li><p><code><a href="../reference/landis_overstory_mortality_share.html">landis_overstory_mortality_share()</a></code> no longer scores mortality on cells the extension burned without damaging any cohort. The severity map writes 2 for those cells and severity + 2 for damaged ones (user guide 3.1), so treating the value as severity + 2 throughout gave them a severity of 0 and then asked the damage table what a severity of 0 kills – inventing mortality against the extension’s own statement that nothing was killed. Such cells remain in the denominator, matching an observed reference that counts every assessed pixel inside a fire perimeter.</p></li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.155" id="landisutils-00155">landisutils 0.0.155<a class="anchor" aria-label="anchor" href="#landisutils-00155"></a></h2>
 <ul><li>

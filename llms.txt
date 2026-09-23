@@ -297,6 +297,9 @@ scenario(
 - [`appendPercent()`](https://for-cast.github.io/landisutils/reference/appendPercent.md)
   : Ensure percent symbol appended to table values
 
+- [`apply_calibrated_damage_age()`](https://for-cast.github.io/landisutils/reference/apply_calibrated_damage_age.md)
+  : Scale a fire damage table's cohort ages by a calibrated multiplier
+
 - [`apply_calibrated_hi_prop()`](https://for-cast.github.io/landisutils/reference/apply_calibrated_hi_prop.md)
   : Overwrite FireSizesTable Sp/Sum/Fall HiProp columns with calibrated
   values
