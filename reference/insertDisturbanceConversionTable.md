@@ -13,8 +13,9 @@ insertDisturbanceConversionTable(df)
 - df:
 
   data.frame corresponding to `DisturbanceConversionTable`, with
-  columns: `Fuel` (int), `Type` (int), `Duration` (int), and
-  `Prescription` (char).
+  columns: `Fuel` (int, the fuel type index), `Duration` (int, years)
+  and `Prescription` (char, a harvest prescription name or a
+  `FireSeverityN` / `WindSeverityN` keyword).
 
 ## Value
 

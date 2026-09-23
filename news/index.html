@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.154</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.155</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,6 +41,11 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.155" id="landisutils-00155">landisutils 0.0.155<a class="anchor" aria-label="anchor" href="#landisutils-00155"></a></h2>
+<ul><li>
+<code>DynamicFuels</code>’s <code>DisturbanceConversionTable</code> now takes the three columns the Dynamic Fuels user guide (2.8) specifies – fuel type index, duration in years, and either a harvest prescription name or a <code>FireSeverityN</code> / <code>WindSeverityN</code> keyword – instead of four. The four-column form came from reading the written header’s “Fuel Type” as two columns, and survived because the table had only ever been empty: the first project to populate it could not write a config at all.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.154" id="landisutils-00154">landisutils 0.0.154<a class="anchor" aria-label="anchor" href="#landisutils-00154"></a></h2>
 <ul><li><p>New loss component <code>mortality</code>, with <code><a href="../reference/landis_overstory_mortality_share.html">landis_overstory_mortality_share()</a></code> behind it: the share of a replicate’s burned cells whose dominant cohort was killed, from the severity maps, the initial communities, the species tolerances and the fire damage table. It exists because the <code>severity</code> component compares quantities on different scales – an observed burn-severity class measures vegetation change, while the extension’s severity classes are crown fraction burned, and the two disagree wherever fire kills the canopy from the ground without crowning. <code><a href="../reference/save_observed_fire_targets.html">save_observed_fire_targets()</a></code> gains <code>mortality_share</code> to carry the observed side. Existing calibrations are unaffected: without an observed share the component contributes 0.</p></li>
