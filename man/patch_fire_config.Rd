@@ -25,6 +25,11 @@ per-ecoregion HiProp calibration would require 6 params not 3.
 base-type-specific candidate (e.g., \code{IgnProb_Conifer} for \code{Base == "Conifer"}).
 Default IgnProbs are mostly 1.0 (D1 = 0.5), so candidate range \verb{[0, 1.5]}
 directly scales the relative-weighting.
+\item \code{FireDamageTable} cohort-age column multiplied by \code{DamageAgeMultiplier},
+rounded to whole percentages and forced strictly increasing. The paired
+severity-minus-tolerance column must be an integer, so it is left alone:
+shifting it offers only a few reachable outcomes and cannot be fitted,
+whereas the age column is a percentage of longevity and scales smoothly.
 }
 }
 \details{
@@ -33,6 +38,7 @@ of the template so trials don't collide.
 }
 \seealso{
 Other Dynamic Fire calibration helpers:
+\code{\link[=apply_calibrated_damage_age]{apply_calibrated_damage_age()}},
 \code{\link[=apply_calibrated_hi_prop]{apply_calibrated_hi_prop()}},
 \code{\link[=apply_calibrated_ignprob]{apply_calibrated_ignprob()}},
 \code{\link[=apply_calibrated_num_fires]{apply_calibrated_num_fires()}},

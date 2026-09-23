@@ -23,6 +23,7 @@ with the calibrated triple (shared across all ecoregion rows).
 }
 \seealso{
 Other Dynamic Fire calibration helpers:
+\code{\link[=apply_calibrated_damage_age]{apply_calibrated_damage_age()}},
 \code{\link[=apply_calibrated_ignprob]{apply_calibrated_ignprob()}},
 \code{\link[=apply_calibrated_num_fires]{apply_calibrated_num_fires()}},
 \code{\link[=bc_fuel_code_to_base]{bc_fuel_code_to_base()}},
@@ -46,6 +47,7 @@ Other Dynamic Fire calibration helpers:
 
 Other Dynamic Fire helpers:
 \code{\link{DynamicFire}},
+\code{\link[=apply_calibrated_damage_age]{apply_calibrated_damage_age()}},
 \code{\link[=apply_calibrated_ignprob]{apply_calibrated_ignprob()}},
 \code{\link[=apply_calibrated_num_fires]{apply_calibrated_num_fires()}},
 \code{\link[=defaultFuelTypeTable]{defaultFuelTypeTable()}},

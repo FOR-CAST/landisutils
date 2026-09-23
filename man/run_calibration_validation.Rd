@@ -48,6 +48,7 @@ goodness-of-fit that \code{\link[=calibrate_dynamic_fire]{calibrate_dynamic_fire
 }
 \seealso{
 Other Dynamic Fire calibration helpers:
+\code{\link[=apply_calibrated_damage_age]{apply_calibrated_damage_age()}},
 \code{\link[=apply_calibrated_hi_prop]{apply_calibrated_hi_prop()}},
 \code{\link[=apply_calibrated_ignprob]{apply_calibrated_ignprob()}},
 \code{\link[=apply_calibrated_num_fires]{apply_calibrated_num_fires()}},

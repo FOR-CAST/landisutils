@@ -7,7 +7,7 @@
 calibration_par_names()
 }
 \value{
-Character vector of length 10.
+Character vector of length 11.
 }
 \description{
 The order of names in this vector is the canonical order used by
@@ -17,6 +17,7 @@ Callers building \code{lower} / \code{upper} bounds, or passing candidate vector
 }
 \seealso{
 Other Dynamic Fire calibration helpers:
+\code{\link[=apply_calibrated_damage_age]{apply_calibrated_damage_age()}},
 \code{\link[=apply_calibrated_hi_prop]{apply_calibrated_hi_prop()}},
 \code{\link[=apply_calibrated_ignprob]{apply_calibrated_ignprob()}},
 \code{\link[=apply_calibrated_num_fires]{apply_calibrated_num_fires()}},
