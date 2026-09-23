@@ -1,10 +1,10 @@
 ## Tests for the Dynamic Fire calibration pure-data helpers (Phase 8a).
 ## Fixtures under inst/testdata/ are sampled from real LANDIS-II rep01 outputs.
 
-test_that("calibration_par_names() is the canonical 10-entry vector", {
+test_that("calibration_par_names() is the canonical 11-entry vector", {
   nm <- calibration_par_names()
   expect_type(nm, "character")
-  expect_length(nm, 10L)
+  expect_length(nm, 11L)
   expect_setequal(
     nm,
     c(
@@ -17,7 +17,8 @@ test_that("calibration_par_names() is the canonical 10-entry vector", {
       "IgnProb_Deciduous",
       "IgnProb_Slash",
       "IgnProb_Open",
-      "NumFires"
+      "NumFires",
+      "DamageAgeMultiplier"
     )
   )
 })
@@ -433,6 +434,84 @@ test_that("apply_calibrated_num_fires() replaces the rate only when it is calibr
   expect_equal(apply_calibrated_num_fires(fst, c(SeverityCalibrationFactor = 1))$NumFires, 0.87)
 })
 
+test_that("patch_fire_config() scales the damage table's age column, leaving the severities", {
+  scenario_dir <- withr::local_tempdir()
+  fs::file_copy(
+    system.file("testdata", "dynamic-fire-sample.txt", package = "landisutils"),
+    fs::path(scenario_dir, "dynamic-fire.txt")
+  )
+
+  patched <- readLines(patch_fire_config(scenario_dir, c(DamageAgeMultiplier = 0.2)))
+  rows <- patched[seq(grep("^FireDamageTable", patched) + 4L, length.out = 4L)]
+  parts <- strsplit(trimws(rows), "\\s+")
+
+  ## 20/50/85/100 scaled by 0.2 and rounded.
+  expect_equal(vapply(parts, \(x) x[1L], character(1)), c("4%", "10%", "17%", "20%"))
+  ## The severity-minus-tolerance column is an integer and must not move.
+  expect_equal(vapply(parts, \(x) as.numeric(x[2L]), numeric(1)), c(-2, -1, 0, 1))
+})
+
+test_that("patch_fire_config() keeps the scaled age column strictly increasing", {
+  scenario_dir <- withr::local_tempdir()
+  fs::file_copy(
+    system.file("testdata", "dynamic-fire-sample.txt", package = "landisutils"),
+    fs::path(scenario_dir, "dynamic-fire.txt")
+  )
+
+  ## Rounding 20/50/85/100 by 0.02 would give 0/1/2/2 -- a zero row and a repeat, both of
+  ## which make a row unreachable.
+  patched <- readLines(patch_fire_config(scenario_dir, c(DamageAgeMultiplier = 0.02)))
+  rows <- patched[seq(grep("^FireDamageTable", patched) + 4L, length.out = 4L)]
+  pcts <- vapply(strsplit(trimws(rows), "\\s+"), \(x) as.numeric(sub("%$", "", x[1L])), numeric(1))
+
+  expect_equal(pcts, c(1, 2, 3, 4))
+})
+
+test_that("patch_fire_config() refuses a damage-age multiplier that is negative or too large", {
+  scenario_dir <- withr::local_tempdir()
+  fs::file_copy(
+    system.file("testdata", "dynamic-fire-sample.txt", package = "landisutils"),
+    fs::path(scenario_dir, "dynamic-fire.txt")
+  )
+
+  expect_snapshot(error = TRUE, patch_fire_config(scenario_dir, c(DamageAgeMultiplier = -0.5)))
+  expect_snapshot(error = TRUE, patch_fire_config(scenario_dir, c(DamageAgeMultiplier = 1.5)))
+})
+
+test_that("apply_calibrated_damage_age() scales the age column only when calibrated", {
+  tbl <- defaultFireDamageTable()
+
+  out <- apply_calibrated_damage_age(tbl, c(DamageAgeMultiplier = 0.2))
+  expect_equal(out[[1L]], c(4L, 10L, 17L, 20L))
+  ## The severity-minus-tolerance column is untouched.
+  expect_equal(out[[2L]], tbl[[2L]])
+
+  ## A vector without it leaves the table as it was.
+  expect_equal(apply_calibrated_damage_age(tbl, c(NumFires = 2))[[1L]], tbl[[1L]])
+})
+
+test_that("apply_calibrated_damage_age() agrees with the config patch it mirrors", {
+  scenario_dir <- withr::local_tempdir()
+  fs::file_copy(
+    system.file("testdata", "dynamic-fire-sample.txt", package = "landisutils"),
+    fs::path(scenario_dir, "dynamic-fire.txt")
+  )
+  patched <- readLines(patch_fire_config(scenario_dir, c(DamageAgeMultiplier = 0.37)))
+  rows <- patched[seq(grep("^FireDamageTable", patched) + 4L, length.out = 4L)]
+  from_text <- vapply(
+    strsplit(trimws(rows), "\\s+"),
+    \(x) as.integer(sub("%$", "", x[1L])),
+    integer(1)
+  )
+
+  from_df <- apply_calibrated_damage_age(
+    defaultFireDamageTable(),
+    c(DamageAgeMultiplier = 0.37)
+  )[[1L]]
+
+  expect_equal(from_text, from_df)
+})
+
 test_that("patch_fire_config() rejects par_vec with wrong names", {
   scenario_dir <- withr::local_tempdir()
   fs::file_copy(
@@ -773,6 +852,18 @@ test_that("landis_overstory_mortality_share() kills everything at severity 5", {
 test_that("landis_overstory_mortality_share() returns NULL without severity maps", {
   dir <- .mk_mortality_rep(list())
   expect_null(landis_overstory_mortality_share(dir))
+})
+
+test_that("landis_overstory_mortality_share() scores no mortality where nothing was damaged", {
+  ## Map value 2 is a burned cell in which the extension damaged NO cohort. It counts as
+  ## burned, but never as a lost dominant cohort -- re-deriving one from the damage table
+  ## would invent a severity of 0 the map does not record.
+  dir <- .mk_mortality_rep(list(c(2L, 2L, 2L, 2L)))
+  m <- landis_overstory_mortality_share(dir)
+
+  expect_equal(m$burned_cells, 4L)
+  expect_equal(m$high_cells, 0L)
+  expect_equal(m$share, 0)
 })
 
 test_that("the mortality loss component is the relative gap to the observed share", {

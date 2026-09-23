@@ -68,6 +68,7 @@ cells that differ, only cells that are already identical.
 \code{\link[=run_calibration_spinup]{run_calibration_spinup()}}
 
 Other Dynamic Fire calibration helpers:
+\code{\link[=apply_calibrated_damage_age]{apply_calibrated_damage_age()}},
 \code{\link[=apply_calibrated_hi_prop]{apply_calibrated_hi_prop()}},
 \code{\link[=apply_calibrated_ignprob]{apply_calibrated_ignprob()}},
 \code{\link[=apply_calibrated_num_fires]{apply_calibrated_num_fires()}},

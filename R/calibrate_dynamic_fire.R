@@ -17,7 +17,7 @@ NULL
 #' Callers building `lower` / `upper` bounds, or passing candidate vectors to
 #' [patch_fire_config()], must match this exact set.
 #'
-#' @returns Character vector of length 10.
+#' @returns Character vector of length 11.
 #'
 #' @family Dynamic Fire calibration helpers
 #'
@@ -33,7 +33,8 @@ calibration_par_names <- function() {
     "IgnProb_Deciduous",
     "IgnProb_Slash",
     "IgnProb_Open",
-    "NumFires"
+    "NumFires",
+    "DamageAgeMultiplier"
   )
 }
 
@@ -235,9 +236,17 @@ landis_overstory_mortality_share <- function(rep_dir) {
     if (!any(ok)) {
       next
     }
+    ## A class of 0 is the map's value 2: the extension burned the cell and damaged NO cohort
+    ## (user guide 3.1). Its severity is not recorded, so re-deriving mortality from the damage
+    ## table there would invent a severity of 0 and, at any tolerance the table reaches, score a
+    ## share of those cells as having lost their dominant cohort -- against the extension's own
+    ## statement that nothing was killed. They stay in the denominator, because the observed
+    ## reference counts every assessed pixel inside a fire perimeter including the unburned ones.
+    damaged <- class[ok] >= 1L
     diff <- class[ok] - dom$tol[idx[ok]]
     killed_to <- .damage_age_pct(damage, diff)
-    high_cells <- high_cells + sum(class[ok] >= 5 | dom$age_share[idx[ok]] <= killed_to)
+    high_cells <- high_cells +
+      sum(damaged & (class[ok] >= 5 | dom$age_share[idx[ok]] <= killed_to))
   }
   list(
     burned_cells = burned_cells,
@@ -326,7 +335,9 @@ landis_overstory_mortality_share <- function(rep_dir) {
 #' Walks `<rep_dir>/fire/severity-{t}.tif` and the matching
 #' `<rep_dir>/fire/FuelType-{t}.tif` files, masks the fuel raster to cells
 #' with severity > 1 (the Dynamic Fire encoding is 0 = inactive,
-#' 1 = active-but-unburned, >= 2 = burned with the value as severity class),
+#' 1 = active-but-unburned, 2 = burned with no cohort damaged, and severity + 2
+#' for a damaged cell, so `> 1` is every burned cell and the value is NOT the
+#' severity class),
 #' and accumulates cell counts per fuel code across timesteps. Each
 #' cell-timestep is counted once, so a cell that burns in two distinct
 #' timesteps contributes twice -- matching NBAC's per-fire-perimeter
@@ -409,6 +420,11 @@ landis_overstory_mortality_share <- function(rep_dir) {
 #'         base-type-specific candidate (e.g., `IgnProb_Conifer` for `Base == "Conifer"`).
 #'         Default IgnProbs are mostly 1.0 (D1 = 0.5), so candidate range `[0, 1.5]`
 #'         directly scales the relative-weighting.
+#'   \item `FireDamageTable` cohort-age column multiplied by `DamageAgeMultiplier`,
+#'         rounded to whole percentages and forced strictly increasing. The paired
+#'         severity-minus-tolerance column must be an integer, so it is left alone:
+#'         shifting it offers only a few reachable outcomes and cannot be fitted,
+#'         whereas the age column is a percentage of longevity and scales smoothly.
 #' }
 #'
 #' The file is patched in place; callers are expected to pass a per-trial copy
@@ -532,6 +548,59 @@ patch_fire_config <- function(scenario_dir, par_vec) {
       }
     }
     j <- j + 1L
+  }
+
+  ## 4. FireDamageTable cohort-age column, scaled by DamageAgeMultiplier
+  ##
+  ## The table's severity-minus-tolerance column must be an integer (user guide 2.16.3), so
+  ## shifting it gives only a handful of reachable outcomes and cannot be fitted. The age
+  ## column is a percentage of longevity (2.16.2), which scales continuously, so that is what
+  ## a calibration can move: the multiplier asks how much younger than the guide's example
+  ## table a cohort must be before a fire of a given severity kills it.
+  ##
+  ## Scaling the FILE's own values rather than an assumed 20/50/85/100 keeps this honest for a
+  ## template carrying a different baseline table, and does not compound across trials because
+  ## every trial patches a fresh copy of the template (see `sim_landis()`).
+  if ("DamageAgeMultiplier" %in% names(par_vec)) {
+    mult <- par_vec[["DamageAgeMultiplier"]]
+    dt_hdr <- grep("^FireDamageTable[[:space:]]*$", lines)
+    if (length(dt_hdr) != 1L) {
+      stop(
+        "Expected exactly one FireDamageTable header in ",
+        fire_txt,
+        " (found ",
+        length(dt_hdr),
+        ")",
+        call. = FALSE
+      )
+    }
+    k <- dt_hdr + 1L
+    while (k <= length(lines) && (grepl("^[[:space:]]*>>", lines[k]) || !nzchar(trimws(lines[k])))) {
+      k <- k + 1L
+    }
+    ## Row indices and the percentages they carry, so the whole column can be rescaled at once
+    ## and kept strictly increasing -- a row that did not exceed its predecessor would be
+    ## unreachable, since the extension takes the first row whose bound the cohort falls under.
+    rows <- integer(0)
+    pcts <- numeric(0)
+    while (k <= length(lines) && nzchar(trimws(lines[k])) && !grepl("^[A-Za-z]", lines[k])) {
+      parts <- strsplit(trimws(lines[k]), "\\s+")[[1]]
+      pct <- suppressWarnings(as.numeric(sub("%$", "", parts[1L])))
+      if (length(parts) >= 2L && !is.na(pct)) {
+        rows <- c(rows, k)
+        pcts <- c(pcts, pct)
+      }
+      k <- k + 1L
+    }
+    if (length(rows) == 0L) {
+      stop("FireDamageTable in ", fire_txt, " has no data rows", call. = FALSE)
+    }
+    scaled <- .scale_damage_age(pcts, mult)
+    for (n in seq_along(rows)) {
+      parts <- strsplit(trimws(lines[rows[n]]), "\\s+")[[1]]
+      parts[1L] <- sprintf("%d%%", as.integer(scaled[n]))
+      lines[rows[n]] <- paste(parts, collapse = "    ")
+    }
   }
 
   writeLines(lines, fire_txt)
@@ -1110,6 +1179,77 @@ apply_calibrated_num_fires <- function(fire_size_table, calibrated_fire_params) 
     fire_size_table$NumFires <- calibrated_fire_params[["NumFires"]]
   }
   fire_size_table
+}
+
+
+## Scale a FireDamageTable cohort-age column (internal).
+##
+## Shared by `patch_fire_config()`, which rewrites a calibration trial's config text, and
+## `apply_calibrated_damage_age()`, which rewrites a production table, so the two cannot drift.
+## Percentages are whole numbers (user guide 2.16.2), and each row must exceed the one above it:
+## the extension takes the first row whose bound the cohort falls under, so a row that did not
+## increase could never be reached.
+.scale_damage_age <- function(pcts, mult) {
+  if (!is.numeric(mult) || length(mult) != 1L || !is.finite(mult) || mult < 0) {
+    stop(
+      "DamageAgeMultiplier must be a non-negative finite number, not ",
+      paste(format(mult), collapse = ", "),
+      call. = FALSE
+    )
+  }
+  scaled <- pmax(round(pcts * mult), 1)
+  for (n in seq_along(scaled)[-1L]) {
+    scaled[n] <- max(scaled[n], scaled[n - 1L] + 1L)
+  }
+  if (max(scaled) > 100) {
+    stop(
+      "DamageAgeMultiplier of ",
+      mult,
+      " scales the fire damage table past 100 % of longevity, which the user guide (2.16.2) ",
+      "does not allow",
+      call. = FALSE
+    )
+  }
+  as.integer(scaled)
+}
+
+#' Scale a fire damage table's cohort ages by a calibrated multiplier
+#'
+#' Multiplies the cohort-age column of `fire_damage_table` by `DamageAgeMultiplier` when the
+#' calibrated vector carries it, and leaves the table alone when it does not. This is the
+#' production-side counterpart of the same scaling [patch_fire_config()] applies to a
+#' calibration trial, so a calibrated table reaches the simulations it was fitted for.
+#'
+#' The paired severity-minus-tolerance column is never touched: the user guide (2.16.3) requires
+#' an integer there, so it offers only a few reachable outcomes and is not a fittable quantity,
+#' whereas the age column is a percentage of longevity (2.16.2) and scales continuously.
+#'
+#' @param fire_damage_table data.frame whose FIRST column is the cohort age as a percentage of
+#'   longevity, as [defaultFireDamageTable()] returns.
+#' @param calibrated_fire_params Named numeric vector. Used only if it holds
+#'   `DamageAgeMultiplier`.
+#'
+#' @returns A copy of `fire_damage_table` with the age column scaled where calibrated.
+#'
+#' @family Dynamic Fire calibration helpers
+#' @family Dynamic Fire helpers
+#'
+#' @export
+apply_calibrated_damage_age <- function(fire_damage_table, calibrated_fire_params) {
+  stopifnot(
+    is.data.frame(fire_damage_table),
+    ncol(fire_damage_table) >= 2L,
+    nrow(fire_damage_table) > 0L,
+    is.numeric(calibrated_fire_params),
+    !is.null(names(calibrated_fire_params))
+  )
+  if ("DamageAgeMultiplier" %in% names(calibrated_fire_params)) {
+    fire_damage_table[[1L]] <- .scale_damage_age(
+      fire_damage_table[[1L]],
+      calibrated_fire_params[["DamageAgeMultiplier"]]
+    )
+  }
+  fire_damage_table
 }
 
 

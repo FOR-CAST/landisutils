@@ -1,3 +1,11 @@
+# landisutils 0.0.156
+
+* `calibration_par_names()` gains `DamageAgeMultiplier`, and `patch_fire_config()` scales the `FireDamageTable`'s cohort-age column by it, so the damage table can be calibrated. The paired severity-minus-tolerance column is deliberately left alone: the user guide (2.16.3) requires an integer there, which gives only a few reachable mortality levels and cannot be fitted, while the age column is a percentage of longevity (2.16.2) and scales smoothly. Scaled values are rounded to whole percentages and forced strictly increasing, since a row that does not exceed its predecessor can never be reached.
+
+* New `apply_calibrated_damage_age()` applies a calibrated `DamageAgeMultiplier` to a production fire damage table, so a fitted table reaches the simulations it was fitted for; it leaves the table alone when the vector does not carry one. It and `patch_fire_config()` share the scaling, so the calibration trial and the production config cannot drift apart.
+
+* `landis_overstory_mortality_share()` no longer scores mortality on cells the extension burned without damaging any cohort. The severity map writes 2 for those cells and severity + 2 for damaged ones (user guide 3.1), so treating the value as severity + 2 throughout gave them a severity of 0 and then asked the damage table what a severity of 0 kills -- inventing mortality against the extension's own statement that nothing was killed. Such cells remain in the denominator, matching an observed reference that counts every assessed pixel inside a fire perimeter.
+
 # landisutils 0.0.155
 
 * `DynamicFuels`'s `DisturbanceConversionTable` now takes the three columns the Dynamic Fuels user guide (2.8) specifies -- fuel type index, duration in years, and either a harvest prescription name or a `FireSeverityN` / `WindSeverityN` keyword -- instead of four. The four-column form came from reading the written header's "Fuel Type" as two columns, and survived because the table had only ever been empty: the first project to populate it could not write a config at all.
