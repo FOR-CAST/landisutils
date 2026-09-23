@@ -63,7 +63,7 @@ One of \code{"WardSeedDispersal"}, \code{"NoDispersal"}, \code{"UniversalDispers
 
     \item{\code{ForCSMapControl}}{\code{data.frame}.}
 
-    \item{\code{MapOutputInterval}}{Integer.}
+    \item{\code{MapOutputInterval}}{Integer. Map output interval (years); \code{0} writes no maps.}
 
     \item{\code{SpinUp}}{\code{data.frame}.}
 
@@ -156,7 +156,7 @@ raster.}
 four columns: Biomass, DOM_Pools, Fluxes, Summary intervals).}
       \item{\code{ForCSMapControl}}{\code{data.frame} (one row, seven columns: \code{BiomassC},
 \code{SDOMC}, \code{NBP}, \code{NEP}, \code{NPP}, \code{RH}, \code{ToFPS} toggles).}
-      \item{\code{MapOutputInterval}}{Integer. Map output interval (years).}
+      \item{\code{MapOutputInterval}}{Integer. Map output interval (years); \code{0} writes no maps.}
       \item{\code{SpinUp}}{\code{data.frame} (one row, four columns: On/Off Flag,
 Biomass Spin-up Flag, Tolerance \%, Max Iterations).}
       \item{\code{AvailableLightBiomass}}{\code{data.frame}.}
