@@ -13,7 +13,7 @@ sim_landis(
   pool = NULL,
   pool_idx = NULL,
   method = NULL,
-  pixel_area_ha = 1,
+  pixel_area_ha = NULL,
   keep_scratch = FALSE,
   retries = 0L,
   trial_timeout_sec = NULL
@@ -47,7 +47,10 @@ the actual Duration comes from the template's scenario.txt).}
 \item{method}{Character. \code{"docker"} or \code{"local"}. Used only when \code{pool} is
 NULL. Default from \code{getOption("landisutils.run.method")}.}
 
-\item{pixel_area_ha}{Numeric. Hectares per cell. Default 1.}
+\item{pixel_area_ha}{Numeric or NULL. Hectares per cell. Default NULL derives it from the
+template's \code{scenario.txt} \code{CellLength}, so fire sizes are in hectares on any grid. A value
+that disagrees with \code{CellLength} is an error: the calibration drivers never passed one, so
+every trial on a non-100 m grid was scored in cells against observed hectares.}
 
 \item{keep_scratch}{Logical. Leave the per-trial scratch dir in place for
 debugging. Default FALSE.}

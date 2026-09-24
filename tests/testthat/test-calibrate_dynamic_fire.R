@@ -65,15 +65,45 @@ test_that("parse_dynamic_fire_logs() reads sample event + summary logs", {
   expect_equal(min(parsed$n_fires_by_year$year), 1L)
   expect_equal(nrow(parsed$n_fires_by_year), 6L)
   expect_false(0L %in% parsed$n_fires_by_year$year)
-  ## sample has 4 events; sizes column is DamagedSites
+  ## sample has 4 events. Sizes come from SitesChecked (537, 3, 49, 3): the log's DamagedSites
+  ## (538, 4, 50, 4) is one more than the burned cells on every event.
   expect_equal(parsed$n_events, 4L)
-  expect_equal(parsed$total_sites_burned, 538L + 4L + 50L + 4L)
-  expect_true(all(parsed$fire_sizes_ha > 0))
-  expect_true(is.numeric(parsed$fire_sizes_ha))
+  expect_equal(parsed$fire_sizes_ha, c(3, 3, 49, 537))
+  expect_equal(parsed$total_sites_burned, 537L + 3L + 49L + 3L)
+  ## MeanSeverity is divided by DamagedSites, so it is rescaled onto the burned cells: the
+  ## three-cell fires logged at 0.75 are three cells at severity 1.
+  expect_equal(parsed$events$mean_severity[parsed$events$sites == 3L], c(1, 1))
+  expect_equal(
+    parsed$events$mean_severity[parsed$events$sites == 537L],
+    4.397769516728625 * 538 / 537
+  )
   ## eco column trimmed of leading/trailing whitespace
   expect_equal(unique(parsed$events$eco), "FRU59")
   ## no severity-*.tif / FuelType-*.tif in the test fixture -> area_by_fuel_ha NULL
   expect_null(parsed$area_by_fuel_ha)
+})
+
+test_that("the cell area comes from the scenario's CellLength and must agree with it", {
+  dir <- withr::local_tempdir()
+  writeLines(c("LandisData  \"Scenario\"", "CellLength    120"), fs::path(dir, "scenario.txt"))
+
+  expect_equal(.resolve_pixel_area_ha(dir), 1.44)
+  expect_equal(.resolve_pixel_area_ha(dir, 1.44), 1.44)
+  ## The drivers never passed one, so every trial on a 120 m grid was scored in cells.
+  expect_snapshot(error = TRUE, .resolve_pixel_area_ha(dir, 1))
+})
+
+test_that("observed targets built on a different grid are refused", {
+  dir <- withr::local_tempdir()
+  writeLines(c("LandisData  \"Scenario\"", "CellLength    120"), fs::path(dir, "scenario.txt"))
+
+  expect_invisible(.check_observed_pixel_area(list(pixel_area_ha = 1.44), dir))
+  expect_snapshot(error = TRUE, .check_observed_pixel_area(list(pixel_area_ha = 1), dir))
+
+  ## A mock template with no CellLength has no grid to disagree with.
+  mock <- withr::local_tempdir()
+  writeLines("LandisData  \"Scenario\"", fs::path(mock, "scenario.txt"))
+  expect_null(.check_observed_pixel_area(list(pixel_area_ha = 1), mock))
 })
 
 test_that("parse_dynamic_fire_logs() errors clearly when logs are missing", {
@@ -2476,7 +2506,9 @@ test_that("cfg$retries reaches landis_pool_exec and defaults to fail-fast", {
     }
   )
   tmpl <- withr::local_tempdir()
-  file.create(fs::path(tmpl, c("scenario.txt", "dynamic-fire.txt")))
+  file.create(fs::path(tmpl, "dynamic-fire.txt"))
+  ## sim_landis reads the cell area from the template's CellLength before anything else.
+  writeLines("CellLength    100", fs::path(tmpl, "scenario.txt"))
   ## sim_landis asserts the pool's bind-mount root IS the scratch root, so the container can see the
   ## trial dir; the fake pool must therefore carry the same path.
   scratch <- withr::local_tempdir()
