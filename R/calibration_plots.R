@@ -104,10 +104,11 @@ calibration_plot_palette <- function(...) {
 #' Binds every replicate's event table into one data frame and adds the burned
 #' area of each event in hectares. One row per simulated fire event.
 #'
-#' `mean_severity` is the value Dynamic Fire writes to its event log: the mean
-#' severity over all of the event's sites, which is why it can fall below 1.
-#' Note that it and `sites` (the log's `DamagedSites`) are not on the same
-#' denominator.
+#' `sites` is the event's burned cells (the log's `SitesChecked`) and
+#' `mean_severity` its mean severity over those cells, as
+#' [parse_dynamic_fire_logs()] recovers them. The log's own `MeanSeverity` is
+#' divided by `DamagedSites`, one more than the burned cells, which is why raw
+#' values fall below 1.
 #'
 #' @param stats A `run_calibration_validation()` summary.
 #'

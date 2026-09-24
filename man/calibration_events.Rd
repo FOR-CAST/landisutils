@@ -18,10 +18,11 @@ Binds every replicate's event table into one data frame and adds the burned
 area of each event in hectares. One row per simulated fire event.
 }
 \details{
-\code{mean_severity} is the value Dynamic Fire writes to its event log: the mean
-severity over all of the event's sites, which is why it can fall below 1.
-Note that it and \code{sites} (the log's \code{DamagedSites}) are not on the same
-denominator.
+\code{sites} is the event's burned cells (the log's \code{SitesChecked}) and
+\code{mean_severity} its mean severity over those cells, as
+\code{\link[=parse_dynamic_fire_logs]{parse_dynamic_fire_logs()}} recovers them. The log's own \code{MeanSeverity} is
+divided by \code{DamagedSites}, one more than the burned cells, which is why raw
+values fall below 1.
 }
 \seealso{
 Other calibration plots:

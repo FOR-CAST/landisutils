@@ -104,6 +104,61 @@ calibration_par_names <- function() {
   df[, !blank, drop = FALSE]
 }
 
+## Hectares per cell from a scenario directory's `scenario.txt` `CellLength` (metres) (internal).
+.scenario_pixel_area_ha <- function(scenario_dir) {
+  f <- fs::path(scenario_dir, "scenario.txt")
+  if (!fs::file_exists(f)) {
+    stop("scenario.txt not found in ", scenario_dir, "; cannot read CellLength", call. = FALSE)
+  }
+  ln <- grep("^\\s*CellLength\\b", readLines(f, warn = FALSE), value = TRUE)
+  len <- suppressWarnings(as.numeric(strsplit(trimws(ln[1L]), "\\s+")[[1]][2L]))
+  if (length(ln) != 1L || !is.finite(len) || len <= 0) {
+    stop("Expected one numeric CellLength in ", f, call. = FALSE)
+  }
+  len^2 / 10000
+}
+
+## The cell area a trial's sizes are converted with: the scenario's own, unless a caller supplied
+## one, which must then agree with it (internal).
+.resolve_pixel_area_ha <- function(scenario_dir, pixel_area_ha = NULL) {
+  from_scenario <- .scenario_pixel_area_ha(scenario_dir)
+  if (!is.null(pixel_area_ha) && !isTRUE(all.equal(pixel_area_ha, from_scenario))) {
+    stop(
+      "pixel_area_ha = ",
+      pixel_area_ha,
+      " disagrees with the scenario's CellLength, which gives ",
+      from_scenario,
+      " ha per cell",
+      call. = FALSE
+    )
+  }
+  from_scenario
+}
+
+## The observed targets carry the cell area of the fuel raster they were built on. If it differs
+## from the simulated landscape's, simulated and observed areas are on different scales (internal).
+.check_observed_pixel_area <- function(observed, scenario_dir) {
+  ## A mock-simulator template need not be a real scenario: without a CellLength there is no
+  ## simulated grid to disagree with. `sim_landis()` still requires one.
+  f <- fs::path(scenario_dir, "scenario.txt")
+  if (!fs::file_exists(f) || !any(grepl("^\\s*CellLength\\b", readLines(f, warn = FALSE)))) {
+    return(invisible(NULL))
+  }
+  obs <- observed$pixel_area_ha
+  sim <- .scenario_pixel_area_ha(scenario_dir)
+  if (!is.null(obs) && is.finite(obs) && !isTRUE(all.equal(obs, sim))) {
+    stop(
+      "The observed targets were built on ",
+      obs,
+      " ha cells but the scenario's CellLength gives ",
+      sim,
+      " ha; rebuild the targets on the simulation grid",
+      call. = FALSE
+    )
+  }
+  invisible(sim)
+}
+
 #' Parse a Dynamic Fire run's event and summary logs
 #'
 #' Reads `<rep_dir>/fire/dynamic-fire-event-log.csv` (one row per fire event)
@@ -113,9 +168,16 @@ calibration_par_names <- function() {
 #'
 #' Columns parsed (Dynamic Fire System v4):
 #' \itemize{
-#'   \item event-log: `Time`, `InitFireRegion`, `InitFuel`, `DamagedSites`, `MeanSeverity`.
+#'   \item event-log: `Time`, `InitFireRegion`, `InitFuel`, `SitesChecked`, `DamagedSites`,
+#'         `MeanSeverity`.
 #'   \item summary-log: `Time`, `NumberFires`, `TotalSitesBurned`.
 #' }
+#'
+#' A fire's size is taken from `SitesChecked`. The extension logs `DamagedSites` as one more
+#' than the cells the fire burned, on every event, while `SitesChecked` equals the burned cells
+#' on the timestep's severity map. `MeanSeverity` is divided by that inflated count, so the
+#' returned `mean_severity` is rescaled to `MeanSeverity * DamagedSites / SitesChecked`, the mean
+#' over the burned cells.
 #'
 #' Cells -> hectares uses `pixel_area_ha` (1 ha for a 100 m x 100 m grid).
 #'
@@ -166,12 +228,52 @@ parse_dynamic_fire_logs <- function(rep_dir, pixel_area_ha = 1.0) {
     .drop_initial_timestep()
 
   if (nrow(events) > 0L) {
+    if (!all(c("SitesChecked", "DamagedSites") %in% names(events))) {
+      stop(
+        "Dynamic Fire event log ",
+        event_path,
+        " lacks SitesChecked or DamagedSites; the burned area and mean severity cannot be recovered",
+        call. = FALSE
+      )
+    }
+    ## A fire's burned area is `SitesChecked`, not `DamagedSites`. The extension logs
+    ## `DamagedSites` as one more than the cells the fire burned, on every event: a fire that
+    ## burns only its ignition cell logs 2, and the burned cells on that timestep's severity map
+    ## equal `SitesChecked` exactly. `MeanSeverity` is the summed severity divided by that same
+    ## inflated count, so it is rescaled onto the burned cells; left alone it reads 0.5 for a
+    ## one-cell fire at severity 1 and 1.5 for one at severity 3.
+    checked <- as.integer(events$SitesChecked)
+    damaged <- as.integer(events$DamagedSites)
+    ## The reading below rests on `DamagedSites == SitesChecked + 1`, verified against the
+    ## severity maps on one landscape. Say so if a log breaks it, rather than silently scoring
+    ## sizes on an assumption that no longer holds. A warning, not an error, so it cannot strand
+    ## a long calibration.
+    off <- which(damaged - checked != 1L)
+    if (length(off) > 0L) {
+      warning(
+        "Dynamic Fire event log ",
+        event_path,
+        ": DamagedSites is not SitesChecked + 1 on ",
+        length(off),
+        " of ",
+        length(damaged),
+        " events (first at row ",
+        off[1L],
+        "); fire sizes are taken from SitesChecked, which matched the severity maps only where ",
+        "that relation held",
+        call. = FALSE
+      )
+    }
     events_tbl <- tibble::tibble(
       year = as.integer(events$Time),
       eco = trimws(as.character(events$InitFireRegion)),
       init_fuel = as.integer(events$InitFuel),
-      sites = as.integer(events$DamagedSites),
-      mean_severity = as.numeric(events$MeanSeverity)
+      sites = checked,
+      mean_severity = ifelse(
+        checked > 0L,
+        as.numeric(events$MeanSeverity) * damaged / checked,
+        NA_real_
+      )
     )
     fire_sizes_ha <- sort(as.numeric(events_tbl$sites) * pixel_area_ha)
   } else {
@@ -711,7 +813,7 @@ default_severity_prior_sturtevant2009 <- function() {
 #'         sizes)` -- shape match for the fire-size distribution.
 #'   \item `L_area_fuel`: chi-squared distance between simulated and observed
 #'         burn-area-by-base-fuel-type *proportions*. Simulated area-by-fuel
-#'         comes from each event's ignition fuel code times its `DamagedSites`,
+#'         comes from each event's ignition fuel code times its burned cells,
 #'         mapped to base fuel types via `observed$fuel_code_to_base`. Skipped
 #'         (contributes 0) when either `observed$primary$area_by_fuel_ha` is
 #'         NULL or `observed$fuel_code_to_base` is missing.
@@ -2381,7 +2483,10 @@ run_calibration_spinup <- function(
 #'   `pool` is non-NULL.
 #' @param method Character. `"docker"` or `"local"`. Used only when `pool` is
 #'   NULL. Default from `getOption("landisutils.run.method")`.
-#' @param pixel_area_ha Numeric. Hectares per cell. Default 1.
+#' @param pixel_area_ha Numeric or NULL. Hectares per cell. Default NULL derives it from the
+#'   template's `scenario.txt` `CellLength`, so fire sizes are in hectares on any grid. A value
+#'   that disagrees with `CellLength` is an error: the calibration drivers never passed one, so
+#'   every trial on a non-100 m grid was scored in cells against observed hectares.
 #' @param keep_scratch Logical. Leave the per-trial scratch dir in place for
 #'   debugging. Default FALSE.
 #' @param retries Integer >= 0. Extra attempts if the simulator exits non-zero,
@@ -2415,7 +2520,7 @@ sim_landis <- function(
   pool = NULL,
   pool_idx = NULL,
   method = NULL,
-  pixel_area_ha = 1.0,
+  pixel_area_ha = NULL,
   keep_scratch = FALSE,
   retries = 0L,
   trial_timeout_sec = NULL
@@ -2430,6 +2535,7 @@ sim_landis <- function(
     !is.null(paths$scenario_template),
     fs::dir_exists(paths$scenario_template)
   )
+  pixel_area_ha <- .resolve_pixel_area_ha(paths$scenario_template, pixel_area_ha)
   scratch_root <- paths$scratch_root %||% tempdir()
   fs::dir_create(scratch_root)
 
@@ -3040,6 +3146,7 @@ calibrate_dynamic_fire <- function(observed_targets_path, scenario_template, cfg
   ## Docker daemon cannot see (e.g. user-space autofs / sshfs / NFS mounts).
   scratch_root <- fs::path_real(fs::dir_create(cfg$scratch_root %||% fs::path(out_dir, "scratch")))
   observed <- readRDS(observed_targets_path)
+  .check_observed_pixel_area(observed, scenario_template)
   ## The SEARCHED parameters are whichever `cfg$lower` / `cfg$upper` name, in a stable order -- not
   ## necessarily all of `calibration_par_names()`. Requiring the full set (the former
   ## `setequal(...)`) forced every calibration to search dimensions that a project sets from data,
@@ -4055,6 +4162,7 @@ run_calibration_validation <- function(
   .stop_on_failed_reps(reps, n_reps_i)
 
   observed <- readRDS(observed_targets_path)
+  .check_observed_pixel_area(observed, scenario_template)
   loss <- loss_from_stats(reps = reps, observed = observed, weights = cfg$weights)
 
   list(

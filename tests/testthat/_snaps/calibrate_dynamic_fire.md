@@ -1,3 +1,19 @@
+# the cell area comes from the scenario's CellLength and must agree with it
+
+    Code
+      .resolve_pixel_area_ha(dir, 1)
+    Condition
+      Error:
+      ! pixel_area_ha = 1 disagrees with the scenario's CellLength, which gives 1.44 ha per cell
+
+# observed targets built on a different grid are refused
+
+    Code
+      .check_observed_pixel_area(list(pixel_area_ha = 1), dir)
+    Condition
+      Error:
+      ! The observed targets were built on 1 ha cells but the scenario's CellLength gives 1.44 ha; rebuild the targets on the simulation grid
+
 # patch_fire_config() refuses a damage-age multiplier that is negative or too large
 
     Code
