@@ -291,6 +291,17 @@ testthat::test_that("Forest Carbon Succession (ForCS) inputs are properly create
   testthat::expect_true(any(grepl("^ForCSClimateFile\\s+", contents)))
   testthat::expect_true(any(grepl("^ForCSMapControl", contents)))
   testthat::expect_true(any(grepl("^MapOutputInterval\\s+1", contents)))
+
+  ## MapOutputInterval 0 turns ForCS maps off, and ForCS accepts it. The setter used to reject
+  ## it, so a config asking for no maps could not be written at all. Exercise it through
+  ## write() -- the path that failed -- not only the active binding, then restore the file.
+  ext_forcs$MapOutputInterval <- 0
+  ext_forcs$write()
+  contents_nomaps <- readLines(file.path(tmp_pth, ext_forcs$files[1]))
+  testthat::expect_true(any(grepl("^MapOutputInterval\\s+0\\s*$", contents_nomaps)))
+  testthat::expect_error(ext_forcs$MapOutputInterval <- -1)
+  ext_forcs$MapOutputInterval <- 1
+  ext_forcs$write()
   testthat::expect_true(any(grepl("^SpinUp", contents)))
   testthat::expect_true(any(grepl("^SpeciesParameters", contents)))
 

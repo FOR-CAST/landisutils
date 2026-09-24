@@ -41,7 +41,7 @@ ForCS <- R6Class(
     #'   four columns: Biomass, DOM_Pools, Fluxes, Summary intervals).
     #' @param ForCSMapControl `data.frame` (one row, seven columns: `BiomassC`,
     #'   `SDOMC`, `NBP`, `NEP`, `NPP`, `RH`, `ToFPS` toggles).
-    #' @param MapOutputInterval Integer. Map output interval (years).
+    #' @param MapOutputInterval Integer. Map output interval (years); `0` writes no maps.
     #' @param SpinUp `data.frame` (one row, four columns: On/Off Flag,
     #'   Biomass Spin-up Flag, Tolerance %, Max Iterations).
     #' @param AvailableLightBiomass `data.frame`.
@@ -284,12 +284,15 @@ ForCS <- R6Class(
       }
     },
 
-    #' @field MapOutputInterval Integer.
+    #' @field MapOutputInterval Integer. Map output interval (years); `0` writes no maps.
     MapOutputInterval = function(value) {
       if (missing(value)) {
         return(private$.MapOutputInterval)
       } else {
-        stopifnot(is.numeric(value), length(value) == 1L, value > 0)
+        ## `>= 0`, not `> 0`: ForCS accepts 0 and then writes no spatial maps at all, which is
+        ## the only way to turn them off. The four ForCSOutput log intervals are different --
+        ## ForCS rejects 0 there, so a log can only be thinned (e.g. to 9999), never disabled.
+        stopifnot(is.numeric(value), length(value) == 1L, value >= 0)
 
         private$.MapOutputInterval <- as.integer(value)
       }
