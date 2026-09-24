@@ -229,8 +229,35 @@ truefalse <- function(x) {
   x[!is.na(x$year) & x$year > 0L, , drop = FALSE]
 }
 
-## The five components `loss_from_stats()` scores, in the order it assembles them. Defined once so
+## The components `loss_from_stats()` scores, in the order it assembles them. Defined once so
 ## the weight validation there and the `cfg$weights` check in `calibrate_dynamic_fire()` cannot drift
 ## apart -- they did once before, when `size_tail` existed for four releases without being added to
 ## the whitelist and was silently stripped from every cfg$weights.
-.LOSS_COMPONENTS <- c("count", "size", "size_tail", "area_fuel", "severity", "mortality")
+.LOSS_COMPONENTS <- c(
+  "count",
+  "size",
+  "size_tail",
+  "area_fuel",
+  "severity",
+  "mortality",
+  "area_burned"
+)
+
+## What `L_area_burned` scores when a replicate set burns nothing at all. `log10(0)` is `-Inf`, and
+## DEoptim cannot rank an infinite objective against a finite one, so the no-fire case needs a
+## finite value. Three log units reads as "a thousandfold short", which is worse than any real
+## disagreement this component produces and still comparable with the other components.
+.AREA_BURNED_NO_FIRE <- 3.0
+
+## Is a named weight present and positive?
+##
+## `w[nm]` on a named numeric vector returns a named `NA` when `nm` is absent, NOT `NULL`, so the
+## obvious `(w[nm] %||% 0) > 0` evaluates to `NA` and the enclosing `if` fails with "missing value
+## where TRUE/FALSE needed". `cfg$weights` is whatever the caller supplied, so any component the
+## caller omitted hits this -- which is every component for a caller who weights only the ones it
+## cares about. The `%||%` form survived only because the checks that used it happened to be
+## written for components the existing callers all named.
+.weight_gt0 <- function(w, nm) {
+  v <- suppressWarnings(as.numeric(w[nm]))
+  length(v) == 1L && !is.na(v) && v > 0
+}

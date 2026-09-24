@@ -822,6 +822,32 @@ default_severity_prior_sturtevant2009 <- function() {
 #'         event's `MeanSeverity` binned into integer classes 1..5; observed
 #'         comes from `observed$primary$severity_dist` (a 5-element named
 #'         numeric vector summing to 1). Skipped when observed is NULL.
+#'   \item `L_mortality = |mean(share_sim) - share_obs| / share_obs` -- the
+#'         share of burned area that lost its dominant cohort, against the same
+#'         share observed. Contributes 0 when
+#'         `observed$primary$mortality_share` is NULL or NA, or when no
+#'         replicate kept the severity maps it is measured from.
+#'   \item `L_area_burned = |log10(area_sim / area_obs)|` -- annual area burned,
+#'         simulated against observed. No other component scores how much area
+#'         burns: `L_area_fuel` scores how burned area is distributed across
+#'         base fuel types, not how much there is. A log10 ratio keeps it
+#'         scale-free, so the same weight means the same thing on study areas
+#'         whose burn rates differ by orders of magnitude. Simulated area is
+#'         summed from each replicate's events over the years `L_count` scores,
+#'         converted with `observed$pixel_area_ha`; observed area is
+#'         `sum(fire_sizes_ha) / n_years`. Contributes 0 when the observed
+#'         payload cannot supply an annual rate, and `.AREA_BURNED_NO_FIRE`
+#'         (3.0) when a replicate set burns nothing, since `log10(0)` would be
+#'         infinite and DEoptim cannot rank an infinite objective.
+#'
+#'         This term and `count` both move with the number of fires, so they
+#'         compete for the same lever wherever a calibration scales ignition
+#'         rates. `count` is normalised by the observed year-to-year standard
+#'         deviation, making it steeper by about
+#'         `lambda_obs / sd(n_fires_obs) * ln(10)`; keep
+#'         `weights["area_burned"]` well below `weights["count"]` times that
+#'         factor, or the fitted fire count is pulled off its own target to
+#'         compensate for a fire-size distribution the search cannot change.
 #' }
 #'
 #' All component values are unitless and non-negative; chi-squared components
@@ -836,7 +862,9 @@ default_severity_prior_sturtevant2009 <- function() {
 #'   `$primary$area_by_fuel_ha`, `$primary$severity_dist`,
 #'   `$fuel_code_to_base`, and `$pixel_area_ha` to activate Tier 2 components.
 #' @param weights Named numeric vector. Components: `count`, `size`,
-#'   `area_fuel`, `severity`. Missing components default to 0.
+#'   `size_tail`, `area_fuel`, `severity`, `mortality`, `area_burned`. Missing
+#'   components default to 0, so an existing caller's weights keep their
+#'   meaning when a component is added.
 #'
 #' @returns Named list with `total` (the scalar minimised by DEoptim),
 #'   `components` (per-component contributions), and `weights` (echoed weights).
@@ -1039,13 +1067,76 @@ loss_from_stats <- function(
     }
   }
 
+  ## L_area_burned: annual area burned, as a log10 ratio of simulated to observed.
+  ##
+  ## Nothing else in the loss scores how much area burns. `area_fuel` scores how burned area is
+  ## DISTRIBUTED across base fuel types, not how much of it there is, and `count` and `size` score
+  ## the number and the shape. A parameter set can satisfy every one of them while burning several
+  ## times too much or too little, which for a range-of-variation study is the quantity the whole
+  ## exercise turns on: annual area burned is what drives the seral-stage distribution.
+  ##
+  ## A log10 ratio rather than a normalised difference, because annual area burned spans orders of
+  ## magnitude between study areas and a scale-free term transfers between them unchanged.
+  ##
+  ## Summed from `events` rather than from `fire_sizes_ha`: the latter is a bare sorted vector with
+  ## no year attached, so it cannot be restricted to the scored years. `.drop_initial_timestep()`
+  ## defines those years exactly as `L_count` does, so the two components always divide by the same
+  ## denominator.
+  ##
+  ## NOTE ON WEIGHTING. This term and `count` both move with the number of fires, so they compete
+  ## for the same lever where a calibration scales ignition rates. `count` is normalised by the
+  ## observed year-to-year standard deviation, which makes it the steeper of the two by roughly
+  ## `lambda_obs / sd(n_fires_obs) * ln(10)` -- about 3x on a record with 27.8 fires per year and an
+  ## sd of 18.9. Below that ratio of weights the count target still decides the fire number and this
+  ## term decides only the size of each fire; above it, the two swap roles and the fitted fire count
+  ## is pulled off its target to compensate for a fire-size distribution the search cannot change.
+  ## Keep `weights["area_burned"]` well under `weights["count"]` times that factor.
+  L_area_burned <- {
+    obs_years <- primary$n_years %||% nrow(primary$n_fires_by_year)
+    obs_aab <- if (
+      is.null(primary$fire_sizes_ha) ||
+        !is.numeric(obs_years) ||
+        length(obs_years) != 1L ||
+        !is.finite(obs_years) ||
+        obs_years <= 0
+    ) {
+      NA_real_
+    } else {
+      sum(primary$fire_sizes_ha) / obs_years
+    }
+    if (!is.finite(obs_aab) || obs_aab <= 0) {
+      0.0
+    } else {
+      cell_ha <- observed$pixel_area_ha %||% 1.0
+      sim_aab <- mean(vapply(
+        reps,
+        function(r) {
+          d <- .drop_initial_timestep(r$n_fires_by_year)
+          n_yr <- max(1L, nrow(d))
+          ev <- r$events
+          if (is.null(ev) || nrow(ev) == 0L) {
+            return(0)
+          }
+          sum(as.numeric(ev$sites[ev$year %in% d$year])) * cell_ha / n_yr
+        },
+        numeric(1)
+      ))
+      if (!is.finite(sim_aab) || sim_aab <= 0) {
+        .AREA_BURNED_NO_FIRE
+      } else {
+        abs(log10(sim_aab / obs_aab))
+      }
+    }
+  }
+
   components <- c(
     count = L_count,
     size = L_size,
     size_tail = L_size_tail,
     area_fuel = L_area_fuel,
     severity = L_severity,
-    mortality = L_mortality
+    mortality = L_mortality,
+    area_burned = L_area_burned
   )
   stopifnot(identical(names(components), .LOSS_COMPONENTS))
   w <- stats::setNames(rep(0, length(components)), names(components))
@@ -2853,7 +2944,7 @@ sim_mock <- function(
 
   ## ---- weight / observed coherence (warnings only) ------------------------
   if (
-    (w["area_fuel"] %||% 0) > 0 &&
+    .weight_gt0(w, "area_fuel") &&
       (is.null(primary$area_by_fuel_ha) || is.null(observed$fuel_code_to_base))
   ) {
     warning(
@@ -2864,11 +2955,37 @@ sim_mock <- function(
       call. = FALSE
     )
   }
-  if ((w["severity"] %||% 0) > 0 && is.null(primary$severity_dist)) {
+  if (.weight_gt0(w, "severity") && is.null(primary$severity_dist)) {
     warning(
       "cfg$weights['severity'] > 0 but observed$primary$severity_dist is NULL; ",
       "L_severity will contribute 0. Pass `severity_dist = ",
       "default_severity_prior_sturtevant2009()` to save_observed_fire_targets().",
+      call. = FALSE
+    )
+  }
+  .n_years <- primary$n_years %||% NROW(primary$n_fires_by_year)
+  if (
+    .weight_gt0(w, "area_burned") &&
+      (is.null(primary$fire_sizes_ha) ||
+        !is.numeric(.n_years) ||
+        length(.n_years) != 1L ||
+        !is.finite(.n_years) ||
+        .n_years <= 0)
+  ) {
+    warning(
+      "cfg$weights['area_burned'] > 0 but the observed payload cannot supply an annual rate ",
+      "(needs primary$fire_sizes_ha and either primary$n_years or a non-empty ",
+      "primary$n_fires_by_year); L_area_burned will contribute 0. Either set the weight to 0 or ",
+      "rebuild the payload with save_observed_fire_targets().",
+      call. = FALSE
+    )
+  }
+  if (.weight_gt0(w, "area_burned") && is.null(observed$pixel_area_ha)) {
+    warning(
+      "cfg$weights['area_burned'] > 0 but observed$pixel_area_ha is NULL, so simulated burned ",
+      "cells will be converted at 1 ha each. On any grid other than 100 m that scores simulated ",
+      "area against observed area in different units. Rebuild the payload with ",
+      "save_observed_fire_targets(), which records the cell area of the fuel raster.",
       call. = FALSE
     )
   }

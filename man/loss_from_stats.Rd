@@ -21,7 +21,9 @@ loss_from_stats(
 \verb{$fuel_code_to_base}, and \verb{$pixel_area_ha} to activate Tier 2 components.}
 
 \item{weights}{Named numeric vector. Components: \code{count}, \code{size},
-\code{area_fuel}, \code{severity}. Missing components default to 0.}
+\code{size_tail}, \code{area_fuel}, \code{severity}, \code{mortality}, \code{area_burned}. Missing
+components default to 0, so an existing caller's weights keep their
+meaning when a component is added.}
 }
 \value{
 Named list with \code{total} (the scalar minimised by DEoptim),
@@ -49,6 +51,34 @@ severity-class proportions. Simulated severities come from each
 event's \code{MeanSeverity} binned into integer classes 1..5; observed
 comes from \code{observed$primary$severity_dist} (a 5-element named
 numeric vector summing to 1). Skipped when observed is NULL.
+\item \verb{L_mortality = |mean(share_sim) - share_obs| / share_obs} -- the
+share of burned area that lost its dominant cohort, against the same
+share observed. Contributes 0 when
+\code{observed$primary$mortality_share} is NULL or NA, or when no
+replicate kept the severity maps it is measured from.
+\item \verb{L_area_burned = |log10(area_sim / area_obs)|} -- annual area burned,
+simulated against observed. No other component scores how much area
+burns: \code{L_area_fuel} scores how burned area is distributed across
+base fuel types, not how much there is. A log10 ratio keeps it
+scale-free, so the same weight means the same thing on study areas
+whose burn rates differ by orders of magnitude. Simulated area is
+summed from each replicate's events over the years \code{L_count} scores,
+converted with \code{observed$pixel_area_ha}; observed area is
+\code{sum(fire_sizes_ha) / n_years}. Contributes 0 when the observed
+payload cannot supply an annual rate, and \code{.AREA_BURNED_NO_FIRE}
+(3.0) when a replicate set burns nothing, since \code{log10(0)} would be
+infinite and DEoptim cannot rank an infinite objective.
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{    This term and `count` both move with the number of fires, so they
+    compete for the same lever wherever a calibration scales ignition
+    rates. `count` is normalised by the observed year-to-year standard
+    deviation, making it steeper by about
+    `lambda_obs / sd(n_fires_obs) * ln(10)`; keep
+    `weights["area_burned"]` well below `weights["count"]` times that
+    factor, or the fitted fire count is pulled off its own target to
+    compensate for a fire-size distribution the search cannot change.
+}\if{html}{\out{</div>}}
+
 }
 
 All component values are unitless and non-negative; chi-squared components

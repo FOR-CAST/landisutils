@@ -783,7 +783,7 @@ test_that("loss_from_stats() Tier 1 returns finite count + size components", {
   expect_named(loss, c("total", "components", "weights"))
   expect_named(
     loss$components,
-    c("count", "size", "size_tail", "area_fuel", "severity", "mortality")
+    c("count", "size", "size_tail", "area_fuel", "severity", "mortality", "area_burned")
   )
   expect_true(is.finite(loss$total))
   expect_true(loss$components[["count"]] >= 0)
@@ -2822,4 +2822,153 @@ test_that("loss_from_stats() refuses a reps list holding a dead replicate", {
   expect_error(loss_from_stats(list(NULL), observed), "process died without returning")
   ## The valid case is unaffected.
   expect_true(is.finite(loss_from_stats(list(rep1), observed)$total))
+})
+
+
+## ---------------------------------------------------------------------------------------------
+## L_area_burned
+## ---------------------------------------------------------------------------------------------
+
+## Observed side shared by the area-burned tests: 1,000 ha over 10 years = 100 ha/yr.
+.ab_observed <- function(...) {
+  utils::modifyList(
+    list(
+      pixel_area_ha = 2, ## deliberately NOT 1, so a missing conversion shows up
+      primary = list(
+        lambda_obs = 2,
+        n_years = 10,
+        n_fires_by_year = tibble::tibble(year = 1:10, n = rep(2L, 10)),
+        fire_sizes_ha = c(100, 200, 300, 400)
+      )
+    ),
+    list(...)
+  )
+}
+
+## One replicate over 10 scored years whose events burn `cells` cells in total.
+.ab_rep <- function(cells, years = 1:10) {
+  tibble_years <- tibble::tibble(year = years, n_fires = rep(1L, length(years)))
+  list(
+    n_fires_by_year = tibble_years,
+    fire_sizes_ha = as.numeric(cells) * 2,
+    events = tibble::tibble(
+      year = rep(years[years > 0L][1], length(cells)),
+      sites = as.integer(cells)
+    )
+  )
+}
+
+test_that("loss_from_stats() scores annual area burned as a log10 ratio", {
+  observed <- .ab_observed()
+
+  ## 500 cells x 2 ha / 10 years = 100 ha/yr, exactly the observed rate
+  matched <- loss_from_stats(list(.ab_rep(c(300, 200))), observed)
+  expect_equal(matched$components[["area_burned"]], 0)
+
+  ## 5,000 cells x 2 ha / 10 years = 1,000 ha/yr, ten times the observed rate
+  tenfold <- loss_from_stats(list(.ab_rep(c(3000, 2000))), observed)
+  expect_equal(tenfold$components[["area_burned"]], 1)
+
+  ## and it is symmetric in the ratio: a tenth scores the same as ten times
+  tenth <- loss_from_stats(list(.ab_rep(c(30, 20))), observed)
+  expect_equal(tenth$components[["area_burned"]], 1)
+})
+
+test_that("loss_from_stats() leaves area_burned unweighted by default", {
+  observed <- .ab_observed()
+  loss <- loss_from_stats(list(.ab_rep(c(3000, 2000))), observed)
+  expect_equal(loss$weights[["area_burned"]], 0)
+  ## the component is non-zero, so a non-zero default weight would show up in the total
+  expect_gt(loss$components[["area_burned"]], 0)
+  ## and the total is exactly the OTHER components' weighted sum
+  others <- setdiff(names(loss$components), "area_burned")
+  expect_equal(loss$total, sum(loss$weights[others] * loss$components[others]))
+
+  weighted <- loss_from_stats(
+    list(.ab_rep(c(3000, 2000))),
+    observed,
+    weights = c(count = 0, size = 0, size_tail = 0, area_burned = 1)
+  )
+  expect_equal(weighted$total, 1)
+})
+
+test_that(".weight_gt0() tolerates a component the caller never named", {
+  ## `cfg$weights` is whatever the caller passed, so every coherence check in
+  ## .preflight_calibrate() reads a name that may be absent. `w[nm]` returns a named NA there,
+  ## not NULL, so the `%||%` form those checks used evaluated to NA and the enclosing `if`
+  ## failed with "missing value where TRUE/FALSE needed".
+  w <- c(count = 1, size = 1)
+  expect_true(is.na(unname(w["area_burned"]) > 0)) ## the trap being guarded against
+  expect_false(.weight_gt0(w, "area_burned"))
+  expect_false(.weight_gt0(w, "severity"))
+  expect_true(.weight_gt0(w, "count"))
+  expect_false(.weight_gt0(c(count = 0), "count"))
+  expect_false(.weight_gt0(c(count = NA_real_), "count"))
+})
+
+test_that("loss_from_stats() counts area only over the years the count component scores", {
+  ## A year-0 event with an enormous burn, and a year-0 row in n_fires_by_year. Both must be
+  ## ignored: `.drop_initial_timestep()` defines the scored years for `count`, and `area_burned`
+  ## must use the same ones or the two components divide by different denominators.
+  rep_with_year0 <- list(
+    n_fires_by_year = tibble::tibble(year = 0:10, n_fires = rep(1L, 11)),
+    fire_sizes_ha = c(9999, 300, 200) * 2,
+    events = tibble::tibble(year = c(0L, 1L, 2L), sites = c(9999L, 300L, 200L))
+  )
+  loss <- loss_from_stats(list(rep_with_year0), .ab_observed())
+  ## (300 + 200) cells x 2 ha / 10 scored years = 100 ha/yr == observed
+  expect_equal(loss$components[["area_burned"]], 0)
+})
+
+test_that("loss_from_stats() converts burned cells with the observed cell area", {
+  ## Same replicate, two payloads differing only in cell area. At 2 ha/cell it matches; at
+  ## 1 ha/cell it burns half as much, so the component becomes |log10(0.5)|.
+  rep1 <- .ab_rep(c(300, 200))
+  expect_equal(loss_from_stats(list(rep1), .ab_observed())$components[["area_burned"]], 0)
+  expect_equal(
+    loss_from_stats(list(rep1), .ab_observed(pixel_area_ha = 1))$components[["area_burned"]],
+    abs(log10(0.5))
+  )
+})
+
+test_that("loss_from_stats() gives a replicate set that burns nothing a finite area_burned", {
+  rep_empty <- list(
+    n_fires_by_year = tibble::tibble(year = 1:10, n_fires = rep(0L, 10)),
+    fire_sizes_ha = numeric(0),
+    events = tibble::tibble(year = integer(0), sites = integer(0))
+  )
+  loss <- loss_from_stats(list(rep_empty), .ab_observed())
+  expect_true(is.finite(loss$components[["area_burned"]]))
+  expect_equal(loss$components[["area_burned"]], 3.0)
+})
+
+test_that("loss_from_stats() contributes 0 when the payload cannot supply an annual rate", {
+  ## no fire sizes
+  obs_no_sizes <- .ab_observed()
+  obs_no_sizes$primary$fire_sizes_ha <- NULL
+  expect_equal(
+    loss_from_stats(list(.ab_rep(c(3000, 2000))), obs_no_sizes)$components[["area_burned"]],
+    0
+  )
+
+  ## no year count of any kind
+  obs_no_years <- .ab_observed()
+  obs_no_years$primary$n_years <- NULL
+  obs_no_years$primary$n_fires_by_year <- tibble::tibble(year = integer(0), n = integer(0))
+  expect_equal(
+    suppressWarnings(
+      loss_from_stats(list(.ab_rep(c(3000, 2000))), obs_no_years)$components[["area_burned"]]
+    ),
+    0
+  )
+})
+
+test_that("loss_from_stats() averages the annual rate across replicates", {
+  observed <- .ab_observed()
+  ## 100 ha/yr and 1,000 ha/yr average to 550 ha/yr, not to the geometric mean of the ratios
+  loss <- loss_from_stats(
+    list(.ab_rep(c(300, 200)), .ab_rep(c(3000, 2000))),
+    observed
+  )
+  expect_equal(loss$components[["area_burned"]], abs(log10(550 / 100)))
 })
