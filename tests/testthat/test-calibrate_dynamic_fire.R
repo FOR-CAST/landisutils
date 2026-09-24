@@ -83,6 +83,25 @@ test_that("parse_dynamic_fire_logs() reads sample event + summary logs", {
   expect_null(parsed$area_by_fuel_ha)
 })
 
+test_that("parse_dynamic_fire_logs() warns when DamagedSites is not SitesChecked + 1", {
+  rep_dir <- withr::local_tempdir()
+  fs::dir_create(fs::path(rep_dir, "fire"))
+  ev <- readLines(system.file(
+    "testdata",
+    "dynamic-fire-event-log-sample.csv",
+    package = "landisutils"
+  ))
+  ## Make the second event log as many damaged sites as it checked.
+  ev[3] <- sub(", 3, 0, 0.75, 4,", ", 3, 0, 0.75, 3,", ev[3], fixed = TRUE)
+  writeLines(ev, fs::path(rep_dir, "fire", "dynamic-fire-event-log.csv"))
+  fs::file_copy(
+    system.file("testdata", "dynamic-fire-summary-log-sample.csv", package = "landisutils"),
+    fs::path(rep_dir, "fire", "dynamic-fire-summary-log.csv")
+  )
+
+  expect_warning(parse_dynamic_fire_logs(rep_dir), "not SitesChecked \\+ 1 on 1 of 4 events")
+})
+
 test_that("the cell area comes from the scenario's CellLength and must agree with it", {
   dir <- withr::local_tempdir()
   writeLines(c("LandisData  \"Scenario\"", "CellLength    120"), fs::path(dir, "scenario.txt"))

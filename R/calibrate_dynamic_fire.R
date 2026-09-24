@@ -244,6 +244,26 @@ parse_dynamic_fire_logs <- function(rep_dir, pixel_area_ha = 1.0) {
     ## one-cell fire at severity 1 and 1.5 for one at severity 3.
     checked <- as.integer(events$SitesChecked)
     damaged <- as.integer(events$DamagedSites)
+    ## The reading below rests on `DamagedSites == SitesChecked + 1`, verified against the
+    ## severity maps on one landscape. Say so if a log breaks it, rather than silently scoring
+    ## sizes on an assumption that no longer holds. A warning, not an error, so it cannot strand
+    ## a long calibration.
+    off <- which(damaged - checked != 1L)
+    if (length(off) > 0L) {
+      warning(
+        "Dynamic Fire event log ",
+        event_path,
+        ": DamagedSites is not SitesChecked + 1 on ",
+        length(off),
+        " of ",
+        length(damaged),
+        " events (first at row ",
+        off[1L],
+        "); fire sizes are taken from SitesChecked, which matched the severity maps only where ",
+        "that relation held",
+        call. = FALSE
+      )
+    }
     events_tbl <- tibble::tibble(
       year = as.integer(events$Time),
       eco = trimws(as.character(events$InitFireRegion)),
