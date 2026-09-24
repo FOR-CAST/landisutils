@@ -158,7 +158,7 @@ Inherited methods
       WindSeverities = NULL,
       IntensityMapNames = NULL,
       SeverityMapNames = NULL,
-      LogFile = "linearwind/log.csv"
+      LogFile = NULL
     )
 
 #### Arguments
@@ -253,7 +253,8 @@ Inherited methods
 
 - `LogFile`:
 
-  Character. Relative file path.
+  Character. Relative file path. Defaults to `linearwind/log.csv` inside
+  the scenario directory.
 
 ------------------------------------------------------------------------
 

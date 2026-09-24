@@ -1,8 +1,6 @@
-# Overwrite FireSizesTable `NumFires` with a calibrated ignition rate
+# Apply a calibrated ignition rate to a FireSizesTable
 
-Replaces `NumFires` in every row of `fire_size_table` when the
-calibrated vector carries it, and leaves the table alone when it does
-not. `NumFires` is the Poisson mean number of IGNITIONS per year for the
+`NumFires` is the Poisson mean number of IGNITIONS per year for the
 ecoregion, each of which becomes a fire only if the initiation
 probability of the fuel on its cell says so, so it is not the same
 quantity as an observed count of fires.
@@ -22,11 +20,29 @@ apply_calibrated_num_fires(fire_size_table, calibrated_fire_params)
 
 - calibrated_fire_params:
 
-  Named numeric vector. Used only if it holds `NumFires`.
+  Named numeric vector. Used only if it holds `NumFires` or
+  `NumFiresMultiplier`.
 
 ## Value
 
-A copy of `fire_size_table`, with `NumFires` replaced where calibrated.
+A copy of `fire_size_table`, with `NumFires` replaced or scaled where
+calibrated.
+
+## Details
+
+Two calibrated forms, and they are alternatives:
+
+- `NumFires` replaces the rate in every row with one value. Right where
+  the rate is a property of the landscape as a whole.
+
+- `NumFiresMultiplier` scales each row's own rate by a common factor, so
+  ecoregions that differ in ignition rate keep their relative structure.
+  Right where the rate is measured per ecoregion and the correction
+  being fitted – the gap between a count of observed fires and a count
+  of ignitions – applies to all of them alike.
+
+Supplying both is an error rather than a composition, and a vector
+carrying neither leaves the table alone.
 
 ## See also
 

@@ -162,8 +162,8 @@ Inherited methods
       LethalTempMapName = NULL,
       TotalBiomassRemovedMapName = NULL,
       SpeciesBiomassRemovedMapName = NULL,
-      EventLog = "rootrot/events.csv",
-      SummaryLog = "rootrot/summary.csv"
+      EventLog = NULL,
+      SummaryLog = NULL
     )
 
 #### Arguments
@@ -239,13 +239,15 @@ Inherited methods
 
 - `EventLog`:
 
-  (Optional) Character. Relative file path for the events CSV log; pass
+  (Optional) Character. Relative file path for the events. Defaults to
+  `rootrot/events.csv` inside the scenario directory. CSV log; pass
   `NULL` to disable.
 
 - `SummaryLog`:
 
-  (Optional) Character. Relative file path for the summary CSV log; pass
-  `NULL` to disable.
+  (Optional) Character. Relative file path for the. Defaults to
+  `rootrot/summary.csv` inside the scenario directory. summary CSV log;
+  pass `NULL` to disable.
 
 ------------------------------------------------------------------------
 

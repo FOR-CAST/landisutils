@@ -8,6 +8,11 @@ Surgical text replacements:
   14 (`FallHiProp`) replaced. Shared across all ecoregion rows –
   per-ecoregion HiProp calibration would require 6 params not 3.
 
+- `FireSizesTable` column 16 (`NumFires`): replaced by `NumFires`, or
+  multiplied by `NumFiresMultiplier`. The two are alternatives – the
+  first gives every ecoregion the same rate, the second preserves the
+  rates' relative structure – and supplying both is an error.
+
 - `FuelTypeTable` data rows: column 4 (`IgnProb`) is multiplied by the
   base-type-specific candidate (e.g., `IgnProb_Conifer` for
   `Base == "Conifer"`). Default IgnProbs are mostly 1.0 (D1 = 0.5), so

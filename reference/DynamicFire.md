@@ -172,8 +172,8 @@ Inherited methods
       SeverityCalibrationFactor = NULL,
       FireDamageTable = NULL,
       MapNames = NULL,
-      LogFile = "fire/log.csv",
-      SummaryLogFile = "fire/summary-log.csv"
+      LogFile = NULL,
+      SummaryLogFile = NULL
     )
 
 #### Arguments
@@ -253,11 +253,13 @@ Inherited methods
 
 - `LogFile`:
 
-  Character. Relative file path.
+  Character. Relative file path. Defaults to `fire/log.csv` inside the
+  scenario directory.
 
 - `SummaryLogFile`:
 
-  Character. Relative file path.
+  Character. Relative file path. Defaults to `fire/summary-log.csv`
+  inside the scenario directory.
 
 ------------------------------------------------------------------------
 

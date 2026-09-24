@@ -91,8 +91,8 @@ Inherited methods
       WindEventParametersTable = NULL,
       WindSeverities = NULL,
       MapNames = NULL,
-      SummaryLogFile = "wind/summary-log.csv",
-      EventLogFile = "wind/event-log.csv"
+      SummaryLogFile = NULL,
+      EventLogFile = NULL
     )
 
 #### Arguments
@@ -125,11 +125,13 @@ Inherited methods
 
 - `SummaryLogFile`:
 
-  Character. Relative file path.
+  Character. Relative file path. Defaults to `wind/summary-log.csv`
+  inside the scenario directory.
 
 - `EventLogFile`:
 
-  Character. Relative file path.
+  Character. Relative file path. Defaults to `wind/event-log.csv` inside
+  the scenario directory.
 
 ------------------------------------------------------------------------
 

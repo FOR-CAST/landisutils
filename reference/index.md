@@ -124,9 +124,7 @@
   : Apply per-base-fuel-type IgnProb multipliers to a FuelTypeTable
 
 - [`apply_calibrated_num_fires()`](https://for-cast.github.io/landisutils/reference/apply_calibrated_num_fires.md)
-  :
-
-  Overwrite FireSizesTable `NumFires` with a calibrated ignition rate
+  : Apply a calibrated ignition rate to a FireSizesTable
 
 - [`assemble_climate_library_file()`](https://for-cast.github.io/landisutils/reference/assemble_climate_library_file.md)
   : Assemble LANDIS-II Climate Library wide-format table from a BioSIM

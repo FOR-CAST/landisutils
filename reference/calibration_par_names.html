@@ -13,7 +13,7 @@ patch_fire_config(), must match this exact set."><meta property="og:image" conte
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.156</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.158</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -62,7 +62,16 @@ Callers building <code>lower</code> / <code>upper</code> bounds, or passing cand
 
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>Character vector of length 11.</p>
+    <p>Character vector of length 12.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="a-catalogue-not-a-parameter-set">A catalogue, not a parameter set<a class="anchor" aria-label="anchor" href="#a-catalogue-not-a-parameter-set"></a></h2>
+
+
+<p>Two entries are alternative ways to express the same quantity: <code>NumFires</code> gives every fire
+ecoregion one ignition rate, <code>NumFiresMultiplier</code> scales each ecoregion's own. A calibration
+carrying both would have two parameters for one degree of freedom, so it is refused. Anything
+building "the full set" from this vector should drop one of the two.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

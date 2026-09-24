@@ -90,7 +90,7 @@ Inherited methods
       Agents = list(),
       MapNames = NULL,
       MORTMapNames = NULL,
-      LogFile = "eda/eda-log.csv"
+      LogFile = NULL
     )
 
 #### Arguments
@@ -120,7 +120,8 @@ Inherited methods
 
 - `LogFile`:
 
-  Character. Relative file path for the EDA CSV log.
+  Character. Relative file path for the EDA CSV log. Defaults to
+  `eda/eda-log.csv` inside the scenario directory.
 
 ------------------------------------------------------------------------
 

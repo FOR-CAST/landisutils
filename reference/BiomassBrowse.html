@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.156</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.158</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -239,7 +239,7 @@ are NOT included here; they are discovered by <code><a href="tar_landis.html">ta
 <span>  SiteHSIMapNames <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  SitePopulationMapNames <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  BiomassRemovedMapNames <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  LogFile <span class="op">=</span> <span class="st">"browse/browse-log.csv"</span></span>
+<span>  LogFile <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div><p></p><div class="section">
 <h4 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h4>
@@ -338,7 +338,8 @@ site-preference component (§4.2.20.2).</p></dd>
 <code>{timestep}</code> (§4.2.21).</p></dd>
 
       <dt><code>LogFile</code></dt>
-<dd><p>Character. Relative path to the events CSV log
+<dd><p>Character. Relative path to the events CSV log.
+Defaults to <code>browse/browse-log.csv</code> inside the scenario directory.
 (§4.2.22).</p></dd>
 
 

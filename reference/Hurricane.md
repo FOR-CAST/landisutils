@@ -152,7 +152,7 @@ Inherited methods
       ExposureMaps = NULL,
       WindSpeedVulnerabilities = list(),
       MapNames = NULL,
-      LogFile = "hurricane/hurricane-log.csv",
+      LogFile = NULL,
       WindReductionTableCSV = NULL
     )
 
@@ -226,7 +226,8 @@ Inherited methods
 
 - `LogFile`:
 
-  Character. Relative file path for the CSV log.
+  Character. Relative file path for the CSV log. Defaults to
+  `hurricane/hurricane-log.csv` inside the scenario directory.
 
 - `WindReductionTableCSV`:
 

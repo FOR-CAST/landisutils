@@ -105,7 +105,7 @@ Inherited methods
       SRDMapNames = NULL,
       NRDMapNames = NULL,
       BDPMapNames = NULL,
-      LogFile = "bda/bda-log.csv"
+      LogFile = NULL
     )
 
 #### Arguments
@@ -145,7 +145,8 @@ Inherited methods
 
 - `LogFile`:
 
-  Character. Relative file path for the BDA CSV log.
+  Character. Relative file path for the BDA CSV log. Defaults to
+  `bda/bda-log.csv` inside the scenario directory.
 
 ------------------------------------------------------------------------
 

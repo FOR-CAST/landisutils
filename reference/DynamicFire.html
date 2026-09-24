@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.156</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.158</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -205,8 +205,8 @@ are NOT included here; they are discovered by <code><a href="tar_landis.html">ta
 <span>  SeverityCalibrationFactor <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  FireDamageTable <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  MapNames <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  LogFile <span class="op">=</span> <span class="st">"fire/log.csv"</span>,</span>
-<span>  SummaryLogFile <span class="op">=</span> <span class="st">"fire/summary-log.csv"</span></span>
+<span>  LogFile <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  SummaryLogFile <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div><p></p><div class="section">
 <h4 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h4>
@@ -267,10 +267,12 @@ the emitted config).</p></dd>
 <dd><p>Character. File pattern for writing outputs to disk.</p></dd>
 
       <dt><code>LogFile</code></dt>
-<dd><p>Character. Relative file path.</p></dd>
+<dd><p>Character. Relative file path.
+Defaults to <code>fire/log.csv</code> inside the scenario directory.</p></dd>
 
       <dt><code>SummaryLogFile</code></dt>
-<dd><p>Character. Relative file path.</p></dd>
+<dd><p>Character. Relative file path.
+Defaults to <code>fire/summary-log.csv</code> inside the scenario directory.</p></dd>
 
 
 </dl><p></p></div>

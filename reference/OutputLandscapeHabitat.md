@@ -133,7 +133,7 @@ Inherited methods
       DistanceVarMapFileNames = NULL,
       SpeciesMapFileNames = NULL,
       SpeciesLogFileNames = NULL,
-      LogFile = "output/landscape-habitat/landscape_habitat_log.csv"
+      LogFile = NULL
     )
 
 #### Arguments
@@ -211,7 +211,9 @@ Inherited methods
 
 - `LogFile`:
 
-  Character. Relative file path for the main log.
+  Character. Relative file path for the main log. Defaults to
+  `output/landscape-habitat/landscape_habitat_log.csv` inside the
+  scenario directory.
 
 ------------------------------------------------------------------------
 

@@ -1,5 +1,49 @@
 # Changelog
 
+## landisutils 0.0.158
+
+- [`calibration_par_names()`](https://for-cast.github.io/landisutils/reference/calibration_par_names.md)
+  gains `NumFiresMultiplier`, which scales each fire ecoregion’s own
+  ignition rate by a common factor instead of replacing every rate with
+  one value. `NumFires`, added in 0.0.154, is right where the rate is a
+  property of the landscape as a whole, but
+  [`patch_fire_config()`](https://for-cast.github.io/landisutils/reference/patch_fire_config.md)
+  writes that scalar into every ecoregion row, so a landscape whose
+  ecoregions carry markedly different rates – 0.57 ignitions per year in
+  one and 17 in another is a real case – loses that structure entirely
+  by being calibrated. The correction being fitted is the gap between a
+  count of observed FIRES and a count of ignitions, and that gap applies
+  to every ecoregion alike, so a common factor expresses it where a
+  common value does not.
+  [`patch_fire_config()`](https://for-cast.github.io/landisutils/reference/patch_fire_config.md)
+  and
+  [`apply_calibrated_num_fires()`](https://for-cast.github.io/landisutils/reference/apply_calibrated_num_fires.md)
+  share the scaling through one internal helper, so a calibration trial
+  and the production table it is applied to cannot drift apart. The two
+  forms are alternatives, not companions: supplying both is an error,
+  raised where a caller first passes them – the bounds in
+  [`calibrate_dynamic_fire()`](https://for-cast.github.io/landisutils/reference/calibrate_dynamic_fire.md)’s
+  config, a trial’s parameter vector, or a production parameter vector.
+
+## landisutils 0.0.157
+
+- Every extension’s log-file default is now a full path rather than a
+  bare relative one, so the defaults are usable as written.
+  `SummaryLogFile`, `EventLogFile`, `EventLog` and `LogFile` are stored
+  through active bindings that apply `.relPath(value, self$path)`, so a
+  default of `"wind/summary-log.csv"` was made relative a SECOND time:
+  against a scenario directory of `LANDIS-II/ForCS_wind` it became
+  `../../wind/summary-log.csv`, two levels above the replicate, and the
+  extension wrote its log outside the run. Nothing caught it because no
+  caller relied on the defaults – `BiomassHarvest` already built full
+  paths in `initialize()`, and callers of the other extensions worked
+  around it one call site at a time. Ten extensions and fourteen
+  parameters were affected: `BiomassBrowse`, `ClimateBDA`,
+  `DynamicFire`, `EDA`, `Hurricane`, `LinearWind`, `OriginalFire`,
+  `OriginalWind`, `OutputLandscapeHabitat` and `RootRot`. A caller that
+  already passes a full path is unaffected, and the written config is
+  unchanged for every such caller.
+
 ## landisutils 0.0.156
 
 - [`calibration_par_names()`](https://for-cast.github.io/landisutils/reference/calibration_par_names.md)

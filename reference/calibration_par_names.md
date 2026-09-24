@@ -17,7 +17,16 @@ calibration_par_names()
 
 ## Value
 
-Character vector of length 11.
+Character vector of length 12.
+
+## A catalogue, not a parameter set
+
+Two entries are alternative ways to express the same quantity:
+`NumFires` gives every fire ecoregion one ignition rate,
+`NumFiresMultiplier` scales each ecoregion's own. A calibration carrying
+both would have two parameters for one degree of freedom, so it is
+refused. Anything building "the full set" from this vector should drop
+one of the two.
 
 ## See also
 

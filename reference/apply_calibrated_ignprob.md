@@ -44,11 +44,12 @@ This matters when reading a finished calibration. A multiplier that
 comes back pinned at such a bound is **not** an estimate that wanted
 more room – it is saturation, meaning the objective wanted more fire
 than the maximum ignition probability can deliver. Widening the bound is
-a no-op. The lever to reach for instead is `NumFires`, the ignition rate
-itself: an ignition becomes a fire only if the initiation probability of
-the fuel on its cell allows it, so a rate taken from a count of observed
-FIRES is systematically low as a count of ignitions. Search it, applying
-the result with
+a no-op. The lever to reach for instead is the ignition rate itself: an
+ignition becomes a fire only if the initiation probability of the fuel
+on its cell allows it, so a rate taken from a count of observed FIRES is
+systematically low as a count of ignitions. Search `NumFires`, or
+`NumFiresMultiplier` where the rate varies by ecoregion and that
+variation should survive the fit, applying the result with
 [`apply_calibrated_num_fires()`](https://for-cast.github.io/landisutils/reference/apply_calibrated_num_fires.md),
 and check the count target too – starting with whether the simulated
 annual rate is computed over the right number of years.

@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.156</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.158</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,6 +41,15 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.158" id="landisutils-00158">landisutils 0.0.158<a class="anchor" aria-label="anchor" href="#landisutils-00158"></a></h2>
+<ul><li>
+<code><a href="../reference/calibration_par_names.html">calibration_par_names()</a></code> gains <code>NumFiresMultiplier</code>, which scales each fire ecoregion’s own ignition rate by a common factor instead of replacing every rate with one value. <code>NumFires</code>, added in 0.0.154, is right where the rate is a property of the landscape as a whole, but <code><a href="../reference/patch_fire_config.html">patch_fire_config()</a></code> writes that scalar into every ecoregion row, so a landscape whose ecoregions carry markedly different rates – 0.57 ignitions per year in one and 17 in another is a real case – loses that structure entirely by being calibrated. The correction being fitted is the gap between a count of observed FIRES and a count of ignitions, and that gap applies to every ecoregion alike, so a common factor expresses it where a common value does not. <code><a href="../reference/patch_fire_config.html">patch_fire_config()</a></code> and <code><a href="../reference/apply_calibrated_num_fires.html">apply_calibrated_num_fires()</a></code> share the scaling through one internal helper, so a calibration trial and the production table it is applied to cannot drift apart. The two forms are alternatives, not companions: supplying both is an error, raised where a caller first passes them – the bounds in <code><a href="../reference/calibrate_dynamic_fire.html">calibrate_dynamic_fire()</a></code>’s config, a trial’s parameter vector, or a production parameter vector.</li>
+</ul></div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.157" id="landisutils-00157">landisutils 0.0.157<a class="anchor" aria-label="anchor" href="#landisutils-00157"></a></h2>
+<ul><li>Every extension’s log-file default is now a full path rather than a bare relative one, so the defaults are usable as written. <code>SummaryLogFile</code>, <code>EventLogFile</code>, <code>EventLog</code> and <code>LogFile</code> are stored through active bindings that apply <code>.relPath(value, self$path)</code>, so a default of <code>"wind/summary-log.csv"</code> was made relative a SECOND time: against a scenario directory of <code>LANDIS-II/ForCS_wind</code> it became <code>../../wind/summary-log.csv</code>, two levels above the replicate, and the extension wrote its log outside the run. Nothing caught it because no caller relied on the defaults – <code>BiomassHarvest</code> already built full paths in <code>initialize()</code>, and callers of the other extensions worked around it one call site at a time. Ten extensions and fourteen parameters were affected: <code>BiomassBrowse</code>, <code>ClimateBDA</code>, <code>DynamicFire</code>, <code>EDA</code>, <code>Hurricane</code>, <code>LinearWind</code>, <code>OriginalFire</code>, <code>OriginalWind</code>, <code>OutputLandscapeHabitat</code> and <code>RootRot</code>. A caller that already passes a full path is unaffected, and the written config is unchanged for every such caller.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.156" id="landisutils-00156">landisutils 0.0.156<a class="anchor" aria-label="anchor" href="#landisutils-00156"></a></h2>
 <ul><li><p><code><a href="../reference/calibration_par_names.html">calibration_par_names()</a></code> gains <code>DamageAgeMultiplier</code>, and <code><a href="../reference/patch_fire_config.html">patch_fire_config()</a></code> scales the <code>FireDamageTable</code>’s cohort-age column by it, so the damage table can be calibrated. The paired severity-minus-tolerance column is deliberately left alone: the user guide (2.16.3) requires an integer there, which gives only a few reachable mortality levels and cannot be fitted, while the age column is a percentage of longevity (2.16.2) and scales smoothly. Scaled values are rounded to whole percentages and forced strictly increasing, since a row that does not exceed its predecessor can never be reached.</p></li>
