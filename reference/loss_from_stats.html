@@ -11,7 +11,7 @@ save_observed_fire_targets()."><meta property="og:image" content="https://for-ca
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.158</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.159</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -95,7 +95,7 @@ annual-rate match against the primary ecoregion target.</p></li>
 <li><p><code>L_size = KS_D(empirical CDF of sim sizes, empirical CDF of obs sizes)</code> – shape match for the fire-size distribution.</p></li>
 <li><p><code>L_area_fuel</code>: chi-squared distance between simulated and observed
 burn-area-by-base-fuel-type <em>proportions</em>. Simulated area-by-fuel
-comes from each event's ignition fuel code times its <code>DamagedSites</code>,
+comes from each event's ignition fuel code times its burned cells,
 mapped to base fuel types via <code>observed$fuel_code_to_base</code>. Skipped
 (contributes 0) when either <code>observed$primary$area_by_fuel_ha</code> is
 NULL or <code>observed$fuel_code_to_base</code> is missing.</p></li>

@@ -13,7 +13,7 @@ suitable for loss-function comparison."><meta property="og:image" content="https
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.158</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.159</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -85,9 +85,15 @@ disk – e.g. mock-simulator trials).</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>Columns parsed (Dynamic Fire System v4):</p><ul><li><p>event-log: <code>Time</code>, <code>InitFireRegion</code>, <code>InitFuel</code>, <code>DamagedSites</code>, <code>MeanSeverity</code>.</p></li>
+    <p>Columns parsed (Dynamic Fire System v4):</p><ul><li><p>event-log: <code>Time</code>, <code>InitFireRegion</code>, <code>InitFuel</code>, <code>SitesChecked</code>, <code>DamagedSites</code>,
+<code>MeanSeverity</code>.</p></li>
 <li><p>summary-log: <code>Time</code>, <code>NumberFires</code>, <code>TotalSitesBurned</code>.</p></li>
-</ul><p>Cells -&gt; hectares uses <code>pixel_area_ha</code> (1 ha for a 100 m x 100 m grid).</p>
+</ul><p>A fire's size is taken from <code>SitesChecked</code>. The extension logs <code>DamagedSites</code> as one more
+than the cells the fire burned, on every event, while <code>SitesChecked</code> equals the burned cells
+on the timestep's severity map. <code>MeanSeverity</code> is divided by that inflated count, so the
+returned <code>mean_severity</code> is rescaled to <code>MeanSeverity * DamagedSites / SitesChecked</code>, the mean
+over the burned cells.</p>
+<p>Cells -&gt; hectares uses <code>pixel_area_ha</code> (1 ha for a 100 m x 100 m grid).</p>
 <p>The <code>area_by_fuel_ha</code> summary is computed by intersecting the per-timestep
 Dynamic Fire severity rasters (cells with severity &gt; 1 = burned; values 0
 and 1 are inactive and active-but-unburned respectively) with the matching

@@ -36,10 +36,18 @@ disk – e.g. mock-simulator trials).
 
 Columns parsed (Dynamic Fire System v4):
 
-- event-log: `Time`, `InitFireRegion`, `InitFuel`, `DamagedSites`,
-  `MeanSeverity`.
+- event-log: `Time`, `InitFireRegion`, `InitFuel`, `SitesChecked`,
+  `DamagedSites`, `MeanSeverity`.
 
 - summary-log: `Time`, `NumberFires`, `TotalSitesBurned`.
+
+A fire's size is taken from `SitesChecked`. The extension logs
+`DamagedSites` as one more than the cells the fire burned, on every
+event, while `SitesChecked` equals the burned cells on the timestep's
+severity map. `MeanSeverity` is divided by that inflated count, so the
+returned `mean_severity` is rescaled to
+`MeanSeverity * DamagedSites / SitesChecked`, the mean over the burned
+cells.
 
 Cells -\> hectares uses `pixel_area_ha` (1 ha for a 100 m x 100 m grid).
 

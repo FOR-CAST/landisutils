@@ -17,7 +17,7 @@ sim_landis(
   pool = NULL,
   pool_idx = NULL,
   method = NULL,
-  pixel_area_ha = 1,
+  pixel_area_ha = NULL,
   keep_scratch = FALSE,
   retries = 0L,
   trial_timeout_sec = NULL
@@ -79,7 +79,11 @@ sim_landis(
 
 - pixel_area_ha:
 
-  Numeric. Hectares per cell. Default 1.
+  Numeric or NULL. Hectares per cell. Default NULL derives it from the
+  template's `scenario.txt` `CellLength`, so fire sizes are in hectares
+  on any grid. A value that disagrees with `CellLength` is an error: the
+  calibration drivers never passed one, so every trial on a non-100 m
+  grid was scored in cells against observed hectares.
 
 - keep_scratch:
 

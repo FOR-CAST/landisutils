@@ -13,7 +13,7 @@ no pool is supplied), parse the resulting Dynamic Fire logs."><meta property="og
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.158</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.159</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -66,7 +66,7 @@ no pool is supplied), parse the resulting Dynamic Fire logs.</p>
 <span>  pool <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  pool_idx <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  method <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  pixel_area_ha <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  pixel_area_ha <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  keep_scratch <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  retries <span class="op">=</span> <span class="fl">0L</span>,</span>
 <span>  trial_timeout_sec <span class="op">=</span> <span class="cn">NULL</span></span>
@@ -124,7 +124,10 @@ NULL. Default from <code>getOption("landisutils.run.method")</code>.</p></dd>
 
 
 <dt id="arg-pixel-area-ha">pixel_area_ha<a class="anchor" aria-label="anchor" href="#arg-pixel-area-ha"></a></dt>
-<dd><p>Numeric. Hectares per cell. Default 1.</p></dd>
+<dd><p>Numeric or NULL. Hectares per cell. Default NULL derives it from the
+template's <code>scenario.txt</code> <code>CellLength</code>, so fire sizes are in hectares on any grid. A value
+that disagrees with <code>CellLength</code> is an error: the calibration drivers never passed one, so
+every trial on a non-100 m grid was scored in cells against observed hectares.</p></dd>
 
 
 <dt id="arg-keep-scratch">keep_scratch<a class="anchor" aria-label="anchor" href="#arg-keep-scratch"></a></dt>

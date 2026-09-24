@@ -56,7 +56,7 @@ Components:
 
 - `L_area_fuel`: chi-squared distance between simulated and observed
   burn-area-by-base-fuel-type *proportions*. Simulated area-by-fuel
-  comes from each event's ignition fuel code times its `DamagedSites`,
+  comes from each event's ignition fuel code times its burned cells,
   mapped to base fuel types via `observed$fuel_code_to_base`. Skipped
   (contributes 0) when either `observed$primary$area_by_fuel_ha` is NULL
   or `observed$fuel_code_to_base` is missing.
