@@ -21,6 +21,10 @@ Surgical text replacements:
 \item \code{FireSizesTable} data rows: columns 8 (\code{SpHiProp}), 11 (\code{SumHiProp}),
 14 (\code{FallHiProp}) replaced. Shared across all ecoregion rows --
 per-ecoregion HiProp calibration would require 6 params not 3.
+\item \code{FireSizesTable} column 16 (\code{NumFires}): replaced by \code{NumFires}, or
+multiplied by \code{NumFiresMultiplier}. The two are alternatives -- the
+first gives every ecoregion the same rate, the second preserves the
+rates' relative structure -- and supplying both is an error.
 \item \code{FuelTypeTable} data rows: column 4 (\code{IgnProb}) is multiplied by the
 base-type-specific candidate (e.g., \code{IgnProb_Conifer} for \code{Base == "Conifer"}).
 Default IgnProbs are mostly 1.0 (D1 = 0.5), so candidate range \verb{[0, 1.5]}

@@ -149,7 +149,7 @@ are NOT included here; they are discovered by \code{\link[=tar_landis]{tar_landi
   SiteHSIMapNames = NULL,
   SitePopulationMapNames = NULL,
   BiomassRemovedMapNames = NULL,
-  LogFile = "browse/browse-log.csv"
+  LogFile = NULL
 )}
     \if{html}{\out{</div>}}
   }
@@ -206,7 +206,8 @@ forage-quantity component (§4.2.20.1). Either this or \code{SitePreference}
 site-preference component (§4.2.20.2).}
       \item{\code{SitePrefMapNames, SiteForageMapNames, SiteHSIMapNames, SitePopulationMapNames, BiomassRemovedMapNames}}{(Optional) Character. Output filename patterns; each must contain
 \code{{timestep}} (§4.2.21).}
-      \item{\code{LogFile}}{Character. Relative path to the events CSV log
+      \item{\code{LogFile}}{Character. Relative path to the events CSV log.
+Defaults to \code{browse/browse-log.csv} inside the scenario directory.
 (§4.2.22).}
     }
     \if{html}{\out{</div>}}

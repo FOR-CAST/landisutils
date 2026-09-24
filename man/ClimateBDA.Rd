@@ -89,7 +89,7 @@ are NOT included here; they are discovered by \code{\link[=tar_landis]{tar_landi
   SRDMapNames = NULL,
   NRDMapNames = NULL,
   BDPMapNames = NULL,
-  LogFile = "bda/bda-log.csv"
+  LogFile = NULL
 )}
     \if{html}{\out{</div>}}
   }
@@ -107,7 +107,8 @@ must contain the literal \code{{agentName}} and \code{{timestep}} placeholders.}
 must contain the literal \code{{agentName}} and \code{{timestep}} placeholders.}
       \item{\code{BDPMapNames}}{(Optional) Character. BDP output map filename pattern;
 must contain the literal \code{{agentName}} and \code{{timestep}} placeholders.}
-      \item{\code{LogFile}}{Character. Relative file path for the BDA CSV log.}
+      \item{\code{LogFile}}{Character. Relative file path for the BDA CSV log.
+Defaults to \code{bda/bda-log.csv} inside the scenario directory.}
     }
     \if{html}{\out{</div>}}
   }

@@ -93,8 +93,8 @@ are NOT included here; they are discovered by \code{\link[=tar_landis]{tar_landi
   WindCurveTable = NULL,
   FireDamageTable = NULL,
   MapNames = NULL,
-  LogFile = "fire/log.csv",
-  SummaryLogFile = "fire/summary-log.csv"
+  LogFile = NULL,
+  SummaryLogFile = NULL
 )}
     \if{html}{\out{</div>}}
   }
@@ -111,8 +111,10 @@ are NOT included here; they are discovered by \code{\link[=tar_landis]{tar_landi
       \item{\code{WindCurveTable}}{\code{data.frame}.}
       \item{\code{FireDamageTable}}{\code{data.frame}.}
       \item{\code{MapNames}}{Character. File pattern for writing outputs to disk.}
-      \item{\code{LogFile}}{Character. Relative file path.}
-      \item{\code{SummaryLogFile}}{Character. Relative file path.}
+      \item{\code{LogFile}}{Character. Relative file path.
+Defaults to \code{fire/log.csv} inside the scenario directory.}
+      \item{\code{SummaryLogFile}}{Character. Relative file path.
+Defaults to \code{fire/summary-log.csv} inside the scenario directory.}
     }
     \if{html}{\out{</div>}}
   }

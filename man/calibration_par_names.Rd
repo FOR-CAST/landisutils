@@ -7,7 +7,7 @@
 calibration_par_names()
 }
 \value{
-Character vector of length 11.
+Character vector of length 12.
 }
 \description{
 The order of names in this vector is the canonical order used by
@@ -15,6 +15,14 @@ The order of names in this vector is the canonical order used by
 Callers building \code{lower} / \code{upper} bounds, or passing candidate vectors to
 \code{\link[=patch_fire_config]{patch_fire_config()}}, must match this exact set.
 }
+\section{A catalogue, not a parameter set}{
+
+Two entries are alternative ways to express the same quantity: \code{NumFires} gives every fire
+ecoregion one ignition rate, \code{NumFiresMultiplier} scales each ecoregion's own. A calibration
+carrying both would have two parameters for one degree of freedom, so it is refused. Anything
+building "the full set" from this vector should drop one of the two.
+}
+
 \seealso{
 Other Dynamic Fire calibration helpers:
 \code{\link[=apply_calibrated_damage_age]{apply_calibrated_damage_age()}},

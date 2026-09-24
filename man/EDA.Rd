@@ -78,7 +78,7 @@ are NOT included here; they are discovered by \code{\link[=tar_landis]{tar_landi
   Agents = list(),
   MapNames = NULL,
   MORTMapNames = NULL,
-  LogFile = "eda/eda-log.csv"
+  LogFile = NULL
 )}
     \if{html}{\out{</div>}}
   }
@@ -92,7 +92,8 @@ are NOT included here; they are discovered by \code{\link[=tar_landis]{tar_landi
 the literal \code{{agentName}} and \code{{timestep}} placeholders.}
       \item{\code{MORTMapNames}}{(Optional) Character. Mortality output map filename
 pattern; must contain the literal \code{{agentName}} and \code{{timestep}} placeholders.}
-      \item{\code{LogFile}}{Character. Relative file path for the EDA CSV log.}
+      \item{\code{LogFile}}{Character. Relative file path for the EDA CSV log.
+Defaults to \code{eda/eda-log.csv} inside the scenario directory.}
     }
     \if{html}{\out{</div>}}
   }

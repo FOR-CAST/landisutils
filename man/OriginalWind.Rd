@@ -78,8 +78,8 @@ are NOT included here; they are discovered by \code{\link[=tar_landis]{tar_landi
   WindEventParametersTable = NULL,
   WindSeverities = NULL,
   MapNames = NULL,
-  SummaryLogFile = "wind/summary-log.csv",
-  EventLogFile = "wind/event-log.csv"
+  SummaryLogFile = NULL,
+  EventLogFile = NULL
 )}
     \if{html}{\out{</div>}}
   }
@@ -96,8 +96,10 @@ are NOT included here; they are discovered by \code{\link[=tar_landis]{tar_landi
 \code{Severity}. Defaults to \code{\link[=defaultWindSeverities]{defaultWindSeverities()}}.}
       \item{\code{MapNames}}{Character. File pattern for writing outputs to disk;
 must contain \code{{timestep}}.}
-      \item{\code{SummaryLogFile}}{Character. Relative file path.}
-      \item{\code{EventLogFile}}{Character. Relative file path.}
+      \item{\code{SummaryLogFile}}{Character. Relative file path.
+Defaults to \code{wind/summary-log.csv} inside the scenario directory.}
+      \item{\code{EventLogFile}}{Character. Relative file path.
+Defaults to \code{wind/event-log.csv} inside the scenario directory.}
     }
     \if{html}{\out{</div>}}
   }
