@@ -25,6 +25,16 @@
   [`calibrate_dynamic_fire()`](https://for-cast.github.io/landisutils/reference/calibrate_dynamic_fire.md)’s
   config, a trial’s parameter vector, or a production parameter vector.
 
+- `ForCS`’s `MapOutputInterval` now accepts `0`, which writes no ForCS
+  spatial maps – the only way to turn them off, and a value ForCS itself
+  accepts. The setter required a positive value, so a configuration that
+  asked for no maps could not be written at all:
+  [`write()`](https://rdrr.io/r/base/write.html) never ran, and a
+  pipeline wiring the ForCS config into a scenario file failed there
+  instead. The four `ForCSOutput` log intervals are unchanged, because
+  ForCS rejects `0` for those; a log can only be thinned, for instance
+  to `9999`.
+
 ## landisutils 0.0.157
 
 - Every extension’s log-file default is now a full path rather than a

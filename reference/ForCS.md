@@ -73,7 +73,7 @@ Other ForCS helpers:
 
 - `MapOutputInterval`:
 
-  Integer.
+  Integer. Map output interval (years); `0` writes no maps.
 
 - `SpinUp`:
 
@@ -218,7 +218,7 @@ Inherited methods
 
 - `MapOutputInterval`:
 
-  Integer. Map output interval (years).
+  Integer. Map output interval (years); `0` writes no maps.
 
 - `SpinUp`:
 
