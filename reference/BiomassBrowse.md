@@ -315,8 +315,8 @@ Inherited methods
 
 - `LogFile`:
 
-  Character. Relative path to the events CSV log. Defaults to
-  `browse/browse-log.csv` inside the scenario directory. (§4.2.22).
+  Character. Relative path to the events CSV log (§4.2.22). Defaults to
+  `browse/browse-log.csv` inside the scenario directory.
 
 ------------------------------------------------------------------------
 
