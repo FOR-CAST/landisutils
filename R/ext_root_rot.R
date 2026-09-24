@@ -49,12 +49,12 @@ RootRot <- R6Class(
     #' @param SpeciesBiomassRemovedMapName (Optional) Character. Per-species
     #'   biomass-removed output raster pattern; must contain both `{species}`
     #'   and `{timestep}`.
-    #' @param EventLog (Optional) Character. Relative file path for the events.
-    #'   Defaults to `rootrot/events.csv` inside the scenario directory.
-    #'   CSV log; pass `NULL` to disable.
-    #' @param SummaryLog (Optional) Character. Relative file path for the.
-    #'   Defaults to `rootrot/summary.csv` inside the scenario directory.
-    #'   summary CSV log; pass `NULL` to disable.
+    #' @param EventLog (Optional) Character. Relative file path for the events
+    #'   CSV log; pass `NULL` to disable. Defaults to `rootrot/events.csv`
+    #'   inside the scenario directory.
+    #' @param SummaryLog (Optional) Character. Relative file path for the
+    #'   summary CSV log; pass `NULL` to disable. Defaults to
+    #'   `rootrot/summary.csv` inside the scenario directory.
     initialize = function(
       path,
       Timestep = NULL,

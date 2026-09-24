@@ -72,9 +72,8 @@ BiomassBrowse <- R6Class(
     #' @param SitePrefMapNames,SiteForageMapNames,SiteHSIMapNames,SitePopulationMapNames,BiomassRemovedMapNames
     #'   (Optional) Character. Output filename patterns; each must contain
     #'   `{timestep}` (§4.2.21).
-    #' @param LogFile Character. Relative path to the events CSV log.
+    #' @param LogFile Character. Relative path to the events CSV log (§4.2.22).
     #'   Defaults to `browse/browse-log.csv` inside the scenario directory.
-    #'   (§4.2.22).
     initialize = function(
       path,
       Timestep = 1L,
