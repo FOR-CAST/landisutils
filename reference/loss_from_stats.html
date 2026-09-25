@@ -11,7 +11,7 @@ save_observed_fire_targets()."><meta property="og:image" content="https://for-ca
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.159</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.160</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -80,7 +80,9 @@ component weighted loss against observed targets from
 
 <dt id="arg-weights">weights<a class="anchor" aria-label="anchor" href="#arg-weights"></a></dt>
 <dd><p>Named numeric vector. Components: <code>count</code>, <code>size</code>,
-<code>area_fuel</code>, <code>severity</code>. Missing components default to 0.</p></dd>
+<code>size_tail</code>, <code>area_fuel</code>, <code>severity</code>, <code>mortality</code>, <code>area_burned</code>. Missing
+components default to 0, so an existing caller's weights keep their
+meaning when a component is added.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -104,6 +106,31 @@ severity-class proportions. Simulated severities come from each
 event's <code>MeanSeverity</code> binned into integer classes 1..5; observed
 comes from <code>observed$primary$severity_dist</code> (a 5-element named
 numeric vector summing to 1). Skipped when observed is NULL.</p></li>
+<li><p><code>L_mortality = |mean(share_sim) - share_obs| / share_obs</code> – the
+share of burned area that lost its dominant cohort, against the same
+share observed. Contributes 0 when
+<code>observed$primary$mortality_share</code> is NULL or NA, or when no
+replicate kept the severity maps it is measured from.</p></li>
+<li><p><code>L_area_burned = |log10(area_sim / area_obs)|</code> – annual area burned,
+simulated against observed. No other component scores how much area
+burns: <code>L_area_fuel</code> scores how burned area is distributed across
+base fuel types, not how much there is. A log10 ratio keeps it
+scale-free, so the same weight means the same thing on study areas
+whose burn rates differ by orders of magnitude. Simulated area is
+summed from each replicate's events over the years <code>L_count</code> scores,
+converted with <code>observed$pixel_area_ha</code>; observed area is
+<code>sum(fire_sizes_ha) / n_years</code>. Contributes 0 when the observed
+payload cannot supply an annual rate, and <code>.AREA_BURNED_NO_FIRE</code>
+(3.0) when a replicate set burns nothing, since <code>log10(0)</code> would be
+infinite and DEoptim cannot rank an infinite objective.</p>
+<p></p><div class="sourceCode"><pre><code><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a>    This term and <span class="st">`</span><span class="at">count</span><span class="st">`</span> both move with the number of fires, so they</span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a>    compete <span class="cf">for</span> the same lever wherever a calibration scales ignition</span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a>    rates. <span class="st">`</span><span class="at">count</span><span class="st">`</span> is normalised by the observed year<span class="sc">-</span>to<span class="sc">-</span>year standard</span>
+<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a>    deviation, making it steeper by about</span>
+<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a>    <span class="st">`</span><span class="at">lambda_obs / sd(n_fires_obs) * ln(10)</span><span class="st">`</span>; keep</span>
+<span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a>    <span class="st">`</span><span class="at">weights["area_burned"]</span><span class="st">`</span> well below <span class="st">`</span><span class="at">weights["count"]</span><span class="st">`</span> times that</span>
+<span id="cb1-7"><a href="#cb1-7" tabindex="-1"></a>    factor, or the fitted fire count is pulled off its own target to</span>
+<span id="cb1-8"><a href="#cb1-8" tabindex="-1"></a>    compensate <span class="cf">for</span> a fire<span class="sc">-</span>size distribution the search cannot change.</span></code></pre><p></p></div></li>
 </ul><p>All component values are unitless and non-negative; chi-squared components
 use a small epsilon in the denominator to avoid division by zero on empty
 observed bins.</p>

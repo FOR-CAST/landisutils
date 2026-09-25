@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.159</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.160</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,6 +41,11 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.160" id="landisutils-00160">landisutils 0.0.160<a class="anchor" aria-label="anchor" href="#landisutils-00160"></a></h2>
+<ul><li>
+<code><a href="../reference/loss_from_stats.html">loss_from_stats()</a></code> gains an <code>area_burned</code> component, <code>|log10(area_sim / area_obs)|</code> on annual area burned. Nothing in the loss scored how much area burns: <code>area_fuel</code> scores how burned area is distributed across base fuel types, <code>count</code> and <code>size</code> score the number of fires and the shape of their size distribution, and a parameter set can satisfy all of them while burning several times too much or too little. On a range-of-variation study that is the quantity the exercise turns on, because annual area burned is what drives the seral-stage distribution. It is also the one area quantity measured to separate candidate fire-size tables: across two landscapes no distributional size statistic separated two real candidate tables by as much as one standard error, while annual area burned separated them by 3.4. A log10 ratio keeps the component scale-free, so one weight means the same thing on study areas whose burn rates differ by orders of magnitude. Simulated area is summed from each replicate’s events over the years <code>count</code> scores, so the two components always divide by the same denominator, and converted with <code>observed$pixel_area_ha</code>; a replicate set that burns nothing scores 3.0 rather than the infinite value <code>log10(0)</code> would give, which DEoptim could not rank. The default weight is 0, so an existing calibration is unchanged until its weights ask for the component, and <code><a href="../reference/calibrate_dynamic_fire.html">calibrate_dynamic_fire()</a></code> warns when a non-zero weight meets a payload that cannot supply an annual rate or is missing <code>pixel_area_ha</code>. Note that <code>area_burned</code> and <code>count</code> both move with the number of fires and so compete for the same lever: <code>count</code> is normalised by the observed year-to-year standard deviation, which makes it steeper by roughly <code>lambda_obs / sd(n_fires_obs) * ln(10)</code>, and above that ratio of weights the fitted fire count is pulled off its own target to compensate for a fire-size distribution the search cannot change.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.159" id="landisutils-00159">landisutils 0.0.159<a class="anchor" aria-label="anchor" href="#landisutils-00159"></a></h2>
 <ul><li>

@@ -1,5 +1,39 @@
 # Changelog
 
+## landisutils 0.0.160
+
+- [`loss_from_stats()`](https://for-cast.github.io/landisutils/reference/loss_from_stats.md)
+  gains an `area_burned` component, `|log10(area_sim / area_obs)|` on
+  annual area burned. Nothing in the loss scored how much area burns:
+  `area_fuel` scores how burned area is distributed across base fuel
+  types, `count` and `size` score the number of fires and the shape of
+  their size distribution, and a parameter set can satisfy all of them
+  while burning several times too much or too little. On a
+  range-of-variation study that is the quantity the exercise turns on,
+  because annual area burned is what drives the seral-stage
+  distribution. It is also the one area quantity measured to separate
+  candidate fire-size tables: across two landscapes no distributional
+  size statistic separated two real candidate tables by as much as one
+  standard error, while annual area burned separated them by 3.4. A
+  log10 ratio keeps the component scale-free, so one weight means the
+  same thing on study areas whose burn rates differ by orders of
+  magnitude. Simulated area is summed from each replicate’s events over
+  the years `count` scores, so the two components always divide by the
+  same denominator, and converted with `observed$pixel_area_ha`; a
+  replicate set that burns nothing scores 3.0 rather than the infinite
+  value `log10(0)` would give, which DEoptim could not rank. The default
+  weight is 0, so an existing calibration is unchanged until its weights
+  ask for the component, and
+  [`calibrate_dynamic_fire()`](https://for-cast.github.io/landisutils/reference/calibrate_dynamic_fire.md)
+  warns when a non-zero weight meets a payload that cannot supply an
+  annual rate or is missing `pixel_area_ha`. Note that `area_burned` and
+  `count` both move with the number of fires and so compete for the same
+  lever: `count` is normalised by the observed year-to-year standard
+  deviation, which makes it steeper by roughly
+  `lambda_obs / sd(n_fires_obs) * ln(10)`, and above that ratio of
+  weights the fitted fire count is pulled off its own target to
+  compensate for a fire-size distribution the search cannot change.
+
 ## landisutils 0.0.159
 
 - [`parse_dynamic_fire_logs()`](https://for-cast.github.io/landisutils/reference/parse_dynamic_fire_logs.md)
