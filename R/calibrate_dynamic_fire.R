@@ -834,11 +834,17 @@ default_severity_prior_sturtevant2009 <- function() {
 #'         scale-free, so the same weight means the same thing on study areas
 #'         whose burn rates differ by orders of magnitude. Simulated area is
 #'         summed from each replicate's events over the years `L_count` scores,
-#'         converted with `observed$pixel_area_ha`; observed area is
-#'         `sum(fire_sizes_ha) / n_years`. Contributes 0 when the observed
-#'         payload cannot supply an annual rate, and `.AREA_BURNED_NO_FIRE`
-#'         (3.0) when a replicate set burns nothing, since `log10(0)` would be
-#'         infinite and DEoptim cannot rank an infinite objective.
+#'         converted with `observed$pixel_area_ha`. Observed area is
+#'         `lambda_obs * mean(fire_sizes_ha)` -- the count target's own annual
+#'         rate times the size sample's mean fire size, NOT
+#'         `sum(fire_sizes_ha) / n_years`. The two agree only when the size
+#'         sample is every fire in the area and years the counts cover; a
+#'         payload that borrows per-fire sizes from a wider region than it
+#'         counts ignitions in would otherwise be scored against that wider
+#'         region's annual area. Contributes 0 when `fire_sizes_ha` is empty or
+#'         `lambda_obs` is not positive, and `.AREA_BURNED_NO_FIRE` (3.0) when a
+#'         replicate set burns nothing, since `log10(0)` would be infinite and
+#'         DEoptim cannot rank an infinite objective.
 #'
 #'         This term and `count` both move with the number of fires, so they
 #'         compete for the same lever wherever a calibration scales ignition
@@ -848,6 +854,12 @@ default_severity_prior_sturtevant2009 <- function() {
 #'         `weights["area_burned"]` well below `weights["count"]` times that
 #'         factor, or the fitted fire count is pulled off its own target to
 #'         compensate for a fire-size distribution the search cannot change.
+#'         **Compute that factor for your own record rather than assuming it is
+#'         large.** It is roughly 3.4 on a record averaging 27.8 fires per year
+#'         with a standard deviation of 18.9, but only 1.6 on a sparse record
+#'         averaging 0.87 fires per year, because a record whose counts are
+#'         nearly Poisson has a small standard deviation to divide by. The
+#'         sparser the fire record, the less headroom this component has.
 #' }
 #'
 #' All component values are unitless and non-negative; chi-squared components
@@ -1092,17 +1104,32 @@ loss_from_stats <- function(
   ## is pulled off its target to compensate for a fire-size distribution the search cannot change.
   ## Keep `weights["area_burned"]` well under `weights["count"]` times that factor.
   L_area_burned <- {
-    obs_years <- primary$n_years %||% nrow(primary$n_fires_by_year)
+    ## The observed rate is the COUNT TARGET's own rate times the SIZE SAMPLE's mean fire size --
+    ## NOT `sum(fire_sizes_ha) / n_years`. Those two agree only when the size sample is every fire
+    ## in the area and years the counts were taken over, and a payload may deliberately break that:
+    ## per-fire sizes are scarce, fire counts are not, so a small study area may borrow its size
+    ## sample from a wider region while counting ignitions only within itself. The summed form then
+    ## returns the WIDER region's annual area. On one such payload it overstated the target by 8.1x,
+    ## which would have dragged the fitted ignition rate up to match an area the landscape does not
+    ## contain. The product form is also the honest statement of what this component assumes: that
+    ## the size sample is representative of fires in the counted area.
+    obs_sizes <- primary$fire_sizes_ha
+    obs_mean_size <- if (is.null(obs_sizes) || length(obs_sizes) == 0L) {
+      NA_real_
+    } else {
+      mean(as.numeric(obs_sizes))
+    }
     obs_aab <- if (
-      is.null(primary$fire_sizes_ha) ||
-        !is.numeric(obs_years) ||
-        length(obs_years) != 1L ||
-        !is.finite(obs_years) ||
-        obs_years <= 0
+      !is.numeric(primary$lambda_obs) ||
+        length(primary$lambda_obs) != 1L ||
+        !is.finite(primary$lambda_obs) ||
+        primary$lambda_obs <= 0 ||
+        !is.finite(obs_mean_size) ||
+        obs_mean_size <= 0
     ) {
       NA_real_
     } else {
-      sum(primary$fire_sizes_ha) / obs_years
+      primary$lambda_obs * obs_mean_size
     }
     if (!is.finite(obs_aab) || obs_aab <= 0) {
       0.0
@@ -2963,20 +2990,15 @@ sim_mock <- function(
       call. = FALSE
     )
   }
-  .n_years <- primary$n_years %||% NROW(primary$n_fires_by_year)
   if (
     .weight_gt0(w, "area_burned") &&
-      (is.null(primary$fire_sizes_ha) ||
-        !is.numeric(.n_years) ||
-        length(.n_years) != 1L ||
-        !is.finite(.n_years) ||
-        .n_years <= 0)
+      (is.null(primary$fire_sizes_ha) || length(primary$fire_sizes_ha) == 0L)
   ) {
     warning(
-      "cfg$weights['area_burned'] > 0 but the observed payload cannot supply an annual rate ",
-      "(needs primary$fire_sizes_ha and either primary$n_years or a non-empty ",
-      "primary$n_fires_by_year); L_area_burned will contribute 0. Either set the weight to 0 or ",
-      "rebuild the payload with save_observed_fire_targets().",
+      "cfg$weights['area_burned'] > 0 but observed$primary$fire_sizes_ha is empty, so the ",
+      "observed annual area burned (lambda_obs x mean fire size) cannot be formed; ",
+      "L_area_burned will contribute 0. Either set the weight to 0 or rebuild the payload with ",
+      "save_observed_fire_targets().",
       call. = FALSE
     )
   }

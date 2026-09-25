@@ -63,11 +63,17 @@ base fuel types, not how much there is. A log10 ratio keeps it
 scale-free, so the same weight means the same thing on study areas
 whose burn rates differ by orders of magnitude. Simulated area is
 summed from each replicate's events over the years \code{L_count} scores,
-converted with \code{observed$pixel_area_ha}; observed area is
-\code{sum(fire_sizes_ha) / n_years}. Contributes 0 when the observed
-payload cannot supply an annual rate, and \code{.AREA_BURNED_NO_FIRE}
-(3.0) when a replicate set burns nothing, since \code{log10(0)} would be
-infinite and DEoptim cannot rank an infinite objective.
+converted with \code{observed$pixel_area_ha}. Observed area is
+\code{lambda_obs * mean(fire_sizes_ha)} -- the count target's own annual
+rate times the size sample's mean fire size, NOT
+\code{sum(fire_sizes_ha) / n_years}. The two agree only when the size
+sample is every fire in the area and years the counts cover; a
+payload that borrows per-fire sizes from a wider region than it
+counts ignitions in would otherwise be scored against that wider
+region's annual area. Contributes 0 when \code{fire_sizes_ha} is empty or
+\code{lambda_obs} is not positive, and \code{.AREA_BURNED_NO_FIRE} (3.0) when a
+replicate set burns nothing, since \code{log10(0)} would be infinite and
+DEoptim cannot rank an infinite objective.
 
 \if{html}{\out{<div class="sourceCode">}}\preformatted{    This term and `count` both move with the number of fires, so they
     compete for the same lever wherever a calibration scales ignition
@@ -77,6 +83,12 @@ infinite and DEoptim cannot rank an infinite objective.
     `weights["area_burned"]` well below `weights["count"]` times that
     factor, or the fitted fire count is pulled off its own target to
     compensate for a fire-size distribution the search cannot change.
+    **Compute that factor for your own record rather than assuming it is
+    large.** It is roughly 3.4 on a record averaging 27.8 fires per year
+    with a standard deviation of 18.9, but only 1.6 on a sparse record
+    averaging 0.87 fires per year, because a record whose counts are
+    nearly Poisson has a small standard deviation to divide by. The
+    sparser the fire record, the less headroom this component has.
 }\if{html}{\out{</div>}}
 
 }

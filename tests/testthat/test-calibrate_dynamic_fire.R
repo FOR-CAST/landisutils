@@ -2835,9 +2835,12 @@ test_that("loss_from_stats() refuses a reps list holding a dead replicate", {
     list(
       pixel_area_ha = 2, ## deliberately NOT 1, so a missing conversion shows up
       primary = list(
-        lambda_obs = 2,
+        ## 4 fires over 10 years = 0.4/yr, and 0.4 * mean(c(100, 200, 300, 400)) = 100 ha/yr.
+        ## The count target and the size sample describe the SAME fires here, which is the
+        ## ordinary case; `.ab_observed_borrowed()` below is the case where they do not.
+        lambda_obs = 0.4,
         n_years = 10,
-        n_fires_by_year = tibble::tibble(year = 1:10, n = rep(2L, 10)),
+        n_fires_by_year = tibble::tibble(year = 1:10, n = rep(0L, 10)),
         fire_sizes_ha = c(100, 200, 300, 400)
       )
     ),
@@ -2931,6 +2934,50 @@ test_that("loss_from_stats() converts burned cells with the observed cell area",
   )
 })
 
+## A payload whose size sample covers a WIDER area than its count target. Per-fire sizes are
+## scarce where fire counts are not, so a small study area may borrow sizes from a wider region
+## while counting ignitions only within itself. Same mean fire size as `.ab_observed()`, five times
+## as many fires in the sample, so `sum(fire_sizes_ha) / n_years` is five times the true rate.
+.ab_observed_borrowed <- function() {
+  o <- .ab_observed()
+  o$primary$fire_sizes_ha <- rep(c(100, 200, 300, 400), 5) ## 20 fires, sum 5000, mean unchanged
+  o
+}
+
+test_that("loss_from_stats() takes the observed rate from lambda_obs, not from the size sample's span", {
+  ## The size sample spans a wider area than the counts, so sum(sizes)/n_years = 5000/10 = 500
+  ## would be the WIDER region's annual area, while the landscape being simulated burns 100.
+  obs <- .ab_observed_borrowed()
+  expect_equal(sum(obs$primary$fire_sizes_ha) / obs$primary$n_years, 500) ## the wrong target
+  expect_equal(obs$primary$lambda_obs * mean(obs$primary$fire_sizes_ha), 100) ## the right one
+
+  ## a replicate burning exactly the right 100 ha/yr must score 0
+  matched <- loss_from_stats(list(.ab_rep(c(300, 200))), obs)
+  expect_equal(matched$components[["area_burned"]], 0)
+
+  ## under the summed form it would have scored |log10(100/500)|, a target 5x too high
+  expect_gt(abs(log10(100 / 500)), 0.69)
+  expect_false(isTRUE(all.equal(
+    matched$components[["area_burned"]],
+    abs(log10(100 / 500))
+  )))
+
+  ## and borrowing sizes must not change the score at all, since the mean is the same
+  expect_equal(
+    matched$components[["area_burned"]],
+    loss_from_stats(list(.ab_rep(c(300, 200))), .ab_observed())$components[["area_burned"]]
+  )
+})
+
+test_that("loss_from_stats() contributes 0 when lambda_obs cannot give a rate", {
+  obs <- .ab_observed()
+  obs$primary$lambda_obs <- 0
+  expect_equal(
+    loss_from_stats(list(.ab_rep(c(3000, 2000))), obs)$components[["area_burned"]],
+    0
+  )
+})
+
 test_that("loss_from_stats() gives a replicate set that burns nothing a finite area_burned", {
   rep_empty <- list(
     n_fires_by_year = tibble::tibble(year = 1:10, n_fires = rep(0L, 10)),
@@ -2951,15 +2998,14 @@ test_that("loss_from_stats() contributes 0 when the payload cannot supply an ann
     0
   )
 
-  ## no year count of any kind
+  ## n_years is no longer consulted at all: the rate comes from lambda_obs and the mean size
   obs_no_years <- .ab_observed()
   obs_no_years$primary$n_years <- NULL
-  obs_no_years$primary$n_fires_by_year <- tibble::tibble(year = integer(0), n = integer(0))
   expect_equal(
     suppressWarnings(
       loss_from_stats(list(.ab_rep(c(3000, 2000))), obs_no_years)$components[["area_burned"]]
     ),
-    0
+    1
   )
 })
 
