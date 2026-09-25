@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.160</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.161</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,6 +41,11 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.161" id="landisutils-00161">landisutils 0.0.161<a class="anchor" aria-label="anchor" href="#landisutils-00161"></a></h2>
+<ul><li><p><code><a href="../reference/loss_from_stats.html">loss_from_stats()</a></code> forms the observed annual area burned as <code>lambda_obs * mean(fire_sizes_ha)</code> rather than <code>sum(fire_sizes_ha) / n_years</code>. The two agree only when the size sample is every fire in the area and years the counts were taken over, and a payload may deliberately break that: per-fire sizes are scarce where fire counts are not, so a small study area may borrow its size sample from a wider region while counting ignitions only within itself. The summed form then returns the wider region’s annual area – on one such payload, 181.6 ha/yr against a landscape that burns 22.4, an 8.1x target that would have dragged the fitted ignition rate up to match an area the landscape does not contain. Where the two pools do agree the forms are numerically identical, so a payload whose sizes and counts come from the same fires is unaffected to the last digit. The component no longer reads <code>primary$n_years</code>, and its coherence warning now fires on an empty <code>fire_sizes_ha</code> rather than a missing year count. <code>area_burned</code> was released at weight 0 in 0.0.160 and no calibration is known to have weighted it, so no fitted result changes.</p></li>
+<li><p>The roxygen for <code>area_burned</code> now says to compute the <code>count</code>-versus-<code>area_burned</code> steepness factor for your own record rather than assuming it is large. It is roughly 3.4 on a record averaging 27.8 fires per year with a standard deviation of 18.9, but only 1.6 on a sparse record averaging 0.87 – a record whose annual counts are nearly Poisson has a small standard deviation to divide by, so the sparser the record, the less headroom this component has before it starts competing with the fire-count target.</p></li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.160" id="landisutils-00160">landisutils 0.0.160<a class="anchor" aria-label="anchor" href="#landisutils-00160"></a></h2>
 <ul><li>

@@ -1,5 +1,35 @@
 # Changelog
 
+## landisutils 0.0.161
+
+- [`loss_from_stats()`](https://for-cast.github.io/landisutils/reference/loss_from_stats.md)
+  forms the observed annual area burned as
+  `lambda_obs * mean(fire_sizes_ha)` rather than
+  `sum(fire_sizes_ha) / n_years`. The two agree only when the size
+  sample is every fire in the area and years the counts were taken over,
+  and a payload may deliberately break that: per-fire sizes are scarce
+  where fire counts are not, so a small study area may borrow its size
+  sample from a wider region while counting ignitions only within
+  itself. The summed form then returns the wider region’s annual area –
+  on one such payload, 181.6 ha/yr against a landscape that burns 22.4,
+  an 8.1x target that would have dragged the fitted ignition rate up to
+  match an area the landscape does not contain. Where the two pools do
+  agree the forms are numerically identical, so a payload whose sizes
+  and counts come from the same fires is unaffected to the last digit.
+  The component no longer reads `primary$n_years`, and its coherence
+  warning now fires on an empty `fire_sizes_ha` rather than a missing
+  year count. `area_burned` was released at weight 0 in 0.0.160 and no
+  calibration is known to have weighted it, so no fitted result changes.
+
+- The roxygen for `area_burned` now says to compute the
+  `count`-versus-`area_burned` steepness factor for your own record
+  rather than assuming it is large. It is roughly 3.4 on a record
+  averaging 27.8 fires per year with a standard deviation of 18.9, but
+  only 1.6 on a sparse record averaging 0.87 – a record whose annual
+  counts are nearly Poisson has a small standard deviation to divide by,
+  so the sparser the record, the less headroom this component has before
+  it starts competing with the fire-count target.
+
 ## landisutils 0.0.160
 
 - [`loss_from_stats()`](https://for-cast.github.io/landisutils/reference/loss_from_stats.md)
