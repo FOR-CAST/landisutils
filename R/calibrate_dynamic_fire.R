@@ -2623,6 +2623,16 @@ run_calibration_spinup <- function(
 #'   not a scheduler) so a wedged trial is killed, retried and, if it keeps
 #'   wedging, surfaced as an error the search can act on. Only the pooled path
 #'   honours it.
+#' @param parse_timeout_sec Numeric or NULL. Wall-clock ceiling on parsing the
+#'   finished replicate, which runs in a child R process so that it can be
+#'   killed: a parse that spins in native code never reaches an interrupt check,
+#'   and one that crashes would otherwise take the calibration worker with it.
+#'   Either stalls the whole search, because the coordinator waits on every
+#'   worker. A healthy parse takes seconds. Default 600. NULL parses in this
+#'   process with no limit, as before 0.0.162. Each failed attempt is appended
+#'   to `parse_failures.log` under the scratch root.
+#' @param parse_retries Integer >= 0. Extra attempts after a parse times out or
+#'   its process dies. An error the parser raises is not retried. Default 2.
 #'
 #' @returns The output of [parse_dynamic_fire_logs()] for the trial's `rep01/`.
 #'
@@ -2641,7 +2651,9 @@ sim_landis <- function(
   pixel_area_ha = NULL,
   keep_scratch = FALSE,
   retries = 0L,
-  trial_timeout_sec = NULL
+  trial_timeout_sec = NULL,
+  parse_timeout_sec = 600,
+  parse_retries = 2L
 ) {
   if (is.null(names(par_vec)) && !is.null(par_names)) {
     names(par_vec) <- par_names
@@ -2750,9 +2762,128 @@ sim_landis <- function(
     }
   }
 
-  result <- parse_dynamic_fire_logs(rep_dir, pixel_area_ha = pixel_area_ha)
+  result <- if (is.null(parse_timeout_sec)) {
+    parse_dynamic_fire_logs(rep_dir, pixel_area_ha = pixel_area_ha)
+  } else {
+    .parse_rep_isolated(
+      rep_dir,
+      pixel_area_ha = pixel_area_ha,
+      timeout_sec = parse_timeout_sec,
+      retries = parse_retries,
+      log_path = fs::path(scratch_root, "parse_failures.log")
+    )
+  }
   trial_succeeded <- TRUE ## triggers scratch cleanup in the on.exit handler
   result
+}
+
+## Parse one finished replicate in a child R process, under a wall-clock limit (internal).
+##
+## Observed on one generation of 70 candidates x 20 replicates, run on PSOCK workers: after
+## its replicate finished normally, one worker spun at 100% CPU in its main R thread for 58 hours
+## without returning from the parse, and another died at the same step. Both replicates re-parse
+## in 16 s, so the fault is intermittent. The coordinator waits on every worker, so either failure
+## stalled the search with nothing logged. Neither can be handled inside the worker: a spin in
+## native code never reaches an interrupt check, and a crash ends the process. A child process can
+## be killed on a timer, and its death is an error here rather than the end of the worker.
+##
+## * Only a timeout or a dead child is retried. An R error raised by the parser is deterministic
+##   (the same files give the same error), so it stops at once with the child's message.
+## * The child starts without the user profile: a project `.Rprofile` (renv activation, attached
+##   packages) tripled its start-up, paid on every replicate.
+## * `supervise = TRUE`: the timeout is enforced by this process, so a hung child whose worker is
+##   killed would otherwise spin on with no owner.
+## * The child must parse with THIS process's landisutils. It resolves the parser's namespace by
+##   name, so the directory the package was loaded from goes first on its library path, and a
+##   version mismatch is refused rather than mixing one version's parser with another's helpers.
+## * Worker output goes to /dev/null in both cluster types, so every failed attempt is also
+##   appended to `log_path`: a hang that a retry cures must still leave a record.
+## * Warnings raised by the parser (the DamagedSites check among them) are carried back.
+.parse_rep_isolated <- function(
+  rep_dir,
+  pixel_area_ha,
+  timeout_sec,
+  retries = 2L,
+  parser = parse_dynamic_fire_logs,
+  log_path = NULL
+) {
+  stopifnot(is.numeric(timeout_sec), length(timeout_sec) == 1L, timeout_sec > 0, retries >= 0L)
+  ## The version check applies to the package's own parser; a stand-in (tests) carries no namespace.
+  own_parser <- identical(environmentName(environment(parser)), "landisutils")
+  ver <- if (own_parser) as.character(utils::packageVersion("landisutils")) else NA_character_
+  libpath <- if (own_parser) {
+    unique(c(dirname(getNamespaceInfo("landisutils", "path")), .libPaths()))
+  } else {
+    .libPaths()
+  }
+  attempts <- 1L + as.integer(retries)
+  for (a in seq_len(attempts)) {
+    t0 <- proc.time()[["elapsed"]]
+    res <- tryCatch(
+      callr::r(
+        function(parser, rep_dir, pixel_area_ha, ver) {
+          if (!is.na(ver)) {
+            got <- as.character(utils::packageVersion("landisutils"))
+            if (!identical(got, ver)) {
+              stop("the parse process loaded landisutils ", got, ", not ", ver, call. = FALSE)
+            }
+          }
+          warns <- character(0)
+          value <- withCallingHandlers(
+            parser(rep_dir, pixel_area_ha = pixel_area_ha),
+            warning = function(cnd) {
+              warns <<- c(warns, conditionMessage(cnd))
+              invokeRestart("muffleWarning")
+            }
+          )
+          list(value = value, warnings = warns)
+        },
+        args = list(parser = parser, rep_dir = rep_dir, pixel_area_ha = pixel_area_ha, ver = ver),
+        libpath = libpath,
+        user_profile = FALSE,
+        timeout = timeout_sec,
+        supervise = TRUE
+      ),
+      error = function(e) e
+    )
+    if (!inherits(res, "error")) {
+      for (w in res$warnings) {
+        warning(w, call. = FALSE)
+      }
+      return(res$value)
+    }
+    ## A child that raised an R error reports it as `$parent`; a timeout or a killed child has none.
+    retryable <- inherits(res, "callr_timeout_error") || is.null(res$parent)
+    msg <- gsub("[[:space:]]+", " ", conditionMessage(res))
+    line <- sprintf(
+      "%s\t%s\t%d\t%s\tattempt %d of %d\t%.1f s\t%s\t%s",
+      format(Sys.time(), "%Y-%m-%dT%H:%M:%S%z"),
+      Sys.info()[["nodename"]],
+      Sys.getpid(),
+      rep_dir,
+      a,
+      attempts,
+      proc.time()[["elapsed"]] - t0,
+      if (retryable) "retryable" else "not retried",
+      msg
+    )
+    if (!is.null(log_path)) {
+      try(cat(line, "\n", file = log_path, append = TRUE, sep = ""), silent = TRUE)
+    }
+    message("sim_landis: parse failed: ", line)
+    if (!retryable) {
+      stop("sim_landis: parsing ", rep_dir, " failed: ", msg, call. = FALSE)
+    }
+  }
+  stop(
+    "sim_landis: parsing ",
+    rep_dir,
+    " failed ",
+    attempts,
+    " time(s); last error: ",
+    msg,
+    call. = FALSE
+  )
 }
 
 #' Standalone-R Dynamic Fire reimplementation (stub)
@@ -3243,6 +3374,11 @@ sim_mock <- function(
 #'       generation waits behind it. Recommended for any unattended search.
 #'       Deliberately excluded from both fingerprints, so it can be added to or
 #'       changed on an in-flight search without invalidating its checkpoint.}
+#'     \item{parse_timeout_sec}{Optional numeric. Wall-clock ceiling on parsing
+#'       one finished replicate (see [sim_landis()]). Default 600 when absent;
+#'       `cfg["parse_timeout_sec"] <- list(NULL)` parses in the worker's own
+#'       process with no limit, as before 0.0.162. Excluded from both
+#'       fingerprints for the same reason as `trial_timeout_sec`.}
 #'   }
 #' @param out_dir Character. Where to write the DEoptim trace + scratch
 #'   sub-directory. Created if missing.
@@ -3537,7 +3673,9 @@ calibrate_dynamic_fire <- function(observed_targets_path, scenario_template, cfg
         retries = as.integer(cfg$retries %||% 0L),
         ## Bound a single execution so a wedged container cannot stall the generation behind it;
         ## see sim_landis()'s `trial_timeout_sec` docs. NULL keeps the historical wait-forever.
-        trial_timeout_sec = cfg$trial_timeout_sec
+        trial_timeout_sec = cfg$trial_timeout_sec,
+        ## Bound the parse of a finished replicate the same way; see `parse_timeout_sec` there.
+        parse_timeout_sec = if ("parse_timeout_sec" %in% names(cfg)) cfg$parse_timeout_sec else 600
       )
     })
     .loss <- loss_from_stats(reps, observed, weights)
@@ -4290,7 +4428,8 @@ run_calibration_validation <- function(
       method = "docker",
       ## Same rationale as the search: one transient container fault should not
       ## discard the whole validation. `cfg$retries` is what the calibration used.
-      retries = as.integer(cfg$retries %||% 0L)
+      retries = as.integer(cfg$retries %||% 0L),
+      parse_timeout_sec = if ("parse_timeout_sec" %in% names(cfg)) cfg$parse_timeout_sec else 600
     )
   }
   reps <- if (n_reps_i > 1L) {

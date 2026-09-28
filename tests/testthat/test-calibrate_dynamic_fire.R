@@ -3018,3 +3018,195 @@ test_that("loss_from_stats() averages the annual rate across replicates", {
   )
   expect_equal(loss$components[["area_burned"]], abs(log10(550 / 100)))
 })
+
+## Stand-in parsers are given `baseenv()` so the child need not load landisutils to run them: a
+## closure made in the test environment carries the package namespace, and loading it takes
+## longer than the short limits these tests use.
+
+test_that(".parse_rep_isolated() returns the parser's value and re-signals its warnings", {
+  parser <- function(rep_dir, pixel_area_ha) {
+    warning("DamagedSites check")
+    list(rep_dir = rep_dir, area = pixel_area_ha)
+  }
+  environment(parser) <- baseenv()
+  expect_warning(
+    out <- .parse_rep_isolated("somewhere", pixel_area_ha = 4, timeout_sec = 60, parser = parser),
+    "DamagedSites check"
+  )
+  expect_identical(out, list(rep_dir = "somewhere", area = 4))
+})
+
+test_that(".parse_rep_isolated() kills a parse that hangs, retries it, and logs the attempt", {
+  ## `rep_dir` doubles as a flag file: the first attempt records its pid and hangs, the second parses.
+  flag <- withr::local_tempfile()
+  log <- withr::local_tempfile()
+  parser <- function(rep_dir, pixel_area_ha) {
+    if (!file.exists(rep_dir)) {
+      writeLines(as.character(Sys.getpid()), rep_dir)
+      Sys.sleep(600)
+    }
+    "parsed"
+  }
+  environment(parser) <- baseenv()
+  expect_message(
+    out <- .parse_rep_isolated(
+      flag,
+      1,
+      timeout_sec = 15,
+      retries = 1L,
+      parser = parser,
+      log_path = log
+    ),
+    "attempt 1 of 2"
+  )
+  expect_identical(out, "parsed")
+  ## The hung child is gone, not left spinning.
+  pid <- as.integer(readLines(flag))
+  Sys.sleep(0.5)
+  expect_false(tryCatch(ps::ps_is_running(ps::ps_handle(pid)), error = function(e) FALSE))
+  ## A cured hang still leaves a record, since worker output goes to /dev/null.
+  logged <- readLines(log)
+  expect_length(logged, 1L)
+  expect_match(logged, "attempt 1 of 2.*retryable")
+})
+
+test_that(".parse_rep_isolated() survives a parse whose process dies", {
+  flag <- withr::local_tempfile()
+  parser <- function(rep_dir, pixel_area_ha) {
+    if (!file.exists(rep_dir)) {
+      file.create(rep_dir)
+      tools::pskill(Sys.getpid(), tools::SIGKILL)
+    }
+    "parsed"
+  }
+  environment(parser) <- baseenv()
+  out <- suppressMessages(
+    .parse_rep_isolated(flag, 1, timeout_sec = 60, retries = 1L, parser = parser)
+  )
+  expect_identical(out, "parsed")
+})
+
+test_that(".parse_rep_isolated() does not retry an error the parser raises", {
+  calls <- withr::local_tempfile()
+  parser <- function(rep_dir, pixel_area_ha) {
+    cat("call\n", file = rep_dir, append = TRUE)
+    stop("Dynamic Fire logs not found")
+  }
+  environment(parser) <- baseenv()
+  expect_error(
+    suppressMessages(
+      .parse_rep_isolated(calls, 1, timeout_sec = 60, retries = 2L, parser = parser)
+    ),
+    "Dynamic Fire logs not found"
+  )
+  expect_length(readLines(calls), 1L)
+})
+
+test_that(".parse_rep_isolated() fails, naming the replicate, once its attempts are spent", {
+  parser <- function(rep_dir, pixel_area_ha) Sys.sleep(600)
+  environment(parser) <- baseenv()
+  expect_error(
+    suppressMessages(
+      .parse_rep_isolated("rep-x", 1, timeout_sec = 2, retries = 1L, parser = parser)
+    ),
+    "parsing rep-x failed 2 time"
+  )
+})
+
+## The real parser in a child needs an installed landisutils of THIS version; skip elsewhere
+## (e.g. under load_all with a different version installed).
+.skip_unless_child_has_this_landisutils <- function() {
+  child <- callr::r(
+    function() {
+      tryCatch(as.character(utils::packageVersion("landisutils")), error = function(e) NA_character_)
+    },
+    user_profile = FALSE
+  )
+  skip_if_not(
+    identical(child, as.character(utils::packageVersion("landisutils"))),
+    "a child process cannot load this version of landisutils"
+  )
+}
+
+.fixture_rep_dir <- function(env = parent.frame()) {
+  rep_dir <- withr::local_tempdir(.local_envir = env)
+  fs::dir_create(fs::path(rep_dir, "fire"))
+  for (f in c("event", "summary")) {
+    fs::file_copy(
+      system.file("testdata", sprintf("dynamic-fire-%s-log-sample.csv", f), package = "landisutils"),
+      fs::path(rep_dir, "fire", sprintf("dynamic-fire-%s-log.csv", f))
+    )
+  }
+  rep_dir
+}
+
+test_that("the real parser gives the same result in a child process as in this one", {
+  .skip_unless_child_has_this_landisutils()
+  rep_dir <- .fixture_rep_dir()
+  expect_identical(
+    .parse_rep_isolated(rep_dir, 1, timeout_sec = 120),
+    parse_dynamic_fire_logs(rep_dir, 1)
+  )
+})
+
+test_that("the real parser's DamagedSites warning is carried back from the child", {
+  .skip_unless_child_has_this_landisutils()
+  rep_dir <- .fixture_rep_dir()
+  f <- fs::path(rep_dir, "fire", "dynamic-fire-event-log.csv")
+  ev <- readLines(f)
+  ev[3] <- sub(", 3, 0, 0.75, 4,", ", 3, 0, 0.75, 3,", ev[3], fixed = TRUE)
+  writeLines(ev, f)
+  expect_warning(.parse_rep_isolated(rep_dir, 1, timeout_sec = 120), "not SitesChecked \\+ 1")
+})
+
+test_that("sim_landis() forwards the parse limit, and NULL parses in-process", {
+  seen <- new.env(parent = emptyenv())
+  local_mocked_bindings(
+    patch_fire_config = function(...) invisible(NULL),
+    landis_replicate = function(...) invisible(NULL),
+    landis_pool_exec = function(...) invisible(NULL),
+    .parse_rep_isolated = function(rep_dir, pixel_area_ha, timeout_sec, retries, log_path, ...) {
+      seen$isolated <- list(timeout_sec = timeout_sec, retries = retries, log_path = log_path)
+      list(n_events = 0L)
+    },
+    parse_dynamic_fire_logs = function(rep_dir, pixel_area_ha = 1) {
+      seen$in_process <- TRUE
+      list(n_events = 0L)
+    }
+  )
+  tmpl <- withr::local_tempdir()
+  file.create(fs::path(tmpl, "dynamic-fire.txt"))
+  writeLines("CellLength    100", fs::path(tmpl, "scenario.txt"))
+  scratch <- withr::local_tempdir()
+  fake_pool <- structure(list(names = "c1", scratch_root = scratch), class = "landis_pool")
+  run <- function(...) {
+    sim_landis(
+      par_vec = stats::setNames(rep(0.5, length(.searchable_par_names())), .searchable_par_names()),
+      paths = list(scenario_template = tmpl, scratch_root = scratch),
+      sim_years = 1L,
+      base_seed = 1L,
+      pool = fake_pool,
+      pool_idx = 1L,
+      ...
+    )
+  }
+  run(parse_timeout_sec = 5, parse_retries = 1L)
+  expect_identical(seen$isolated$timeout_sec, 5)
+  expect_identical(seen$isolated$retries, 1L)
+  expect_match(as.character(seen$isolated$log_path), "parse_failures\\.log$")
+  expect_null(seen$in_process)
+
+  run(parse_timeout_sec = NULL)
+  expect_true(seen$in_process)
+})
+
+test_that("both calibration drivers take the parse limit from cfg, and can switch it off", {
+  for (fn in list(calibrate_dynamic_fire, run_calibration_validation)) {
+    src <- paste(deparse(body(fn)), collapse = " ")
+    ## deparse() wraps long lines, so every gap between tokens may be any run of whitespace.
+    expect_match(
+      src,
+      'parse_timeout_sec\\s*=\\s*if\\s*\\(\\s*"parse_timeout_sec"\\s*%in%\\s*names\\(cfg\\)\\s*\\)\\s*cfg\\$parse_timeout_sec'
+    )
+  }
+})

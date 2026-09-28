@@ -62,6 +62,11 @@ simulator that exits; one that wedges never returns, and the whole
 generation waits behind it. Recommended for any unattended search.
 Deliberately excluded from both fingerprints, so it can be added to or
 changed on an in-flight search without invalidating its checkpoint.}
+\item{parse_timeout_sec}{Optional numeric. Wall-clock ceiling on parsing
+one finished replicate (see \code{\link[=sim_landis]{sim_landis()}}). Default 600 when absent;
+\code{cfg["parse_timeout_sec"] <- list(NULL)} parses in the worker's own
+process with no limit, as before 0.0.162. Excluded from both
+fingerprints for the same reason as \code{trial_timeout_sec}.}
 }}
 
 \item{out_dir}{Character. Where to write the DEoptim trace + scratch
