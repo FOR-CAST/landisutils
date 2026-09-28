@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.161</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.162</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,6 +41,11 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.162" id="landisutils-00162">landisutils 0.0.162<a class="anchor" aria-label="anchor" href="#landisutils-00162"></a></h2>
+<ul><li>
+<code><a href="../reference/sim_landis.html">sim_landis()</a></code> parses each finished replicate in a child R process under a wall-clock limit, <code>parse_timeout_sec</code> (default 600 s), and retries a parse that times out or whose process dies, <code>parse_retries</code> times (default 2). In one generation of 70 candidates x 20 replicates, run on PSOCK workers, one worker spun at 100% CPU for 58 hours without returning from the parse of a replicate that had finished normally, and another died at the same step. Both replicates re-parse in 16 s, so the fault is intermittent. The coordinator waits on every worker, so either failure stalled the whole search with nothing logged, and neither can be handled inside the worker: a spin in native code never reaches an interrupt check, and a crash ends the process. An error the parser itself raises is not retried, since the same files give the same error. The child starts without the user profile, is killed if its worker dies, and must load the same landisutils version as the worker. Each failed attempt is appended to <code>parse_failures.log</code> under the scratch root, because worker output goes to <code>/dev/null</code> and a hang that a retry cures would otherwise leave no trace. The parser’s warnings, including the <code>DamagedSites</code> check, are carried back from the child. <code><a href="../reference/calibrate_dynamic_fire.html">calibrate_dynamic_fire()</a></code> and <code><a href="../reference/run_calibration_validation.html">run_calibration_validation()</a></code> take the limit from <code>cfg$parse_timeout_sec</code>; <code>cfg["parse_timeout_sec"] &lt;- list(NULL)</code> parses in the worker’s own process, as before. Like <code>trial_timeout_sec</code>, it enters neither checkpoint fingerprint. Starting the child and loading the package costs about 4 s per replicate, against minutes of simulation.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.161" id="landisutils-00161">landisutils 0.0.161<a class="anchor" aria-label="anchor" href="#landisutils-00161"></a></h2>
 <ul><li><p><code><a href="../reference/loss_from_stats.html">loss_from_stats()</a></code> forms the observed annual area burned as <code>lambda_obs * mean(fire_sizes_ha)</code> rather than <code>sum(fire_sizes_ha) / n_years</code>. The two agree only when the size sample is every fire in the area and years the counts were taken over, and a payload may deliberately break that: per-fire sizes are scarce where fire counts are not, so a small study area may borrow its size sample from a wider region while counting ignitions only within itself. The summed form then returns the wider region’s annual area – on one such payload, 181.6 ha/yr against a landscape that burns 22.4, an 8.1x target that would have dragged the fitted ignition rate up to match an area the landscape does not contain. Where the two pools do agree the forms are numerically identical, so a payload whose sizes and counts come from the same fires is unaffected to the last digit. The component no longer reads <code>primary$n_years</code>, and its coherence warning now fires on an empty <code>fire_sizes_ha</code> rather than a missing year count. <code>area_burned</code> was released at weight 0 in 0.0.160 and no calibration is known to have weighted it, so no fitted result changes.</p></li>

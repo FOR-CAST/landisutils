@@ -13,7 +13,7 @@ on.exit() regardless of success / error / interrupt."><meta property="og:image" 
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.161</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.162</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -147,6 +147,13 @@ simulator that exits; one that wedges never returns, and the whole
 generation waits behind it. Recommended for any unattended search.
 Deliberately excluded from both fingerprints, so it can be added to or
 changed on an in-flight search without invalidating its checkpoint.</p></dd>
+
+<dt>parse_timeout_sec</dt>
+<dd><p>Optional numeric. Wall-clock ceiling on parsing
+one finished replicate (see <code><a href="sim_landis.html">sim_landis()</a></code>). Default 600 when absent;
+<code>cfg["parse_timeout_sec"] &lt;- list(NULL)</code> parses in the worker's own
+process with no limit, as before 0.0.162. Excluded from both
+fingerprints for the same reason as <code>trial_timeout_sec</code>.</p></dd>
 
 
 </dl></dd>

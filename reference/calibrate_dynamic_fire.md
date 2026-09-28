@@ -122,6 +122,16 @@ calibrate_dynamic_fire(observed_targets_path, scenario_template, cfg, out_dir)
       both fingerprints, so it can be added to or changed on an
       in-flight search without invalidating its checkpoint.
 
+  parse_timeout_sec
+
+  :   Optional numeric. Wall-clock ceiling on parsing one finished
+      replicate (see
+      [`sim_landis()`](https://for-cast.github.io/landisutils/reference/sim_landis.md)).
+      Default 600 when absent; `cfg["parse_timeout_sec"] <- list(NULL)`
+      parses in the worker's own process with no limit, as before
+      0.0.162. Excluded from both fingerprints for the same reason as
+      `trial_timeout_sec`.
+
 - out_dir:
 
   Character. Where to write the DEoptim trace + scratch sub-directory.

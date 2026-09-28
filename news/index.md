@@ -1,5 +1,36 @@
 # Changelog
 
+## landisutils 0.0.162
+
+- [`sim_landis()`](https://for-cast.github.io/landisutils/reference/sim_landis.md)
+  parses each finished replicate in a child R process under a wall-clock
+  limit, `parse_timeout_sec` (default 600 s), and retries a parse that
+  times out or whose process dies, `parse_retries` times (default 2). In
+  one generation of 70 candidates x 20 replicates, run on PSOCK workers,
+  one worker spun at 100% CPU for 58 hours without returning from the
+  parse of a replicate that had finished normally, and another died at
+  the same step. Both replicates re-parse in 16 s, so the fault is
+  intermittent. The coordinator waits on every worker, so either failure
+  stalled the whole search with nothing logged, and neither can be
+  handled inside the worker: a spin in native code never reaches an
+  interrupt check, and a crash ends the process. An error the parser
+  itself raises is not retried, since the same files give the same
+  error. The child starts without the user profile, is killed if its
+  worker dies, and must load the same landisutils version as the worker.
+  Each failed attempt is appended to `parse_failures.log` under the
+  scratch root, because worker output goes to `/dev/null` and a hang
+  that a retry cures would otherwise leave no trace. The parser’s
+  warnings, including the `DamagedSites` check, are carried back from
+  the child.
+  [`calibrate_dynamic_fire()`](https://for-cast.github.io/landisutils/reference/calibrate_dynamic_fire.md)
+  and
+  [`run_calibration_validation()`](https://for-cast.github.io/landisutils/reference/run_calibration_validation.md)
+  take the limit from `cfg$parse_timeout_sec`;
+  `cfg["parse_timeout_sec"] <- list(NULL)` parses in the worker’s own
+  process, as before. Like `trial_timeout_sec`, it enters neither
+  checkpoint fingerprint. Starting the child and loading the package
+  costs about 4 s per replicate, against minutes of simulation.
+
 ## landisutils 0.0.161
 
 - [`loss_from_stats()`](https://for-cast.github.io/landisutils/reference/loss_from_stats.md)

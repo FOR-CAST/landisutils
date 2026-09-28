@@ -20,7 +20,9 @@ sim_landis(
   pixel_area_ha = NULL,
   keep_scratch = FALSE,
   retries = 0L,
-  trial_timeout_sec = NULL
+  trial_timeout_sec = NULL,
+  parse_timeout_sec = 600,
+  parse_retries = 2L
 )
 ```
 
@@ -114,6 +116,22 @@ sim_landis(
   trial's runtime (it is a deadlock breaker, not a scheduler) so a
   wedged trial is killed, retried and, if it keeps wedging, surfaced as
   an error the search can act on. Only the pooled path honours it.
+
+- parse_timeout_sec:
+
+  Numeric or NULL. Wall-clock ceiling on parsing the finished replicate,
+  which runs in a child R process so that it can be killed: a parse that
+  spins in native code never reaches an interrupt check, and one that
+  crashes would otherwise take the calibration worker with it. Either
+  stalls the whole search, because the coordinator waits on every
+  worker. A healthy parse takes seconds. Default 600. NULL parses in
+  this process with no limit, as before 0.0.162. Each failed attempt is
+  appended to `parse_failures.log` under the scratch root.
+
+- parse_retries:
+
+  Integer \>= 0. Extra attempts after a parse times out or its process
+  dies. An error the parser raises is not retried. Default 2.
 
 ## Value
 
