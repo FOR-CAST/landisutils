@@ -28,7 +28,8 @@ Other Biomass Harvest helpers:
 \code{\link[=insertPlant]{insertPlant()}},
 \code{\link[=insertPrescription]{insertPrescription()}},
 \code{\link[=insertSingleRepeat]{insertSingleRepeat()}},
-\code{\link[=insertSiteSelection]{insertSiteSelection()}}
+\code{\link[=insertSiteSelection]{insertSiteSelection()}},
+\code{\link[=insertTimeSinceDisturbance]{insertTimeSinceDisturbance()}}
 }
 \concept{Biomass Harvest helpers}
 \keyword{internal}
