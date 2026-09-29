@@ -1,11 +1,12 @@
-# Specify a `SingleRepeat` harvest in a Biomass Harvest prescription
+# Specify the `TimeSinceLastFire` / `TimeSinceLastWind` requirement of a Biomass Harvest prescription
 
-Specify a `SingleRepeat` harvest in a Biomass Harvest prescription
+Written after `MaximumAge`, where the parser reads it, not beside
+`StandRanking`.
 
 ## Usage
 
 ``` r
-insertSingleRepeat(rx)
+insertTimeSinceDisturbance(rx)
 ```
 
 ## Arguments
@@ -31,6 +32,6 @@ Other Biomass Harvest helpers:
 [`insertMultipleRepeat()`](https://for-cast.github.io/landisutils/reference/insertMultipleRepeat.md),
 [`insertPlant()`](https://for-cast.github.io/landisutils/reference/insertPlant.md),
 [`insertPrescription()`](https://for-cast.github.io/landisutils/reference/insertPrescription.md),
+[`insertSingleRepeat()`](https://for-cast.github.io/landisutils/reference/insertSingleRepeat.md),
 [`insertSiteSelection()`](https://for-cast.github.io/landisutils/reference/insertSiteSelection.md),
-[`insertStandRanking()`](https://for-cast.github.io/landisutils/reference/insertStandRanking.md),
-[`insertTimeSinceDisturbance()`](https://for-cast.github.io/landisutils/reference/insertTimeSinceDisturbance.md)
+[`insertStandRanking()`](https://for-cast.github.io/landisutils/reference/insertStandRanking.md)

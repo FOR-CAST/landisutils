@@ -1,5 +1,26 @@
 # Changelog
 
+## landisutils 0.0.163
+
+- [`harvestPrescription()`](https://for-cast.github.io/landisutils/reference/harvestPrescription.md)
+  and `BiomassHarvest` write each prescription keyword where the Biomass
+  Harvest parser reads it. The parser reads optional keywords once each,
+  in a fixed sequence, so a keyword out of place is not skipped but
+  stops LANDIS-II at start-up. Four were misplaced: `AllowOverlap` was
+  written on a line of its own, but is read only as a trailing word on
+  the `SiteSelection PatchCutting` line; `RepeatExactCells` was written
+  after `SiteSelection`, but is read only after `MultipleRepeat` and
+  `TimesToRepeat`; `PresalvageYears` was written after the
+  `ForestTypeTable`, but is read immediately after the ranking method;
+  and `TimeSinceLastFire` / `TimeSinceLastWind` were written beside
+  `StandRanking`, which failed whenever `MinimumAge` or `MaximumAge` was
+  also set, since the parser reads those first. None had been used in a
+  run, so no written config that loaded is affected.
+  [`harvestPrescription()`](https://for-cast.github.io/landisutils/reference/harvestPrescription.md)
+  now refuses `AllowOverlap` without `PatchCutting`, and
+  `RepeatExactCells` without `MultipleRepeat` or, when `FALSE`, without
+  `PatchCutting`, which the parser would reject.
+
 ## landisutils 0.0.162
 
 - [`sim_landis()`](https://for-cast.github.io/landisutils/reference/sim_landis.md)

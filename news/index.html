@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.162</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.163</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,6 +41,11 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.163" id="landisutils-00163">landisutils 0.0.163<a class="anchor" aria-label="anchor" href="#landisutils-00163"></a></h2>
+<ul><li>
+<code><a href="../reference/harvestPrescription.html">harvestPrescription()</a></code> and <code>BiomassHarvest</code> write each prescription keyword where the Biomass Harvest parser reads it. The parser reads optional keywords once each, in a fixed sequence, so a keyword out of place is not skipped but stops LANDIS-II at start-up. Four were misplaced: <code>AllowOverlap</code> was written on a line of its own, but is read only as a trailing word on the <code>SiteSelection PatchCutting</code> line; <code>RepeatExactCells</code> was written after <code>SiteSelection</code>, but is read only after <code>MultipleRepeat</code> and <code>TimesToRepeat</code>; <code>PresalvageYears</code> was written after the <code>ForestTypeTable</code>, but is read immediately after the ranking method; and <code>TimeSinceLastFire</code> / <code>TimeSinceLastWind</code> were written beside <code>StandRanking</code>, which failed whenever <code>MinimumAge</code> or <code>MaximumAge</code> was also set, since the parser reads those first. None had been used in a run, so no written config that loaded is affected. <code><a href="../reference/harvestPrescription.html">harvestPrescription()</a></code> now refuses <code>AllowOverlap</code> without <code>PatchCutting</code>, and <code>RepeatExactCells</code> without <code>MultipleRepeat</code> or, when <code>FALSE</code>, without <code>PatchCutting</code>, which the parser would reject.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.162" id="landisutils-00162">landisutils 0.0.162<a class="anchor" aria-label="anchor" href="#landisutils-00162"></a></h2>
 <ul><li>

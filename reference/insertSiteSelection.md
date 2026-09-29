@@ -32,4 +32,5 @@ Other Biomass Harvest helpers:
 [`insertPlant()`](https://for-cast.github.io/landisutils/reference/insertPlant.md),
 [`insertPrescription()`](https://for-cast.github.io/landisutils/reference/insertPrescription.md),
 [`insertSingleRepeat()`](https://for-cast.github.io/landisutils/reference/insertSingleRepeat.md),
-[`insertStandRanking()`](https://for-cast.github.io/landisutils/reference/insertStandRanking.md)
+[`insertStandRanking()`](https://for-cast.github.io/landisutils/reference/insertStandRanking.md),
+[`insertTimeSinceDisturbance()`](https://for-cast.github.io/landisutils/reference/insertTimeSinceDisturbance.md)

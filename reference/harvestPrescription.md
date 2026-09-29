@@ -120,9 +120,16 @@ harvestPrescription(
 
   Numeric (hectares). Required when `SiteSelection = "PatchCutting"`.
 
-- AllowOverlap, RepeatExactCells:
+- AllowOverlap:
 
-  (Optional) Logical. Only applies to `SiteSelection = "PatchCutting"`.
+  (Optional) Logical. Only with `SiteSelection = "PatchCutting"`;
+  written on the `SiteSelection` line, which is the only place the
+  parser reads it.
+
+- RepeatExactCells:
+
+  (Optional) Logical. Only with `MultipleRepeat`, after which the parser
+  reads it; `FALSE` requires `SiteSelection = "PatchCutting"`.
 
 - MinTimeSinceDamage:
 
@@ -189,4 +196,5 @@ Other Biomass Harvest helpers:
 [`insertPrescription()`](https://for-cast.github.io/landisutils/reference/insertPrescription.md),
 [`insertSingleRepeat()`](https://for-cast.github.io/landisutils/reference/insertSingleRepeat.md),
 [`insertSiteSelection()`](https://for-cast.github.io/landisutils/reference/insertSiteSelection.md),
-[`insertStandRanking()`](https://for-cast.github.io/landisutils/reference/insertStandRanking.md)
+[`insertStandRanking()`](https://for-cast.github.io/landisutils/reference/insertStandRanking.md),
+[`insertTimeSinceDisturbance()`](https://for-cast.github.io/landisutils/reference/insertTimeSinceDisturbance.md)
