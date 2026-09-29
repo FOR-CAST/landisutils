@@ -149,3 +149,74 @@ testthat::test_that("BiomassHarvest EventLog/SummaryLog defaults resolve under a
 
   withr::deferred_run()
 })
+
+testthat::test_that("prescription keywords are written where the parser reads them", {
+  ## Order read by Library-Harvest-Mgmt InputParametersParser.cs:
+  ## ReadRankingMethod(), then ForestTypeTable, SiteSelection, ..., repeats.
+  rx <- harvestPrescription(
+    name = "Salvage",
+    StandRanking = "TimeSinceDisturbance",
+    TimeSinceLastFire = 5L,
+    PresalvageYears = 3L,
+    MinimumAge = 20L,
+    MaximumAge = 200L,
+    StandAdjacency = 10L,
+    AdjacencyType = "TimeSinceLastHarvested",
+    MinimumTimeSinceLastHarvest = 30L,
+    SiteSelection = "PatchCutting",
+    PatchPercentage = 87.5,
+    PatchSize = 14,
+    AllowOverlap = TRUE,
+    CohortsRemoved = "ClearCut",
+    MultipleRepeat = 20L,
+    TimesToRepeat = 3L,
+    RepeatExactCells = FALSE
+  )
+  lines <- trimws(insertPrescription(rx))
+  keyword <- sub("[[:space:]].*$", "", lines)
+  order_read <- c(
+    "StandRanking",
+    "PresalvageYears",
+    "MinimumAge",
+    "MaximumAge",
+    "TimeSinceLastFire",
+    "StandAdjacency",
+    "AdjacencyType",
+    "MinimumTimeSinceLastHarvest",
+    "SiteSelection",
+    "CohortsRemoved",
+    "MultipleRepeat",
+    "TimesToRepeat",
+    "RepeatExactCells"
+  )
+  testthat::expect_identical(keyword[keyword %in% order_read], order_read)
+
+  testthat::expect_identical(
+    grep("^SiteSelection", lines, value = TRUE),
+    "SiteSelection    PatchCutting    87.5%    14    AllowOverlap"
+  )
+  testthat::expect_false("AllowOverlap" %in% keyword)
+})
+
+testthat::test_that("site-selection flags are refused where the parser would reject them", {
+  testthat::expect_snapshot(error = TRUE, {
+    harvestPrescription(
+      name = "CC",
+      StandRanking = "MaxCohortAge",
+      SiteSelection = "Complete",
+      AllowOverlap = TRUE,
+      CohortsRemoved = "ClearCut"
+    )
+  })
+  testthat::expect_snapshot(error = TRUE, {
+    harvestPrescription(
+      name = "CC",
+      StandRanking = "MaxCohortAge",
+      SiteSelection = "PatchCutting",
+      PatchPercentage = 50,
+      PatchSize = 4,
+      RepeatExactCells = FALSE,
+      CohortsRemoved = "ClearCut"
+    )
+  })
+})

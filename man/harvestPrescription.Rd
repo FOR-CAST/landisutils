@@ -84,7 +84,12 @@ space-separated in the \code{Species} column.}
 \item{PatchSize}{Numeric (hectares). Required when
 \code{SiteSelection = "PatchCutting"}.}
 
-\item{AllowOverlap, RepeatExactCells}{(Optional) Logical. Only applies to
+\item{AllowOverlap}{(Optional) Logical. Only with
+\code{SiteSelection = "PatchCutting"}; written on the \code{SiteSelection} line,
+which is the only place the parser reads it.}
+
+\item{RepeatExactCells}{(Optional) Logical. Only with \code{MultipleRepeat},
+after which the parser reads it; \code{FALSE} requires
 \code{SiteSelection = "PatchCutting"}.}
 
 \item{MinTimeSinceDamage}{(Optional) Integer.}
@@ -138,6 +143,7 @@ Other Biomass Harvest helpers:
 \code{\link[=insertPrescription]{insertPrescription()}},
 \code{\link[=insertSingleRepeat]{insertSingleRepeat()}},
 \code{\link[=insertSiteSelection]{insertSiteSelection()}},
-\code{\link[=insertStandRanking]{insertStandRanking()}}
+\code{\link[=insertStandRanking]{insertStandRanking()}},
+\code{\link[=insertTimeSinceDisturbance]{insertTimeSinceDisturbance()}}
 }
 \concept{Biomass Harvest helpers}
