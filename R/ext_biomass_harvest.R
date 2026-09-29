@@ -273,7 +273,11 @@ BiomassHarvest <- R6Class(
 #'   `SiteSelection = "PatchCutting"`.
 #' @param PatchSize Numeric (hectares). Required when
 #'   `SiteSelection = "PatchCutting"`.
-#' @param AllowOverlap,RepeatExactCells (Optional) Logical. Only applies to
+#' @param AllowOverlap (Optional) Logical. Only with
+#'   `SiteSelection = "PatchCutting"`; written on the `SiteSelection` line,
+#'   which is the only place the parser reads it.
+#' @param RepeatExactCells (Optional) Logical. Only with `MultipleRepeat`,
+#'   after which the parser reads it; `FALSE` requires
 #'   `SiteSelection = "PatchCutting"`.
 #' @param MinTimeSinceDamage (Optional) Integer.
 #' @param PreventEstablishment Logical. If `TRUE`, emits the bare
@@ -413,6 +417,22 @@ harvestPrescription <- function(
     }
   }
   stopifnot(is.null(SingleRepeat) || is.null(MultipleRepeat))
+  ## The parser would reject each of these at start-up.
+  if (isTRUE(AllowOverlap) && SiteSelection != "PatchCutting") {
+    stop("`AllowOverlap` applies only to `SiteSelection = \"PatchCutting\"`.", call. = FALSE)
+  }
+  if (!is.null(RepeatExactCells)) {
+    stopifnot(is.logical(RepeatExactCells), length(RepeatExactCells) == 1L)
+    if (is.null(MultipleRepeat)) {
+      stop("`RepeatExactCells` is read only after `MultipleRepeat`.", call. = FALSE)
+    }
+    if (!RepeatExactCells && SiteSelection != "PatchCutting") {
+      stop(
+        "`RepeatExactCells = FALSE` applies only to `SiteSelection = \"PatchCutting\"`.",
+        call. = FALSE
+      )
+    }
+  }
 
   structure(
     list(
@@ -469,15 +489,20 @@ insertPrescription <- function(rx) {
     glue::glue(">> ----------------------------------------------------------------"),
     glue::glue("Prescription    {rx$name}"),
     glue::glue(""),
+    ## Keywords follow the order the Biomass Harvest parser reads them in
+    ## (Library-Harvest-Mgmt InputParametersParser.cs, ReadRankingMethod() then
+    ## ReadPrescriptions()): it reads each optional keyword once, in sequence,
+    ## so one written out of order is not skipped but fails the parse.
     insertStandRanking(rx),
+    insertValue("PresalvageYears", rx$PresalvageYears %||% NA),
     insertValue("MinimumAge", rx$MinimumAge %||% NA),
     insertValue("MaximumAge", rx$MaximumAge %||% NA),
+    insertTimeSinceDisturbance(rx),
     insertValue("StandAdjacency", rx$StandAdjacency %||% NA),
     insertValue("AdjacencyType", rx$AdjacencyType %||% NA),
     insertValue("AdjacencyNeighborSetAside", rx$AdjacencyNeighborSetAside %||% NA),
     insertValue("MinimumTimeSinceLastHarvest", rx$MinimumTimeSinceLastHarvest %||% NA),
     insertForestTypeTable(rx$ForestTypeTable),
-    insertValue("PresalvageYears", rx$PresalvageYears %||% NA),
     insertSiteSelection(rx),
     insertValue("MinTimeSinceDamage", rx$MinTimeSinceDamage %||% NA),
     if (isTRUE(rx$PreventEstablishment)) c("PreventEstablishment", ""),
@@ -506,13 +531,6 @@ insertStandRanking <- function(rx) {
     c(header, "", insertEconomicRankTable(rx$EconomicRankTable))
   } else if (method == "FireHazard") {
     c(header, "", insertFireHazardTable(rx$FireHazardTable))
-  } else if (method == "TimeSinceDisturbance") {
-    sub <- if (!is.null(rx$TimeSinceLastFire)) {
-      glue::glue("TimeSinceLastFire    {as.integer(rx$TimeSinceLastFire)}")
-    } else {
-      glue::glue("TimeSinceLastWind    {as.integer(rx$TimeSinceLastWind)}")
-    }
-    c(header, sub, "")
   } else {
     c(header, "")
   }
@@ -588,6 +606,32 @@ insertForestTypeTable <- function(df) {
   )
 }
 
+#' Specify the `TimeSinceLastFire` / `TimeSinceLastWind` requirement of a
+#' Biomass Harvest prescription
+#'
+#' Written after `MaximumAge`, where the parser reads it, not beside
+#' `StandRanking`.
+#'
+#' @param rx `HarvestPrescription` object.
+#'
+#' @template return_insert
+#'
+#' @family Biomass Harvest helpers
+#'
+#' @keywords internal
+insertTimeSinceDisturbance <- function(rx) {
+  c(
+    insertValue(
+      "TimeSinceLastFire",
+      if (is.null(rx$TimeSinceLastFire)) NA else as.integer(rx$TimeSinceLastFire)
+    ),
+    insertValue(
+      "TimeSinceLastWind",
+      if (is.null(rx$TimeSinceLastWind)) NA else as.integer(rx$TimeSinceLastWind)
+    )
+  )
+}
+
 #' Specify the `SiteSelection` portion of a Biomass Harvest prescription
 #'
 #' @param rx `HarvestPrescription` object.
@@ -604,13 +648,10 @@ insertSiteSelection <- function(rx) {
     glue::glue("SiteSelection    {method}    {rx$MinTargetSize}    {rx$MaxTargetSize}")
   } else if (method == "PatchCutting") {
     pct <- appendPercent(as.character(rx$PatchPercentage))
-    extras <- c(
-      if (isTRUE(rx$AllowOverlap)) "AllowOverlap",
-      if (!is.null(rx$RepeatExactCells)) {
-        glue::glue("RepeatExactCells    {yesno(rx$RepeatExactCells)}")
-      }
-    )
-    c(glue::glue("SiteSelection    PatchCutting    {pct}    {rx$PatchSize}"), extras)
+    ## The parser reads AllowOverlap as a trailing word on this line and nowhere
+    ## else; on a line of its own it fails the parse.
+    overlap <- if (isTRUE(rx$AllowOverlap)) "    AllowOverlap" else ""
+    glue::glue("SiteSelection    PatchCutting    {pct}    {rx$PatchSize}{overlap}")
   } else {
     glue::glue("SiteSelection    Complete")
   }
@@ -700,6 +741,10 @@ insertMultipleRepeat <- function(rx) {
   lines <- glue::glue("MultipleRepeat    {as.integer(rx$MultipleRepeat)}")
   if (!is.null(rx$TimesToRepeat)) {
     lines <- c(lines, glue::glue("TimesToRepeat    {as.integer(rx$TimesToRepeat)}"))
+  }
+  ## Read only here, after MultipleRepeat and TimesToRepeat.
+  if (!is.null(rx$RepeatExactCells)) {
+    lines <- c(lines, glue::glue("RepeatExactCells    {yesno(rx$RepeatExactCells)}"))
   }
   c(lines, glue::glue(""))
 }
