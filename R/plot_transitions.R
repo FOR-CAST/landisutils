@@ -87,12 +87,7 @@ read_biomass_c_snapshots <- function(paths, times, run_name = NULL, cell_mask = 
     replicate_dir <- basename(dirname(path))
     scenario_label <- run_name %||% basename(dirname(dirname(path)))
 
-    dt <- .fread_biomass_c_times(path, times, cols)
-
-    ## restrict to core study area cells if a mask was provided
-    if (!is.null(cell_mask)) {
-      dt <- dt[cell_mask, on = .(row, column), nomatch = NULL]
-    }
+    dt <- .fread_biomass_c_times(path, times, cols, cell_mask)
 
     ## sum over cohort age classes; convert g C/m?^2 -> Mg C/ha (x 0.01)
     dt <- dt[,
@@ -110,21 +105,31 @@ read_biomass_c_snapshots <- function(paths, times, run_name = NULL, cell_mask = 
     data.table::rbindlist()
 }
 
-## Read log_BiomassC.csv rows matching `times`, selecting only `cols`.
+## Read log_BiomassC.csv rows matching `times` (and, when given, the cells in
+## `cell_mask`), selecting only `cols`.
 ## arrow::open_dataset() creates a lazy Scanner that reads the file in chunks and
 ## applies the filter at the Arrow compute level; only matching rows are materialised
-## in R, keeping memory use bounded regardless of file size or OS.
+## in R. The cell mask is applied there too, as a semi-join, not after collect():
+## snapshot times usually span most of the file, so filtering cells afterwards
+## materialised every cell first -- about three times the rows of a core mask, and
+## enough to exhaust memory with several replicates read at once.
 ##
 ## ForCS writes headers with a space after each comma (e.g. "Time, row, column").
 ## Arrow does not strip these, so column names arrive as " row", " column", etc.
 ## dplyr::rename_with(trimws) normalises them before filtering/selecting.
-.fread_biomass_c_times <- function(path, times, cols) {
-  arrow::open_dataset(path, format = "csv") |>
+.fread_biomass_c_times <- function(path, times, cols, cell_mask = NULL) {
+  q <- arrow::open_dataset(path, format = "csv") |>
     dplyr::rename_with(trimws) |>
-    dplyr::filter(.data$Time %in% times) |>
-    dplyr::select(dplyr::all_of(cols)) |>
-    dplyr::collect() |>
-    data.table::as.data.table()
+    dplyr::filter(.data$Time %in% times)
+  if (!is.null(cell_mask)) {
+    ## int64 to match the CSV reader's inference for whole-number columns
+    mask <- arrow::arrow_table(
+      row = arrow::Array$create(cell_mask$row, type = arrow::int64()),
+      column = arrow::Array$create(cell_mask$column, type = arrow::int64())
+    )
+    q <- dplyr::semi_join(q, mask, by = c("row", "column"))
+  }
+  q |> dplyr::select(dplyr::all_of(cols)) |> dplyr::collect() |> data.table::as.data.table()
 }
 
 #' Open + collect a per-scenario biomass_snapshots Arrow dataset

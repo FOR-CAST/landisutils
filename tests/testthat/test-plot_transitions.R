@@ -81,6 +81,27 @@ testthat::test_that("read_biomass_c_snapshots reads snapshot times from CSV", {
   testthat::expect_true(all(result$replicate == basename(tmp)))
 })
 
+testthat::test_that("read_biomass_c_snapshots keeps only the cells in cell_mask", {
+  tmp <- withr::local_tempdir("test_biomass_c_mask_")
+  csv_path <- file.path(tmp, "log_BiomassC.csv")
+  make_biomass_c_csv(csv_path, times = c(0L, 100L))
+
+  all_cells <- read_biomass_c_snapshots(csv_path, times = c(0L, 100L), run_name = "s")
+  masked <- read_biomass_c_snapshots(
+    csv_path,
+    times = c(0L, 100L),
+    run_name = "s",
+    cell_mask = data.frame(row = c(1L, 2L), column = c(2L, 1L))
+  )
+
+  testthat::expect_setequal(paste(masked$row, masked$column), c("1 2", "2 1"))
+  key <- c("Time", "row", "column", "species")
+  expected <- all_cells[paste(all_cells$row, all_cells$column) %in% c("1 2", "2 1")]
+  data.table::setorderv(masked, key)
+  data.table::setorderv(expected, key)
+  testthat::expect_equal(masked, expected, ignore_attr = TRUE)
+})
+
 testthat::test_that("read_biomass_c_snapshots handles multiple replicate paths", {
   tmp <- withr::local_tempdir("test_biomass_c_multi_")
 
