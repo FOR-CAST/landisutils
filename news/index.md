@@ -1,5 +1,17 @@
 # Changelog
 
+## landisutils 0.0.164
+
+- [`read_biomass_c_snapshots()`](https://for-cast.github.io/landisutils/reference/read_biomass_c_snapshots.md),
+  and so
+  [`write_biomass_c_snapshots_parquet()`](https://for-cast.github.io/landisutils/reference/write_biomass_c_snapshots_parquet.md),
+  apply `cell_mask` inside Arrow as a semi-join, before the rows are
+  collected. It was applied after `collect()`, and since the snapshot
+  times span most of a `log_BiomassC.csv`, every cell was materialised
+  first: about three times the rows of a core-area mask. On 400-year
+  runs whose logs reach 27 GB, five replicates read at once exhausted a
+  400 GB memory limit.
+
 ## landisutils 0.0.163
 
 - [`harvestPrescription()`](https://for-cast.github.io/landisutils/reference/harvestPrescription.md)

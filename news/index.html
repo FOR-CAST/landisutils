@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.163</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.164</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,6 +41,11 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.164" id="landisutils-00164">landisutils 0.0.164<a class="anchor" aria-label="anchor" href="#landisutils-00164"></a></h2>
+<ul><li>
+<code><a href="../reference/read_biomass_c_snapshots.html">read_biomass_c_snapshots()</a></code>, and so <code><a href="../reference/write_biomass_c_snapshots_parquet.html">write_biomass_c_snapshots_parquet()</a></code>, apply <code>cell_mask</code> inside Arrow as a semi-join, before the rows are collected. It was applied after <code>collect()</code>, and since the snapshot times span most of a <code>log_BiomassC.csv</code>, every cell was materialised first: about three times the rows of a core-area mask. On 400-year runs whose logs reach 27 GB, five replicates read at once exhausted a 400 GB memory limit.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.163" id="landisutils-00163">landisutils 0.0.163<a class="anchor" aria-label="anchor" href="#landisutils-00163"></a></h2>
 <ul><li>
