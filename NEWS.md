@@ -1,3 +1,7 @@
+# landisutils 0.0.164
+
+* `read_biomass_c_snapshots()`, and so `write_biomass_c_snapshots_parquet()`, apply `cell_mask` inside Arrow as a semi-join, before the rows are collected. It was applied after `collect()`, and since the snapshot times span most of a `log_BiomassC.csv`, every cell was materialised first: about three times the rows of a core-area mask. On 400-year runs whose logs reach 27 GB, five replicates read at once exhausted a 400 GB memory limit.
+
 # landisutils 0.0.163
 
 * `harvestPrescription()` and `BiomassHarvest` write each prescription keyword where the Biomass Harvest parser reads it. The parser reads optional keywords once each, in a fixed sequence, so a keyword out of place is not skipped but stops LANDIS-II at start-up. Four were misplaced: `AllowOverlap` was written on a line of its own, but is read only as a trailing word on the `SiteSelection PatchCutting` line; `RepeatExactCells` was written after `SiteSelection`, but is read only after `MultipleRepeat` and `TimesToRepeat`; `PresalvageYears` was written after the `ForestTypeTable`, but is read immediately after the ranking method; and `TimeSinceLastFire` / `TimeSinceLastWind` were written beside `StandRanking`, which failed whenever `MinimumAge` or `MaximumAge` was also set, since the parser reads those first. None had been used in a run, so no written config that loaded is affected. `harvestPrescription()` now refuses `AllowOverlap` without `PatchCutting`, and `RepeatExactCells` without `MultipleRepeat` or, when `FALSE`, without `PatchCutting`, which the parser would reject.
