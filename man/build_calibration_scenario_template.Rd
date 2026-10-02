@@ -15,7 +15,8 @@ build_calibration_scenario_template(
   baseline_seasons_sim_table = NULL,
   sim_years = 10L,
   cell_length,
-  overrides = list()
+  overrides = list(),
+  community_output_timestep = NULL
 )
 }
 \arguments{
@@ -45,6 +46,16 @@ touching the production scenario. Accepted keys: \code{"ground_slope.tif"},
 \code{"species.txt"}, \code{"ecoregions.txt"}, \code{"ecoregions.tif"}, \code{"climate.txt"}.
 \code{.tif} overrides also copy their \code{.aux.xml} / \code{.tfw} sidecars if present
 alongside the source.}
+
+\item{community_output_timestep}{Emit the Output Biomass Community extension's
+cohort snapshot every this many years, or \code{NULL} (the default) to leave the
+extension out. The objective reads only the severity maps and the fire logs,
+so trials do not need it; set it when post-fire cohort state has to be
+inspected, since mortality derived from the severity maps and the damage
+table describes what the damage table specifies rather than what the
+extension killed. The extension writes a \verb{community-input-file-<year>.csv} at
+year 0 and at every multiple of the timestep, and the map-code raster that
+keys them ONCE, at year 0.}
 }
 \value{
 Character scalar: absolute path to the written \code{scenario.txt}.
