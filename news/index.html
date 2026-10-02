@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.164</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.165</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,6 +41,11 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.165" id="landisutils-00165">landisutils 0.0.165<a class="anchor" aria-label="anchor" href="#landisutils-00165"></a></h2>
+<ul><li>
+<code><a href="../reference/parse_dynamic_fire_logs.html">parse_dynamic_fire_logs()</a></code> also reads event logs from a Dynamic Fire build that counts <code>DamagedSites</code> correctly (Extension-Dynamic-Fire-System issue #15), where <code>DamagedSites</code> equals <code>SitesChecked</code>. It warned on every event of such a log, because it accepted only the published extension’s <code>DamagedSites == SitesChecked + 1</code>. Either relation is now read, provided it holds on every event of the log; a log that mixes them, or holds neither, still warns. Sizes and <code>mean_severity</code> are unchanged for logs from the published extension.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.164" id="landisutils-00164">landisutils 0.0.164<a class="anchor" aria-label="anchor" href="#landisutils-00164"></a></h2>
 <ul><li>

@@ -27,9 +27,9 @@ and `area_ha`.
 `sites` is the event's burned cells (the log's `SitesChecked`) and
 `mean_severity` its mean severity over those cells, as
 [`parse_dynamic_fire_logs()`](https://for-cast.github.io/landisutils/reference/parse_dynamic_fire_logs.md)
-recovers them. The log's own `MeanSeverity` is divided by
-`DamagedSites`, one more than the burned cells, which is why raw values
-fall below 1.
+recovers them. In the published extension the log's own `MeanSeverity`
+is divided by `DamagedSites`, one more than the burned cells, which is
+why raw values fall below 1.
 
 ## See also
 

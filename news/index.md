@@ -1,5 +1,17 @@
 # Changelog
 
+## landisutils 0.0.165
+
+- [`parse_dynamic_fire_logs()`](https://for-cast.github.io/landisutils/reference/parse_dynamic_fire_logs.md)
+  also reads event logs from a Dynamic Fire build that counts
+  `DamagedSites` correctly (Extension-Dynamic-Fire-System issue \#15),
+  where `DamagedSites` equals `SitesChecked`. It warned on every event
+  of such a log, because it accepted only the published extension’s
+  `DamagedSites == SitesChecked + 1`. Either relation is now read,
+  provided it holds on every event of the log; a log that mixes them, or
+  holds neither, still warns. Sizes and `mean_severity` are unchanged
+  for logs from the published extension.
+
 ## landisutils 0.0.164
 
 - [`read_biomass_c_snapshots()`](https://for-cast.github.io/landisutils/reference/read_biomass_c_snapshots.md),
