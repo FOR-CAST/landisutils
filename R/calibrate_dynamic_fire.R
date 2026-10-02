@@ -2222,7 +2222,10 @@ build_calibration_spinup_scenario <- function(
     output_manifest = c(
       backend$logs,
       sprintf("community-input-file-%d.csv", as.integer(community_output_year)),
-      sprintf("output-community-%d.tif", as.integer(community_output_year))
+      ## The map-code raster is written once, at year 0, whatever year the snapshot is consumed at;
+      ## the per-year composition is the CSV keyed by those codes. A `output-community-<year>.tif`
+      ## entry names a file the run never produces, and every manifest entry is a tracked file.
+      "output-community-0.tif"
     )
   )
 }
@@ -2268,6 +2271,15 @@ build_calibration_spinup_scenario <- function(
 #'   supplied, the function writes a fresh `dynamic-fire.txt` from them.
 #' @param sim_years Integer. Calibration sim duration (years). Default 10.
 #' @param cell_length Integer. Raster cell size in metres.
+#' @param community_output_timestep Emit the Output Biomass Community extension's
+#'   cohort snapshot every this many years, or `NULL` (the default) to leave the
+#'   extension out. The objective reads only the severity maps and the fire logs,
+#'   so trials do not need it; set it when post-fire cohort state has to be
+#'   inspected, since mortality derived from the severity maps and the damage
+#'   table describes what the damage table specifies rather than what the
+#'   extension killed. The extension writes a `community-input-file-<year>.csv` at
+#'   year 0 and at every multiple of the timestep, and the map-code raster that
+#'   keys them ONCE, at year 0.
 #' @param overrides Named list. Optional per-file overrides applied AFTER the
 #'   bulk template-dir copy. Keys are output filenames (relative to `out_dir`);
 #'   values are paths to source files to copy in place of whatever was copied
@@ -2296,7 +2308,8 @@ build_calibration_scenario_template <- function(
   baseline_seasons_sim_table = NULL,
   sim_years = 10L,
   cell_length,
-  overrides = list()
+  overrides = list(),
+  community_output_timestep = NULL
 ) {
   stopifnot(
     fs::dir_exists(template_dir),
@@ -2306,6 +2319,8 @@ build_calibration_scenario_template <- function(
     sim_years >= 1L,
     is.numeric(cell_length),
     cell_length > 0,
+    is.null(community_output_timestep) ||
+      (is.numeric(community_output_timestep) && community_output_timestep >= 1L),
     is.list(overrides),
     is.null(names(overrides)) || all(nzchar(names(overrides)))
   )
@@ -2452,6 +2467,32 @@ build_calibration_scenario_template <- function(
     all(fs::file_exists(eco_files))
   )
 
+  ## Cohort output is off by default: the objective is scored from the severity maps and the fire
+  ## logs, and a per-year community snapshot for every trial of every generation is far more disk
+  ## than the search needs. Set `community_output_timestep` to emit it, which is what makes post-fire
+  ## cohort state observable -- mortality derived from the severity maps and the damage table cannot
+  ## show what the extension actually killed.
+  obc_ext <- NULL
+  obc_outputs <- character()
+  if (!is.null(community_output_timestep)) {
+    obc <- OutputBiomassCommunity$new(
+      path = out_dir,
+      Timestep = as.integer(community_output_timestep)
+    )
+    obc$write()
+    obc_file <- fs::path(out_dir, "output-biomass-community.txt")
+    stopifnot(fs::file_exists(obc_file))
+    obc_ext <- c("Output Biomass Community" = obc_file)
+    ## What the extension actually writes, measured on a 3-year run at Timestep 1: a CSV at year 0
+    ## and at every multiple of the timestep, and the MapCode RASTER ONCE, at year 0. Per-year
+    ## composition is therefore the CSV keyed by those map codes. Both halves of that matter here,
+    ## because every manifest entry becomes a tracked file: naming a per-year raster names a file the
+    ## run never produces, and omitting year 0 leaves the pre-disturbance snapshot untracked.
+    emitted <- c(0L, seq_len(as.integer(sim_years)))
+    emitted <- emitted[emitted %% as.integer(community_output_timestep) == 0L]
+    obc_outputs <- c(sprintf("community-input-file-%d.csv", emitted), "output-community-0.tif")
+  }
+
   write_landis_scenario_file(
     path = out_dir,
     duration = as.integer(sim_years),
@@ -2463,11 +2504,12 @@ build_calibration_scenario_template <- function(
       "Dynamic Fuel System" = fuels_file,
       "Dynamic Fire System" = fire_file
     ),
-    other_ext_files = NULL,
+    other_ext_files = obc_ext,
     output_manifest = c(
       backend$logs,
       "fire/dynamic-fire-event-log.csv",
-      "fire/dynamic-fire-summary-log.csv"
+      "fire/dynamic-fire-summary-log.csv",
+      obc_outputs
     )
   )
 }
