@@ -1,5 +1,30 @@
 # Changelog
 
+## landisutils 0.0.166
+
+- [`build_calibration_scenario_template()`](https://for-cast.github.io/landisutils/reference/build_calibration_scenario_template.md)
+  gains `community_output_timestep`, which registers the Output Biomass
+  Community extension at that timestep and adds the community snapshots
+  it emits to the output manifest. `NULL`, the default, leaves the
+  extension out, as before: the calibration’s objective is computed from
+  the severity maps and the fire logs, and a per-year cohort snapshot
+  for every trial of every generation is far more disk than the search
+  needs. It is set when post-fire cohort state has to be inspected,
+  which mortality derived from the severity maps and the damage table
+  cannot show – that figure describes what the damage table specifies,
+  not what the extension killed. The manifest names what the extension
+  writes, measured on a 3-year run: a `community-input-file-<year>.csv`
+  at year 0 and at each multiple of the timestep, and the map-code
+  raster that keys them once, at year 0.
+
+- [`build_calibration_spinup_scenario()`](https://for-cast.github.io/landisutils/reference/build_calibration_spinup_scenario.md)
+  no longer names `output-community-<community_output_year>.tif` in its
+  output manifest. The map-code raster is written once, at year 0,
+  whatever year the snapshot is consumed at, so at any other year the
+  manifest named a file the run never produces – and every manifest
+  entry becomes a tracked file. Unchanged at the default
+  `community_output_year = 0`.
+
 ## landisutils 0.0.165
 
 - [`parse_dynamic_fire_logs()`](https://for-cast.github.io/landisutils/reference/parse_dynamic_fire_logs.md)

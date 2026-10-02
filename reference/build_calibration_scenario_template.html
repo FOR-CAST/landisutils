@@ -17,7 +17,7 @@ template so it's built once."><meta property="og:image" content="https://for-cas
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.165</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.166</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -74,7 +74,8 @@ template so it's built once.</p>
 <span>  baseline_seasons_sim_table <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  sim_years <span class="op">=</span> <span class="fl">10L</span>,</span>
 <span>  <span class="va">cell_length</span>,</span>
-<span>  overrides <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span></span>
+<span>  overrides <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  community_output_timestep <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -121,6 +122,18 @@ touching the production scenario. Accepted keys: <code>"ground_slope.tif"</code>
 <code>"species.txt"</code>, <code>"ecoregions.txt"</code>, <code>"ecoregions.tif"</code>, <code>"climate.txt"</code>.
 <code>.tif</code> overrides also copy their <code>.aux.xml</code> / <code>.tfw</code> sidecars if present
 alongside the source.</p></dd>
+
+
+<dt id="arg-community-output-timestep">community_output_timestep<a class="anchor" aria-label="anchor" href="#arg-community-output-timestep"></a></dt>
+<dd><p>Emit the Output Biomass Community extension's
+cohort snapshot every this many years, or <code>NULL</code> (the default) to leave the
+extension out. The objective reads only the severity maps and the fire logs,
+so trials do not need it; set it when post-fire cohort state has to be
+inspected, since mortality derived from the severity maps and the damage
+table describes what the damage table specifies rather than what the
+extension killed. The extension writes a <code>community-input-file-&lt;year&gt;.csv</code> at
+year 0 and at every multiple of the timestep, and the map-code raster that
+keys them ONCE, at year 0.</p></dd>
 
 </dl></div>
     <div class="section level2">
