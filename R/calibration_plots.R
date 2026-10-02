@@ -106,9 +106,9 @@ calibration_plot_palette <- function(...) {
 #'
 #' `sites` is the event's burned cells (the log's `SitesChecked`) and
 #' `mean_severity` its mean severity over those cells, as
-#' [parse_dynamic_fire_logs()] recovers them. The log's own `MeanSeverity` is
-#' divided by `DamagedSites`, one more than the burned cells, which is why raw
-#' values fall below 1.
+#' [parse_dynamic_fire_logs()] recovers them. In the published extension the
+#' log's own `MeanSeverity` is divided by `DamagedSites`, one more than the
+#' burned cells, which is why raw values fall below 1.
 #'
 #' @param stats A `run_calibration_validation()` summary.
 #'
