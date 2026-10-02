@@ -1,3 +1,7 @@
+# landisutils 0.0.165
+
+* `parse_dynamic_fire_logs()` also reads event logs from a Dynamic Fire build that counts `DamagedSites` correctly (Extension-Dynamic-Fire-System issue #15), where `DamagedSites` equals `SitesChecked`. It warned on every event of such a log, because it accepted only the published extension's `DamagedSites == SitesChecked + 1`. Either relation is now read, provided it holds on every event of the log; a log that mixes them, or holds neither, still warns. Sizes and `mean_severity` are unchanged for logs from the published extension.
+
 # landisutils 0.0.164
 
 * `read_biomass_c_snapshots()`, and so `write_biomass_c_snapshots_parquet()`, apply `cell_mask` inside Arrow as a semi-join, before the rows are collected. It was applied after `collect()`, and since the snapshot times span most of a `log_BiomassC.csv`, every cell was materialised first: about three times the rows of a core-area mask. On 400-year runs whose logs reach 27 GB, five replicates read at once exhausted a 400 GB memory limit.

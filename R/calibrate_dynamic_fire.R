@@ -173,11 +173,12 @@ calibration_par_names <- function() {
 #'   \item summary-log: `Time`, `NumberFires`, `TotalSitesBurned`.
 #' }
 #'
-#' A fire's size is taken from `SitesChecked`. The extension logs `DamagedSites` as one more
-#' than the cells the fire burned, on every event, while `SitesChecked` equals the burned cells
-#' on the timestep's severity map. `MeanSeverity` is divided by that inflated count, so the
+#' A fire's size is taken from `SitesChecked`. The published extension logs `DamagedSites` as one
+#' more than the cells the fire burned, on every event, while `SitesChecked` equals the burned
+#' cells on the timestep's severity map. `MeanSeverity` is divided by that inflated count, so the
 #' returned `mean_severity` is rescaled to `MeanSeverity * DamagedSites / SitesChecked`, the mean
-#' over the burned cells.
+#' over the burned cells. A build with the count fixed logs `DamagedSites == SitesChecked`, which
+#' the same rescaling leaves unchanged. A log that holds neither relation on every event warns.
 #'
 #' Cells -> hectares uses `pixel_area_ha` (1 ha for a 100 m x 100 m grid).
 #'
@@ -236,31 +237,35 @@ parse_dynamic_fire_logs <- function(rep_dir, pixel_area_ha = 1.0) {
         call. = FALSE
       )
     }
-    ## A fire's burned area is `SitesChecked`, not `DamagedSites`. The extension logs
+    ## A fire's burned area is `SitesChecked`, not `DamagedSites`. The published extension logs
     ## `DamagedSites` as one more than the cells the fire burned, on every event: a fire that
     ## burns only its ignition cell logs 2, and the burned cells on that timestep's severity map
     ## equal `SitesChecked` exactly. `MeanSeverity` is the summed severity divided by that same
     ## inflated count, so it is rescaled onto the burned cells; left alone it reads 0.5 for a
-    ## one-cell fire at severity 1 and 1.5 for one at severity 3.
+    ## one-cell fire at severity 1 and 1.5 for one at severity 3. A build with the count fixed
+    ## (Extension-Dynamic-Fire-System issue #15) logs `DamagedSites == SitesChecked`, where the
+    ## same rescaling is a factor of 1.
     checked <- as.integer(events$SitesChecked)
     damaged <- as.integer(events$DamagedSites)
-    ## The reading below rests on `DamagedSites == SitesChecked + 1`, verified against the
-    ## severity maps on one landscape. Say so if a log breaks it, rather than silently scoring
-    ## sizes on an assumption that no longer holds. A warning, not an error, so it cannot strand
-    ## a long calibration.
-    off <- which(damaged - checked != 1L)
+    ## The reading below rests on one of those two relations holding on every event of the log,
+    ## each verified against the severity maps. Say so if a log breaks it, rather than silently
+    ## scoring sizes on an assumption that no longer holds. A warning, not an error, so it
+    ## cannot strand a long calibration.
+    gap <- damaged - checked
+    off <- if (gap[1L] %in% c(0L, 1L)) which(gap != gap[1L]) else seq_along(gap)
     if (length(off) > 0L) {
       warning(
         "Dynamic Fire event log ",
         event_path,
-        ": DamagedSites is not SitesChecked + 1 on ",
+        ": DamagedSites is not SitesChecked + 1 (published extension) or SitesChecked (fixed ",
+        "extension) consistently on ",
         length(off),
         " of ",
         length(damaged),
         " events (first at row ",
         off[1L],
         "); fire sizes are taken from SitesChecked, which matched the severity maps only where ",
-        "that relation held",
+        "one relation held throughout",
         call. = FALSE
       )
     }

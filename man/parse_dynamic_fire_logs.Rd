@@ -35,11 +35,12 @@ Columns parsed (Dynamic Fire System v4):
 \item summary-log: \code{Time}, \code{NumberFires}, \code{TotalSitesBurned}.
 }
 
-A fire's size is taken from \code{SitesChecked}. The extension logs \code{DamagedSites} as one more
-than the cells the fire burned, on every event, while \code{SitesChecked} equals the burned cells
-on the timestep's severity map. \code{MeanSeverity} is divided by that inflated count, so the
+A fire's size is taken from \code{SitesChecked}. The published extension logs \code{DamagedSites} as one
+more than the cells the fire burned, on every event, while \code{SitesChecked} equals the burned
+cells on the timestep's severity map. \code{MeanSeverity} is divided by that inflated count, so the
 returned \code{mean_severity} is rescaled to \code{MeanSeverity * DamagedSites / SitesChecked}, the mean
-over the burned cells.
+over the burned cells. A build with the count fixed logs \code{DamagedSites == SitesChecked}, which
+the same rescaling leaves unchanged. A log that holds neither relation on every event warns.
 
 Cells -> hectares uses \code{pixel_area_ha} (1 ha for a 100 m x 100 m grid).
 

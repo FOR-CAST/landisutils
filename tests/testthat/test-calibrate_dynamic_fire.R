@@ -99,7 +99,53 @@ test_that("parse_dynamic_fire_logs() warns when DamagedSites is not SitesChecked
     fs::path(rep_dir, "fire", "dynamic-fire-summary-log.csv")
   )
 
-  expect_warning(parse_dynamic_fire_logs(rep_dir), "not SitesChecked \\+ 1 on 1 of 4 events")
+  expect_warning(parse_dynamic_fire_logs(rep_dir), "consistently on 1 of 4 events")
+})
+
+test_that("parse_dynamic_fire_logs() reads a log with DamagedSites fixed to SitesChecked", {
+  rep_dir <- withr::local_tempdir()
+  fs::dir_create(fs::path(rep_dir, "fire"))
+  ev <- readLines(system.file(
+    "testdata",
+    "dynamic-fire-event-log-sample.csv",
+    package = "landisutils"
+  ))
+  ## As a fixed extension writes it: DamagedSites equals SitesChecked, and MeanSeverity is the
+  ## mean over the burned cells.
+  ev[2] <- sub(", 537, 335, 4.397769516728625, 538,", ", 537, 335, 4.4, 537,", ev[2], fixed = TRUE)
+  ev[c(3, 5)] <- sub(", 3, 0, 0.75, 4,", ", 3, 0, 1, 3,", ev[c(3, 5)], fixed = TRUE)
+  ev[4] <- sub(", 49, 0, 3.38, 50,", ", 49, 0, 3.45, 49,", ev[4], fixed = TRUE)
+  writeLines(ev, fs::path(rep_dir, "fire", "dynamic-fire-event-log.csv"))
+  fs::file_copy(
+    system.file("testdata", "dynamic-fire-summary-log-sample.csv", package = "landisutils"),
+    fs::path(rep_dir, "fire", "dynamic-fire-summary-log.csv")
+  )
+
+  expect_no_warning(parsed <- parse_dynamic_fire_logs(rep_dir))
+  expect_equal(parsed$fire_sizes_ha, c(3, 3, 49, 537))
+  expect_equal(parsed$events$mean_severity, c(4.4, 1, 3.45, 1))
+})
+
+test_that("parse_dynamic_fire_logs() warns on a log mixing the two DamagedSites relations", {
+  rep_dir <- withr::local_tempdir()
+  fs::dir_create(fs::path(rep_dir, "fire"))
+  ev <- readLines(system.file(
+    "testdata",
+    "dynamic-fire-event-log-sample.csv",
+    package = "landisutils"
+  ))
+  ## First event fixed (equal), the other three as published (+ 1).
+  ev[2] <- sub(", 4.397769516728625, 538,", ", 4.4, 537,", ev[2], fixed = TRUE)
+  writeLines(ev, fs::path(rep_dir, "fire", "dynamic-fire-event-log.csv"))
+  fs::file_copy(
+    system.file("testdata", "dynamic-fire-summary-log-sample.csv", package = "landisutils"),
+    fs::path(rep_dir, "fire", "dynamic-fire-summary-log.csv")
+  )
+
+  expect_warning(
+    parse_dynamic_fire_logs(rep_dir),
+    "consistently on 3 of 4 events \\(first at row 2\\)"
+  )
 })
 
 test_that("the cell area comes from the scenario's CellLength and must agree with it", {
