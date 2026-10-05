@@ -37,6 +37,10 @@ ForCS <- R6Class(
     #'   raster.
     #' @param DisturbanceMatrixFile Character. Relative file path.
     #' @param SnagFile (Optional) Character. Relative file path. May be `NULL`.
+    #' @param SpinupMortalityFraction (Optional) Numeric in `[0, 1)`. Extra fraction of each
+    #'   cohort's biomass removed as age-related mortality in every spin-up year (ForCS
+    #'   `CohortBiomass.ComputeAgeMortality`); lowers spun-up biomass while the DOM spin-up still
+    #'   receives its inputs. `NULL` (default) omits the line, which ForCS reads as 0.
     #' @param OutputTables `data.frame` corresponding to `ForCSOutput` (one row,
     #'   four columns: Biomass, DOM_Pools, Fluxes, Summary intervals).
     #' @param ForCSMapControl `data.frame` (one row, seven columns: `BiomassC`,
@@ -65,6 +69,7 @@ ForCS <- R6Class(
       InitialCommunitiesFiles = NULL,
       DisturbanceMatrixFile = NULL,
       SnagFile = NULL,
+      SpinupMortalityFraction = NULL,
       OutputTables = NULL,
       ForCSMapControl = NULL,
       MapOutputInterval = NULL,
@@ -96,6 +101,7 @@ ForCS <- R6Class(
       self$InitialCommunitiesFiles <- InitialCommunitiesFiles
       self$DisturbanceMatrixFile <- DisturbanceMatrixFile
       self$SnagFile <- SnagFile
+      self$SpinupMortalityFraction <- SpinupMortalityFraction
       self$OutputTables <- OutputTables
       self$ForCSMapControl <- ForCSMapControl
       self$MapOutputInterval <- MapOutputInterval
@@ -148,6 +154,14 @@ ForCS <- R6Class(
       } else {
         character(0)
       }
+      spinup_mortality_lines <- if (!is.null(self$SpinupMortalityFraction)) {
+        insertValue(
+          "SpinupMortalityFraction",
+          format(self$SpinupMortalityFraction, scientific = FALSE)
+        )
+      } else {
+        character(0)
+      }
 
       writeLines(
         c(
@@ -158,6 +172,7 @@ ForCS <- R6Class(
           insertInitialCommunities(self$InitialCommunitiesFiles),
           insertFile("DisturbanceMatrixFile", self$DisturbanceMatrixFile),
           snag_lines,
+          spinup_mortality_lines,
           insertOutputTables(self$OutputTables),
           insertForCSMapControl(self$ForCSMapControl),
           insertValue("MapOutputInterval", self$MapOutputInterval),
@@ -199,6 +214,7 @@ ForCS <- R6Class(
     .InitialCommunitiesFiles = NULL,
     .DisturbanceMatrixFile = NULL,
     .SnagFile = NULL,
+    .SpinupMortalityFraction = NULL,
     .OutputTables = NULL,
     .ForCSMapControl = NULL,
     .MapOutputInterval = NULL,
@@ -259,6 +275,18 @@ ForCS <- R6Class(
         return(private$.SnagFile)
       } else {
         private$.SnagFile <- .relPath(value, self$path)
+      }
+    },
+
+    #' @field SpinupMortalityFraction (Optional) Numeric in `[0, 1)` or `NULL`.
+    SpinupMortalityFraction = function(value) {
+      if (missing(value)) {
+        return(private$.SpinupMortalityFraction)
+      } else {
+        if (!is.null(value)) {
+          stopifnot(is.numeric(value), length(value) == 1L, !is.na(value), value >= 0, value < 1)
+        }
+        private$.SpinupMortalityFraction <- value
       }
     },
 

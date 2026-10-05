@@ -59,6 +59,8 @@ One of \code{"WardSeedDispersal"}, \code{"NoDispersal"}, \code{"UniversalDispers
 
     \item{\code{SnagFile}}{(Optional) Character. Relative file path.}
 
+    \item{\code{SpinupMortalityFraction}}{(Optional) Numeric in \verb{[0, 1)} or \code{NULL}.}
+
     \item{\code{OutputTables}}{\code{data.frame}.}
 
     \item{\code{ForCSMapControl}}{\code{data.frame}.}
@@ -121,6 +123,7 @@ scenario configuration. See \link{LandisExtension} for the contract.}
   InitialCommunitiesFiles = NULL,
   DisturbanceMatrixFile = NULL,
   SnagFile = NULL,
+  SpinupMortalityFraction = NULL,
   OutputTables = NULL,
   ForCSMapControl = NULL,
   MapOutputInterval = NULL,
@@ -152,6 +155,10 @@ file paths: the initial-communities text/CSV and the initial-communities
 raster.}
       \item{\code{DisturbanceMatrixFile}}{Character. Relative file path.}
       \item{\code{SnagFile}}{(Optional) Character. Relative file path. May be \code{NULL}.}
+      \item{\code{SpinupMortalityFraction}}{(Optional) Numeric in \verb{[0, 1)}. Extra fraction of each
+cohort's biomass removed as age-related mortality in every spin-up year (ForCS
+\code{CohortBiomass.ComputeAgeMortality}); lowers spun-up biomass while the DOM spin-up still
+receives its inputs. \code{NULL} (default) omits the line, which ForCS reads as 0.}
       \item{\code{OutputTables}}{\code{data.frame} corresponding to \code{ForCSOutput} (one row,
 four columns: Biomass, DOM_Pools, Fluxes, Summary intervals).}
       \item{\code{ForCSMapControl}}{\code{data.frame} (one row, seven columns: \code{BiomassC},

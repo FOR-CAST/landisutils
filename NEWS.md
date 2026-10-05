@@ -1,3 +1,7 @@
+# landisutils 0.0.167
+
+* `ForCS` gains an optional `SpinupMortalityFraction`, written between `DisturbanceMatrixFile` (or `SnagFile`) and `ForCSOutput`, the order ForCS's parser reads them in. ForCS removes that fraction of each cohort's biomass as extra age-related mortality in every spin-up year and never after year 0, so it lowers spun-up live biomass while the dead-organic-matter spin-up still receives its inputs; the biomass spin-up flag must stay on. `NULL`, the default, omits the line, which ForCS reads as 0. Values outside `[0, 1)` are rejected.
+
 # landisutils 0.0.166
 
 * `build_calibration_scenario_template()` gains `community_output_timestep`, which registers the Output Biomass Community extension at that timestep and adds the community snapshots it emits to the output manifest. `NULL`, the default, leaves the extension out, as before: the calibration's objective is computed from the severity maps and the fire logs, and a per-year cohort snapshot for every trial of every generation is far more disk than the search needs. It is set when post-fire cohort state has to be inspected, which mortality derived from the severity maps and the damage table cannot show -- that figure describes what the damage table specifies, not what the extension killed. The manifest names what the extension writes, measured on a 3-year run: a `community-input-file-<year>.csv` at year 0 and at each multiple of the timestep, and the map-code raster that keys them once, at year 0.
