@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.166</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.167</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,6 +41,11 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.167" id="landisutils-00167">landisutils 0.0.167<a class="anchor" aria-label="anchor" href="#landisutils-00167"></a></h2>
+<ul><li>
+<code>ForCS</code> gains an optional <code>SpinupMortalityFraction</code>, written between <code>DisturbanceMatrixFile</code> (or <code>SnagFile</code>) and <code>ForCSOutput</code>, the order ForCS’s parser reads them in. ForCS removes that fraction of each cohort’s biomass as extra age-related mortality in every spin-up year and never after year 0, so it lowers spun-up live biomass while the dead-organic-matter spin-up still receives its inputs; the biomass spin-up flag must stay on. <code>NULL</code>, the default, omits the line, which ForCS reads as 0. Values outside <code>[0, 1)</code> are rejected.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.166" id="landisutils-00166">landisutils 0.0.166<a class="anchor" aria-label="anchor" href="#landisutils-00166"></a></h2>
 <ul><li><p><code><a href="../reference/build_calibration_scenario_template.html">build_calibration_scenario_template()</a></code> gains <code>community_output_timestep</code>, which registers the Output Biomass Community extension at that timestep and adds the community snapshots it emits to the output manifest. <code>NULL</code>, the default, leaves the extension out, as before: the calibration’s objective is computed from the severity maps and the fire logs, and a per-year cohort snapshot for every trial of every generation is far more disk than the search needs. It is set when post-fire cohort state has to be inspected, which mortality derived from the severity maps and the damage table cannot show – that figure describes what the damage table specifies, not what the extension killed. The manifest names what the extension writes, measured on a 3-year run: a <code>community-input-file-&lt;year&gt;.csv</code> at year 0 and at each multiple of the timestep, and the map-code raster that keys them once, at year 0.</p></li>

@@ -1,5 +1,16 @@
 # Changelog
 
+## landisutils 0.0.167
+
+- `ForCS` gains an optional `SpinupMortalityFraction`, written between
+  `DisturbanceMatrixFile` (or `SnagFile`) and `ForCSOutput`, the order
+  ForCS’s parser reads them in. ForCS removes that fraction of each
+  cohort’s biomass as extra age-related mortality in every spin-up year
+  and never after year 0, so it lowers spun-up live biomass while the
+  dead-organic-matter spin-up still receives its inputs; the biomass
+  spin-up flag must stay on. `NULL`, the default, omits the line, which
+  ForCS reads as 0. Values outside `[0, 1)` are rejected.
+
 ## landisutils 0.0.166
 
 - [`build_calibration_scenario_template()`](https://for-cast.github.io/landisutils/reference/build_calibration_scenario_template.md)

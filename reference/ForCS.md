@@ -63,6 +63,10 @@ Other ForCS helpers:
 
   (Optional) Character. Relative file path.
 
+- `SpinupMortalityFraction`:
+
+  (Optional) Numeric in `[0, 1)` or `NULL`.
+
 - `OutputTables`:
 
   `data.frame`.
@@ -156,6 +160,7 @@ Inherited methods
       InitialCommunitiesFiles = NULL,
       DisturbanceMatrixFile = NULL,
       SnagFile = NULL,
+      SpinupMortalityFraction = NULL,
       OutputTables = NULL,
       ForCSMapControl = NULL,
       MapOutputInterval = NULL,
@@ -205,6 +210,14 @@ Inherited methods
 - `SnagFile`:
 
   (Optional) Character. Relative file path. May be `NULL`.
+
+- `SpinupMortalityFraction`:
+
+  (Optional) Numeric in `[0, 1)`. Extra fraction of each cohort's
+  biomass removed as age-related mortality in every spin-up year (ForCS
+  `CohortBiomass.ComputeAgeMortality`); lowers spun-up biomass while the
+  DOM spin-up still receives its inputs. `NULL` (default) omits the
+  line, which ForCS reads as 0.
 
 - `OutputTables`:
 

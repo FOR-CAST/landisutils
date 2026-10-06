@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.166</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.167</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -106,6 +106,10 @@ One of <code>"WardSeedDispersal"</code>, <code>"NoDispersal"</code>, <code>"Univ
 <dd><p>(Optional) Character. Relative file path.</p></dd>
 
 
+    <dt><code>SpinupMortalityFraction</code></dt>
+<dd><p>(Optional) Numeric in <code>[0, 1)</code> or <code>NULL</code>.</p></dd>
+
+
     <dt><code>OutputTables</code></dt>
 <dd><p><code>data.frame</code>.</p></dd>
 
@@ -192,6 +196,7 @@ scenario configuration. See <a href="LandisExtension.html">LandisExtension</a> f
 <span>  InitialCommunitiesFiles <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  DisturbanceMatrixFile <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  SnagFile <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  SpinupMortalityFraction <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  OutputTables <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  ForCSMapControl <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  MapOutputInterval <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -233,6 +238,12 @@ raster.</p></dd>
 
       <dt><code>SnagFile</code></dt>
 <dd><p>(Optional) Character. Relative file path. May be <code>NULL</code>.</p></dd>
+
+      <dt><code>SpinupMortalityFraction</code></dt>
+<dd><p>(Optional) Numeric in <code>[0, 1)</code>. Extra fraction of each
+cohort's biomass removed as age-related mortality in every spin-up year (ForCS
+<code>CohortBiomass.ComputeAgeMortality</code>); lowers spun-up biomass while the DOM spin-up still
+receives its inputs. <code>NULL</code> (default) omits the line, which ForCS reads as 0.</p></dd>
 
       <dt><code>OutputTables</code></dt>
 <dd><p><code>data.frame</code> corresponding to <code>ForCSOutput</code> (one row,
