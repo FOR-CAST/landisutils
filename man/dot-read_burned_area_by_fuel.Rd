@@ -2,7 +2,7 @@
 % Please edit documentation in R/calibrate_dynamic_fire.R
 \name{.read_burned_area_by_fuel}
 \alias{.read_burned_area_by_fuel}
-\title{Per-rep cell-based burn area by fuel code (internal)}
+\title{Per-rep cell-based burn area by fuel type (internal)}
 \usage{
 .read_burned_area_by_fuel(rep_dir, pixel_area_ha)
 }
@@ -13,12 +13,21 @@ with severity > 1 (the Dynamic Fire encoding is 0 = inactive,
 1 = active-but-unburned, 2 = burned with no cohort damaged, and severity + 2
 for a damaged cell, so \verb{> 1} is every burned cell and the value is NOT the
 severity class),
-and accumulates cell counts per fuel code across timesteps. Each
+and accumulates cell counts per fuel type across timesteps. Each
 cell-timestep is counted once, so a cell that burns in two distinct
 timesteps contributes twice -- matching NBAC's per-fire-perimeter
 accounting on the observed side.
 }
 \details{
+Dynamic Fuels writes each active cell of the \code{FuelType} map as its fuel-type
+index plus one and each inactive cell as 0. The returned tibble has one row
+per map value: \code{fuel_code} (the raw map value), \code{fuel_index}
+(\code{fuel_code - 1}), \code{base} (the index's base fuel type in the run's
+\code{FuelTypeTable}, read from \verb{<rep_dir>/dynamic-fire.txt}; \code{NA} for index 0,
+which has no fuel type), \code{cells} and \code{area_ha}. A missing \code{FuelTypeTable}
+falls back to \code{\link[=defaultFuelTypeTable]{defaultFuelTypeTable()}} with a warning, and a burned index the
+table does not list warns and gets \code{NA}.
+
 Returns NULL when:
 \itemize{
 \item \verb{<rep_dir>/fire/} does not exist (caller didn't run LANDIS),

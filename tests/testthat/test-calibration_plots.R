@@ -18,7 +18,9 @@ make_calibration_stats <- function(n_reps = 2L) {
       total_sites_burned = sum(sites),
       n_events = 5L,
       area_by_fuel_ha = data.frame(
-        fuel_code = c(1L, 3L),
+        fuel_code = c(2L, 9L), ## FuelType map values: fuel-type index + 1
+        fuel_index = c(1L, 8L),
+        base = c("Conifer", "Deciduous"),
         cells = c(5102L, 120L),
         area_ha = c(7346.88, 172.8)
       )
@@ -83,6 +85,18 @@ test_that("the plots build, not merely construct", {
     expect_s3_class(plots[[nm]], "ggplot")
     expect_no_error(ggplot2::ggplot_build(plots[[nm]]))
   }
+})
+
+test_that("plot_calibration_area_by_fuel() takes simulated fuel types from the replicates", {
+  skip_if_not_installed("ggplot2")
+  stats <- make_calibration_stats()
+  ## A table for the OBSERVED raster's codes that, applied to the simulated map values, would name
+  ## other fuel types -- as the BC code table named C-5 ConiferPlantation.
+  stats$observed$fuel_code_to_base <- c("2" = "Open", "9" = "Slash")
+  p <- plot_calibration_area_by_fuel(stats)
+  sim <- p$data[p$data$source == "simulated", ]
+  expect_equal(sim$base, c("Conifer", "Deciduous"))
+  expect_equal(sim$area, c(5102, 120) * 1.44 * 2, tolerance = 1e-6)
 })
 
 test_that("plot_calibration_convergence() reads a trace from file", {

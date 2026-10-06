@@ -41,11 +41,21 @@ Components:
 annual-rate match against the primary ecoregion target.
 \item \verb{L_size = KS_D(empirical CDF of sim sizes, empirical CDF of obs sizes)} -- shape match for the fire-size distribution.
 \item \code{L_area_fuel}: chi-squared distance between simulated and observed
-burn-area-by-base-fuel-type \emph{proportions}. Simulated area-by-fuel
-comes from each event's ignition fuel code times its burned cells,
-mapped to base fuel types via \code{observed$fuel_code_to_base}. Skipped
-(contributes 0) when either \code{observed$primary$area_by_fuel_ha} is
-NULL or \code{observed$fuel_code_to_base} is missing.
+burn-area-by-base-fuel-type \emph{proportions}. Simulated area comes from
+each replicate's \code{area_by_fuel_ha}, whose \code{base} column
+\code{\link[=parse_dynamic_fire_logs]{parse_dynamic_fire_logs()}} takes from the run's own
+\code{FuelTypeTable}. A replicate parsed before landisutils 0.0.168 has
+no \code{base} column; its \code{fuel_code} is decoded as fuel-type index
+\code{fuel_code - 1} through \code{\link[=defaultFuelTypeTable]{defaultFuelTypeTable()}}, with a warning.
+When a replicate with fires has no \code{area_by_fuel_ha} at all (mock
+simulator, Dynamic Fuels off), each event's burned cells are
+attributed to its ignition fuel-type index instead, also through
+\code{\link[=defaultFuelTypeTable]{defaultFuelTypeTable()}}. Observed area is the \code{base} column of
+\code{observed$primary$area_by_fuel_ha}; \code{observed$fuel_code_to_base}
+describes the observed raster only and is never applied to
+simulated fuel types. Skipped (contributes 0) when either
+\code{observed$primary$area_by_fuel_ha} is NULL or
+\code{observed$fuel_code_to_base} is missing.
 \item \code{L_severity}: chi-squared distance between simulated and observed
 severity-class proportions. Simulated severities come from each
 event's \code{MeanSeverity} binned into integer classes 1..5; observed
@@ -104,6 +114,7 @@ Other Dynamic Fire calibration helpers:
 \code{\link[=apply_calibrated_ignprob]{apply_calibrated_ignprob()}},
 \code{\link[=apply_calibrated_num_fires]{apply_calibrated_num_fires()}},
 \code{\link[=bc_fuel_code_to_base]{bc_fuel_code_to_base()}},
+\code{\link[=bc_fuel_label_to_base]{bc_fuel_label_to_base()}},
 \code{\link[=build_calibration_scenario_template]{build_calibration_scenario_template()}},
 \code{\link[=build_calibration_spinup_scenario]{build_calibration_spinup_scenario()}},
 \code{\link[=calibrate_dynamic_fire]{calibrate_dynamic_fire()}},

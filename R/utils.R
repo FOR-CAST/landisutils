@@ -261,3 +261,20 @@ truefalse <- function(x) {
   v <- suppressWarnings(as.numeric(w[nm]))
   length(v) == 1L && !is.na(v) && v > 0
 }
+
+## Warn at most once per R session for each `id`.
+##
+## For a condition that belongs to a stored object rather than to one call: scoring a stored
+## replicate set calls the scorer for every candidate or figure that reads it, and the same warning
+## on every call buries everything else in the log. Tests that expect the warning clear the record
+## first, since another test in the same process may already have raised it.
+.warned_once <- new.env(parent = emptyenv())
+
+.warn_once <- function(id, ...) {
+  if (isTRUE(.warned_once[[id]])) {
+    return(invisible(FALSE))
+  }
+  assign(id, TRUE, envir = .warned_once)
+  warning(..., call. = FALSE)
+  invisible(TRUE)
+}

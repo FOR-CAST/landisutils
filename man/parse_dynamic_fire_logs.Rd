@@ -17,9 +17,9 @@ and \code{fire/dynamic-fire-summary-log.csv}.}
 Named list with \code{n_fires_by_year} (tibble: \code{year}, \code{n_fires}),
 \code{fire_sizes_ha} (sorted numeric vector), \code{events} (per-event tibble),
 \code{total_sites_burned} (integer), \code{n_events} (integer), and
-\code{area_by_fuel_ha} (tibble with \code{fuel_code}, \code{cells}, \code{area_ha} columns,
-or NULL when the per-timestep severity x fuel-type rasters aren't on
-disk -- e.g. mock-simulator trials).
+\code{area_by_fuel_ha} (tibble with \code{fuel_code}, \code{fuel_index}, \code{base}, \code{cells}
+and \code{area_ha} columns, or NULL when the per-timestep severity x fuel-type
+rasters aren't on disk -- e.g. mock-simulator trials).
 }
 \description{
 Reads \verb{<rep_dir>/fire/dynamic-fire-event-log.csv} (one row per fire event)
@@ -55,6 +55,15 @@ This replaces the earlier convention of attributing each event's
 entire \code{DamagedSites} count to its \code{InitFuel}, which biased simulated
 burn area toward the dominant-cover fuel since fires ignite where there's
 igniteable fuel and then spread anywhere.
+
+Dynamic Fuels writes each active cell of a \code{FuelType} map as its fuel-type
+index plus one, and an inactive cell as 0. \code{fuel_code} is that raw map
+value, \code{fuel_index} is \code{fuel_code - 1} (0 for an active cell with no fuel
+type), and \code{base} is the base fuel type of that index in the run's own
+\code{FuelTypeTable}, read from \verb{<rep_dir>/dynamic-fire.txt}. Index 0, and an
+index the table does not list, have no base (\code{NA}) and are not scored; the
+latter also warns. If the file or its \code{FuelTypeTable} is missing,
+\code{\link[=defaultFuelTypeTable]{defaultFuelTypeTable()}} is used instead, with a warning.
 }
 \seealso{
 Other Dynamic Fire calibration helpers:
@@ -63,6 +72,7 @@ Other Dynamic Fire calibration helpers:
 \code{\link[=apply_calibrated_ignprob]{apply_calibrated_ignprob()}},
 \code{\link[=apply_calibrated_num_fires]{apply_calibrated_num_fires()}},
 \code{\link[=bc_fuel_code_to_base]{bc_fuel_code_to_base()}},
+\code{\link[=bc_fuel_label_to_base]{bc_fuel_label_to_base()}},
 \code{\link[=build_calibration_scenario_template]{build_calibration_scenario_template()}},
 \code{\link[=build_calibration_spinup_scenario]{build_calibration_spinup_scenario()}},
 \code{\link[=calibrate_dynamic_fire]{calibrate_dynamic_fire()}},
