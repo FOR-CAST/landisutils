@@ -357,8 +357,14 @@ plot_calibration_fire_counts <- function(stats, bins = 24L) {
 #' Plotted as shares rather than totals, because the objective's area-by-fuel
 #' term renormalises both sides over the base fuels shared between them.
 #'
+#' Simulated base fuel types are the `base` column of each replicate's
+#' `area_by_fuel_ha`, which [parse_dynamic_fire_logs()] takes from the run's own
+#' `FuelTypeTable`. A replicate parsed before landisutils 0.0.168 has no `base`
+#' column and is decoded through [defaultFuelTypeTable()], with a warning, as in
+#' [loss_from_stats()].
+#'
 #' @param stats A `run_calibration_validation()` summary carrying
-#'   `$observed$primary$area_by_fuel_ha` and `$observed$fuel_code_to_base`.
+#'   `$observed$primary$area_by_fuel_ha`.
 #'
 #' @returns A ggplot object.
 #'
@@ -367,21 +373,18 @@ plot_calibration_fire_counts <- function(stats, bins = 24L) {
 plot_calibration_area_by_fuel <- function(stats) {
   .need("ggplot2", "plot_calibration_area_by_fuel()")
   .check_calibration_stats(stats, need = "area_by_fuel_ha")
-  ftb <- stats$observed$fuel_code_to_base
-  if (is.null(ftb)) {
-    stop("`stats$observed$fuel_code_to_base` is required.", call. = FALSE)
-  }
   obs <- stats$observed$primary$area_by_fuel_ha
-  ca <- do.call(rbind, lapply(stats$reps, function(r) r$area_by_fuel_ha))
-  if (is.null(ca)) {
+  rep_dfs <- Filter(Negate(is.null), lapply(stats$reps, function(r) r$area_by_fuel_ha))
+  if (length(rep_dfs) == 0L) {
     stop(
       "no per-replicate `area_by_fuel_ha`; the replicates predate cell-based ",
       "fuel attribution.",
       call. = FALSE
     )
   }
-  ca <- as.data.frame(ca)
-  ca$base <- unname(ftb[as.character(ca$fuel_code)])
+  ## Never through `stats$observed$fuel_code_to_base`: that decodes the OBSERVED raster's codes,
+  ## and read through it a FuelType map value (fuel-type index + 1) names the wrong fuel type.
+  ca <- do.call(rbind, lapply(rep_dfs, function(d) .area_by_fuel_base(d)[, c("base", "area_ha")]))
   ca <- ca[!is.na(ca$base), , drop = FALSE]
   sim <- tapply(ca$area_ha, ca$base, sum)
 

@@ -190,9 +190,9 @@ calibration_par_names <- function() {
 #' @returns Named list with `n_fires_by_year` (tibble: `year`, `n_fires`),
 #'   `fire_sizes_ha` (sorted numeric vector), `events` (per-event tibble),
 #'   `total_sites_burned` (integer), `n_events` (integer), and
-#'   `area_by_fuel_ha` (tibble with `fuel_code`, `cells`, `area_ha` columns,
-#'   or NULL when the per-timestep severity x fuel-type rasters aren't on
-#'   disk -- e.g. mock-simulator trials).
+#'   `area_by_fuel_ha` (tibble with `fuel_code`, `fuel_index`, `base`, `cells`
+#'   and `area_ha` columns, or NULL when the per-timestep severity x fuel-type
+#'   rasters aren't on disk -- e.g. mock-simulator trials).
 #'
 #' @details
 #' The `area_by_fuel_ha` summary is computed by intersecting the per-timestep
@@ -206,6 +206,15 @@ calibration_par_names <- function() {
 #' entire `DamagedSites` count to its `InitFuel`, which biased simulated
 #' burn area toward the dominant-cover fuel since fires ignite where there's
 #' igniteable fuel and then spread anywhere.
+#'
+#' Dynamic Fuels writes each active cell of a `FuelType` map as its fuel-type
+#' index plus one, and an inactive cell as 0. `fuel_code` is that raw map
+#' value, `fuel_index` is `fuel_code - 1` (0 for an active cell with no fuel
+#' type), and `base` is the base fuel type of that index in the run's own
+#' `FuelTypeTable`, read from `<rep_dir>/dynamic-fire.txt`. Index 0, and an
+#' index the table does not list, have no base (`NA`) and are not scored; the
+#' latter also warns. If the file or its `FuelTypeTable` is missing,
+#' [defaultFuelTypeTable()] is used instead, with a warning.
 #'
 #' @family Dynamic Fire calibration helpers
 #'
@@ -484,7 +493,71 @@ landis_overstory_mortality_share <- function(rep_dir) {
   out
 }
 
-#' Per-rep cell-based burn area by fuel code (internal)
+## The FuelTypeTable of a `dynamic-fire.txt` (internal): `Index`, `Base` and `Surface` for each fuel
+## type, as `insertFuelTypeTable()` writes them, or NULL when the file has no single such section.
+## Read like the FireDamageTable above: data rows are the non-comment lines after the header, up to
+## the first blank line or keyword after them. `<<` starts an end-of-line comment in LANDIS-II input.
+.read_fuel_type_table <- function(path) {
+  lines <- trimws(sub("<<.*$", "", readLines(path, warn = FALSE)))
+  hdr <- which(lines == "FuelTypeTable")
+  if (length(hdr) != 1L) {
+    return(NULL)
+  }
+  rows <- list()
+  i <- hdr + 1L
+  while (i <= length(lines)) {
+    ln <- lines[i]
+    i <- i + 1L
+    if (startsWith(ln, ">>") || !nzchar(ln)) {
+      if (length(rows) > 0L && !nzchar(ln)) {
+        break
+      }
+      next
+    }
+    if (grepl("^[A-Za-z]", ln)) {
+      break
+    }
+    parts <- strsplit(ln, "[[:space:]]+")[[1]]
+    index <- suppressWarnings(as.integer(parts[1L]))
+    if (length(parts) < 3L || is.na(index)) {
+      next
+    }
+    rows[[length(rows) + 1L]] <- data.frame(Index = index, Base = parts[2L], Surface = parts[3L])
+  }
+  if (length(rows) == 0L) {
+    return(NULL)
+  }
+  do.call(rbind, rows)
+}
+
+## The fuel-type table a replicate ran with (internal): the FuelTypeTable of its own
+## `dynamic-fire.txt`, or `defaultFuelTypeTable()`, with a warning, when that cannot be read.
+.rep_fuel_type_table <- function(rep_dir) {
+  fire_txt <- fs::path(rep_dir, "dynamic-fire.txt")
+  ftt <- if (fs::file_exists(fire_txt)) .read_fuel_type_table(fire_txt) else NULL
+  if (is.null(ftt)) {
+    warning(
+      "No FuelTypeTable could be read from ",
+      fire_txt,
+      "; burned cells are given base fuel types from defaultFuelTypeTable(), which is right only ",
+      "if the run used that table's fuel-type indices",
+      call. = FALSE
+    )
+    ftt <- defaultFuelTypeTable()
+  }
+  ftt
+}
+
+## Base fuel type of each Dynamic Fire fuel-type index (internal). Index 0 is the extension's "no
+## fuel type" and a `NoFuel` base says the same in the table, so both are NA, as is an index the
+## table does not list.
+.fuel_index_base <- function(index, fuel_type_table) {
+  base <- as.character(fuel_type_table$Base)[match(index, fuel_type_table$Index)]
+  base[index %in% 0L | base %in% "NoFuel"] <- NA_character_
+  base
+}
+
+#' Per-rep cell-based burn area by fuel type (internal)
 #'
 #' Walks `<rep_dir>/fire/severity-{t}.tif` and the matching
 #' `<rep_dir>/fire/FuelType-{t}.tif` files, masks the fuel raster to cells
@@ -492,10 +565,19 @@ landis_overstory_mortality_share <- function(rep_dir) {
 #' 1 = active-but-unburned, 2 = burned with no cohort damaged, and severity + 2
 #' for a damaged cell, so `> 1` is every burned cell and the value is NOT the
 #' severity class),
-#' and accumulates cell counts per fuel code across timesteps. Each
+#' and accumulates cell counts per fuel type across timesteps. Each
 #' cell-timestep is counted once, so a cell that burns in two distinct
 #' timesteps contributes twice -- matching NBAC's per-fire-perimeter
 #' accounting on the observed side.
+#'
+#' Dynamic Fuels writes each active cell of the `FuelType` map as its fuel-type
+#' index plus one and each inactive cell as 0. The returned tibble has one row
+#' per map value: `fuel_code` (the raw map value), `fuel_index`
+#' (`fuel_code - 1`), `base` (the index's base fuel type in the run's
+#' `FuelTypeTable`, read from `<rep_dir>/dynamic-fire.txt`; `NA` for index 0,
+#' which has no fuel type), `cells` and `area_ha`. A missing `FuelTypeTable`
+#' falls back to [defaultFuelTypeTable()] with a warning, and a burned index the
+#' table does not list warns and gets `NA`.
 #'
 #' Returns NULL when:
 #'   * `<rep_dir>/fire/` does not exist (caller didn't run LANDIS),
@@ -530,7 +612,8 @@ landis_overstory_mortality_share <- function(rep_dir) {
     ## Dynamic Fire severity encoding:
     ##   0  = inactive (non-flammable / off-landscape)
     ##   1  = active but UNBURNED this timestep (still in scope; just didn't burn)
-    ##   >= 2 = burned, with the value as the fire severity class
+    ##   2  = burned, with no cohort damaged
+    ##   severity + 2 = burned and damaged, so the map value is NOT the severity class
     ## So burned cells are `sev > 1`, NOT `sev > 0`. Counting `> 0` would
     ## select the whole active landscape and accumulate the landscape's fuel
     ## composition instead of the burned area -- silently mis-training
@@ -555,8 +638,26 @@ landis_overstory_mortality_share <- function(rep_dir) {
     FUN = sum
   )
   names(agg)[2L] <- "cells"
+  ## The map value is the fuel-type index + 1 (Dynamic Fuels, src/PlugIn.cs:
+  ## `(byte) ((int) SiteVars.FuelType[site] + 1)`), and the index means what the run's own
+  ## FuelTypeTable says it means. It is not the code of any external fuel raster: mapped through the
+  ## observed side's code table, C-5 (index 5, value 6) was scored as ConiferPlantation.
+  fuel_index <- as.integer(agg$fuel_code) - 1L
+  ftt <- .rep_fuel_type_table(rep_dir)
+  unlisted <- setdiff(fuel_index[fuel_index != 0L], ftt$Index)
+  if (length(unlisted) > 0L) {
+    warning(
+      rep_dir,
+      ": burned cells carry fuel-type index(es) ",
+      paste(unlisted, collapse = ", "),
+      " that the run's FuelTypeTable does not list; they get no base fuel type and are not scored",
+      call. = FALSE
+    )
+  }
   tibble::tibble(
     fuel_code = as.integer(agg$fuel_code),
+    fuel_index = fuel_index,
+    base = .fuel_index_base(fuel_index, ftt),
     cells = as.integer(agg$cells),
     area_ha = as.numeric(agg$cells) * pixel_area_ha
   )
@@ -817,11 +918,21 @@ default_severity_prior_sturtevant2009 <- function() {
 #'   \item `L_size = KS_D(empirical CDF of sim sizes, empirical CDF of obs
 #'         sizes)` -- shape match for the fire-size distribution.
 #'   \item `L_area_fuel`: chi-squared distance between simulated and observed
-#'         burn-area-by-base-fuel-type *proportions*. Simulated area-by-fuel
-#'         comes from each event's ignition fuel code times its burned cells,
-#'         mapped to base fuel types via `observed$fuel_code_to_base`. Skipped
-#'         (contributes 0) when either `observed$primary$area_by_fuel_ha` is
-#'         NULL or `observed$fuel_code_to_base` is missing.
+#'         burn-area-by-base-fuel-type *proportions*. Simulated area comes from
+#'         each replicate's `area_by_fuel_ha`, whose `base` column
+#'         [parse_dynamic_fire_logs()] takes from the run's own
+#'         `FuelTypeTable`. A replicate parsed before landisutils 0.0.168 has
+#'         no `base` column; its `fuel_code` is decoded as fuel-type index
+#'         `fuel_code - 1` through [defaultFuelTypeTable()], with a warning.
+#'         When a replicate with fires has no `area_by_fuel_ha` at all (mock
+#'         simulator, Dynamic Fuels off), each event's burned cells are
+#'         attributed to its ignition fuel-type index instead, also through
+#'         [defaultFuelTypeTable()]. Observed area is the `base` column of
+#'         `observed$primary$area_by_fuel_ha`; `observed$fuel_code_to_base`
+#'         describes the observed raster only and is never applied to
+#'         simulated fuel types. Skipped (contributes 0) when either
+#'         `observed$primary$area_by_fuel_ha` is NULL or
+#'         `observed$fuel_code_to_base` is missing.
 #'   \item `L_severity`: chi-squared distance between simulated and observed
 #'         severity-class proportions. Simulated severities come from each
 #'         event's `MeanSeverity` binned into integer classes 1..5; observed
@@ -1183,7 +1294,9 @@ loss_from_stats <- function(
 ## no data (the L_count / L_size components handle the no-fires case more
 ## meaningfully).
 .chi_sq_area_by_fuel <- function(reps, primary, observed) {
-  fuel_to_base <- observed$fuel_code_to_base
+  ## Simulated fuel types are decoded on the simulated side's own terms, never through
+  ## `observed$fuel_code_to_base`: that table describes the OBSERVED raster's codes, and a FuelType
+  ## map value is a fuel-type index + 1. Read through it, C-5 (value 6) scored as ConiferPlantation.
   pixel_area_ha <- observed$pixel_area_ha %||% 1.0
 
   ## Cell-based attribution: prefer the per-rep `area_by_fuel_ha` summary
@@ -1219,8 +1332,10 @@ loss_from_stats <- function(
     if (length(rep_dfs) == 0L) {
       return(1.0) ## no fires in ANY rep across the trial -- penalty
     }
-    sim_area_df <- do.call(rbind, rep_dfs)
-    sim_area_df$base <- unname(fuel_to_base[as.character(sim_area_df$fuel_code)])
+    sim_area_df <- do.call(
+      rbind,
+      lapply(rep_dfs, function(d) .area_by_fuel_base(d)[, c("base", "area_ha")])
+    )
     sim_area_df <- sim_area_df[!is.na(sim_area_df$base), , drop = FALSE]
     if (nrow(sim_area_df) == 0L) {
       return(1.0)
@@ -1239,7 +1354,9 @@ loss_from_stats <- function(
     if (is.null(sim_events) || nrow(sim_events) == 0L) {
       return(1.0) ## penalty for no simulated fires
     }
-    sim_events$base <- unname(fuel_to_base[as.character(sim_events$init_fuel)])
+    ## The event log's InitFuel is a fuel-type index, with no offset. A replicate summary carries
+    ## no FuelTypeTable, so the default table's indices are assumed.
+    sim_events$base <- .fuel_index_base(sim_events$init_fuel, defaultFuelTypeTable())
     sim_events <- sim_events[!is.na(sim_events$base), , drop = FALSE]
     if (nrow(sim_events) == 0L) {
       return(1.0)
@@ -1266,6 +1383,25 @@ loss_from_stats <- function(
   nbins <- length(obs_p)
   obs_p_smoothed <- (obs_p + alpha) / (1 + nbins * alpha)
   sum((sim_p - obs_p_smoothed)^2 / obs_p_smoothed)
+}
+
+## A replicate's `area_by_fuel_ha` with its `base` column (internal). One parsed before landisutils
+## 0.0.168 carries only `fuel_code`, the raw FuelType map value, which is the fuel-type index + 1.
+## Its base is decoded through `defaultFuelTypeTable()` -- right for a run whose FuelTypeTable kept
+## the default indices -- and that assumption is announced once per session.
+.area_by_fuel_base <- function(d) {
+  d <- as.data.frame(d)
+  if (!"base" %in% names(d)) {
+    .warn_once(
+      "area_by_fuel_pre_0.0.168",
+      "A replicate's `area_by_fuel_ha` has no `base` column, so it was parsed before landisutils ",
+      "0.0.168, which read FuelType map values as fuel codes. Its base fuel types are decoded as ",
+      "fuel-type index `fuel_code - 1` through defaultFuelTypeTable(), which is right only if the ",
+      "run used that table's indices; parse the replicate again to use the run's own FuelTypeTable."
+    )
+    d$base <- .fuel_index_base(as.integer(d$fuel_code) - 1L, defaultFuelTypeTable())
+  }
+  d
 }
 
 ## Chi-squared on severity-class proportions (internal).
@@ -1568,11 +1704,18 @@ apply_calibrated_damage_age <- function(fire_damage_table, calibrated_fire_param
 
 #' Default fuel-code -> base-fuel-type mapping (BC FUEL_TYPE_CD factor levels)
 #'
-#' Returns the mapping used by downstream projects that use the BC
-#' `FUEL_TYPE_CD` factor encoding for `fuel_types_rast`. Levels
-#' correspond to: 1=B71_S-2, 2=C-2, 3=C-3, 4=C-4, 5=C-5, 6=C-6, 7=C-7, 8=D-1/2,
-#' 9=M-1/2, 10=N (non-fuel), 11=O-1a/b, 12=S-1, 13=S-3. Mapped to the five base
-#' types accepted by [defaultFuelTypeTable()] / [calibration_par_names()].
+#' Returns the mapping for a `fuel_types_rast` whose cells hold the 1-based
+#' integer codes of the BC `FUEL_TYPE_CD` factor, as `as.integer()` gives them
+#' for a factor with these 13 levels: 1=B71_S-2, 2=C-2, 3=C-3, 4=C-4, 5=C-5,
+#' 6=C-6, 7=C-7, 8=D-1/2, 9=M-1/2, 10=N (non-fuel), 11=O-1a/b, 12=S-1, 13=S-3.
+#' Mapped to the five base types accepted by [defaultFuelTypeTable()] /
+#' [calibration_par_names()].
+#'
+#' A code table is right only for the raster whose codes it was written for.
+#' `terra::rasterize()` of a factor field writes 0-based category codes, which
+#' this table reads as the class before each one. Pass such a raster with its
+#' category labels instead: [save_observed_fire_targets()] decodes a labelled
+#' raster by label, with [bc_fuel_label_to_base()].
 #'
 #' Downstream projects with a different fuel-classification raster should pass
 #' their own mapping vector to [save_observed_fire_targets()] via the
@@ -1600,6 +1743,44 @@ bc_fuel_code_to_base <- function() {
     "11" = "Open", ## O-1a/b
     "12" = "Slash", ## S-1
     "13" = "Slash" ## S-3
+  )
+}
+
+#' Default fuel-label -> base-fuel-type mapping (BC FUEL_TYPE_CD labels)
+#'
+#' Maps the labels of the BC `FUEL_TYPE_CD` fuel types to the five base types
+#' accepted by [defaultFuelTypeTable()] / [calibration_par_names()], with `NA`
+#' for non-fuel (`N`) and water (`W`). [save_observed_fire_targets()] uses it
+#' to decode a categorical `fuel_types_rast` by label, which does not depend on
+#' how the raster's integer codes were assigned.
+#'
+#' Downstream projects whose fuel raster carries other labels should pass their
+#' own mapping vector to [save_observed_fire_targets()] via the
+#' `fuel_label_to_base` argument.
+#'
+#' @returns Character vector of length 14, named by label, values
+#'   `"Conifer"` / `"ConiferPlantation"` / `"Deciduous"` / `"Slash"` /
+#'   `"Open"` / `NA_character_`.
+#'
+#' @family Dynamic Fire calibration helpers
+#'
+#' @export
+bc_fuel_label_to_base <- function() {
+  c(
+    "B71_S-2" = "Conifer", ## burned regen, classified as Conifer per pipeline
+    "C-2" = "Conifer",
+    "C-3" = "Conifer",
+    "C-4" = "Conifer",
+    "C-5" = "Conifer",
+    "C-6" = "ConiferPlantation",
+    "C-7" = "Conifer",
+    "D-1/2" = "Deciduous",
+    "M-1/2" = "Conifer", ## mixedwood
+    "N" = NA_character_, ## non-fuel
+    "O-1a/b" = "Open",
+    "S-1" = "Slash",
+    "S-3" = "Slash",
+    "W" = NA_character_ ## water
   )
 }
 
@@ -1727,6 +1908,17 @@ observed_fire_sizes <- function(points, polys = NULL, min_size_ha = 0) {
 #'         misleading (it would just be the primary value over again).
 #' }
 #'
+#' A categorical `fuel_types_rast` is decoded by category label, through
+#' `fuel_label_to_base`; any other is decoded by integer code, through
+#' `fuel_code_to_base`. Labels are preferred because codes depend on how the
+#' raster was built: `terra::rasterize()` of a factor field numbers its
+#' categories from 0, and GeoTIFF storage can drop the labels that say what
+#' each number means. A burned cell that the table in use cannot decode is an
+#' error, not a silently dropped cell. The payload's `fuel_code_to_base` is the
+#' code mapping that was applied: for a categorical raster, each code's label
+#' looked up in `fuel_label_to_base`, with the raster's code-to-label table
+#' kept as `fuel_code_labels` (NULL for a raster decoded by code).
+#'
 #' @param primary_points SpatVector. NFDB ignition points for the primary
 #'   ecoregion (the LANDIS simulation extent). Required.
 #' @param primary_polys SpatVector or NULL. Fire perimeter polygons for the
@@ -1741,14 +1933,20 @@ observed_fire_sizes <- function(points, polys = NULL, min_size_ha = 0) {
 #'   for the secondary (see Details).
 #' @param fire_years Integer vector. Years over which counts are normalised
 #'   (denominator for `lambda_obs`).
-#' @param fuel_types_rast SpatRaster. Integer-coded fuel-type raster covering
-#'   the LANDIS simulation extent.
+#' @param fuel_types_rast SpatRaster. Fuel-type raster covering the LANDIS
+#'   simulation extent: categorical (with category labels), or integer-coded.
+#'   See Details for how each is decoded.
 #' @param primary_label,secondary_label Character. Labels for the two ecoregions
 #'   (e.g., `"FRU59"` / `"FRT12"`). Stored in the payload for reproducibility.
 #' @param fuel_code_to_base Named character vector. Mapping from
 #'   `fuel_types_rast` integer codes (as character names) to the five base
-#'   fuel types from [defaultFuelTypeTable()]. NA values mark non-fuel codes
-#'   to be excluded. Default: [bc_fuel_code_to_base()].
+#'   fuel types from [defaultFuelTypeTable()], used when the raster is not
+#'   categorical. NA values mark non-fuel codes to be excluded; a burned code
+#'   missing from the names is an error. Default: [bc_fuel_code_to_base()].
+#' @param fuel_label_to_base Named character vector. Mapping from category
+#'   labels to the five base fuel types, used when `fuel_types_rast` is
+#'   categorical. NA values mark non-fuel labels to be excluded; a burned label
+#'   missing from the names is an error. Default: [bc_fuel_label_to_base()].
 #' @param severity_dist Named numeric vector or NULL. Expected proportions
 #'   across the 5 Dynamic Fire severity classes (names `"1"`..`"5"`). Stored
 #'   on the primary-ecoregion summary; consumed by `loss_from_stats()`'s
@@ -1786,6 +1984,7 @@ save_observed_fire_targets <- function(
   primary_label = "primary",
   secondary_label = "secondary",
   fuel_code_to_base = bc_fuel_code_to_base(),
+  fuel_label_to_base = bc_fuel_label_to_base(),
   severity_dist = NULL,
   mortality_share = NULL,
   min_size_ha = 1.0
@@ -1809,6 +2008,8 @@ save_observed_fire_targets <- function(
     length(path) == 1L,
     is.character(fuel_code_to_base),
     !is.null(names(fuel_code_to_base)),
+    is.character(fuel_label_to_base),
+    !is.null(names(fuel_label_to_base)),
     is.null(severity_dist) || (is.numeric(severity_dist) && !is.null(names(severity_dist))),
     is.null(mortality_share) ||
       (is.numeric(mortality_share) &&
@@ -1819,6 +2020,20 @@ save_observed_fire_targets <- function(
 
   fs::dir_create(dirname(path))
   pixel_area_ha <- prod(terra::res(fuel_types_rast)) / 10000
+
+  ## Decode by category LABEL where the raster has labels. Its integer codes depend on how it was
+  ## built: `terra::rasterize()` of a factor field numbers the categories from 0, so the 1-based
+  ## `bc_fuel_code_to_base()` read each class as the one before it (D-1/2 as Conifer, water as
+  ## Slash) and dropped O-1a/b. The code mapping this implies is what the payload records.
+  fuel_code_labels <- NULL
+  if (isTRUE(terra::is.factor(fuel_types_rast)[1L])) {
+    lv <- terra::levels(fuel_types_rast)[[1L]]
+    fuel_code_labels <- stats::setNames(trimws(as.character(lv[[2L]])), as.character(lv[[1L]]))
+    fuel_code_to_base <- stats::setNames(
+      unname(fuel_label_to_base[fuel_code_labels]),
+      names(fuel_code_labels)
+    )
+  }
 
   .summarise <- function(points_sv, polys_sv, label, compute_area_by_fuel) {
     pts <- as.data.frame(points_sv)
@@ -1854,13 +2069,19 @@ save_observed_fire_targets <- function(
     if (isTRUE(compute_area_by_fuel) && !is.null(polys_sv) && nrow(plys) > 0L) {
       poly_mask <- terra::rasterize(polys_sv, fuel_types_rast, background = NA, field = 1)
       burned <- terra::mask(fuel_types_rast, poly_mask)
+      ## `freq()` reports a categorical raster's LABELS, which `as.integer()` made NA and so
+      ## dropped: count its codes instead, and name them through the raster's own table.
+      if (!is.null(fuel_code_labels)) {
+        burned <- terra::as.int(burned)
+      }
       freq_df <- as.data.frame(terra::freq(burned))
-      val_col <- if ("value" %in% names(freq_df)) "value" else "label"
+      code <- as.character(as.integer(freq_df[["value"]]))
+      .check_observed_fuel_codes(code, fuel_code_to_base, fuel_code_labels, fuel_label_to_base)
       area_by_fuel_ha <- tibble::tibble(
-        fuel_code = as.integer(freq_df[[val_col]]),
+        fuel_code = as.integer(code),
         cells = as.integer(freq_df[["count"]]),
         area_ha = as.numeric(freq_df[["count"]]) * pixel_area_ha,
-        base = unname(fuel_code_to_base[as.character(freq_df[[val_col]])])
+        base = unname(fuel_code_to_base[code])
       ) |>
         dplyr::filter(!is.na(.data$base)) |>
         dplyr::group_by(.data$base) |>
@@ -1904,7 +2125,10 @@ save_observed_fire_targets <- function(
     secondary = secondary,
     fru59 = primary, ## back-compat alias kept for downstream loss_from_stats() refs
     frt12 = secondary, ## back-compat alias
+    ## The code mapping applied to the raster: for a categorical one, derived from its labels,
+    ## whose code-to-label table is kept beside it (NULL for a raster decoded by code).
     fuel_code_to_base = fuel_code_to_base,
+    fuel_code_labels = fuel_code_labels,
     fire_years_range = c(min = min(fire_years), max = max(fire_years)),
     fire_years = as.integer(fire_years),
     pixel_area_ha = pixel_area_ha,
@@ -1918,6 +2142,11 @@ save_observed_fire_targets <- function(
       "Fire counts come from NFDB ignition points (one row = one ignition).",
       "Fire sizes: one per ignition point, upgraded to a same-year containing polygon's SIZE_HA.",
       "area_by_fuel_ha is computed for the primary ecoregion only (LANDIS sim extent).",
+      if (is.null(fuel_code_labels)) {
+        "area_by_fuel_ha decodes fuel_types_rast by integer code, through fuel_code_to_base."
+      } else {
+        "area_by_fuel_ha decodes fuel_types_rast by category label, through fuel_label_to_base."
+      },
       paste(
         "severity_dist on primary is",
         if (is.null(severity_dist)) "NULL (L_severity will contribute 0);" else "set from caller;",
@@ -1928,6 +2157,51 @@ save_observed_fire_targets <- function(
 
   saveRDS(payload, path)
   fs::path_real(path)
+}
+
+## Refuse burned cells the observed fuel decoding cannot read (internal). Dropping them was the
+## defect: a 0-based factor raster read through the 1-based BC code table lost its code 0 cells
+## and misread the rest, and nothing said so. `code` holds the burned cells' codes as character.
+.check_observed_fuel_codes <- function(
+  code,
+  fuel_code_to_base,
+  fuel_code_labels,
+  fuel_label_to_base
+) {
+  if (is.null(fuel_code_labels)) {
+    unknown <- setdiff(code, names(fuel_code_to_base))
+    if (length(unknown) > 0L) {
+      stop(
+        "Burned cells of `fuel_types_rast` carry code(s) ",
+        paste(unknown, collapse = ", "),
+        " that `fuel_code_to_base` does not list, so it was not written for this raster. Pass ",
+        "the raster with its category labels (as terra::rasterize() of a factor field returns ",
+        "it), which are decoded through `fuel_label_to_base`, or a `fuel_code_to_base` written ",
+        "for its codes.",
+        call. = FALSE
+      )
+    }
+    return(invisible(code))
+  }
+  unlabelled <- setdiff(code, names(fuel_code_labels))
+  if (length(unlabelled) > 0L) {
+    stop(
+      "Burned cells of `fuel_types_rast` carry code(s) ",
+      paste(unlabelled, collapse = ", "),
+      " that its category table does not label.",
+      call. = FALSE
+    )
+  }
+  unknown <- setdiff(fuel_code_labels[code], names(fuel_label_to_base))
+  if (length(unknown) > 0L) {
+    stop(
+      "`fuel_label_to_base` has no entry for the fuel type label(s) ",
+      paste(sprintf("'%s'", unknown), collapse = ", "),
+      " found in burned cells; add them, with NA for a non-fuel.",
+      call. = FALSE
+    )
+  }
+  invisible(code)
 }
 
 

@@ -15,6 +15,7 @@ save_observed_fire_targets(
   primary_label = "primary",
   secondary_label = "secondary",
   fuel_code_to_base = bc_fuel_code_to_base(),
+  fuel_label_to_base = bc_fuel_label_to_base(),
   severity_dist = NULL,
   mortality_share = NULL,
   min_size_ha = 1
@@ -35,8 +36,9 @@ NULL on the primary summary.}
 \item{fire_years}{Integer vector. Years over which counts are normalised
 (denominator for \code{lambda_obs}).}
 
-\item{fuel_types_rast}{SpatRaster. Integer-coded fuel-type raster covering
-the LANDIS simulation extent.}
+\item{fuel_types_rast}{SpatRaster. Fuel-type raster covering the LANDIS
+simulation extent: categorical (with category labels), or integer-coded.
+See Details for how each is decoded.}
 
 \item{path}{Character. Output \code{.rds} path. Parent dir created if missing.}
 
@@ -49,8 +51,14 @@ for the secondary (see Details).}
 
 \item{fuel_code_to_base}{Named character vector. Mapping from
 \code{fuel_types_rast} integer codes (as character names) to the five base
-fuel types from \code{\link[=defaultFuelTypeTable]{defaultFuelTypeTable()}}. NA values mark non-fuel codes
-to be excluded. Default: \code{\link[=bc_fuel_code_to_base]{bc_fuel_code_to_base()}}.}
+fuel types from \code{\link[=defaultFuelTypeTable]{defaultFuelTypeTable()}}, used when the raster is not
+categorical. NA values mark non-fuel codes to be excluded; a burned code
+missing from the names is an error. Default: \code{\link[=bc_fuel_code_to_base]{bc_fuel_code_to_base()}}.}
+
+\item{fuel_label_to_base}{Named character vector. Mapping from category
+labels to the five base fuel types, used when \code{fuel_types_rast} is
+categorical. NA values mark non-fuel labels to be excluded; a burned label
+missing from the names is an error. Default: \code{\link[=bc_fuel_label_to_base]{bc_fuel_label_to_base()}}.}
 
 \item{severity_dist}{Named numeric vector or NULL. Expected proportions
 across the 5 Dynamic Fire severity classes (names \code{"1"}..\code{"5"}). Stored
@@ -107,6 +115,17 @@ LANDIS simulation domain; secondary-ecoregion polygons typically
 extend well beyond that extent, making a secondary computation
 misleading (it would just be the primary value over again).
 }
+
+A categorical \code{fuel_types_rast} is decoded by category label, through
+\code{fuel_label_to_base}; any other is decoded by integer code, through
+\code{fuel_code_to_base}. Labels are preferred because codes depend on how the
+raster was built: \code{terra::rasterize()} of a factor field numbers its
+categories from 0, and GeoTIFF storage can drop the labels that say what
+each number means. A burned cell that the table in use cannot decode is an
+error, not a silently dropped cell. The payload's \code{fuel_code_to_base} is the
+code mapping that was applied: for a categorical raster, each code's label
+looked up in \code{fuel_label_to_base}, with the raster's code-to-label table
+kept as \code{fuel_code_labels} (NULL for a raster decoded by code).
 }
 \seealso{
 Other Dynamic Fire calibration helpers:
@@ -115,6 +134,7 @@ Other Dynamic Fire calibration helpers:
 \code{\link[=apply_calibrated_ignprob]{apply_calibrated_ignprob()}},
 \code{\link[=apply_calibrated_num_fires]{apply_calibrated_num_fires()}},
 \code{\link[=bc_fuel_code_to_base]{bc_fuel_code_to_base()}},
+\code{\link[=bc_fuel_label_to_base]{bc_fuel_label_to_base()}},
 \code{\link[=build_calibration_scenario_template]{build_calibration_scenario_template()}},
 \code{\link[=build_calibration_spinup_scenario]{build_calibration_spinup_scenario()}},
 \code{\link[=calibrate_dynamic_fire]{calibrate_dynamic_fire()}},

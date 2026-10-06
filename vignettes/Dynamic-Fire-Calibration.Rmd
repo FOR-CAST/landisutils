@@ -43,7 +43,7 @@ The calibration is built from three layers:
 
 | Layer | Purpose | Functions |
 |---|---|---|
-| Observation | Pre-compute observed targets from NFDB | `save_observed_fire_targets()` (+ `bc_fuel_code_to_base()` default; pass your own if fuel codes differ) |
+| Observation | Pre-compute observed targets from NFDB | `save_observed_fire_targets()` (+ `bc_fuel_label_to_base()` / `bc_fuel_code_to_base()` defaults; pass your own if your fuel types differ) |
 | Scenario | Build a static-landscape calibration scenario (post-spinup IC; succession frozen; dynamic-fire baseline) | `build_calibration_spinup_scenario()`, `run_calibration_spinup()`, `build_calibration_scenario_template()` |
 | Optimiser | Run DEoptim against the calibration scenario, applying patches per trial | `patch_fire_config()`, `loss_from_stats()`, `parse_dynamic_fire_logs()`, `sim_landis()` (or `sim_mock()` for testing), `calibrate_dynamic_fire()` |
 
@@ -59,10 +59,13 @@ The library is project-agnostic but expects you to provide:
    optionally a secondary, broader regime for context) -- with `YEAR`
    and `SIZE_HA` columns on the points.
 2. **A fuel-type raster** covering your LANDIS simulation extent, with a
-   mapping from integer codes to base fuel types (`Conifer`,
-   `ConiferPlantation`, `Deciduous`, `Slash`, `Open`). Use
-   `bc_fuel_code_to_base()` if you're working with BC `FUEL_TYPE_CD`
-   factor levels.
+   mapping to base fuel types (`Conifer`, `ConiferPlantation`, `Deciduous`,
+   `Slash`, `Open`). Pass the raster with its category labels where it has
+   them: a categorical raster is decoded by label (`bc_fuel_label_to_base()`
+   for BC `FUEL_TYPE_CD`), and only an unlabelled one by integer code
+   (`bc_fuel_code_to_base()`). `terra::rasterize()` of a factor field numbers
+   the categories from 0, so saving it without its labels leaves codes that
+   the 1-based BC code table does not describe.
 3. **A production scenario directory** with ForCS / Dynamic Fuels /
    Dynamic Fire configs already written. The calibration scenario template
    is built by copying this and patching.
@@ -87,7 +90,7 @@ save_observed_fire_targets(
   path             = "outputs/calibration/observed_fire_targets.rds",
   primary_label    = "FRU59",
   secondary_label  = "FRT12"
-  ## fuel_code_to_base defaults to bc_fuel_code_to_base(); override if needed
+  ## fuel_label_to_base / fuel_code_to_base default to the BC tables; override if needed
 )
 
 ## 2. Pre-calibration spinup: one LANDIS-II run with both ForCS spinup flags ON
