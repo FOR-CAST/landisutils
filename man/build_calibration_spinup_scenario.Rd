@@ -62,6 +62,7 @@ Other Dynamic Fire calibration helpers:
 \code{\link[=apply_calibrated_ignprob]{apply_calibrated_ignprob()}},
 \code{\link[=apply_calibrated_num_fires]{apply_calibrated_num_fires()}},
 \code{\link[=bc_fuel_code_to_base]{bc_fuel_code_to_base()}},
+\code{\link[=bc_fuel_label_to_base]{bc_fuel_label_to_base()}},
 \code{\link[=build_calibration_scenario_template]{build_calibration_scenario_template()}},
 \code{\link[=calibrate_dynamic_fire]{calibrate_dynamic_fire()}},
 \code{\link[=calibration_par_names]{calibration_par_names()}},

@@ -189,9 +189,15 @@ test_that("parse_dynamic_fire_logs() populates area_by_fuel_ha from severity x F
     system.file("testdata", "dynamic-fire-summary-log-sample.csv", package = "landisutils"),
     fs::path(rep_dir, "fire", "dynamic-fire-summary-log.csv")
   )
+  ## The run's own FuelTypeTable, which names each fuel-type index's base type.
+  fs::file_copy(
+    system.file("testdata", "dynamic-fire-sample.txt", package = "landisutils"),
+    fs::path(rep_dir, "dynamic-fire.txt")
+  )
 
-  ## 10x10 fuel grid: half Conifer (code 1), half Open (code 13).
-  fuel_mat <- matrix(rep(c(rep(1L, 5L), rep(13L, 5L)), 10L), nrow = 10L, byrow = TRUE)
+  ## 10x10 fuel grid: half Conifer, half Open. Dynamic Fuels writes the fuel-type index + 1, so
+  ## index 1 (C1, Conifer) is 2 on the map and index 16 (O1a, Open) is 17.
+  fuel_mat <- matrix(rep(c(rep(2L, 5L), rep(17L, 5L)), 10L), nrow = 10L, byrow = TRUE)
   fuel_r <- terra::rast(fuel_mat, extent = terra::ext(0, 100, 0, 100))
 
   ## Timestep 1: 6 cells burn -- 4 Conifer, 2 Open.
@@ -210,19 +216,22 @@ test_that("parse_dynamic_fire_logs() populates area_by_fuel_ha from severity x F
   terra::writeRaster(fuel_r, fs::path(rep_dir, "fire", "FuelType-2.tif"), overwrite = TRUE)
 
   parsed <- parse_dynamic_fire_logs(rep_dir, pixel_area_ha = 0.01)
-  expect_false(is.null(parsed$area_by_fuel_ha))
-  expect_named(parsed$area_by_fuel_ha, c("fuel_code", "cells", "area_ha"))
-  expect_equal(parsed$area_by_fuel_ha$cells[parsed$area_by_fuel_ha$fuel_code == 1L], 4L)
-  expect_equal(parsed$area_by_fuel_ha$cells[parsed$area_by_fuel_ha$fuel_code == 13L], 5L) ## 2 + 3
+  abf <- parsed$area_by_fuel_ha
+  expect_false(is.null(abf))
+  expect_named(abf, c("fuel_code", "fuel_index", "base", "cells", "area_ha"))
+  expect_equal(abf$fuel_index, abf$fuel_code - 1L)
+  expect_equal(abf$base, c("Conifer", "Open"))
+  expect_equal(abf$cells[abf$fuel_code == 2L], 4L)
+  expect_equal(abf$cells[abf$fuel_code == 17L], 5L) ## 2 + 3
   ## Cell-timestep accounting (not unique cells): each cell-burn counts once
-  expect_equal(sum(parsed$area_by_fuel_ha$cells), 9L)
-  expect_equal(sum(parsed$area_by_fuel_ha$area_ha), 9L * 0.01)
+  expect_equal(sum(abf$cells), 9L)
+  expect_equal(sum(abf$area_ha), 9L * 0.01)
 })
 
 test_that("parse_dynamic_fire_logs() excludes severity == 1 cells (active-but-unburned)", {
   ## Regression for the "whole-landscape mis-attribution" bug: Dynamic Fire
   ## severity encodes 0 = inactive, 1 = active-but-unburned this timestep,
-  ## >= 2 = burned with the value as severity class. The helper must use
+  ## 2 = burned with no cohort damaged, and severity + 2 for a damaged cell. The helper must use
   ## `severity > 1` (NOT `> 0`); otherwise it counts every active cell as
   ## burned and trains `L_area_fuel` against landscape-fuel composition
   ## rather than burned area. Same `> 1` convention as the consuming
@@ -238,9 +247,13 @@ test_that("parse_dynamic_fire_logs() excludes severity == 1 cells (active-but-un
     system.file("testdata", "dynamic-fire-summary-log-sample.csv", package = "landisutils"),
     fs::path(rep_dir, "fire", "dynamic-fire-summary-log.csv")
   )
+  fs::file_copy(
+    system.file("testdata", "dynamic-fire-sample.txt", package = "landisutils"),
+    fs::path(rep_dir, "dynamic-fire.txt")
+  )
 
-  ## 4x4 fuel grid: all Conifer (code 1).
-  fuel_r <- terra::rast(matrix(rep(1L, 16L), nrow = 4L), extent = terra::ext(0, 40, 0, 40))
+  ## 4x4 fuel grid: all Conifer (map value 2, fuel-type index 1).
+  fuel_r <- terra::rast(matrix(rep(2L, 16L), nrow = 4L), extent = terra::ext(0, 40, 0, 40))
 
   ## Severity layout (4 rows x 4 cols):
   ##   Row 1: [1 1 1 1]   <- 4 active-but-unburned
@@ -262,7 +275,7 @@ test_that("parse_dynamic_fire_logs() excludes severity == 1 cells (active-but-un
 
   parsed <- parse_dynamic_fire_logs(rep_dir, pixel_area_ha = 1.0)
   expect_equal(sum(parsed$area_by_fuel_ha$cells), 3L)
-  expect_equal(parsed$area_by_fuel_ha$cells[parsed$area_by_fuel_ha$fuel_code == 1L], 3L)
+  expect_equal(parsed$area_by_fuel_ha$cells[parsed$area_by_fuel_ha$fuel_code == 2L], 3L)
 })
 
 test_that("parse_dynamic_fire_logs() area_by_fuel_ha is NULL when FuelType companion is absent", {
@@ -286,6 +299,95 @@ test_that("parse_dynamic_fire_logs() area_by_fuel_ha is NULL when FuelType compa
   expect_null(parsed$area_by_fuel_ha)
 })
 
+## A `dynamic-fire.txt` holding just a FuelTypeTable, written by the package's own writer.
+.fuel_type_table_txt <- function(ftt = defaultFuelTypeTable()) {
+  c(
+    "LandisData  \"Dynamic Fire System\"",
+    "",
+    as.character(insertFuelTypeTable(ftt)),
+    "SeverityCalibrationFactor    1"
+  )
+}
+
+## A replicate directory with one timestep's severity and FuelType maps, in one row of cells so the
+## reader's vertical flip cannot reorder them, and a `dynamic-fire.txt` when `fire_txt` is given.
+.mk_fuel_rep <- function(sev, fuel, fire_txt = NULL, env = parent.frame()) {
+  dir <- withr::local_tempdir(.local_envir = env)
+  fs::dir_create(fs::path(dir, "fire"))
+  r <- terra::rast(nrows = 1, ncols = length(sev), xmin = 0, xmax = length(sev), ymin = 0, ymax = 1)
+  terra::values(r) <- sev
+  terra::writeRaster(r, fs::path(dir, "fire", "severity-1.tif"), datatype = "INT2S")
+  terra::values(r) <- fuel
+  terra::writeRaster(r, fs::path(dir, "fire", "FuelType-1.tif"), datatype = "INT2S")
+  if (!is.null(fire_txt)) {
+    writeLines(fire_txt, fs::path(dir, "dynamic-fire.txt"))
+  }
+  dir
+}
+
+test_that(".read_fuel_type_table() reads back the table insertFuelTypeTable() writes", {
+  f <- withr::local_tempfile(fileext = ".txt")
+  writeLines(.fuel_type_table_txt(), f)
+  ftt <- .read_fuel_type_table(f)
+  expect_equal(ftt$Index, defaultFuelTypeTable()$Index)
+  expect_equal(ftt$Base, defaultFuelTypeTable()$Base)
+  expect_equal(ftt$Surface, defaultFuelTypeTable()$Surface)
+  sample_txt <- system.file("testdata", "dynamic-fire-sample.txt", package = "landisutils")
+  expect_equal(nrow(.read_fuel_type_table(sample_txt)), 17L)
+
+  writeLines(c("LandisData  \"Dynamic Fire System\"", "", "SeverityCalibrationFactor    1"), f)
+  expect_null(.read_fuel_type_table(f))
+
+  ## Index 0 is the extension's "no fuel type", and a NoFuel base says the same; an index the
+  ## table does not list has no base either.
+  ftt <- data.frame(Index = c(0L, 1L, 2L), Base = c("Conifer", "NoFuel", "Open"))
+  expect_equal(.fuel_index_base(c(0L, 1L, 2L, 99L), ftt), c(NA, NA, "Open", NA))
+})
+
+test_that("FuelType map values are read as fuel-type index + 1, through the run's own table", {
+  ## A table whose index 5 is Deciduous, where defaultFuelTypeTable() has C5, a Conifer: the base
+  ## must come from the table the run used. The BC provincial code table, which the simulated side
+  ## was once read through, calls map value 6 C-6 and so ConiferPlantation.
+  ftt <- defaultFuelTypeTable()
+  ftt$Base[ftt$Index == 5] <- "Deciduous"
+  ## Map values: 6 is index 5, 1 is an active cell with no fuel type, 0 is an inactive cell.
+  ## Severity values above 1 are burned; the fourth cell is active and unburned.
+  rep_dir <- .mk_fuel_rep(
+    sev = c(3L, 4L, 2L, 1L, 0L),
+    fuel = c(6L, 6L, 1L, 6L, 0L),
+    fire_txt = .fuel_type_table_txt(ftt)
+  )
+
+  expect_no_warning(out <- .read_burned_area_by_fuel(rep_dir, pixel_area_ha = 1.44))
+  expect_named(out, c("fuel_code", "fuel_index", "base", "cells", "area_ha"))
+  expect_equal(out$fuel_code, c(1L, 6L))
+  expect_equal(out$fuel_index, c(0L, 5L))
+  expect_equal(out$base, c(NA, "Deciduous"))
+  expect_equal(out$cells, c(1L, 2L))
+  expect_equal(out$area_ha, c(1, 2) * 1.44)
+})
+
+test_that("a replicate without a FuelTypeTable falls back to the default table, with a warning", {
+  rep_dir <- .mk_fuel_rep(sev = c(3L, 3L, 5L), fuel = c(6L, 9L, 9L))
+  expect_warning(
+    out <- .read_burned_area_by_fuel(rep_dir, pixel_area_ha = 1),
+    "No FuelTypeTable could be read"
+  )
+  ## Indices 5 and 8: C5 and D1 in defaultFuelTypeTable().
+  expect_equal(out$base, c("Conifer", "Deciduous"))
+  expect_equal(out$cells, c(1L, 2L))
+})
+
+test_that("a burned fuel-type index the run's table does not list warns and gets no base", {
+  rep_dir <- .mk_fuel_rep(sev = c(3L, 3L), fuel = c(31L, 6L), fire_txt = .fuel_type_table_txt())
+  expect_warning(
+    out <- .read_burned_area_by_fuel(rep_dir, pixel_area_ha = 1),
+    "index\\(es\\) 30 that the run's FuelTypeTable does not list"
+  )
+  expect_equal(out$fuel_code, c(6L, 31L))
+  expect_equal(out$base, c("Conifer", NA))
+})
+
 test_that(".chi_sq_area_by_fuel prefers cell-based attribution when available, falls back when not", {
   ## Two minimal reps: rep1 has area_by_fuel_ha (cell-based), rep2 does not.
   ## When ANY rep is missing the field, fallback to legacy event-based.
@@ -300,7 +402,9 @@ test_that(".chi_sq_area_by_fuel prefers cell-based attribution when available, f
       mean_severity = c(2, 3, 2, 3, 2)
     ),
     area_by_fuel_ha = tibble::tibble(
-      fuel_code = c(1L, 13L), ## 1=Conifer, 13=Open
+      fuel_code = c(2L, 17L), ## map values: indices 1 (C1) and 16 (O1a)
+      fuel_index = c(1L, 16L),
+      base = c("Conifer", "Open"),
       cells = c(80L, 70L),
       area_ha = c(80, 70) ## cell-based: events spread into Open (not just ignition fuel)
     )
@@ -354,7 +458,13 @@ test_that(".chi_sq_area_by_fuel uses cell-based path when some reps have 0 event
       sites = 30L,
       mean_severity = 2
     ),
-    area_by_fuel_ha = tibble::tibble(fuel_code = 1L, cells = 30L, area_ha = 30)
+    area_by_fuel_ha = tibble::tibble(
+      fuel_code = 2L,
+      fuel_index = 1L,
+      base = "Conifer",
+      cells = 30L,
+      area_ha = 30
+    )
   )
   rep_zero_fires <- list(
     n_fires_by_year = tibble::tibble(year = 1:3, n_fires = c(0L, 0L, 0L)),
@@ -414,6 +524,91 @@ test_that(".chi_sq_area_by_fuel falls back to legacy when reps have events but n
   result <- .chi_sq_area_by_fuel(list(rep_events_no_cells), observed$primary, observed)
   expect_true(is.finite(result))
   expect_lt(result, 1.0) ## not the no-fires penalty
+})
+
+test_that(".chi_sq_area_by_fuel scores replicates by their own base, not the observed code table", {
+  rep <- list(
+    events = tibble::tibble(
+      year = 1L,
+      eco = "MOCK",
+      init_fuel = 5L,
+      sites = 100L,
+      mean_severity = 2
+    ),
+    area_by_fuel_ha = tibble::tibble(
+      fuel_code = 6L,
+      fuel_index = 5L,
+      base = "Conifer",
+      cells = 100L,
+      area_ha = 100
+    )
+  )
+  observed <- list(
+    primary = list(area_by_fuel_ha = tibble::tibble(base = "Conifer", area_ha = 100, cells = 100L)),
+    ## Read through this table, map value 6 is C-6 and so ConiferPlantation: the old defect, which
+    ## scored a landscape burning only C-5 against itself as a complete mismatch.
+    fuel_code_to_base = bc_fuel_code_to_base(),
+    pixel_area_ha = 1
+  )
+  expect_lt(.chi_sq_area_by_fuel(list(rep), observed$primary, observed), 0.05)
+})
+
+test_that(".chi_sq_area_by_fuel decodes a replicate parsed before 0.0.168, warning once", {
+  pre <- list(
+    events = tibble::tibble(
+      year = 1L,
+      eco = "MOCK",
+      init_fuel = 5L,
+      sites = 150L,
+      mean_severity = 2
+    ),
+    ## As landisutils < 0.0.168 wrote it: the raw FuelType map value, and no base.
+    area_by_fuel_ha = tibble::tibble(
+      fuel_code = c(6L, 9L),
+      cells = c(100L, 50L),
+      area_ha = c(100, 50)
+    )
+  )
+  post <- pre
+  post$area_by_fuel_ha$base <- c("Conifer", "Deciduous") ## indices 5 (C5) and 8 (D1)
+  observed <- list(
+    primary = list(
+      area_by_fuel_ha = tibble::tibble(base = c("Conifer", "Deciduous"), area_ha = c(60, 40))
+    ),
+    fuel_code_to_base = bc_fuel_code_to_base(),
+    pixel_area_ha = 1
+  )
+
+  ## Another test in this process may already have raised the once-per-session warning.
+  rm(list = ls(.warned_once), envir = .warned_once)
+  expect_warning(
+    loss_pre <- .chi_sq_area_by_fuel(list(pre), observed$primary, observed),
+    "parsed before landisutils 0.0.168"
+  )
+  expect_equal(loss_pre, .chi_sq_area_by_fuel(list(post), observed$primary, observed))
+  ## Rescoring the same payload, as every candidate or figure does, stays quiet.
+  expect_no_warning(.chi_sq_area_by_fuel(list(pre), observed$primary, observed))
+})
+
+test_that("the legacy InitFuel attribution reads the index through the default FuelTypeTable", {
+  ## InitFuel is a fuel-type index with no offset; 16 is O1a, an Open fuel. The BC code table has
+  ## no code 16, so read through it the event vanished and the trial scored the no-fire penalty.
+  rep <- list(
+    events = tibble::tibble(
+      year = 1L,
+      eco = "MOCK",
+      init_fuel = 16L,
+      sites = 10L,
+      mean_severity = 2
+    ),
+    area_by_fuel_ha = NULL
+  )
+  observed <- list(
+    primary = list(area_by_fuel_ha = tibble::tibble(base = "Open", area_ha = 10)),
+    fuel_code_to_base = bc_fuel_code_to_base(),
+    pixel_area_ha = 1
+  )
+  expect_lt(.chi_sq_area_by_fuel(list(rep), observed$primary, observed), 0.05)
 })
 
 test_that("patch_fire_config() rewrites SeverityCalibrationFactor / HiProp / IgnProb", {
@@ -899,6 +1094,7 @@ test_that("save_observed_fire_targets() writes a payload with expected shape", {
       "fru59",
       "frt12",
       "fuel_code_to_base",
+      "fuel_code_labels",
       "fire_years_range",
       "fire_years",
       "pixel_area_ha",
@@ -925,6 +1121,9 @@ test_that("save_observed_fire_targets() writes a payload with expected shape", {
   ## area_by_fuel_ha: polygon overlaps deciduous cells only (codes 8)
   expect_s3_class(p$area_by_fuel_ha, "tbl_df")
   expect_true("Deciduous" %in% p$area_by_fuel_ha$base)
+  ## An integer-coded raster is decoded by code, and the payload says so.
+  expect_null(payload$fuel_code_labels)
+  expect_equal(payload$fuel_code_to_base, bc_fuel_code_to_base())
 
   ## Secondary stays NULL when no secondary inputs supplied
   expect_null(payload$secondary)
@@ -1176,6 +1375,137 @@ test_that("save_observed_fire_targets() accepts a custom fuel_code_to_base mappi
   payload <- readRDS(out_path)
   expect_equal(payload$primary$area_by_fuel_ha$base, "Open")
   expect_equal(payload$fuel_code_to_base, custom_map)
+})
+
+## The 14 BC fuel types in factor-level order. `terra::rasterize()` of a factor field codes them
+## from 0: 0 = B71_S-2 through 13 = W.
+.bc_fuel_labels <- c(
+  "B71_S-2",
+  "C-2",
+  "C-3",
+  "C-4",
+  "C-5",
+  "C-6",
+  "C-7",
+  "D-1/2",
+  "M-1/2",
+  "N",
+  "O-1a/b",
+  "S-1",
+  "S-3",
+  "W"
+)
+
+## A 10 x 10 raster of 100 m cells coded that way, two columns per fuel type: D-1/2, O-1a/b, W,
+## M-1/2 and B71_S-2. `labelled = FALSE` drops the labels, as GeoTIFF storage can.
+.mk_bc_fuel_rast <- function(labelled = TRUE) {
+  r <- terra::rast(nrows = 10, ncols = 10, xmin = 0, xmax = 1000, ymin = 0, ymax = 1000)
+  terra::values(r) <- rep(rep(c(7L, 10L, 13L, 8L, 0L), each = 2L), 10L)
+  if (labelled) {
+    r <- terra::categories(
+      r,
+      layer = 1,
+      value = data.frame(id = 0:13, FUEL_TYPE_CD = .bc_fuel_labels)
+    )
+  }
+  r
+}
+
+## One ignition and one same-year perimeter spanning `xmax` metres from the raster's left edge.
+.one_fire <- function(r, xmax) {
+  pts <- terra::vect(
+    data.frame(lon = 50, lat = 50, YEAR = 2010L, SIZE_HA = 10),
+    geom = c("lon", "lat"),
+    crs = terra::crs(r)
+  )
+  poly <- terra::vect(
+    sprintf("POLYGON ((0 0, %1$g 0, %1$g %2$g, 0 %2$g, 0 0))", xmax, terra::ymax(r)),
+    crs = terra::crs(r)
+  )
+  poly$YEAR <- 2010L
+  poly$SIZE_HA <- 10
+  list(points = pts, polys = poly)
+}
+
+test_that("bc_fuel_label_to_base() maps the 14 BC FUEL_TYPE_CD labels", {
+  m <- bc_fuel_label_to_base()
+  expect_setequal(names(m), .bc_fuel_labels)
+  expect_true(all(m[c("B71_S-2", "C-2", "C-3", "C-4", "C-5", "C-7", "M-1/2")] == "Conifer"))
+  expect_equal(m[["C-6"]], "ConiferPlantation")
+  expect_equal(m[["D-1/2"]], "Deciduous")
+  expect_equal(m[["O-1a/b"]], "Open")
+  expect_true(all(m[c("S-1", "S-3")] == "Slash"))
+  expect_true(all(is.na(m[c("N", "W")])))
+  ## The same fuel types as the code table, in its order, so the two decodings agree.
+  expect_equal(unname(m[names(m) != "W"]), unname(bc_fuel_code_to_base()))
+})
+
+test_that("save_observed_fire_targets() decodes a categorical fuel raster by label", {
+  r <- .mk_bc_fuel_rast()
+  ## The perimeter covers the first eight columns: D-1/2, O-1a/b, W and M-1/2, 20 cells each.
+  fire <- .one_fire(r, xmax = 800)
+  out_path <- withr::local_tempfile(fileext = ".rds")
+  save_observed_fire_targets(
+    primary_points = fire$points,
+    primary_polys = fire$polys,
+    fire_years = 2010L:2015L,
+    fuel_types_rast = r,
+    path = out_path
+  )
+  payload <- readRDS(out_path)
+
+  ## Through the 1-based code table these codes read as C-7 (Conifer), D-1/2 (Deciduous), S-3
+  ## (Slash) and N (dropped); and with the labels left on, `freq()` returned labels, which became
+  ## NA codes and dropped everything.
+  expect_equal(
+    as.data.frame(payload$primary$area_by_fuel_ha),
+    data.frame(
+      base = c("Conifer", "Deciduous", "Open"),
+      area_ha = c(20, 20, 20),
+      cells = c(20L, 20L, 20L)
+    )
+  )
+  expect_equal(unname(payload$fuel_code_labels), .bc_fuel_labels)
+  expect_equal(
+    payload$fuel_code_to_base[c("0", "7", "8", "10", "13")],
+    c("0" = "Conifer", "7" = "Deciduous", "8" = "Conifer", "10" = "Open", "13" = NA)
+  )
+})
+
+test_that("save_observed_fire_targets() refuses unlabelled codes its code table does not list", {
+  ## The same raster with its labels lost: codes 0..13 against a table keyed 1..13. Its B71_S-2
+  ## cells (code 0) burn, and nothing in the table describes them.
+  r <- .mk_bc_fuel_rast(labelled = FALSE)
+  fire <- .one_fire(r, xmax = 1000)
+  out_path <- withr::local_tempfile(fileext = ".rds")
+  expect_error(
+    save_observed_fire_targets(
+      primary_points = fire$points,
+      primary_polys = fire$polys,
+      fire_years = 2010L:2015L,
+      fuel_types_rast = r,
+      path = out_path
+    ),
+    "code\\(s\\) 0 that `fuel_code_to_base` does not list"
+  )
+  expect_false(fs::file_exists(out_path))
+})
+
+test_that("save_observed_fire_targets() refuses a burned label its label table does not list", {
+  r <- terra::rast(nrows = 2, ncols = 2, xmin = 0, xmax = 200, ymin = 0, ymax = 200)
+  terra::values(r) <- c(0L, 0L, 1L, 1L)
+  r <- terra::categories(r, layer = 1, value = data.frame(id = 0:1, FUEL_TYPE_CD = c("C-1", "C-2")))
+  fire <- .one_fire(r, xmax = 200)
+  expect_error(
+    save_observed_fire_targets(
+      primary_points = fire$points,
+      primary_polys = fire$polys,
+      fire_years = 2010L:2015L,
+      fuel_types_rast = r,
+      path = withr::local_tempfile(fileext = ".rds")
+    ),
+    "no entry for the fuel type label\\(s\\) 'C-1'"
+  )
 })
 
 test_that(".patch_forcs_for_calibration() rewrites Timestep + SpinUp", {

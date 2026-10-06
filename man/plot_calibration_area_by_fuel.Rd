@@ -8,7 +8,7 @@ plot_calibration_area_by_fuel(stats)
 }
 \arguments{
 \item{stats}{A \code{run_calibration_validation()} summary carrying
-\verb{$observed$primary$area_by_fuel_ha} and \verb{$observed$fuel_code_to_base}.}
+\verb{$observed$primary$area_by_fuel_ha}.}
 }
 \value{
 A ggplot object.
@@ -16,6 +16,13 @@ A ggplot object.
 \description{
 Plotted as shares rather than totals, because the objective's area-by-fuel
 term renormalises both sides over the base fuels shared between them.
+}
+\details{
+Simulated base fuel types are the \code{base} column of each replicate's
+\code{area_by_fuel_ha}, which \code{\link[=parse_dynamic_fire_logs]{parse_dynamic_fire_logs()}} takes from the run's own
+\code{FuelTypeTable}. A replicate parsed before landisutils 0.0.168 has no \code{base}
+column and is decoded through \code{\link[=defaultFuelTypeTable]{defaultFuelTypeTable()}}, with a warning, as in
+\code{\link[=loss_from_stats]{loss_from_stats()}}.
 }
 \seealso{
 Other calibration plots:
