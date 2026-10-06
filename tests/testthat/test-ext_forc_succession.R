@@ -498,6 +498,22 @@ testthat::test_that("ForCS can be written without a SnagFile", {
   contents <- readLines(file.path(tmp_pth, ext_forcs$files[1]))
   testthat::expect_false(any(grepl("^SnagFile", contents)))
 
+  ## SpinupMortalityFraction: optional, written between DisturbanceMatrixFile and ForCSOutput
+  ## (the order ForCS's InputParameterParser reads them in).
+  testthat::expect_null(ext_forcs$SpinupMortalityFraction)
+  testthat::expect_false(any(grepl("^SpinupMortalityFraction", contents)))
+  ext_forcs$SpinupMortalityFraction <- 0.0025
+  ext_forcs$write()
+  contents_smf <- readLines(file.path(tmp_pth, ext_forcs$files[1]))
+  i_smf <- grep("^SpinupMortalityFraction\\s+0\\.0025\\s*$", contents_smf)
+  testthat::expect_length(i_smf, 1L)
+  testthat::expect_gt(i_smf, grep("^DisturbanceMatrixFile", contents_smf))
+  testthat::expect_lt(i_smf, grep("^ForCSOutput", contents_smf))
+  testthat::expect_error(ext_forcs$SpinupMortalityFraction <- 1)
+  testthat::expect_error(ext_forcs$SpinupMortalityFraction <- -0.1)
+  testthat::expect_error(ext_forcs$SpinupMortalityFraction <- c(0.1, 0.2))
+  testthat::expect_error(ext_forcs$SpinupMortalityFraction <- "0.1")
+
   withr::deferred_run()
 })
 
