@@ -9,7 +9,7 @@ term renormalises both sides over the base fuels shared between them."><meta pro
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.167</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.168</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -60,12 +60,20 @@ term renormalises both sides over the base fuels shared between them.</p>
 
 <dl><dt id="arg-stats">stats<a class="anchor" aria-label="anchor" href="#arg-stats"></a></dt>
 <dd><p>A <code><a href="run_calibration_validation.html">run_calibration_validation()</a></code> summary carrying
-<code>$observed$primary$area_by_fuel_ha</code> and <code>$observed$fuel_code_to_base</code>.</p></dd>
+<code>$observed$primary$area_by_fuel_ha</code>.</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A ggplot object.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
+    <p>Simulated base fuel types are the <code>base</code> column of each replicate's
+<code>area_by_fuel_ha</code>, which <code><a href="parse_dynamic_fire_logs.html">parse_dynamic_fire_logs()</a></code> takes from the run's own
+<code>FuelTypeTable</code>. A replicate parsed before landisutils 0.0.168 has no <code>base</code>
+column and is decoded through <code><a href="defaultFuelTypeTable.html">defaultFuelTypeTable()</a></code>, with a warning, as in
+<code><a href="loss_from_stats.html">loss_from_stats()</a></code>.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

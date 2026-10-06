@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.167</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.168</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -108,8 +108,9 @@ loop.</p>
 <td>Pre-compute observed targets from NFDB</td>
 <td>
 <code><a href="../reference/save_observed_fire_targets.html">save_observed_fire_targets()</a></code> (+
-<code><a href="../reference/bc_fuel_code_to_base.html">bc_fuel_code_to_base()</a></code> default; pass your own if fuel codes
-differ)</td>
+<code><a href="../reference/bc_fuel_label_to_base.html">bc_fuel_label_to_base()</a></code> /
+<code><a href="../reference/bc_fuel_code_to_base.html">bc_fuel_code_to_base()</a></code> defaults; pass your own if your fuel
+types differ)</td>
 </tr>
 <tr class="even">
 <td>Scenario</td>
@@ -150,11 +151,16 @@ regime (and optionally a secondary, broader regime for context) – with
 <code>YEAR</code> and <code>SIZE_HA</code> columns on the points.</li>
 <li>
 <strong>A fuel-type raster</strong> covering your LANDIS simulation
-extent, with a mapping from integer codes to base fuel types
-(<code>Conifer</code>, <code>ConiferPlantation</code>,
-<code>Deciduous</code>, <code>Slash</code>, <code>Open</code>). Use
-<code><a href="../reference/bc_fuel_code_to_base.html">bc_fuel_code_to_base()</a></code> if you’re working with BC
-<code>FUEL_TYPE_CD</code> factor levels.</li>
+extent, with a mapping to base fuel types (<code>Conifer</code>,
+<code>ConiferPlantation</code>, <code>Deciduous</code>,
+<code>Slash</code>, <code>Open</code>). Pass the raster with its
+category labels where it has them: a categorical raster is decoded by
+label (<code><a href="../reference/bc_fuel_label_to_base.html">bc_fuel_label_to_base()</a></code> for BC
+<code>FUEL_TYPE_CD</code>), and only an unlabelled one by integer code
+(<code><a href="../reference/bc_fuel_code_to_base.html">bc_fuel_code_to_base()</a></code>). <code><a href="https://rspatial.github.io/terra/reference/rasterize.html" class="external-link">terra::rasterize()</a></code>
+of a factor field numbers the categories from 0, so saving it without
+its labels leaves codes that the 1-based BC code table does not
+describe.</li>
 <li>
 <strong>A production scenario directory</strong> with ForCS /
 Dynamic Fuels / Dynamic Fire configs already written. The calibration
@@ -185,7 +191,7 @@ is the typical wiring; each numbered block is one or more
 <span>  path             <span class="op">=</span> <span class="st">"outputs/calibration/observed_fire_targets.rds"</span>,</span>
 <span>  primary_label    <span class="op">=</span> <span class="st">"FRU59"</span>,</span>
 <span>  secondary_label  <span class="op">=</span> <span class="st">"FRT12"</span></span>
-<span>  <span class="co">## fuel_code_to_base defaults to bc_fuel_code_to_base(); override if needed</span></span>
+<span>  <span class="co">## fuel_label_to_base / fuel_code_to_base default to the BC tables; override if needed</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="co">## 2. Pre-calibration spinup: one LANDIS-II run with both ForCS spinup flags ON</span></span>

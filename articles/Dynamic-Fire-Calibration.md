@@ -23,7 +23,7 @@ The calibration is built from three layers:
 
 | Layer | Purpose | Functions |
 |----|----|----|
-| Observation | Pre-compute observed targets from NFDB | [`save_observed_fire_targets()`](https://for-cast.github.io/landisutils/reference/save_observed_fire_targets.md) (+ [`bc_fuel_code_to_base()`](https://for-cast.github.io/landisutils/reference/bc_fuel_code_to_base.md) default; pass your own if fuel codes differ) |
+| Observation | Pre-compute observed targets from NFDB | [`save_observed_fire_targets()`](https://for-cast.github.io/landisutils/reference/save_observed_fire_targets.md) (+ [`bc_fuel_label_to_base()`](https://for-cast.github.io/landisutils/reference/bc_fuel_label_to_base.md) / [`bc_fuel_code_to_base()`](https://for-cast.github.io/landisutils/reference/bc_fuel_code_to_base.md) defaults; pass your own if your fuel types differ) |
 | Scenario | Build a static-landscape calibration scenario (post-spinup IC; succession frozen; dynamic-fire baseline) | [`build_calibration_spinup_scenario()`](https://for-cast.github.io/landisutils/reference/build_calibration_spinup_scenario.md), [`run_calibration_spinup()`](https://for-cast.github.io/landisutils/reference/run_calibration_spinup.md), [`build_calibration_scenario_template()`](https://for-cast.github.io/landisutils/reference/build_calibration_scenario_template.md) |
 | Optimiser | Run DEoptim against the calibration scenario, applying patches per trial | [`patch_fire_config()`](https://for-cast.github.io/landisutils/reference/patch_fire_config.md), [`loss_from_stats()`](https://for-cast.github.io/landisutils/reference/loss_from_stats.md), [`parse_dynamic_fire_logs()`](https://for-cast.github.io/landisutils/reference/parse_dynamic_fire_logs.md), [`sim_landis()`](https://for-cast.github.io/landisutils/reference/sim_landis.md) (or [`sim_mock()`](https://for-cast.github.io/landisutils/reference/sim_mock.md) for testing), [`calibrate_dynamic_fire()`](https://for-cast.github.io/landisutils/reference/calibrate_dynamic_fire.md) |
 
@@ -41,10 +41,16 @@ The library is project-agnostic but expects you to provide:
     optionally a secondary, broader regime for context) – with `YEAR`
     and `SIZE_HA` columns on the points.
 2.  **A fuel-type raster** covering your LANDIS simulation extent, with
-    a mapping from integer codes to base fuel types (`Conifer`,
-    `ConiferPlantation`, `Deciduous`, `Slash`, `Open`). Use
-    [`bc_fuel_code_to_base()`](https://for-cast.github.io/landisutils/reference/bc_fuel_code_to_base.md)
-    if you’re working with BC `FUEL_TYPE_CD` factor levels.
+    a mapping to base fuel types (`Conifer`, `ConiferPlantation`,
+    `Deciduous`, `Slash`, `Open`). Pass the raster with its category
+    labels where it has them: a categorical raster is decoded by label
+    ([`bc_fuel_label_to_base()`](https://for-cast.github.io/landisutils/reference/bc_fuel_label_to_base.md)
+    for BC `FUEL_TYPE_CD`), and only an unlabelled one by integer code
+    ([`bc_fuel_code_to_base()`](https://for-cast.github.io/landisutils/reference/bc_fuel_code_to_base.md)).
+    [`terra::rasterize()`](https://rspatial.github.io/terra/reference/rasterize.html)
+    of a factor field numbers the categories from 0, so saving it
+    without its labels leaves codes that the 1-based BC code table does
+    not describe.
 3.  **A production scenario directory** with ForCS / Dynamic Fuels /
     Dynamic Fire configs already written. The calibration scenario
     template is built by copying this and patching.
@@ -72,7 +78,7 @@ save_observed_fire_targets(
   path             = "outputs/calibration/observed_fire_targets.rds",
   primary_label    = "FRU59",
   secondary_label  = "FRT12"
-  ## fuel_code_to_base defaults to bc_fuel_code_to_base(); override if needed
+  ## fuel_label_to_base / fuel_code_to_base default to the BC tables; override if needed
 )
 
 ## 2. Pre-calibration spinup: one LANDIS-II run with both ForCS spinup flags ON

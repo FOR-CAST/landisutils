@@ -150,6 +150,10 @@
   : Default fuel-code -\> base-fuel-type mapping (BC FUEL_TYPE_CD factor
   levels)
 
+- [`bc_fuel_label_to_base()`](https://for-cast.github.io/landisutils/reference/bc_fuel_label_to_base.md)
+  : Default fuel-label -\> base-fuel-type mapping (BC FUEL_TYPE_CD
+  labels)
+
 - [`bdaAgent()`](https://for-cast.github.io/landisutils/reference/bdaAgent.md)
   : Construct a Climate BDA agent
 

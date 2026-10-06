@@ -57,11 +57,23 @@ Components:
   – shape match for the fire-size distribution.
 
 - `L_area_fuel`: chi-squared distance between simulated and observed
-  burn-area-by-base-fuel-type *proportions*. Simulated area-by-fuel
-  comes from each event's ignition fuel code times its burned cells,
-  mapped to base fuel types via `observed$fuel_code_to_base`. Skipped
-  (contributes 0) when either `observed$primary$area_by_fuel_ha` is NULL
-  or `observed$fuel_code_to_base` is missing.
+  burn-area-by-base-fuel-type *proportions*. Simulated area comes from
+  each replicate's `area_by_fuel_ha`, whose `base` column
+  [`parse_dynamic_fire_logs()`](https://for-cast.github.io/landisutils/reference/parse_dynamic_fire_logs.md)
+  takes from the run's own `FuelTypeTable`. A replicate parsed before
+  landisutils 0.0.168 has no `base` column; its `fuel_code` is decoded
+  as fuel-type index `fuel_code - 1` through
+  [`defaultFuelTypeTable()`](https://for-cast.github.io/landisutils/reference/defaultFuelTypeTable.md),
+  with a warning. When a replicate with fires has no `area_by_fuel_ha`
+  at all (mock simulator, Dynamic Fuels off), each event's burned cells
+  are attributed to its ignition fuel-type index instead, also through
+  [`defaultFuelTypeTable()`](https://for-cast.github.io/landisutils/reference/defaultFuelTypeTable.md).
+  Observed area is the `base` column of
+  `observed$primary$area_by_fuel_ha`; `observed$fuel_code_to_base`
+  describes the observed raster only and is never applied to simulated
+  fuel types. Skipped (contributes 0) when either
+  `observed$primary$area_by_fuel_ha` is NULL or
+  `observed$fuel_code_to_base` is missing.
 
 - `L_severity`: chi-squared distance between simulated and observed
   severity-class proportions. Simulated severities come from each
@@ -121,6 +133,7 @@ Other Dynamic Fire calibration helpers:
 [`apply_calibrated_ignprob()`](https://for-cast.github.io/landisutils/reference/apply_calibrated_ignprob.md),
 [`apply_calibrated_num_fires()`](https://for-cast.github.io/landisutils/reference/apply_calibrated_num_fires.md),
 [`bc_fuel_code_to_base()`](https://for-cast.github.io/landisutils/reference/bc_fuel_code_to_base.md),
+[`bc_fuel_label_to_base()`](https://for-cast.github.io/landisutils/reference/bc_fuel_label_to_base.md),
 [`build_calibration_scenario_template()`](https://for-cast.github.io/landisutils/reference/build_calibration_scenario_template.md),
 [`build_calibration_spinup_scenario()`](https://for-cast.github.io/landisutils/reference/build_calibration_spinup_scenario.md),
 [`calibrate_dynamic_fire()`](https://for-cast.github.io/landisutils/reference/calibrate_dynamic_fire.md),

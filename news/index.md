@@ -1,5 +1,53 @@
 # Changelog
 
+## landisutils 0.0.168
+
+- The burned-area-by-base-fuel comparison,
+  [`loss_from_stats()`](https://for-cast.github.io/landisutils/reference/loss_from_stats.md)’s
+  `area_fuel` component and
+  [`plot_calibration_area_by_fuel()`](https://for-cast.github.io/landisutils/reference/plot_calibration_area_by_fuel.md),
+  misread fuel types on the simulated side. Dynamic Fuels writes each
+  active cell of a `FuelType` map as its fuel-type index plus one, but
+  the map values were read through `observed$fuel_code_to_base`, the
+  code table of the observed fuel raster, so C-5 (map value 6) was
+  scored as `ConiferPlantation`.
+  [`parse_dynamic_fire_logs()`](https://for-cast.github.io/landisutils/reference/parse_dynamic_fire_logs.md)
+  now returns `area_by_fuel_ha` with `fuel_index` (the map value minus
+  one) and `base`, that index’s base fuel type in the run’s own
+  `FuelTypeTable`, read from `dynamic-fire.txt`;
+  [`defaultFuelTypeTable()`](https://for-cast.github.io/landisutils/reference/defaultFuelTypeTable.md)
+  is used, with a warning, when the table cannot be read. `fuel_code`
+  keeps the raw map value. Scoring and the figure use `base`. A
+  replicate parsed by an earlier version has no `base`; its map values
+  are decoded through
+  [`defaultFuelTypeTable()`](https://for-cast.github.io/landisutils/reference/defaultFuelTypeTable.md),
+  with a warning once per session. The fallback that attributes each
+  fire to its ignition fuel reads the event log’s `InitFuel`, which is
+  an index with no offset, through the same table.
+
+- [`save_observed_fire_targets()`](https://for-cast.github.io/landisutils/reference/save_observed_fire_targets.md)
+  decodes a categorical `fuel_types_rast` by category label, through the
+  new `fuel_label_to_base` argument, default
+  [`bc_fuel_label_to_base()`](https://for-cast.github.io/landisutils/reference/bc_fuel_label_to_base.md).
+  It misread both forms of the raster
+  [`terra::rasterize()`](https://rspatial.github.io/terra/reference/rasterize.html)
+  makes from a factor field. With the labels attached,
+  [`terra::freq()`](https://rspatial.github.io/terra/reference/freq.html)
+  returned labels, which became missing codes and were dropped. With the
+  labels lost, as in GeoTIFF storage, the codes are 0-based, and the
+  1-based
+  [`bc_fuel_code_to_base()`](https://for-cast.github.io/landisutils/reference/bc_fuel_code_to_base.md)
+  read each class as the one before it: D-1/2 as Conifer, M-1/2 as
+  Deciduous, water as Slash, and O-1a/b dropped. An integer-coded raster
+  is still decoded by code, but a burned code missing from
+  `fuel_code_to_base`, or a burned label missing from
+  `fuel_label_to_base`, is now an error rather than a dropped cell. The
+  payload’s `fuel_code_to_base` is the code mapping applied, and
+  `fuel_code_labels` holds a categorical raster’s code-to-label table.
+  `area_fuel` has weight 0 by default, so no fitted parameter changes
+  unless a calibration weighted it; observed targets built from an
+  unlabelled 0-based raster should be rebuilt from the labelled one.
+
 ## landisutils 0.0.167
 
 - `ForCS` gains an optional `SpinupMortalityFraction`, written between

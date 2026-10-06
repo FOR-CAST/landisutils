@@ -13,7 +13,7 @@ suitable for loss-function comparison."><meta property="og:image" content="https
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.167</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.168</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -79,9 +79,9 @@ and <code>fire/dynamic-fire-summary-log.csv</code>.</p></dd>
     <p>Named list with <code>n_fires_by_year</code> (tibble: <code>year</code>, <code>n_fires</code>),
 <code>fire_sizes_ha</code> (sorted numeric vector), <code>events</code> (per-event tibble),
 <code>total_sites_burned</code> (integer), <code>n_events</code> (integer), and
-<code>area_by_fuel_ha</code> (tibble with <code>fuel_code</code>, <code>cells</code>, <code>area_ha</code> columns,
-or NULL when the per-timestep severity x fuel-type rasters aren't on
-disk – e.g. mock-simulator trials).</p>
+<code>area_by_fuel_ha</code> (tibble with <code>fuel_code</code>, <code>fuel_index</code>, <code>base</code>, <code>cells</code>
+and <code>area_ha</code> columns, or NULL when the per-timestep severity x fuel-type
+rasters aren't on disk – e.g. mock-simulator trials).</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -106,6 +106,14 @@ This replaces the earlier convention of attributing each event's
 entire <code>DamagedSites</code> count to its <code>InitFuel</code>, which biased simulated
 burn area toward the dominant-cover fuel since fires ignite where there's
 igniteable fuel and then spread anywhere.</p>
+<p>Dynamic Fuels writes each active cell of a <code>FuelType</code> map as its fuel-type
+index plus one, and an inactive cell as 0. <code>fuel_code</code> is that raw map
+value, <code>fuel_index</code> is <code>fuel_code - 1</code> (0 for an active cell with no fuel
+type), and <code>base</code> is the base fuel type of that index in the run's own
+<code>FuelTypeTable</code>, read from <code>&lt;rep_dir&gt;/dynamic-fire.txt</code>. Index 0, and an
+index the table does not list, have no base (<code>NA</code>) and are not scored; the
+latter also warns. If the file or its <code>FuelTypeTable</code> is missing,
+<code><a href="defaultFuelTypeTable.html">defaultFuelTypeTable()</a></code> is used instead, with a warning.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
@@ -115,6 +123,7 @@ igniteable fuel and then spread anywhere.</p>
 <code><a href="apply_calibrated_ignprob.html">apply_calibrated_ignprob()</a></code>,
 <code><a href="apply_calibrated_num_fires.html">apply_calibrated_num_fires()</a></code>,
 <code><a href="bc_fuel_code_to_base.html">bc_fuel_code_to_base()</a></code>,
+<code><a href="bc_fuel_label_to_base.html">bc_fuel_label_to_base()</a></code>,
 <code><a href="build_calibration_scenario_template.html">build_calibration_scenario_template()</a></code>,
 <code><a href="build_calibration_spinup_scenario.html">build_calibration_spinup_scenario()</a></code>,
 <code><a href="calibrate_dynamic_fire.html">calibrate_dynamic_fire()</a></code>,

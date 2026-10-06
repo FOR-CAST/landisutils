@@ -28,9 +28,9 @@ parse_dynamic_fire_logs(rep_dir, pixel_area_ha = 1)
 Named list with `n_fires_by_year` (tibble: `year`, `n_fires`),
 `fire_sizes_ha` (sorted numeric vector), `events` (per-event tibble),
 `total_sites_burned` (integer), `n_events` (integer), and
-`area_by_fuel_ha` (tibble with `fuel_code`, `cells`, `area_ha` columns,
-or NULL when the per-timestep severity x fuel-type rasters aren't on
-disk – e.g. mock-simulator trials).
+`area_by_fuel_ha` (tibble with `fuel_code`, `fuel_index`, `base`,
+`cells` and `area_ha` columns, or NULL when the per-timestep severity x
+fuel-type rasters aren't on disk – e.g. mock-simulator trials).
 
 ## Details
 
@@ -65,6 +65,17 @@ attributing each event's entire `DamagedSites` count to its `InitFuel`,
 which biased simulated burn area toward the dominant-cover fuel since
 fires ignite where there's igniteable fuel and then spread anywhere.
 
+Dynamic Fuels writes each active cell of a `FuelType` map as its
+fuel-type index plus one, and an inactive cell as 0. `fuel_code` is that
+raw map value, `fuel_index` is `fuel_code - 1` (0 for an active cell
+with no fuel type), and `base` is the base fuel type of that index in
+the run's own `FuelTypeTable`, read from `<rep_dir>/dynamic-fire.txt`.
+Index 0, and an index the table does not list, have no base (`NA`) and
+are not scored; the latter also warns. If the file or its
+`FuelTypeTable` is missing,
+[`defaultFuelTypeTable()`](https://for-cast.github.io/landisutils/reference/defaultFuelTypeTable.md)
+is used instead, with a warning.
+
 ## See also
 
 Other Dynamic Fire calibration helpers:
@@ -73,6 +84,7 @@ Other Dynamic Fire calibration helpers:
 [`apply_calibrated_ignprob()`](https://for-cast.github.io/landisutils/reference/apply_calibrated_ignprob.md),
 [`apply_calibrated_num_fires()`](https://for-cast.github.io/landisutils/reference/apply_calibrated_num_fires.md),
 [`bc_fuel_code_to_base()`](https://for-cast.github.io/landisutils/reference/bc_fuel_code_to_base.md),
+[`bc_fuel_label_to_base()`](https://for-cast.github.io/landisutils/reference/bc_fuel_label_to_base.md),
 [`build_calibration_scenario_template()`](https://for-cast.github.io/landisutils/reference/build_calibration_scenario_template.md),
 [`build_calibration_spinup_scenario()`](https://for-cast.github.io/landisutils/reference/build_calibration_spinup_scenario.md),
 [`calibrate_dynamic_fire()`](https://for-cast.github.io/landisutils/reference/calibrate_dynamic_fire.md),

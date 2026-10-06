@@ -16,12 +16,22 @@ plot_calibration_area_by_fuel(stats)
 
   A
   [`run_calibration_validation()`](https://for-cast.github.io/landisutils/reference/run_calibration_validation.md)
-  summary carrying `$observed$primary$area_by_fuel_ha` and
-  `$observed$fuel_code_to_base`.
+  summary carrying `$observed$primary$area_by_fuel_ha`.
 
 ## Value
 
 A ggplot object.
+
+## Details
+
+Simulated base fuel types are the `base` column of each replicate's
+`area_by_fuel_ha`, which
+[`parse_dynamic_fire_logs()`](https://for-cast.github.io/landisutils/reference/parse_dynamic_fire_logs.md)
+takes from the run's own `FuelTypeTable`. A replicate parsed before
+landisutils 0.0.168 has no `base` column and is decoded through
+[`defaultFuelTypeTable()`](https://for-cast.github.io/landisutils/reference/defaultFuelTypeTable.md),
+with a warning, as in
+[`loss_from_stats()`](https://for-cast.github.io/landisutils/reference/loss_from_stats.md).
 
 ## See also
 

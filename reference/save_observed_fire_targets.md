@@ -21,6 +21,7 @@ save_observed_fire_targets(
   primary_label = "primary",
   secondary_label = "secondary",
   fuel_code_to_base = bc_fuel_code_to_base(),
+  fuel_label_to_base = bc_fuel_label_to_base(),
   severity_dist = NULL,
   mortality_share = NULL,
   min_size_ha = 1
@@ -52,8 +53,9 @@ save_observed_fire_targets(
 
 - fuel_types_rast:
 
-  SpatRaster. Integer-coded fuel-type raster covering the LANDIS
-  simulation extent.
+  SpatRaster. Fuel-type raster covering the LANDIS simulation extent:
+  categorical (with category labels), or integer-coded. See Details for
+  how each is decoded.
 
 - path:
 
@@ -73,9 +75,19 @@ save_observed_fire_targets(
 
   Named character vector. Mapping from `fuel_types_rast` integer codes
   (as character names) to the five base fuel types from
-  [`defaultFuelTypeTable()`](https://for-cast.github.io/landisutils/reference/defaultFuelTypeTable.md).
-  NA values mark non-fuel codes to be excluded. Default:
+  [`defaultFuelTypeTable()`](https://for-cast.github.io/landisutils/reference/defaultFuelTypeTable.md),
+  used when the raster is not categorical. NA values mark non-fuel codes
+  to be excluded; a burned code missing from the names is an error.
+  Default:
   [`bc_fuel_code_to_base()`](https://for-cast.github.io/landisutils/reference/bc_fuel_code_to_base.md).
+
+- fuel_label_to_base:
+
+  Named character vector. Mapping from category labels to the five base
+  fuel types, used when `fuel_types_rast` is categorical. NA values mark
+  non-fuel labels to be excluded; a burned label missing from the names
+  is an error. Default:
+  [`bc_fuel_label_to_base()`](https://for-cast.github.io/landisutils/reference/bc_fuel_label_to_base.md).
 
 - severity_dist:
 
@@ -144,6 +156,19 @@ Per ecoregion (`primary_ecoregion`, `secondary_ecoregion`):
   extend well beyond that extent, making a secondary computation
   misleading (it would just be the primary value over again).
 
+A categorical `fuel_types_rast` is decoded by category label, through
+`fuel_label_to_base`; any other is decoded by integer code, through
+`fuel_code_to_base`. Labels are preferred because codes depend on how
+the raster was built:
+[`terra::rasterize()`](https://rspatial.github.io/terra/reference/rasterize.html)
+of a factor field numbers its categories from 0, and GeoTIFF storage can
+drop the labels that say what each number means. A burned cell that the
+table in use cannot decode is an error, not a silently dropped cell. The
+payload's `fuel_code_to_base` is the code mapping that was applied: for
+a categorical raster, each code's label looked up in
+`fuel_label_to_base`, with the raster's code-to-label table kept as
+`fuel_code_labels` (NULL for a raster decoded by code).
+
 ## See also
 
 Other Dynamic Fire calibration helpers:
@@ -152,6 +177,7 @@ Other Dynamic Fire calibration helpers:
 [`apply_calibrated_ignprob()`](https://for-cast.github.io/landisutils/reference/apply_calibrated_ignprob.md),
 [`apply_calibrated_num_fires()`](https://for-cast.github.io/landisutils/reference/apply_calibrated_num_fires.md),
 [`bc_fuel_code_to_base()`](https://for-cast.github.io/landisutils/reference/bc_fuel_code_to_base.md),
+[`bc_fuel_label_to_base()`](https://for-cast.github.io/landisutils/reference/bc_fuel_label_to_base.md),
 [`build_calibration_scenario_template()`](https://for-cast.github.io/landisutils/reference/build_calibration_scenario_template.md),
 [`build_calibration_spinup_scenario()`](https://for-cast.github.io/landisutils/reference/build_calibration_spinup_scenario.md),
 [`calibrate_dynamic_fire()`](https://for-cast.github.io/landisutils/reference/calibrate_dynamic_fire.md),

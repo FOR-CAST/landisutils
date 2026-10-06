@@ -13,7 +13,7 @@ can read it from disk without terra/sf in their environments."><meta property="o
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.167</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.168</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -68,6 +68,7 @@ can read it from disk without terra/sf in their environments.</p>
 <span>  primary_label <span class="op">=</span> <span class="st">"primary"</span>,</span>
 <span>  secondary_label <span class="op">=</span> <span class="st">"secondary"</span>,</span>
 <span>  fuel_code_to_base <span class="op">=</span> <span class="fu"><a href="bc_fuel_code_to_base.html">bc_fuel_code_to_base</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  fuel_label_to_base <span class="op">=</span> <span class="fu"><a href="bc_fuel_label_to_base.html">bc_fuel_label_to_base</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  severity_dist <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  mortality_share <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  min_size_ha <span class="op">=</span> <span class="fl">1</span></span>
@@ -99,8 +100,9 @@ NULL on the primary summary.</p></dd>
 
 
 <dt id="arg-fuel-types-rast">fuel_types_rast<a class="anchor" aria-label="anchor" href="#arg-fuel-types-rast"></a></dt>
-<dd><p>SpatRaster. Integer-coded fuel-type raster covering
-the LANDIS simulation extent.</p></dd>
+<dd><p>SpatRaster. Fuel-type raster covering the LANDIS
+simulation extent: categorical (with category labels), or integer-coded.
+See Details for how each is decoded.</p></dd>
 
 
 <dt id="arg-path">path<a class="anchor" aria-label="anchor" href="#arg-path"></a></dt>
@@ -121,8 +123,16 @@ for the secondary (see Details).</p></dd>
 <dt id="arg-fuel-code-to-base">fuel_code_to_base<a class="anchor" aria-label="anchor" href="#arg-fuel-code-to-base"></a></dt>
 <dd><p>Named character vector. Mapping from
 <code>fuel_types_rast</code> integer codes (as character names) to the five base
-fuel types from <code><a href="defaultFuelTypeTable.html">defaultFuelTypeTable()</a></code>. NA values mark non-fuel codes
-to be excluded. Default: <code><a href="bc_fuel_code_to_base.html">bc_fuel_code_to_base()</a></code>.</p></dd>
+fuel types from <code><a href="defaultFuelTypeTable.html">defaultFuelTypeTable()</a></code>, used when the raster is not
+categorical. NA values mark non-fuel codes to be excluded; a burned code
+missing from the names is an error. Default: <code><a href="bc_fuel_code_to_base.html">bc_fuel_code_to_base()</a></code>.</p></dd>
+
+
+<dt id="arg-fuel-label-to-base">fuel_label_to_base<a class="anchor" aria-label="anchor" href="#arg-fuel-label-to-base"></a></dt>
+<dd><p>Named character vector. Mapping from category
+labels to the five base fuel types, used when <code>fuel_types_rast</code> is
+categorical. NA values mark non-fuel labels to be excluded; a burned label
+missing from the names is an error. Default: <code><a href="bc_fuel_label_to_base.html">bc_fuel_label_to_base()</a></code>.</p></dd>
 
 
 <dt id="arg-severity-dist">severity_dist<a class="anchor" aria-label="anchor" href="#arg-severity-dist"></a></dt>
@@ -175,7 +185,17 @@ polygon overlay on <code>fuel_types_rast</code>. <code>fuel_types_rast</code> co
 LANDIS simulation domain; secondary-ecoregion polygons typically
 extend well beyond that extent, making a secondary computation
 misleading (it would just be the primary value over again).</p></li>
-</ul></div>
+</ul><p>A categorical <code>fuel_types_rast</code> is decoded by category label, through
+<code>fuel_label_to_base</code>; any other is decoded by integer code, through
+<code>fuel_code_to_base</code>. Labels are preferred because codes depend on how the
+raster was built: <code><a href="https://rspatial.github.io/terra/reference/rasterize.html" class="external-link">terra::rasterize()</a></code> of a factor field numbers its
+categories from 0, and GeoTIFF storage can drop the labels that say what
+each number means. A burned cell that the table in use cannot decode is an
+error, not a silently dropped cell. The payload's <code>fuel_code_to_base</code> is the
+code mapping that was applied: for a categorical raster, each code's label
+looked up in <code>fuel_label_to_base</code>, with the raster's code-to-label table
+kept as <code>fuel_code_labels</code> (NULL for a raster decoded by code).</p>
+    </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p>Other Dynamic Fire calibration helpers:
@@ -184,6 +204,7 @@ misleading (it would just be the primary value over again).</p></li>
 <code><a href="apply_calibrated_ignprob.html">apply_calibrated_ignprob()</a></code>,
 <code><a href="apply_calibrated_num_fires.html">apply_calibrated_num_fires()</a></code>,
 <code><a href="bc_fuel_code_to_base.html">bc_fuel_code_to_base()</a></code>,
+<code><a href="bc_fuel_label_to_base.html">bc_fuel_label_to_base()</a></code>,
 <code><a href="build_calibration_scenario_template.html">build_calibration_scenario_template()</a></code>,
 <code><a href="build_calibration_spinup_scenario.html">build_calibration_spinup_scenario()</a></code>,
 <code><a href="calibrate_dynamic_fire.html">calibrate_dynamic_fire()</a></code>,
