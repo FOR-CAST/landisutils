@@ -29,7 +29,7 @@
 ##   * `docker` on PATH; LANDIS-II v8 image cached locally
 ##     (ghcr.io/landis-ii-foundation/landis-ii-v8-release:main by default).
 ##   * The project's targets pipeline must already have these targets built:
-##     `nfdb_point_fru59`, `nfdb_poly_fru59`, `fire_years`, `fuel_types_rast`,
+##     `nfdb_point`, `nfdb_point_fru59`, `nfdb_poly_fru59`, `fire_years`, `fuel_types_rast`,
 ##     `fire_size_table`, `fuel_type_table`, `fire_damage_table`,
 ##     `seasons_sim_table` plus the LANDIS scenario directories under
 ##     `LANDIS-II/`.
@@ -60,6 +60,8 @@ obs_path <- save_observed_fire_targets(
   primary_polys = tar_read(nfdb_poly_fru59),
   secondary_points = tryCatch(tar_read(nfdb_point_frt12), error = function(e) NULL),
   secondary_polys = tryCatch(tar_read(nfdb_poly_frt12), error = function(e) NULL),
+  ## every ignition, inside the fire regimes or not: a fire may start outside one and burn into it
+  ignitions = tar_read(nfdb_point),
   fire_years = tar_read(fire_years),
   fuel_types_rast = tar_read(fuel_types_rast),
   path = fs::path(out_dir, "observed_fire_targets.rds"),
