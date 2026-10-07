@@ -4,18 +4,31 @@
 #' generated code cannot reach an unexported name without `:::`. Not part of the
 #' user-facing API.
 #'
+#' A file inside another directory beside `scenario_dir` (a sibling under the
+#' same parent) belongs to another scenario and is not staged. Every other file
+#' -- under `scenario_dir`, directly in its parent, or outside the parent -- is
+#' staged, one per basename, with files under `scenario_dir` first. Inputs that
+#' several scenarios share must therefore not sit in a sibling directory.
+#'
 #' @param deps List of upstream target values; character elements are treated as
 #'   file paths.
 #' @param scenario_dir Character. The replicate's scenario directory.
 #'
-#' @return Character vector of files to stage, one per basename.
+#' @return Character vector of files to stage, one per basename. When `deps`
+#'   holds files of other scenarios, they are attached, in `deps` order, as the
+#'   attribute `"foreign"`, which [landis_rep_is_current()] uses to recognise a
+#'   replicate staged by landisutils 0.0.168 or earlier.
 #' @keywords internal
 #' @export
 ##
 ## `deps` is whatever the caller listed, and when a pattern maps over the
 ## scenario dir but NOT over the dependency target, every branch receives ALL
-## branches' files. Deduplicating on basename then has to pick, so files under
-## THIS scenario dir are ordered first and win.
+## branches' files. Up to 0.0.168 every branch staged one copy of each basename
+## found in ANY scenario, its own first, and hashed them: a no-wind scenario
+## carried another scenario's wind config, and adding a scenario to the fleet
+## changed the input hash of every finished replicate of the others. Files of
+## other scenarios are now left out, and own files still win the basename
+## dedup over shared ones.
 ##
 ## That prioritisation compares paths, and the comparison has to be
 ## like-for-like: `scenario_dir` is resolved with `path_real()`, so the
@@ -37,11 +50,21 @@ landis_dep_files <- function(deps, scenario_dir) {
     return(character(0))
   }
   files <- as.character(fs::path_real(files))
+  sd_real <- as.character(fs::path_real(scenario_dir))
   ## Trailing "/" so startsWith() matches only files *under* scenario_dir, not a
   ## sibling sharing its prefix (phase_2_ICH_fire/ vs phase_2_ICH/).
-  sd_real <- paste0(fs::path_real(scenario_dir), "/")
-  files <- c(files[startsWith(files, sd_real)], files[!startsWith(files, sd_real)])
-  files[!duplicated(basename(files))]
+  own <- startsWith(files, paste0(sd_real, "/"))
+  ## In a sibling directory: under the parent, with a "/" after the next path component.
+  parent <- paste0(fs::path_dir(sd_real), "/")
+  foreign <- !own &
+    startsWith(files, parent) &
+    grepl("/", substring(files, nchar(parent) + 1L), fixed = TRUE)
+  staged <- c(files[own], files[!own & !foreign])
+  staged <- staged[!duplicated(basename(staged))]
+  if (any(foreign)) {
+    attr(staged, "foreign") <- unique(files[foreign])
+  }
+  staged
 }
 
 ## LANDIS-II execution helpers (local and Docker) --------------------------------------------------
@@ -1232,9 +1255,12 @@ landis_archive_rep <- function(run_dir, final_dir, max_tries = 5L, backoff_sec =
 #'   `tar_target(name = ..._rep_index, command = seq_len(n_reps), iteration = "vector")`.
 #' @param deps List (unquoted, optional). A `list()` of upstream target
 #'   symbols that must complete before the simulation runs, e.g.
-#'   `list(landis_scenario_file, landis_ext_forcs_file)`. Values are not used
-#'   directly -- they are embedded in the command so `{targets}` detects them
-#'   as upstream dependencies.
+#'   `list(landis_scenario_file, landis_ext_forcs_file)`. They are embedded in
+#'   the command so `{targets}` detects them as upstream dependencies, and their
+#'   files are staged into each replicate and hashed, except files inside
+#'   another directory beside `scenario_dir`, which belong to another scenario
+#'   (see [landis_dep_files()]). The rule applies after symbolic links are
+#'   resolved.
 #' @param scenario_file Character. Scenario filename inside `scenario_dir`.
 #' @param output_dir Character vector. Output subdirectory (or subdirectories)
 #'   inside `scenario_dir`; all files found there (recursively) are returned as
