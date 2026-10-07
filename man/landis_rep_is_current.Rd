@@ -36,3 +36,13 @@ and earlier would have written is accepted, sorted in this process's locale or u
 (ICU). A replicate finished by an earlier version is therefore not re-simulated after an upgrade,
 whichever of those locales wrote it.
 }
+\details{
+Up to 0.0.168, \code{\link[=landis_dep_files]{landis_dep_files()}} also staged other scenarios' files, and the hash covered
+them. When \code{dep_files} carries those files as its \code{"foreign"} attribute, as \code{\link[=landis_dep_files]{landis_dep_files()}}
+returns it, that hash is accepted too. It is rebuilt from \code{dep_files} and the copies in \code{rep_dir}
+of files named in the attribute, with the MD5 of the copy rather than of the source, each keyed
+by a path it could have been staged from: one in the attribute, or the same name in another
+directory beside the replicate's scenario directory. A change to \code{dep_files} still makes the
+replicate stale; a change to another scenario's file, which this replicate does not read, does
+not. A copy whose name no file in the attribute has is not considered.
+}

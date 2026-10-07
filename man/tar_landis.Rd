@@ -51,9 +51,12 @@ elements. Typically created as
 
 \item{deps}{List (unquoted, optional). A \code{list()} of upstream target
 symbols that must complete before the simulation runs, e.g.
-\code{list(landis_scenario_file, landis_ext_forcs_file)}. Values are not used
-directly -- they are embedded in the command so \code{{targets}} detects them
-as upstream dependencies.}
+\code{list(landis_scenario_file, landis_ext_forcs_file)}. They are embedded in
+the command so \code{{targets}} detects them as upstream dependencies, and their
+files are staged into each replicate and hashed, except files inside
+another directory beside \code{scenario_dir}, which belong to another scenario
+(see \code{\link[=landis_dep_files]{landis_dep_files()}}). The rule applies after symbolic links are
+resolved.}
 
 \item{scenario_file}{Character. Scenario filename inside \code{scenario_dir}.}
 

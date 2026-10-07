@@ -66,3 +66,66 @@ test_that("landis_dep_files() does not match a sibling sharing the prefix", {
   )
   expect_true(all(grepl("phase_2_ICH_fire", got)))
 })
+
+## Scenario directories side by side. A pattern that maps over the scenario directory but not over
+## the dependency targets hands every branch every scenario's files.
+make_scenario <- function(root, name, files = c("scenario.txt", "species.txt")) {
+  d <- fs::dir_create(fs::path(root, name))
+  for (f in files) {
+    writeLines(paste(name, f), fs::path(d, f))
+  }
+  as.character(fs::path(d, files))
+}
+
+test_that("landis_dep_files() stages none of another scenario's files", {
+  root <- withr::local_tempdir()
+  only <- make_scenario(root, "ForCS_only")
+  wind <- make_scenario(root, "ForCS_wind", c("scenario.txt", "species.txt", "original-wind.txt"))
+  sd <- fs::path(root, "ForCS_only")
+
+  got <- landis_dep_files(list(c(wind, only)), sd)
+
+  ## landisutils 0.0.168 also staged ForCS_wind/original-wind.txt, which ForCS_only lacks
+  expect_identical(as.character(got), as.character(fs::path_real(only)))
+  rep_dir <- landis_replicate(sd, rep_index = 1L, files = got)
+  expect_setequal(basename(fs::dir_ls(rep_dir)), c("scenario.txt", "species.txt"))
+  ## kept aside, in deps order, for landis_rep_is_current()
+  expect_identical(attr(got, "foreign"), as.character(fs::path_real(wind)))
+})
+
+test_that("landis_dep_files() still stages shared files that sit in no scenario directory", {
+  root <- withr::local_tempdir()
+  landis <- fs::dir_create(fs::path(root, "LANDIS-II"))
+  only <- make_scenario(landis, "ForCS_only")
+  wind <- make_scenario(landis, "ForCS_wind", c("scenario.txt", "original-wind.txt"))
+  ## directly in the scenarios' parent, and outside it; species.txt also exists under ForCS_only
+  beside <- make_scenario(root, "LANDIS-II", c("climate.txt", "species.txt"))
+  outside <- make_scenario(root, "data", "weather.csv")
+
+  got <- landis_dep_files(list(c(wind, only), beside, outside), fs::path(landis, "ForCS_only"))
+
+  expect_identical(as.character(got), as.character(fs::path_real(c(only, beside[[1L]], outside))))
+  expect_identical(attr(got, "foreign"), as.character(fs::path_real(wind)))
+  expect_null(attr(
+    landis_dep_files(list(only, outside), fs::path(landis, "ForCS_only")),
+    "foreign"
+  ))
+})
+
+test_that("adding a scenario leaves another scenario's staged files and hash unchanged", {
+  root <- withr::local_tempdir()
+  only <- make_scenario(root, "ForCS_only")
+  wind <- make_scenario(root, "ForCS_wind", c("scenario.txt", "species.txt", "original-wind.txt"))
+  fire <- make_scenario(root, "ForCS_fire", c("scenario.txt", "species.txt", "dynamic-fire.txt"))
+  sd <- fs::path(root, "ForCS_wind")
+
+  before <- landis_dep_files(list(c(only, wind)), sd)
+  after <- landis_dep_files(list(c(only, fire, wind)), sd)
+
+  ## landisutils 0.0.168 staged ForCS_fire/dynamic-fire.txt into ForCS_wind once ForCS_fire joined
+  expect_identical(as.character(after), as.character(before))
+  expect_identical(
+    landis_input_hash(after, 12345L, 1L, "scenario.txt"),
+    landis_input_hash(before, 12345L, 1L, "scenario.txt")
+  )
+})
