@@ -15,7 +15,7 @@ whichever of those locales wrote it."><meta property="og:image" content="https:/
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.168</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.169</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -101,6 +101,17 @@ whichever of those locales wrote it.</p>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>Logical(1).</p>
+    </div>
+    <div class="section level2">
+    <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
+    <p>Up to 0.0.168, <code><a href="landis_dep_files.html">landis_dep_files()</a></code> also staged other scenarios' files, and the hash covered
+them. When <code>dep_files</code> carries those files as its <code>"foreign"</code> attribute, as <code><a href="landis_dep_files.html">landis_dep_files()</a></code>
+returns it, that hash is accepted too. It is rebuilt from <code>dep_files</code> and the copies in <code>rep_dir</code>
+of files named in the attribute, with the MD5 of the copy rather than of the source, each keyed
+by a path it could have been staged from: one in the attribute, or the same name in another
+directory beside the replicate's scenario directory. A change to <code>dep_files</code> still makes the
+replicate stale; a change to another scenario's file, which this replicate does not read, does
+not. A copy whose name no file in the attribute has is not considered.</p>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

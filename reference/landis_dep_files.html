@@ -11,7 +11,7 @@ user-facing API."><meta property="og:image" content="https://for-cast.github.io/
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.168</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.169</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -72,7 +72,18 @@ file paths.</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>Character vector of files to stage, one per basename.</p>
+    <p>Character vector of files to stage, one per basename. When <code>deps</code>
+holds files of other scenarios, they are attached, in <code>deps</code> order, as the
+attribute <code>"foreign"</code>, which <code><a href="landis_rep_is_current.html">landis_rep_is_current()</a></code> uses to recognise a
+replicate staged by landisutils 0.0.168 or earlier.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
+    <p>A file inside another directory beside <code>scenario_dir</code> (a sibling under the
+same parent) belongs to another scenario and is not staged. Every other file
+– under <code>scenario_dir</code>, directly in its parent, or outside the parent – is
+staged, one per basename, with files under <code>scenario_dir</code> first. Inputs that
+several scenarios share must therefore not sit in a sibling directory.</p>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

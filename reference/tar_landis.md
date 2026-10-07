@@ -65,9 +65,13 @@ tar_landis(
   List (unquoted, optional). A
   [`list()`](https://rdrr.io/r/base/list.html) of upstream target
   symbols that must complete before the simulation runs, e.g.
-  `list(landis_scenario_file, landis_ext_forcs_file)`. Values are not
-  used directly – they are embedded in the command so `{targets}`
-  detects them as upstream dependencies.
+  `list(landis_scenario_file, landis_ext_forcs_file)`. They are embedded
+  in the command so `{targets}` detects them as upstream dependencies,
+  and their files are staged into each replicate and hashed, except
+  files inside another directory beside `scenario_dir`, which belong to
+  another scenario (see
+  [`landis_dep_files()`](https://for-cast.github.io/landisutils/reference/landis_dep_files.md)).
+  The rule applies after symbolic links are resolved.
 
 - scenario_file:
 

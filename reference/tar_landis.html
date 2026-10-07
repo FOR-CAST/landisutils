@@ -11,7 +11,7 @@ replicate's output files."><meta property="og:image" content="https://for-cast.g
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.168</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.169</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -112,9 +112,12 @@ elements. Typically created as
 <dt id="arg-deps">deps<a class="anchor" aria-label="anchor" href="#arg-deps"></a></dt>
 <dd><p>List (unquoted, optional). A <code><a href="https://rdrr.io/r/base/list.html" class="external-link">list()</a></code> of upstream target
 symbols that must complete before the simulation runs, e.g.
-<code>list(landis_scenario_file, landis_ext_forcs_file)</code>. Values are not used
-directly – they are embedded in the command so <code>{targets}</code> detects them
-as upstream dependencies.</p></dd>
+<code>list(landis_scenario_file, landis_ext_forcs_file)</code>. They are embedded in
+the command so <code>{targets}</code> detects them as upstream dependencies, and their
+files are staged into each replicate and hashed, except files inside
+another directory beside <code>scenario_dir</code>, which belong to another scenario
+(see <code><a href="landis_dep_files.html">landis_dep_files()</a></code>). The rule applies after symbolic links are
+resolved.</p></dd>
 
 
 <dt id="arg-scenario-file">scenario_file<a class="anchor" aria-label="anchor" href="#arg-scenario-file"></a></dt>

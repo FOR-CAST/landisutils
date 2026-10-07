@@ -1,5 +1,35 @@
 # Changelog
 
+## landisutils 0.0.169
+
+- A
+  [`tar_landis()`](https://for-cast.github.io/landisutils/reference/tar_landis.md)
+  replicate no longer stages, or hashes, other scenarios’ files. When a
+  pattern maps over the scenario directory but not over the dependency
+  targets, every branch receives every scenario’s files, and
+  [`landis_dep_files()`](https://for-cast.github.io/landisutils/reference/landis_dep_files.md)
+  staged one copy of each basename found in any of them, the replicate’s
+  own first. A scenario without wind thus carried another scenario’s
+  wind configuration, and adding a scenario to the fleet, or editing a
+  file only another scenario reads, made the finished replicates of the
+  others stale. A file inside a sibling of the replicate’s scenario
+  directory is now taken to belong to another scenario and is not
+  staged; files under the scenario directory, directly in its parent or
+  outside it are staged as before, so inputs that scenarios share must
+  not sit in a sibling directory. A replicate staged by an earlier
+  version stays current while some scenario in the dependencies still
+  has a file of each name it was given from another:
+  [`landis_dep_files()`](https://for-cast.github.io/landisutils/reference/landis_dep_files.md)
+  returns the files it leaves out as the attribute `"foreign"`, and
+  [`landis_rep_is_current()`](https://for-cast.github.io/landisutils/reference/landis_rep_is_current.md)
+  rebuilds the earlier hash from the replicate’s own files and the
+  copies of those files found in the replicate directory. A change to
+  the replicate’s own files still makes it stale, and a replicate whose
+  own scenario file is missing from the dependencies is never accepted
+  through the earlier hash. The command
+  [`tar_landis()`](https://for-cast.github.io/landisutils/reference/tar_landis.md)
+  generates is unchanged, so upgrading invalidates no target.
+
 ## landisutils 0.0.168
 
 - The burned-area-by-base-fuel comparison,
