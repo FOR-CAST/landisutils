@@ -13,11 +13,21 @@ file paths.}
 \item{scenario_dir}{Character. The replicate's scenario directory.}
 }
 \value{
-Character vector of files to stage, one per basename.
+Character vector of files to stage, one per basename. When \code{deps}
+holds files of other scenarios, they are attached, in \code{deps} order, as the
+attribute \code{"foreign"}, which \code{\link[=landis_rep_is_current]{landis_rep_is_current()}} uses to recognise a
+replicate staged by landisutils 0.0.168 or earlier.
 }
 \description{
 Exported because \code{\link[=tar_landis]{tar_landis()}} emits a target command that calls it, and
 generated code cannot reach an unexported name without \code{:::}. Not part of the
 user-facing API.
+}
+\details{
+A file inside another directory beside \code{scenario_dir} (a sibling under the
+same parent) belongs to another scenario and is not staged. Every other file
+-- under \code{scenario_dir}, directly in its parent, or outside the parent -- is
+staged, one per basename, with files under \code{scenario_dir} first. Inputs that
+several scenarios share must therefore not sit in a sibling directory.
 }
 \keyword{internal}
