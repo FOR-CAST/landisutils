@@ -4,7 +4,15 @@
 \alias{observed_fire_sizes}
 \title{Observed per-fire sizes: one per ignition point, upgraded to mapped area}
 \usage{
-observed_fire_sizes(points, polys = NULL, min_size_ha = 0)
+observed_fire_sizes(
+  points,
+  polys = NULL,
+  min_size_ha = 0,
+  ignitions = points,
+  ignition_min_ha = 1,
+  conflict_m = 500,
+  part_gap_m = 250
+)
 }
 \arguments{
 \item{points}{SpatVector. Ignition points with \code{SIZE_HA} and \code{YEAR} columns.}
@@ -14,6 +22,20 @@ columns. NULL keeps every point's own size.}
 
 \item{min_size_ha}{Numeric scalar. Sizes below this, and missing sizes, are
 dropped. Default \code{0} keeps every positive and zero size.}
+
+\item{ignitions}{SpatVector. Ignition points with \code{SIZE_HA} and \code{YEAR}
+columns, in the CRS of \code{points}, tested as other fires in or near a
+polygon. Every point of \code{ignition_min_ha} or more that a same-year polygon
+contains must be among them, at the same coordinates. Default \code{points}.}
+
+\item{ignition_min_ha}{Numeric scalar, not negative. Smallest ignition (ha)
+taken to be another fire. Default \code{1}.}
+
+\item{conflict_m}{Numeric scalar, not negative. Distance (m) within which
+another ignition disputes a polygon or a group of its parts. Default \code{500}.}
+
+\item{part_gap_m}{Numeric scalar, not negative. Largest distance (m) between
+parts of a polygon that are grouped as one fire. Default \code{250}.}
 }
 \value{
 Numeric vector of sizes (ha), sorted ascending; at most one element
@@ -27,6 +49,23 @@ keeps NFDB's full sample (pre-1972 fires, and small fires NBAC does not map)
 while taking NBAC's satellite-derived area wherever a fire was mapped.
 }
 \details{
+A polygon can hold more than one fire: NBAC maps some neighbouring fires of
+the same year as parts of one feature, whose \code{SIZE_HA} is the area of them
+all. A point therefore takes the polygon's \code{SIZE_HA} only when no other
+ignition of that year, of \code{ignition_min_ha} or more, lies inside the polygon
+or within \code{conflict_m} of it. Otherwise the polygon's parts are grouped,
+joining parts no more than \code{part_gap_m} apart, and the point takes the area
+of its own group, measured from the geometry, when no other such ignition
+lies in or within \code{conflict_m} of that group, or keeps its own \code{SIZE_HA}
+when one does. A fire mapped in several parts with no other ignition near it
+keeps the whole polygon's size. Because the test measures distance to the
+whole polygon, pass polygons that have not been clipped to a study area, and
+take \code{ignitions} from the whole point record: a fire that burned into a
+region may have started outside it. The defaults were chosen by comparing
+candidate rules with agency-mapped fire perimeters. \code{conflict_m} and
+\code{part_gap_m} are in metres whatever the CRS's linear unit; a CRS that states
+no unit is taken to be in metres.
+
 This is the fire-size rule behind \code{\link[=save_observed_fire_targets]{save_observed_fire_targets()}}'s
 \code{fire_sizes_ha}. It is exported so that anything else derived from the same
 fire record -- such as a fitted fire-size distribution -- uses the same sizes

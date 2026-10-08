@@ -18,7 +18,8 @@ save_observed_fire_targets(
   fuel_label_to_base = bc_fuel_label_to_base(),
   severity_dist = NULL,
   mortality_share = NULL,
-  min_size_ha = 1
+  min_size_ha = 1,
+  ignitions = NULL
 )
 }
 \arguments{
@@ -26,12 +27,14 @@ save_observed_fire_targets(
 ecoregion (the LANDIS simulation extent). Required.}
 
 \item{primary_polys}{SpatVector or NULL. Fire perimeter polygons for the
-primary ecoregion. When supplied, a point's size is replaced by the
-\code{SIZE_HA} (e.g. NBAC's \code{ADJ_HA}) of a same-year polygon containing it (see
-\code{\link[=observed_fire_sizes]{observed_fire_sizes()}}), and \code{area_by_fuel_ha} is computed by rasterising
-the polys against \code{fuel_types_rast}. When NULL, \code{fire_sizes_ha} is the
-points' own \code{SIZE_HA} (NFDB agency-reported sizes) and \code{area_by_fuel_ha} is
-NULL on the primary summary.}
+primary ecoregion, not clipped to it. When supplied, a point's size is
+replaced by the \code{SIZE_HA} (e.g. NBAC's \code{ADJ_HA}) of a same-year polygon
+containing it, unless another ignition of 1 ha or more lies in that
+polygon or within 500 m of it (see \code{\link[=observed_fire_sizes]{observed_fire_sizes()}}), and
+\code{area_by_fuel_ha} is computed by rasterising the polys against
+\code{fuel_types_rast}. When NULL, \code{fire_sizes_ha} is the points' own \code{SIZE_HA}
+(NFDB agency-reported sizes) and \code{area_by_fuel_ha} is NULL on the primary
+summary.}
 
 \item{fire_years}{Integer vector. Years over which counts are normalised
 (denominator for \code{lambda_obs}).}
@@ -81,6 +84,12 @@ observed distribution is effectively left-censored at this threshold.
 \code{loss_from_stats()} reads \code{observed$min_size_ha} and applies the same
 truncation symmetrically to \code{sim_sizes} so the KS distance compares
 like with like. Set to \code{0} to disable the floor.}
+
+\item{ignitions}{SpatVector or NULL. Ignition points tested as other fires
+in or near a perimeter polygon besides the point being sized, passed to
+\code{\link[=observed_fire_sizes]{observed_fire_sizes()}} for both ecoregions. Pass the whole point record,
+including both ecoregions' points. NULL uses each ecoregion's own points,
+which misses a fire that started outside the ecoregion.}
 }
 \value{
 Character. Absolute path to the written file.
@@ -108,7 +117,10 @@ Per ecoregion (\code{primary_ecoregion}, \code{secondary_ecoregion}):
 NFDB polygons are sparser (only mapped for larger fires).
 \item Fire sizes come from \code{\link[=observed_fire_sizes]{observed_fire_sizes()}}: one per ignition
 point, its own \code{SIZE_HA} unless a same-year perimeter polygon
-contains it, then the polygon's \code{SIZE_HA}.
+contains it, then the polygon's \code{SIZE_HA} -- or, where another
+ignition of 1 ha or more lies in the polygon or within 500 m of it,
+the area of the point's own group of the polygon's parts, or the
+point's own \code{SIZE_HA}.
 \item \code{area_by_fuel_ha} is computed for the PRIMARY ecoregion only via
 polygon overlay on \code{fuel_types_rast}. \code{fuel_types_rast} covers the
 LANDIS simulation domain; secondary-ecoregion polygons typically

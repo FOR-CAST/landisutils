@@ -1792,6 +1792,23 @@ bc_fuel_label_to_base <- function() {
 #' keeps NFDB's full sample (pre-1972 fires, and small fires NBAC does not map)
 #' while taking NBAC's satellite-derived area wherever a fire was mapped.
 #'
+#' A polygon can hold more than one fire: NBAC maps some neighbouring fires of
+#' the same year as parts of one feature, whose `SIZE_HA` is the area of them
+#' all. A point therefore takes the polygon's `SIZE_HA` only when no other
+#' ignition of that year, of `ignition_min_ha` or more, lies inside the polygon
+#' or within `conflict_m` of it. Otherwise the polygon's parts are grouped,
+#' joining parts no more than `part_gap_m` apart, and the point takes the area
+#' of its own group, measured from the geometry, when no other such ignition
+#' lies in or within `conflict_m` of that group, or keeps its own `SIZE_HA`
+#' when one does. A fire mapped in several parts with no other ignition near it
+#' keeps the whole polygon's size. Because the test measures distance to the
+#' whole polygon, pass polygons that have not been clipped to a study area, and
+#' take `ignitions` from the whole point record: a fire that burned into a
+#' region may have started outside it. The defaults were chosen by comparing
+#' candidate rules with agency-mapped fire perimeters. `conflict_m` and
+#' `part_gap_m` are in metres whatever the CRS's linear unit; a CRS that states
+#' no unit is taken to be in metres.
+#'
 #' This is the fire-size rule behind [save_observed_fire_targets()]'s
 #' `fire_sizes_ha`. It is exported so that anything else derived from the same
 #' fire record -- such as a fitted fire-size distribution -- uses the same sizes
@@ -1804,6 +1821,16 @@ bc_fuel_label_to_base <- function() {
 #'   columns. NULL keeps every point's own size.
 #' @param min_size_ha Numeric scalar. Sizes below this, and missing sizes, are
 #'   dropped. Default `0` keeps every positive and zero size.
+#' @param ignitions SpatVector. Ignition points with `SIZE_HA` and `YEAR`
+#'   columns, in the CRS of `points`, tested as other fires in or near a
+#'   polygon. Every point of `ignition_min_ha` or more that a same-year polygon
+#'   contains must be among them, at the same coordinates. Default `points`.
+#' @param ignition_min_ha Numeric scalar, not negative. Smallest ignition (ha)
+#'   taken to be another fire. Default `1`.
+#' @param conflict_m Numeric scalar, not negative. Distance (m) within which
+#'   another ignition disputes a polygon or a group of its parts. Default `500`.
+#' @param part_gap_m Numeric scalar, not negative. Largest distance (m) between
+#'   parts of a polygon that are grouped as one fire. Default `250`.
 #'
 #' @returns Numeric vector of sizes (ha), sorted ascending; at most one element
 #'   per point.
@@ -1811,13 +1838,34 @@ bc_fuel_label_to_base <- function() {
 #' @family Dynamic Fire calibration helpers
 #'
 #' @export
-observed_fire_sizes <- function(points, polys = NULL, min_size_ha = 0) {
+observed_fire_sizes <- function(
+  points,
+  polys = NULL,
+  min_size_ha = 0,
+  ignitions = points,
+  ignition_min_ha = 1,
+  conflict_m = 500,
+  part_gap_m = 250
+) {
   stopifnot(
     inherits(points, "SpatVector"),
     is.null(polys) || inherits(polys, "SpatVector"),
     is.numeric(min_size_ha),
     length(min_size_ha) == 1L,
-    min_size_ha >= 0
+    min_size_ha >= 0,
+    inherits(ignitions, "SpatVector"),
+    is.numeric(ignition_min_ha),
+    length(ignition_min_ha) == 1L,
+    !is.na(ignition_min_ha),
+    ignition_min_ha >= 0,
+    is.numeric(conflict_m),
+    length(conflict_m) == 1L,
+    !is.na(conflict_m),
+    conflict_m >= 0,
+    is.numeric(part_gap_m),
+    length(part_gap_m) == 1L,
+    !is.na(part_gap_m),
+    part_gap_m >= 0
   )
   pts <- as.data.frame(points)
   plys <- if (is.null(polys)) data.frame() else as.data.frame(polys)
@@ -1835,8 +1883,11 @@ observed_fire_sizes <- function(points, polys = NULL, min_size_ha = 0) {
     ## polygon contains the point. When a point intersects multiple
     ## polygons (rare), extract returns multiple rows -- we accept the
     ## last-write-wins assignment because all matches are valid year-aligned
-    ## polygons for that point.
-    poly_attrs <- tryCatch(terra::extract(polys, points), error = function(e) NULL)
+    ## polygons for that point. `.poly_row` carries each polygon's row index
+    ## through, since extract returns its attributes but not its index.
+    polys_idx <- polys
+    polys_idx[[".poly_row"]] <- seq_len(nrow(polys))
+    poly_attrs <- tryCatch(terra::extract(polys_idx, points), error = function(e) NULL)
     if (
       !is.null(poly_attrs) &&
         nrow(poly_attrs) > 0L &&
@@ -1870,11 +1921,110 @@ observed_fire_sizes <- function(points, polys = NULL, min_size_ha = 0) {
         !is.na(pts_year[pt_idx]) &
         poly_yr == pts_year[pt_idx]
       if (any(valid)) {
-        sizes_raw[pt_idx[valid]] <- poly_size[valid]
+        sizes_raw[pt_idx[valid]] <- .matched_fire_sizes(
+          points,
+          polys,
+          pt_idx[valid],
+          as.integer(poly_attrs[[".poly_row"]][valid]),
+          ignitions,
+          ignition_min_ha,
+          conflict_m,
+          part_gap_m
+        )
       }
     }
   }
   sort(sizes_raw[!is.na(sizes_raw) & sizes_raw >= min_size_ha])
+}
+
+## The size each same-year match of a point `pt` to a polygon `poly` (row indices, one element per
+## match) gives the point, under observed_fire_sizes()'s rule for a polygon that holds more than one
+## fire (internal).
+.matched_fire_sizes <- function(
+  points,
+  polys,
+  pt,
+  poly,
+  ignitions,
+  ignition_min_ha,
+  conflict_m,
+  part_gap_m
+) {
+  if (!all(c("SIZE_HA", "YEAR") %in% names(ignitions))) {
+    stop("`ignitions` needs `SIZE_HA` and `YEAR` columns.", call. = FALSE)
+  }
+  ign_size <- ignitions$SIZE_HA
+  counted <- which(!is.na(ignitions$YEAR) & !is.na(ign_size) & ign_size >= ignition_min_ha)
+  by_year <- split(counted, ignitions$YEAR[counted])
+  ign_xy <- terra::crds(ignitions)
+  pt_xy <- terra::crds(points)
+  pt_size <- points$SIZE_HA
+  poly_year <- polys$YEAR
+  ## terra::distance() measures in metres in any CRS, but an extent is in the CRS's own unit, of
+  ## `unit_m` metres: 0 for lon/lat, which needs no pre-filter, and NaN for a CRS that states no
+  ## unit, taken to be metres.
+  unit_m <- terra::linearUnits(polys)
+  planar <- !isTRUE(unit_m == 0)
+  conflict_crs <- conflict_m / if (isTRUE(unit_m > 0)) unit_m else 1
+  sizes <- polys$SIZE_HA[poly]
+  for (j in unique(poly)) {
+    feature <- polys[j]
+    ## Ignitions of the feature's year within `conflict_m` of it. Those at one of its matched
+    ## points lie in it. Of the rest, in a planar CRS, the feature's extent widened by `conflict_m`
+    ## excludes most before any distance is measured.
+    near <- by_year[[as.character(poly_year[j])]]
+    on_pt <- rep(FALSE, length(near))
+    for (i in pt[poly == j]) {
+      on_pt <- on_pt | (ign_xy[near, 1] == pt_xy[i, 1] & ign_xy[near, 2] == pt_xy[i, 2])
+    }
+    rest <- near[!on_pt]
+    if (planar && length(rest)) {
+      e <- as.vector(terra::ext(feature)) + c(-1, 1, -1, 1) * conflict_crs
+      xy <- ign_xy[rest, , drop = FALSE]
+      rest <- rest[xy[, 1] >= e[1] & xy[, 1] <= e[2] & xy[, 2] >= e[3] & xy[, 2] <= e[4]]
+    }
+    if (length(rest)) {
+      rest <- rest[terra::distance(ignitions[rest], feature)[, 1] <= conflict_m]
+    }
+    near <- c(near[on_pt], rest)
+    parts <- NULL
+    for (k in which(poly == j)) {
+      i <- pt[k]
+      self <- near[ign_xy[near, 1] == pt_xy[i, 1] & ign_xy[near, 2] == pt_xy[i, 2]]
+      if (!length(self) && isTRUE(pt_size[i] >= ignition_min_ha)) {
+        stop(
+          "Point ",
+          i,
+          " of `points` lies in a same-year polygon but is not in `ignitions` at the same ",
+          "coordinates. `ignitions` must include every point: a copy of it at other coordinates ",
+          "would be taken for another fire.",
+          call. = FALSE
+        )
+      }
+      others <- setdiff(near, self[1L])
+      if (!length(others)) {
+        next ## the whole polygon's SIZE_HA
+      }
+      if (is.null(parts)) {
+        parts <- terra::disagg(feature)
+        group <- if (nrow(parts) > 1L) {
+          stats::cutree(stats::hclust(terra::distance(parts), method = "single"), h = part_gap_m)
+        } else {
+          1L
+        }
+      }
+      d_pt <- terra::distance(points[i], parts)[1L, ]
+      own <- group %in% group[d_pt == min(d_pt)]
+      sizes[k] <- if (
+        all(own) || any(terra::distance(ignitions[others], parts[own]) <= conflict_m)
+      ) {
+        pt_size[i]
+      } else {
+        sum(terra::expanse(parts[own], unit = "ha"))
+      }
+    }
+  }
+  sizes
 }
 
 #' Save observed fire-regime targets (NFDB-derived) for calibration loss
@@ -1900,7 +2050,10 @@ observed_fire_sizes <- function(points, polys = NULL, min_size_ha = 0) {
 #'         NFDB polygons are sparser (only mapped for larger fires).
 #'   \item Fire sizes come from [observed_fire_sizes()]: one per ignition
 #'         point, its own `SIZE_HA` unless a same-year perimeter polygon
-#'         contains it, then the polygon's `SIZE_HA`.
+#'         contains it, then the polygon's `SIZE_HA` -- or, where another
+#'         ignition of 1 ha or more lies in the polygon or within 500 m of it,
+#'         the area of the point's own group of the polygon's parts, or the
+#'         point's own `SIZE_HA`.
 #'   \item `area_by_fuel_ha` is computed for the PRIMARY ecoregion only via
 #'         polygon overlay on `fuel_types_rast`. `fuel_types_rast` covers the
 #'         LANDIS simulation domain; secondary-ecoregion polygons typically
@@ -1922,12 +2075,14 @@ observed_fire_sizes <- function(points, polys = NULL, min_size_ha = 0) {
 #' @param primary_points SpatVector. NFDB ignition points for the primary
 #'   ecoregion (the LANDIS simulation extent). Required.
 #' @param primary_polys SpatVector or NULL. Fire perimeter polygons for the
-#'   primary ecoregion. When supplied, a point's size is replaced by the
-#'   `SIZE_HA` (e.g. NBAC's `ADJ_HA`) of a same-year polygon containing it (see
-#'   [observed_fire_sizes()]), and `area_by_fuel_ha` is computed by rasterising
-#'   the polys against `fuel_types_rast`. When NULL, `fire_sizes_ha` is the
-#'   points' own `SIZE_HA` (NFDB agency-reported sizes) and `area_by_fuel_ha` is
-#'   NULL on the primary summary.
+#'   primary ecoregion, not clipped to it. When supplied, a point's size is
+#'   replaced by the `SIZE_HA` (e.g. NBAC's `ADJ_HA`) of a same-year polygon
+#'   containing it, unless another ignition of 1 ha or more lies in that
+#'   polygon or within 500 m of it (see [observed_fire_sizes()]), and
+#'   `area_by_fuel_ha` is computed by rasterising the polys against
+#'   `fuel_types_rast`. When NULL, `fire_sizes_ha` is the points' own `SIZE_HA`
+#'   (NFDB agency-reported sizes) and `area_by_fuel_ha` is NULL on the primary
+#'   summary.
 #' @param secondary_points,secondary_polys SpatVector or NULL. Same, for an
 #'   optional regional-context ecoregion. `area_by_fuel_ha` is NOT computed
 #'   for the secondary (see Details).
@@ -1967,6 +2122,11 @@ observed_fire_sizes <- function(points, polys = NULL, min_size_ha = 0) {
 #'   truncation symmetrically to `sim_sizes` so the KS distance compares
 #'   like with like. Set to `0` to disable the floor.
 #' @param path Character. Output `.rds` path. Parent dir created if missing.
+#' @param ignitions SpatVector or NULL. Ignition points tested as other fires
+#'   in or near a perimeter polygon besides the point being sized, passed to
+#'   [observed_fire_sizes()] for both ecoregions. Pass the whole point record,
+#'   including both ecoregions' points. NULL uses each ecoregion's own points,
+#'   which misses a fire that started outside the ecoregion.
 #'
 #' @returns Character. Absolute path to the written file.
 #'
@@ -1987,10 +2147,12 @@ save_observed_fire_targets <- function(
   fuel_label_to_base = bc_fuel_label_to_base(),
   severity_dist = NULL,
   mortality_share = NULL,
-  min_size_ha = 1.0
+  min_size_ha = 1.0,
+  ignitions = NULL
 ) {
   stopifnot(
     inherits(primary_points, "SpatVector"),
+    is.null(ignitions) || inherits(ignitions, "SpatVector"),
     is.numeric(min_size_ha),
     length(min_size_ha) == 1L,
     min_size_ha >= 0,
@@ -2064,7 +2226,12 @@ save_observed_fire_targets <- function(
     ## floor the KS comparison compares the sim's full distribution against
     ## a truncated observed distribution. `loss_from_stats()` applies the
     ## same truncation to `sim_sizes` symmetrically via `observed$min_size_ha`.
-    fire_sizes_ha <- observed_fire_sizes(points_sv, polys_sv, min_size_ha = min_size_ha)
+    fire_sizes_ha <- observed_fire_sizes(
+      points_sv,
+      polys_sv,
+      min_size_ha = min_size_ha,
+      ignitions = if (is.null(ignitions)) points_sv else ignitions
+    )
 
     if (isTRUE(compute_area_by_fuel) && !is.null(polys_sv) && nrow(plys) > 0L) {
       poly_mask <- terra::rasterize(polys_sv, fuel_types_rast, background = NA, field = 1)
@@ -2140,7 +2307,12 @@ save_observed_fire_targets <- function(
     computed_at = Sys.time(),
     notes = c(
       "Fire counts come from NFDB ignition points (one row = one ignition).",
-      "Fire sizes: one per ignition point, upgraded to a same-year containing polygon's SIZE_HA.",
+      paste(
+        "Fire sizes: one per ignition point, upgraded to a same-year containing polygon's SIZE_HA.",
+        "Where another ignition of 1 ha or more lies in the polygon or within 500 m of it, the",
+        "point takes the area of its own group of parts, or keeps its own SIZE_HA",
+        "(observed_fire_sizes())."
+      ),
       "area_by_fuel_ha is computed for the primary ecoregion only (LANDIS sim extent).",
       if (is.null(fuel_code_labels)) {
         "area_by_fuel_ha decodes fuel_types_rast by integer code, through fuel_code_to_base."
