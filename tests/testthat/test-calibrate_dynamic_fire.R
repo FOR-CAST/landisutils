@@ -1145,10 +1145,11 @@ test_that("save_observed_fire_targets() backfills NBAC with NFDB (year-aligned p
   ##   pt1: 2010, inside the 2010 polygon         -> SWAP to NBAC SIZE_HA
   ##   pt2: 2015, NOT inside any polygon          -> KEEP NFDB SIZE_HA
   ##   pt3: 2010, inside the 2020 polygons bbox   -> KEEP NFDB SIZE_HA (year mismatch)
+  ##        (550 m from the 2010 polygon, too far to be a second fire in it)
   ##   pt4: 1965, before NBAC coverage entirely   -> KEEP NFDB SIZE_HA
   pts <- terra::vect(
     data.frame(
-      lon = c(250, 750, 750, 100),
+      lon = c(250, 750, 950, 100),
       lat = c(250, 750, 250, 100),
       YEAR = c(2010L, 2015L, 2010L, 1965L),
       SIZE_HA = c(5.0, 50.0, 7.0, 12.0)
@@ -1158,7 +1159,7 @@ test_that("save_observed_fire_targets() backfills NBAC with NFDB (year-aligned p
   )
   ## Two NBAC polygons in distinct years:
   ##   * 2010: covers (200,200)-(400,400) -- contains pt1, sizes upgraded to 25
-  ##   * 2020: covers (700,200)-(800,300) -- bbox contains pt3 but year mismatches
+  ##   * 2020: covers (920,200)-(1000,300) -- bbox contains pt3 but year mismatches
   poly_2010 <- terra::vect(
     "POLYGON ((200 200, 400 200, 400 400, 200 400, 200 200))",
     crs = terra::crs(r)
@@ -1166,7 +1167,7 @@ test_that("save_observed_fire_targets() backfills NBAC with NFDB (year-aligned p
   poly_2010$YEAR <- 2010L
   poly_2010$SIZE_HA <- 25.0
   poly_2020 <- terra::vect(
-    "POLYGON ((700 200, 800 200, 800 300, 700 300, 700 200))",
+    "POLYGON ((920 200, 1000 200, 1000 300, 920 300, 920 200))",
     crs = terra::crs(r)
   )
   poly_2020$YEAR <- 2020L
@@ -1309,6 +1310,227 @@ test_that("observed_fire_sizes() gives one size per point, upgraded by same-year
   expect_equal(observed_fire_sizes(pts, poly), c(0.5, 25.0, 50.0))
   expect_equal(observed_fire_sizes(pts), c(0.5, 5.0, 50.0))
   expect_equal(observed_fire_sizes(pts, poly, min_size_ha = 1), c(25.0, 50.0))
+})
+
+## Fixtures for the merged-feature tests, in BC Albers metres: square polygon parts as WKT
+## (lower-left corner and side), one fire-perimeter feature made of such parts, and ignition points.
+.square <- function(x0, y0, side) {
+  sprintf(
+    "((%1$.1f %2$.1f, %3$.1f %2$.1f, %3$.1f %4$.1f, %1$.1f %4$.1f, %1$.1f %2$.1f))",
+    x0,
+    y0,
+    x0 + side,
+    y0 + side
+  )
+}
+.fire_feature <- function(squares, year, size_ha) {
+  v <- terra::vect(sprintf("MULTIPOLYGON (%s)", paste(squares, collapse = ", ")), crs = "EPSG:3005")
+  v$YEAR <- as.integer(year)
+  v$SIZE_HA <- size_ha
+  v
+}
+.ignitions <- function(x, y, year, size_ha) {
+  terra::vect(
+    data.frame(x = x, y = y, YEAR = as.integer(year), SIZE_HA = size_ha),
+    geom = c("x", "y"),
+    crs = "EPSG:3005"
+  )
+}
+
+test_that("observed_fire_sizes() gives each of two fires in one polygon its own part", {
+  ## A 100 ha part and a 25 ha part, 9 km apart, mapped as one feature whose SIZE_HA (120) covers
+  ## both. The fire in the small part started outside the region, so it is in `ignitions` only.
+  feat <- .fire_feature(c(.square(1.2e6, 1e6, 1000), .square(1.21e6, 1e6, 500)), 2018, 120)
+  pts <- .ignitions(1.2e6 + 500, 1e6 + 500, 2018, 90)
+  ign <- rbind(pts, .ignitions(1.21e6 + 250, 1e6 + 250, 2018, 30))
+  expect_equal(observed_fire_sizes(pts, feat, ignitions = ign), 100, tolerance = 1e-6)
+  expect_equal(observed_fire_sizes(ign, feat), c(25, 100), tolerance = 1e-6)
+  ## A spot fire under `ignition_min_ha` inside the large part is not another fire.
+  spot <- rbind(ign, .ignitions(1.2e6 + 100, 1e6 + 100, 2018, 0.5))
+  expect_equal(observed_fire_sizes(pts, feat, ignitions = spot), 100, tolerance = 1e-6)
+  ## The caller's polygons are not modified.
+  expect_named(feat, c("YEAR", "SIZE_HA"))
+  ## Without the other fire's ignition nothing disputes the feature, hence the whole record.
+  expect_equal(observed_fire_sizes(pts, feat), 120)
+})
+
+test_that("observed_fire_sizes() sizes a point from the polygon that holds it, in any row", {
+  ## The merged feature above, 50 km east, now the second of two same-year features. The first, a
+  ## 16 ha fire that holds no ignition, must not size the point.
+  feats <- rbind(
+    .fire_feature(.square(1.2e6, 1e6, 400), 2015, 16),
+    .fire_feature(c(.square(1.25e6, 1e6, 1000), .square(1.26e6, 1e6, 500)), 2015, 120)
+  )
+  pts <- .ignitions(1.25e6 + 500, 1e6 + 500, 2015, 90)
+  expect_equal(observed_fire_sizes(pts, feats), 120)
+  ign <- rbind(pts, .ignitions(1.26e6 + 250, 1e6 + 250, 2015, 30))
+  expect_equal(observed_fire_sizes(pts, feats, ignitions = ign), 100, tolerance = 1e-6)
+})
+
+test_that("observed_fire_sizes() keeps each fire's own size when fires share a polygon", {
+  ## One part holding two fires' ignitions: neither fire's area can be told apart.
+  feat <- .fire_feature(.square(1.2e6, 1e6, 400), 2009, 15.26)
+  pts <- .ignitions(1.2e6 + c(100, 300), 1e6 + c(100, 300), 2009, c(11.5, 4.0))
+  expect_equal(observed_fire_sizes(pts, feat), c(4.0, 11.5))
+  ## Two parts 100 m apart, one fire in each, are grouped as one fire and so shared.
+  feat2 <- .fire_feature(.square(1.2e6 + c(0, 500), 1e6, 400), 2009, 30)
+  pts2 <- .ignitions(1.2e6 + c(100, 700), 1e6 + 200, 2009, c(11.5, 4.0))
+  expect_equal(observed_fire_sizes(pts2, feat2), c(4.0, 11.5))
+})
+
+test_that("observed_fire_sizes() counts an ignition just outside a polygon as another fire", {
+  ## A mapped perimeter need not hold its own ignition: the second fire's lies 50 m outside.
+  feat <- .fire_feature(.square(1.2e6, 1e6, 400), 2009, 17.57)
+  pts <- .ignitions(1.2e6 + 200, 1e6 + 200, 2009, 15)
+  near <- rbind(pts, .ignitions(1.2e6 + 450, 1e6 + 200, 2009, 2.5))
+  expect_equal(observed_fire_sizes(pts, feat, ignitions = near), 15)
+  ## 600 m away, beyond `conflict_m`, it does not dispute the polygon.
+  far <- rbind(pts, .ignitions(1.2e6 + 1000, 1e6 + 200, 2009, 2.5))
+  expect_equal(observed_fire_sizes(pts, feat, ignitions = far), 17.57)
+})
+
+test_that("observed_fire_sizes() counts an ignition of exactly `ignition_min_ha` as another fire", {
+  ## The second fire above, 50 m outside the polygon, at the default `ignition_min_ha` of 1 ha.
+  feat <- .fire_feature(.square(1.2e6, 1e6, 400), 2009, 17.57)
+  pts <- .ignitions(1.2e6 + 200, 1e6 + 200, 2009, 15)
+  near <- rbind(pts, .ignitions(1.2e6 + 450, 1e6 + 200, 2009, 1))
+  expect_equal(observed_fire_sizes(pts, feat, ignitions = near), 15)
+})
+
+test_that("observed_fire_sizes() lets an ignition outside a fire's group dispute the group", {
+  ## Parts of 16 and 4 ha, 400 m apart, so two groups. The other fire's ignition lies 0.1 m
+  ## outside the far part and 399.9 m from the near one: it disputes the near part's group as
+  ## well, so the fire keeps its own size.
+  feat <- .fire_feature(c(.square(1.2e6, 1e6, 400), .square(1.2e6 + 800, 1e6, 200)), 2009, 17.57)
+  pts <- .ignitions(1.2e6 + 200, 1e6 + 200, 2009, 15)
+  near <- rbind(pts, .ignitions(1.2e6 + 799.9, 1e6 + 100, 2009, 2.5))
+  expect_equal(observed_fire_sizes(pts, feat, ignitions = near), 15)
+  ## On the far side of that part, 600 m from the near one, it disputes only the far group.
+  far <- rbind(pts, .ignitions(1.2e6 + 1000.1, 1e6 + 100, 2009, 2.5))
+  expect_equal(observed_fire_sizes(pts, feat, ignitions = far), 16, tolerance = 1e-6)
+})
+
+test_that("observed_fire_sizes() keeps every part of a fire mapped in several parts", {
+  ## Three 9 ha parts of one fire, 400 m apart. With no other ignition near, the fire keeps the
+  ## whole polygon's SIZE_HA however far apart its parts lie.
+  spread <- .fire_feature(.square(1.2e6 + c(0, 700, 1400), 1e6, 300), 2009, 26)
+  pts <- .ignitions(1.2e6 + 150, 1e6 + 150, 2009, 30)
+  ign <- rbind(pts, .ignitions(1.2e6 + 5000, 1e6 + 5000, 2009, 4))
+  expect_equal(observed_fire_sizes(pts, spread, ignitions = ign), 26)
+  ## The same fire with its parts 150 m apart, in a feature that also maps another fire 3 km away:
+  ## it takes all three of its parts, not only the part holding its ignition.
+  merged <- .fire_feature(
+    c(.square(1.2e6 + c(0, 450, 900), 1e6, 300), .square(1.2e6 + 4200, 1e6, 500)),
+    2009,
+    50
+  )
+  other <- rbind(pts, .ignitions(1.2e6 + 4450, 1e6 + 250, 2009, 20))
+  expect_equal(observed_fire_sizes(pts, merged, ignitions = other), 27, tolerance = 1e-6)
+})
+
+test_that("observed_fire_sizes() counts only other ignitions of the polygon's year", {
+  feat <- .fire_feature(.square(1.2e6, 1e6, 500), 2010, 25)
+  pts <- .ignitions(1.2e6 + 100, 1e6 + 100, 2010, 5)
+  ## A fire the next year inside the same polygon is not a second fire in it.
+  next_year <- rbind(pts, .ignitions(1.2e6 + 400, 1e6 + 400, 2011, 8))
+  expect_equal(observed_fire_sizes(pts, feat, ignitions = next_year), 25)
+  same_year <- rbind(pts, .ignitions(1.2e6 + 400, 1e6 + 400, 2010, 8))
+  expect_equal(observed_fire_sizes(pts, feat, ignitions = same_year), 5)
+  ## A polygon of another year never sizes a point.
+  expect_equal(observed_fire_sizes(.ignitions(1.2e6 + 100, 1e6 + 100, 2011, 5), feat), 5)
+})
+
+test_that("observed_fire_sizes() refuses `ignitions` that leave out a point it sizes", {
+  feat <- .fire_feature(.square(1.2e6, 1e6, 500), 2010, 25)
+  pts <- .ignitions(1.2e6 + 100, 1e6 + 100, 2010, 5)
+  elsewhere <- .ignitions(1.2e6 + 5000, 1e6 + 5000, 2010, 8)
+  expect_error(observed_fire_sizes(pts, feat, ignitions = elsewhere), "not in `ignitions`")
+  ## A point of exactly `ignition_min_ha` must be in `ignitions` as well.
+  one_ha <- .ignitions(1.2e6 + 100, 1e6 + 100, 2010, 1)
+  expect_error(observed_fire_sizes(one_ha, feat, ignitions = elsewhere), "not in `ignitions`")
+})
+
+test_that("observed_fire_sizes() refuses `ignitions` without `SIZE_HA` or `YEAR`", {
+  feat <- .fire_feature(.square(1.2e6, 1e6, 400), 2009, 17.57)
+  pts <- .ignitions(1.2e6 + 200, 1e6 + 200, 2009, 15)
+  no_year <- pts
+  no_year$YEAR <- NULL
+  no_size <- pts
+  no_size$SIZE_HA <- NULL
+  msg <- "needs `SIZE_HA` and `YEAR` columns"
+  expect_error(observed_fire_sizes(pts, feat, ignitions = no_year), msg, fixed = TRUE)
+  expect_error(observed_fire_sizes(pts, feat, ignitions = no_size), msg, fixed = TRUE)
+})
+
+test_that("observed_fire_sizes() measures distances in metres in any CRS", {
+  ## Another fire's ignition 300 m outside the polygon disputes it. One 400 m east and 400 m north
+  ## of its corner, 566 m away, does not, though it lies in the extent widened by 500 m. In US
+  ## survey feet the polygon's extent is in feet; lon/lat has no linear unit.
+  feat <- .fire_feature(.square(1.2e6, 1e6, 400), 2009, 17.57)
+  pts <- .ignitions(1.2e6 + 200, 1e6 + 200, 2009, 15)
+  near <- rbind(pts, .ignitions(1.2e6 + 700, 1e6 + 200, 2009, 2.5))
+  corner <- rbind(pts, .ignitions(1.2e6 + 800, 1e6 + 800, 2009, 2.5))
+  sizes_in <- function(crs, ign) {
+    to <- function(v) terra::project(v, crs)
+    observed_fire_sizes(to(pts), to(feat), ignitions = to(ign))
+  }
+  us_ft <- paste(
+    "+proj=aea +lat_0=45 +lon_0=-126 +lat_1=50 +lat_2=58.5 +x_0=1000000 +y_0=0",
+    "+datum=NAD83 +units=us-ft +no_defs"
+  )
+  expect_equal(sizes_in("EPSG:3005", near), 15)
+  expect_equal(sizes_in("EPSG:3005", corner), 17.57)
+  expect_equal(sizes_in(us_ft, near), 15)
+  expect_equal(sizes_in(us_ft, corner), 17.57)
+  expect_equal(sizes_in("EPSG:4326", near), 15)
+  expect_equal(sizes_in("EPSG:4326", corner), 17.57)
+  ## A CRS that states no unit is taken to be in metres (terra warns that it is unknown).
+  no_crs <- function(v) {
+    terra::crs(v) <- ""
+    v
+  }
+  expect_equal(
+    suppressWarnings(observed_fire_sizes(no_crs(pts), no_crs(feat), ignitions = no_crs(near))),
+    15
+  )
+})
+
+test_that("observed_fire_sizes() refuses a missing or negative threshold", {
+  feat <- .fire_feature(c(.square(1.2e6, 1e6, 1000), .square(1.21e6, 1e6, 500)), 2018, 120)
+  pts <- .ignitions(1.2e6 + 500, 1e6 + 500, 2018, 90)
+  ign <- rbind(pts, .ignitions(1.21e6 + 250, 1e6 + 250, 2018, 30))
+  sizes <- function(...) observed_fire_sizes(pts, feat, ignitions = ign, ...)
+  expect_equal(sizes(), 100, tolerance = 1e-6)
+  ## A missing `ignition_min_ha` would count no ignition, giving back the whole feature's 120 ha.
+  expect_error(sizes(ignition_min_ha = NA_real_), "ignition_min_ha")
+  expect_error(sizes(ignition_min_ha = -1), "ignition_min_ha")
+  expect_error(sizes(conflict_m = NA_real_), "conflict_m")
+  expect_error(sizes(conflict_m = -1), "conflict_m")
+  expect_error(sizes(part_gap_m = NA_real_), "part_gap_m")
+  expect_error(sizes(part_gap_m = -1), "part_gap_m")
+})
+
+test_that("save_observed_fire_targets() passes `ignitions` to the size rule", {
+  r <- terra::rast(
+    nrows = 10,
+    ncols = 110,
+    xmin = 1.2e6,
+    xmax = 1.211e6,
+    ymin = 1e6,
+    ymax = 1.001e6,
+    crs = "EPSG:3005"
+  )
+  terra::values(r) <- 2L
+  feat <- .fire_feature(c(.square(1.2e6, 1e6, 1000), .square(1.21e6, 1e6, 500)), 2018, 120)
+  pts <- .ignitions(1.2e6 + 500, 1e6 + 500, 2018, 90)
+  ign <- rbind(pts, .ignitions(1.21e6 + 250, 1e6 + 250, 2018, 30))
+  sizes <- function(ignitions) {
+    path <- withr::local_tempfile(fileext = ".rds")
+    save_observed_fire_targets(pts, feat, 2018L, r, path, ignitions = ignitions)
+    readRDS(path)$primary$fire_sizes_ha
+  }
+  expect_equal(sizes(ign), 100, tolerance = 1e-6)
+  expect_equal(sizes(NULL), 120)
 })
 
 test_that("save_observed_fire_targets() falls back to points' SIZE_HA when polys are not supplied", {
