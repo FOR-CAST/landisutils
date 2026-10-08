@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.169</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.170</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -146,9 +146,13 @@ fire config via <code><a href="../reference/apply_calibrated_ignprob.html">apply
 <p>The library is project-agnostic but expects you to provide:</p>
 <ol style="list-style-type: decimal">
 <li>
-<strong>NFDB-style SpatVectors</strong> clipped to your primary fire
-regime (and optionally a secondary, broader regime for context) – with
-<code>YEAR</code> and <code>SIZE_HA</code> columns on the points.</li>
+<strong>NFDB-style SpatVectors</strong> with <code>YEAR</code> and
+<code>SIZE_HA</code> columns: ignition points clipped to your primary
+fire regime (and optionally a secondary, broader regime for context),
+perimeter polygons for each regime, not clipped to it, and the whole
+ignition record as <code>ignitions</code>, since a fire that burned into
+a regime may have started outside it (see
+<code><a href="../reference/observed_fire_sizes.html">observed_fire_sizes()</a></code>).</li>
 <li>
 <strong>A fuel-type raster</strong> covering your LANDIS simulation
 extent, with a mapping to base fuel types (<code>Conifer</code>,
@@ -186,6 +190,7 @@ is the typical wiring; each numbered block is one or more
 <span>  primary_polys    <span class="op">=</span> <span class="va">nfdb_poly_fru59</span>,</span>
 <span>  secondary_points <span class="op">=</span> <span class="va">nfdb_point_frt12</span>, <span class="co">## optional regional context</span></span>
 <span>  secondary_polys  <span class="op">=</span> <span class="va">nfdb_poly_frt12</span>,</span>
+<span>  ignitions        <span class="op">=</span> <span class="va">nfdb_point</span>,       <span class="co">## every ignition, inside the regimes or not</span></span>
 <span>  fire_years       <span class="op">=</span> <span class="fl">1950L</span><span class="op">:</span><span class="fl">2023L</span>,</span>
 <span>  fuel_types_rast  <span class="op">=</span> <span class="va">fuel_types_rast</span>,</span>
 <span>  path             <span class="op">=</span> <span class="st">"outputs/calibration/observed_fire_targets.rds"</span>,</span>

@@ -15,7 +15,7 @@ while taking NBAC's satellite-derived area wherever a fire was mapped."><meta pr
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.169</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.170</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -60,7 +60,15 @@ while taking NBAC's satellite-derived area wherever a fire was mapped.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">observed_fire_sizes</span><span class="op">(</span><span class="va">points</span>, polys <span class="op">=</span> <span class="cn">NULL</span>, min_size_ha <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">observed_fire_sizes</span><span class="op">(</span></span>
+<span>  <span class="va">points</span>,</span>
+<span>  polys <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  min_size_ha <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  ignitions <span class="op">=</span> <span class="va">points</span>,</span>
+<span>  ignition_min_ha <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  conflict_m <span class="op">=</span> <span class="fl">500</span>,</span>
+<span>  part_gap_m <span class="op">=</span> <span class="fl">250</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -80,6 +88,28 @@ columns. NULL keeps every point's own size.</p></dd>
 <dd><p>Numeric scalar. Sizes below this, and missing sizes, are
 dropped. Default <code>0</code> keeps every positive and zero size.</p></dd>
 
+
+<dt id="arg-ignitions">ignitions<a class="anchor" aria-label="anchor" href="#arg-ignitions"></a></dt>
+<dd><p>SpatVector. Ignition points with <code>SIZE_HA</code> and <code>YEAR</code>
+columns, in the CRS of <code>points</code>, tested as other fires in or near a
+polygon. Every point of <code>ignition_min_ha</code> or more that a same-year polygon
+contains must be among them, at the same coordinates. Default <code>points</code>.</p></dd>
+
+
+<dt id="arg-ignition-min-ha">ignition_min_ha<a class="anchor" aria-label="anchor" href="#arg-ignition-min-ha"></a></dt>
+<dd><p>Numeric scalar, not negative. Smallest ignition (ha)
+taken to be another fire. Default <code>1</code>.</p></dd>
+
+
+<dt id="arg-conflict-m">conflict_m<a class="anchor" aria-label="anchor" href="#arg-conflict-m"></a></dt>
+<dd><p>Numeric scalar, not negative. Distance (m) within which
+another ignition disputes a polygon or a group of its parts. Default <code>500</code>.</p></dd>
+
+
+<dt id="arg-part-gap-m">part_gap_m<a class="anchor" aria-label="anchor" href="#arg-part-gap-m"></a></dt>
+<dd><p>Numeric scalar, not negative. Largest distance (m) between
+parts of a polygon that are grouped as one fire. Default <code>250</code>.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -88,7 +118,23 @@ per point.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>This is the fire-size rule behind <code><a href="save_observed_fire_targets.html">save_observed_fire_targets()</a></code>'s
+    <p>A polygon can hold more than one fire: NBAC maps some neighbouring fires of
+the same year as parts of one feature, whose <code>SIZE_HA</code> is the area of them
+all. A point therefore takes the polygon's <code>SIZE_HA</code> only when no other
+ignition of that year, of <code>ignition_min_ha</code> or more, lies inside the polygon
+or within <code>conflict_m</code> of it. Otherwise the polygon's parts are grouped,
+joining parts no more than <code>part_gap_m</code> apart, and the point takes the area
+of its own group, measured from the geometry, when no other such ignition
+lies in or within <code>conflict_m</code> of that group, or keeps its own <code>SIZE_HA</code>
+when one does. A fire mapped in several parts with no other ignition near it
+keeps the whole polygon's size. Because the test measures distance to the
+whole polygon, pass polygons that have not been clipped to a study area, and
+take <code>ignitions</code> from the whole point record: a fire that burned into a
+region may have started outside it. The defaults were chosen by comparing
+candidate rules with agency-mapped fire perimeters. <code>conflict_m</code> and
+<code>part_gap_m</code> are in metres whatever the CRS's linear unit; a CRS that states
+no unit is taken to be in metres.</p>
+<p>This is the fire-size rule behind <code><a href="save_observed_fire_targets.html">save_observed_fire_targets()</a></code>'s
 <code>fire_sizes_ha</code>. It is exported so that anything else derived from the same
 fire record – such as a fitted fire-size distribution – uses the same sizes
 as the calibration's size target, rather than a second rule that can drift

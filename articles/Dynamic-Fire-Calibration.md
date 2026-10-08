@@ -37,9 +37,13 @@ and the `SeverityCalibrationFactor` scalar.
 
 The library is project-agnostic but expects you to provide:
 
-1.  **NFDB-style SpatVectors** clipped to your primary fire regime (and
-    optionally a secondary, broader regime for context) – with `YEAR`
-    and `SIZE_HA` columns on the points.
+1.  **NFDB-style SpatVectors** with `YEAR` and `SIZE_HA` columns:
+    ignition points clipped to your primary fire regime (and optionally
+    a secondary, broader regime for context), perimeter polygons for
+    each regime, not clipped to it, and the whole ignition record as
+    `ignitions`, since a fire that burned into a regime may have started
+    outside it (see
+    [`observed_fire_sizes()`](https://for-cast.github.io/landisutils/reference/observed_fire_sizes.md)).
 2.  **A fuel-type raster** covering your LANDIS simulation extent, with
     a mapping to base fuel types (`Conifer`, `ConiferPlantation`,
     `Deciduous`, `Slash`, `Open`). Pass the raster with its category
@@ -73,6 +77,7 @@ save_observed_fire_targets(
   primary_polys    = nfdb_poly_fru59,
   secondary_points = nfdb_point_frt12, ## optional regional context
   secondary_polys  = nfdb_poly_frt12,
+  ignitions        = nfdb_point,       ## every ignition, inside the regimes or not
   fire_years       = 1950L:2023L,
   fuel_types_rast  = fuel_types_rast,
   path             = "outputs/calibration/observed_fire_targets.rds",

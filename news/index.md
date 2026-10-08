@@ -1,5 +1,40 @@
 # Changelog
 
+## landisutils 0.0.170
+
+- [`observed_fire_sizes()`](https://for-cast.github.io/landisutils/reference/observed_fire_sizes.md)
+  no longer gives every same-year ignition inside a perimeter polygon
+  the polygon’s whole `SIZE_HA`. NBAC maps some neighbouring fires of a
+  year as parts of one feature, whose size is the area of them all, so
+  each fire took the area of every fire mapped with it. In a 196-fire
+  record from one BC fire regime unit (1991-2020), a fire whose own part
+  is 521 ha entered at 2,673 ha, because its feature also holds a 2,370
+  ha part 9.9 km away, burned by a fire that started 47 m outside the
+  unit; five other fires took merged sizes, and corrected, the record’s
+  mean falls from 27.8 to 15.6 ha. A point now takes the polygon’s
+  `SIZE_HA` only when no other ignition of that year, of
+  `ignition_min_ha` (1 ha) or more, lies inside the polygon or within
+  `conflict_m` (500 m) of it. Otherwise the polygon’s parts are grouped,
+  joining parts no more than `part_gap_m` (250 m) apart, and the point
+  takes its own group’s area, measured from the geometry, when no other
+  such ignition lies in or within `conflict_m` of that group, or keeps
+  its own `SIZE_HA` when one does. A fire mapped in several parts with
+  no other ignition near it keeps the whole polygon’s size, so a
+  fragmented fire is not cut to the part holding its ignition. The other
+  ignitions come from the new `ignitions` argument, which defaults to
+  `points`: pass the whole point record, since a fire that burned into a
+  region may have started outside it, and polygons not clipped to the
+  region.
+  [`save_observed_fire_targets()`](https://for-cast.github.io/landisutils/reference/save_observed_fire_targets.md)
+  gains `ignitions` and passes it on for both ecoregions. Sizes change
+  only where another such ignition lies in a polygon or within
+  `conflict_m` of it, so one just outside the polygon counts too: a
+  mapped perimeter need not contain the ignition of the fire it maps.
+  `conflict_m` and `part_gap_m` are in metres whatever the CRS’s linear
+  unit. Upgrading invalidates no `targets` target that calls either
+  function, so rebuild those, and anything fitted to their sizes, by
+  hand.
+
 ## landisutils 0.0.169
 
 - A

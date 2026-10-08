@@ -13,7 +13,7 @@ can read it from disk without terra/sf in their environments."><meta property="o
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.169</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.170</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -71,7 +71,8 @@ can read it from disk without terra/sf in their environments.</p>
 <span>  fuel_label_to_base <span class="op">=</span> <span class="fu"><a href="bc_fuel_label_to_base.html">bc_fuel_label_to_base</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  severity_dist <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  mortality_share <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  min_size_ha <span class="op">=</span> <span class="fl">1</span></span>
+<span>  min_size_ha <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  ignitions <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -86,12 +87,14 @@ ecoregion (the LANDIS simulation extent). Required.</p></dd>
 
 <dt id="arg-primary-polys">primary_polys<a class="anchor" aria-label="anchor" href="#arg-primary-polys"></a></dt>
 <dd><p>SpatVector or NULL. Fire perimeter polygons for the
-primary ecoregion. When supplied, a point's size is replaced by the
-<code>SIZE_HA</code> (e.g. NBAC's <code>ADJ_HA</code>) of a same-year polygon containing it (see
-<code><a href="observed_fire_sizes.html">observed_fire_sizes()</a></code>), and <code>area_by_fuel_ha</code> is computed by rasterising
-the polys against <code>fuel_types_rast</code>. When NULL, <code>fire_sizes_ha</code> is the
-points' own <code>SIZE_HA</code> (NFDB agency-reported sizes) and <code>area_by_fuel_ha</code> is
-NULL on the primary summary.</p></dd>
+primary ecoregion, not clipped to it. When supplied, a point's size is
+replaced by the <code>SIZE_HA</code> (e.g. NBAC's <code>ADJ_HA</code>) of a same-year polygon
+containing it, unless another ignition of 1 ha or more lies in that
+polygon or within 500 m of it (see <code><a href="observed_fire_sizes.html">observed_fire_sizes()</a></code>), and
+<code>area_by_fuel_ha</code> is computed by rasterising the polys against
+<code>fuel_types_rast</code>. When NULL, <code>fire_sizes_ha</code> is the points' own <code>SIZE_HA</code>
+(NFDB agency-reported sizes) and <code>area_by_fuel_ha</code> is NULL on the primary
+summary.</p></dd>
 
 
 <dt id="arg-fire-years">fire_years<a class="anchor" aria-label="anchor" href="#arg-fire-years"></a></dt>
@@ -162,6 +165,14 @@ observed distribution is effectively left-censored at this threshold.
 truncation symmetrically to <code>sim_sizes</code> so the KS distance compares
 like with like. Set to <code>0</code> to disable the floor.</p></dd>
 
+
+<dt id="arg-ignitions">ignitions<a class="anchor" aria-label="anchor" href="#arg-ignitions"></a></dt>
+<dd><p>SpatVector or NULL. Ignition points tested as other fires
+in or near a perimeter polygon besides the point being sized, passed to
+<code><a href="observed_fire_sizes.html">observed_fire_sizes()</a></code> for both ecoregions. Pass the whole point record,
+including both ecoregions' points. NULL uses each ecoregion's own points,
+which misses a fire that started outside the ecoregion.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -179,7 +190,10 @@ severity matching is implemented.</p></li>
 NFDB polygons are sparser (only mapped for larger fires).</p></li>
 <li><p>Fire sizes come from <code><a href="observed_fire_sizes.html">observed_fire_sizes()</a></code>: one per ignition
 point, its own <code>SIZE_HA</code> unless a same-year perimeter polygon
-contains it, then the polygon's <code>SIZE_HA</code>.</p></li>
+contains it, then the polygon's <code>SIZE_HA</code> – or, where another
+ignition of 1 ha or more lies in the polygon or within 500 m of it,
+the area of the point's own group of the polygon's parts, or the
+point's own <code>SIZE_HA</code>.</p></li>
 <li><p><code>area_by_fuel_ha</code> is computed for the PRIMARY ecoregion only via
 polygon overlay on <code>fuel_types_rast</code>. <code>fuel_types_rast</code> covers the
 LANDIS simulation domain; secondary-ecoregion polygons typically

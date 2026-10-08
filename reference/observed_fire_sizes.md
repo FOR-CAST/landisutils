@@ -10,7 +10,15 @@ wherever a fire was mapped.
 ## Usage
 
 ``` r
-observed_fire_sizes(points, polys = NULL, min_size_ha = 0)
+observed_fire_sizes(
+  points,
+  polys = NULL,
+  min_size_ha = 0,
+  ignitions = points,
+  ignition_min_ha = 1,
+  conflict_m = 500,
+  part_gap_m = 250
+)
 ```
 
 ## Arguments
@@ -29,12 +37,52 @@ observed_fire_sizes(points, polys = NULL, min_size_ha = 0)
   Numeric scalar. Sizes below this, and missing sizes, are dropped.
   Default `0` keeps every positive and zero size.
 
+- ignitions:
+
+  SpatVector. Ignition points with `SIZE_HA` and `YEAR` columns, in the
+  CRS of `points`, tested as other fires in or near a polygon. Every
+  point of `ignition_min_ha` or more that a same-year polygon contains
+  must be among them, at the same coordinates. Default `points`.
+
+- ignition_min_ha:
+
+  Numeric scalar, not negative. Smallest ignition (ha) taken to be
+  another fire. Default `1`.
+
+- conflict_m:
+
+  Numeric scalar, not negative. Distance (m) within which another
+  ignition disputes a polygon or a group of its parts. Default `500`.
+
+- part_gap_m:
+
+  Numeric scalar, not negative. Largest distance (m) between parts of a
+  polygon that are grouped as one fire. Default `250`.
+
 ## Value
 
 Numeric vector of sizes (ha), sorted ascending; at most one element per
 point.
 
 ## Details
+
+A polygon can hold more than one fire: NBAC maps some neighbouring fires
+of the same year as parts of one feature, whose `SIZE_HA` is the area of
+them all. A point therefore takes the polygon's `SIZE_HA` only when no
+other ignition of that year, of `ignition_min_ha` or more, lies inside
+the polygon or within `conflict_m` of it. Otherwise the polygon's parts
+are grouped, joining parts no more than `part_gap_m` apart, and the
+point takes the area of its own group, measured from the geometry, when
+no other such ignition lies in or within `conflict_m` of that group, or
+keeps its own `SIZE_HA` when one does. A fire mapped in several parts
+with no other ignition near it keeps the whole polygon's size. Because
+the test measures distance to the whole polygon, pass polygons that have
+not been clipped to a study area, and take `ignitions` from the whole
+point record: a fire that burned into a region may have started outside
+it. The defaults were chosen by comparing candidate rules with
+agency-mapped fire perimeters. `conflict_m` and `part_gap_m` are in
+metres whatever the CRS's linear unit; a CRS that states no unit is
+taken to be in metres.
 
 This is the fire-size rule behind
 [`save_observed_fire_targets()`](https://for-cast.github.io/landisutils/reference/save_observed_fire_targets.md)'s

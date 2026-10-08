@@ -24,7 +24,8 @@ save_observed_fire_targets(
   fuel_label_to_base = bc_fuel_label_to_base(),
   severity_dist = NULL,
   mortality_share = NULL,
-  min_size_ha = 1
+  min_size_ha = 1,
+  ignitions = NULL
 )
 ```
 
@@ -37,9 +38,11 @@ save_observed_fire_targets(
 
 - primary_polys:
 
-  SpatVector or NULL. Fire perimeter polygons for the primary ecoregion.
-  When supplied, a point's size is replaced by the `SIZE_HA` (e.g.
-  NBAC's `ADJ_HA`) of a same-year polygon containing it (see
+  SpatVector or NULL. Fire perimeter polygons for the primary ecoregion,
+  not clipped to it. When supplied, a point's size is replaced by the
+  `SIZE_HA` (e.g. NBAC's `ADJ_HA`) of a same-year polygon containing it,
+  unless another ignition of 1 ha or more lies in that polygon or within
+  500 m of it (see
   [`observed_fire_sizes()`](https://for-cast.github.io/landisutils/reference/observed_fire_sizes.md)),
   and `area_by_fuel_ha` is computed by rasterising the polys against
   `fuel_types_rast`. When NULL, `fire_sizes_ha` is the points' own
@@ -122,6 +125,15 @@ save_observed_fire_targets(
   symmetrically to `sim_sizes` so the KS distance compares like with
   like. Set to `0` to disable the floor.
 
+- ignitions:
+
+  SpatVector or NULL. Ignition points tested as other fires in or near a
+  perimeter polygon besides the point being sized, passed to
+  [`observed_fire_sizes()`](https://for-cast.github.io/landisutils/reference/observed_fire_sizes.md)
+  for both ecoregions. Pass the whole point record, including both
+  ecoregions' points. NULL uses each ecoregion's own points, which
+  misses a fire that started outside the ecoregion.
+
 ## Value
 
 Character. Absolute path to the written file.
@@ -148,7 +160,10 @@ Per ecoregion (`primary_ecoregion`, `secondary_ecoregion`):
 - Fire sizes come from
   [`observed_fire_sizes()`](https://for-cast.github.io/landisutils/reference/observed_fire_sizes.md):
   one per ignition point, its own `SIZE_HA` unless a same-year perimeter
-  polygon contains it, then the polygon's `SIZE_HA`.
+  polygon contains it, then the polygon's `SIZE_HA` – or, where another
+  ignition of 1 ha or more lies in the polygon or within 500 m of it,
+  the area of the point's own group of the polygon's parts, or the
+  point's own `SIZE_HA`.
 
 - `area_by_fuel_ha` is computed for the PRIMARY ecoregion only via
   polygon overlay on `fuel_types_rast`. `fuel_types_rast` covers the
