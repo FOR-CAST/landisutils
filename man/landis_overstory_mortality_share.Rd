@@ -27,7 +27,10 @@ Everything needed is in the replicate directory, because a run is a copy of its 
 0 inactive, 1 active and unburned, 2 burned with no cohort damaged, and severity + 2 for
 a damaged cell, so a cell's severity class is its map value MINUS TWO.
 \item \code{initial-communities.csv} / \code{.tif} -- the cohorts on each cell.
-\item \code{species.txt} -- longevity, which the damage table's age thresholds are shares of.
+\item the core species file -- longevity, which the damage table's age thresholds are shares
+of. Its name is read from \code{scenario.txt}'s \code{Species} directive, since \code{writeSpecies()}
+names it \code{species-core.txt} while the LANDIS-II examples use \code{species.txt}; the latter is
+the fallback when there is no directive to read.
 \item \code{DynamicFire_Spp_Table.csv} -- each species' fire tolerance.
 \item \code{dynamic-fire.txt} -- the \code{FireDamageTable}, mapping severity minus tolerance to the
 oldest cohort killed, as a percentage of longevity.
