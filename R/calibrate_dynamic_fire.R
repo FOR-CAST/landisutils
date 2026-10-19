@@ -327,7 +327,10 @@ parse_dynamic_fire_logs <- function(rep_dir, pixel_area_ha = 1.0) {
 #'         0 inactive, 1 active and unburned, 2 burned with no cohort damaged, and severity + 2 for
 #'         a damaged cell, so a cell's severity class is its map value MINUS TWO.
 #'   \item `initial-communities.csv` / `.tif` -- the cohorts on each cell.
-#'   \item `species.txt` -- longevity, which the damage table's age thresholds are shares of.
+#'   \item the core species file -- longevity, which the damage table's age thresholds are shares
+#'         of. Its name is read from `scenario.txt`'s `Species` directive, since `writeSpecies()`
+#'         names it `species-core.txt` while the LANDIS-II examples use `species.txt`; the latter is
+#'         the fallback when there is no directive to read.
 #'   \item `DynamicFire_Spp_Table.csv` -- each species' fire tolerance.
 #'   \item `dynamic-fire.txt` -- the `FireDamageTable`, mapping severity minus tolerance to the
 #'         oldest cohort killed, as a percentage of longevity.
@@ -356,7 +359,16 @@ landis_overstory_mortality_share <- function(rep_dir) {
   ic_csv <- fs::path(rep_dir, "initial-communities.csv")
   ic_tif <- fs::path(rep_dir, "initial-communities.tif")
   spp_csv <- fs::path(rep_dir, "DynamicFire_Spp_Table.csv")
-  spp_txt <- fs::path(rep_dir, "species.txt")
+  ## Resolve the species file the way the scenario NAMES it, not by guessing. `writeSpecies()`
+  ## defaults to `species-core.txt`, so a hardcoded `species.txt` is absent from every scenario this
+  ## package writes, the all-files guard below returns NULL, and the component scores a STRUCTURAL
+  ## ZERO -- identical for every parameter set, so nothing that reaches the loss only through it has
+  ## any gradient. Measured on a completed 25-generation search (2026-10-09): `comp_mortality` was
+  ## exactly 0 in all 519 evaluations and `overstory_mortality` NULL in all 20 validation replicates,
+  ## leaving `DamageAgeMultiplier` unconstrained at rho -0.036 to the total loss. The scenario builder
+  ## in this same file already reads the `Species` directive (`.calibration_species_file()`); this is
+  ## the same lookup, with the old hardcoded name kept only as the fallback.
+  spp_txt <- .calibration_species_file(rep_dir)
   fire_txt <- fs::path(rep_dir, "dynamic-fire.txt")
   if (
     length(sev_files) == 0L || !all(fs::file_exists(c(ic_csv, ic_tif, spp_csv, spp_txt, fire_txt)))

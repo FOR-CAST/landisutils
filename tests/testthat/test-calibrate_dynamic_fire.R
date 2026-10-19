@@ -1247,6 +1247,36 @@ test_that("landis_overstory_mortality_share() counts cells that lost their domin
   expect_equal(m$share, 2 / 3)
 })
 
+test_that("landis_overstory_mortality_share() reads the species file scenario.txt names", {
+  ## REGRESSION. The share used to be read from a hardcoded `species.txt`, which `writeSpecies()`
+  ## never produces -- it names the file `species-core.txt` -- so the all-files guard returned NULL
+  ## for every replicate this package writes, and the component scored a structural zero: identical
+  ## for all parameters, which left `DamageAgeMultiplier` with no gradient through its only route
+  ## into the loss. A completed 25-generation search (2026-10-09) had comp_mortality exactly 0 in
+  ## all 519 evaluations. The fixture above writes `species.txt` because it was modelled on the
+  ## LANDIS-II example, which is why the suite never caught it.
+  dir <- .mk_mortality_rep(list(c(3L, 3L, 3L, 1L)))
+  fs::file_move(fs::path(dir, "species.txt"), fs::path(dir, "species-core.txt"))
+  writeLines(
+    c("LandisData  Scenario", "   Species    species-core.txt"),
+    fs::path(dir, "scenario.txt")
+  )
+
+  m <- landis_overstory_mortality_share(dir)
+
+  expect_equal(m$burned_cells, 3L)
+  expect_equal(m$share, 2 / 3)
+})
+
+test_that("landis_overstory_mortality_share() falls back to species.txt without a directive", {
+  ## The LANDIS-II examples ship `species.txt` and no `Species` directive to read, so the old name
+  ## has to keep working -- the fix resolves the name, it does not replace one guess with another.
+  dir <- .mk_mortality_rep(list(c(3L, 3L, 3L, 1L)))
+  expect_false(fs::file_exists(fs::path(dir, "scenario.txt")))
+
+  expect_equal(landis_overstory_mortality_share(dir)$share, 2 / 3)
+})
+
 test_that("landis_overstory_mortality_share() kills everything at severity 5", {
   ## The extension kills all cohorts at severity 5 whatever their tolerance, so the old cohort
   ## that survived class 1 dies here.
