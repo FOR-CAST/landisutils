@@ -1,6 +1,6 @@
 Package: landisutils
 Title: Utilities for Running LANDIS-II Simulations
-Version: 0.0.171
+Version: 0.0.172
 Authors@R: 
     person(c("Alex", "M"), "Chubaty", , "achubaty@for-cast.ca", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0001-7146-8135"))
@@ -51,6 +51,7 @@ Suggests:
     keyring,
     knitr,
     mgcv,
+    nanonext,
     parallelly,
     rlang,
     rmarkdown,
