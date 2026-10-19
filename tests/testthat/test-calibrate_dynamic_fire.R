@@ -3432,6 +3432,32 @@ test_that("mclapply() really does return NULL for a child that dies", {
   expect_identical(res[[2L]], "ok")
 })
 
+test_that(".fork_lapply() and .fork_cluster() collect NNG garbage before they fork", {
+  ## A child that finalizes an inherited NNG context dies with SIGILL, as every replicate did
+  ## after crew tasks had left contexts behind. Each child collects garbage first thing, so
+  ## without the parent's collection both would die here.
+  skip_on_os("windows") ## fork-only
+  skip_if_not_installed("nanonext")
+  leave_nng_garbage <- function() {
+    s <- nanonext::socket("req")
+    nanonext::context(s)
+    invisible(NULL)
+  }
+  child <- function(i) {
+    gc()
+    i
+  }
+
+  leave_nng_garbage()
+  res <- suppressWarnings(.fork_lapply(1:2, child, mc.cores = 2L, mc.preschedule = FALSE))
+  expect_identical(res, list(1L, 2L))
+
+  leave_nng_garbage()
+  cl <- .fork_cluster(2L)
+  on.exit(parallel::stopCluster(cl), add = TRUE)
+  expect_identical(parallel::parLapply(cl, 1:2, child), list(1L, 2L))
+})
+
 test_that("loss_from_stats() refuses a reps list holding a dead replicate", {
   observed <- list(
     fru59 = list(
@@ -3585,10 +3611,7 @@ test_that("loss_from_stats() takes the observed rate from lambda_obs, not from t
 
   ## under the summed form it would have scored |log10(100/500)|, a target 5x too high
   expect_gt(abs(log10(100 / 500)), 0.69)
-  expect_false(isTRUE(all.equal(
-    matched$components[["area_burned"]],
-    abs(log10(100 / 500))
-  )))
+  expect_false(isTRUE(all.equal(matched$components[["area_burned"]], abs(log10(100 / 500)))))
 
   ## and borrowing sizes must not change the score at all, since the mean is the same
   expect_equal(
@@ -3600,10 +3623,7 @@ test_that("loss_from_stats() takes the observed rate from lambda_obs, not from t
 test_that("loss_from_stats() contributes 0 when lambda_obs cannot give a rate", {
   obs <- .ab_observed()
   obs$primary$lambda_obs <- 0
-  expect_equal(
-    loss_from_stats(list(.ab_rep(c(3000, 2000))), obs)$components[["area_burned"]],
-    0
-  )
+  expect_equal(loss_from_stats(list(.ab_rep(c(3000, 2000))), obs)$components[["area_burned"]], 0)
 })
 
 test_that("loss_from_stats() gives a replicate set that burns nothing a finite area_burned", {
@@ -3630,9 +3650,9 @@ test_that("loss_from_stats() contributes 0 when the payload cannot supply an ann
   obs_no_years <- .ab_observed()
   obs_no_years$primary$n_years <- NULL
   expect_equal(
-    suppressWarnings(
-      loss_from_stats(list(.ab_rep(c(3000, 2000))), obs_no_years)$components[["area_burned"]]
-    ),
+    suppressWarnings(loss_from_stats(list(.ab_rep(c(3000, 2000))), obs_no_years)$components[[
+      "area_burned"
+    ]]),
     1
   )
 })
@@ -3640,10 +3660,7 @@ test_that("loss_from_stats() contributes 0 when the payload cannot supply an ann
 test_that("loss_from_stats() averages the annual rate across replicates", {
   observed <- .ab_observed()
   ## 100 ha/yr and 1,000 ha/yr average to 550 ha/yr, not to the geometric mean of the ratios
-  loss <- loss_from_stats(
-    list(.ab_rep(c(300, 200)), .ab_rep(c(3000, 2000))),
-    observed
-  )
+  loss <- loss_from_stats(list(.ab_rep(c(300, 200)), .ab_rep(c(3000, 2000))), observed)
   expect_equal(loss$components[["area_burned"]], abs(log10(550 / 100)))
 })
 
@@ -3708,9 +3725,13 @@ test_that(".parse_rep_isolated() survives a parse whose process dies", {
     "parsed"
   }
   environment(parser) <- baseenv()
-  out <- suppressMessages(
-    .parse_rep_isolated(flag, 1, timeout_sec = 60, retries = 1L, parser = parser)
-  )
+  out <- suppressMessages(.parse_rep_isolated(
+    flag,
+    1,
+    timeout_sec = 60,
+    retries = 1L,
+    parser = parser
+  ))
   expect_identical(out, "parsed")
 })
 
@@ -3722,9 +3743,13 @@ test_that(".parse_rep_isolated() does not retry an error the parser raises", {
   }
   environment(parser) <- baseenv()
   expect_error(
-    suppressMessages(
-      .parse_rep_isolated(calls, 1, timeout_sec = 60, retries = 2L, parser = parser)
-    ),
+    suppressMessages(.parse_rep_isolated(
+      calls,
+      1,
+      timeout_sec = 60,
+      retries = 2L,
+      parser = parser
+    )),
     "Dynamic Fire logs not found"
   )
   expect_length(readLines(calls), 1L)
@@ -3734,9 +3759,13 @@ test_that(".parse_rep_isolated() fails, naming the replicate, once its attempts 
   parser <- function(rep_dir, pixel_area_ha) Sys.sleep(600)
   environment(parser) <- baseenv()
   expect_error(
-    suppressMessages(
-      .parse_rep_isolated("rep-x", 1, timeout_sec = 2, retries = 1L, parser = parser)
-    ),
+    suppressMessages(.parse_rep_isolated(
+      "rep-x",
+      1,
+      timeout_sec = 2,
+      retries = 1L,
+      parser = parser
+    )),
     "parsing rep-x failed 2 time"
   )
 })
@@ -3746,7 +3775,9 @@ test_that(".parse_rep_isolated() fails, naming the replicate, once its attempts 
 .skip_unless_child_has_this_landisutils <- function() {
   child <- callr::r(
     function() {
-      tryCatch(as.character(utils::packageVersion("landisutils")), error = function(e) NA_character_)
+      tryCatch(as.character(utils::packageVersion("landisutils")), error = function(e) {
+        NA_character_
+      })
     },
     user_profile = FALSE
   )
@@ -3761,7 +3792,11 @@ test_that(".parse_rep_isolated() fails, naming the replicate, once its attempts 
   fs::dir_create(fs::path(rep_dir, "fire"))
   for (f in c("event", "summary")) {
     fs::file_copy(
-      system.file("testdata", sprintf("dynamic-fire-%s-log-sample.csv", f), package = "landisutils"),
+      system.file(
+        "testdata",
+        sprintf("dynamic-fire-%s-log-sample.csv", f),
+        package = "landisutils"
+      ),
       fs::path(rep_dir, "fire", sprintf("dynamic-fire-%s-log.csv", f))
     )
   }

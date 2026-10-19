@@ -234,25 +234,7 @@ fps_run_docker <- function(
 
   ## Image tags are mutable; the digest identifies the bytes that actually ran.
   ## Same sidecar convention as `landis_run_docker()`.
-  digest_line <- tryCatch(
-    {
-      rd <- system2(
-        console,
-        c(
-          "image",
-          "inspect",
-          image,
-          "--format",
-          "{{if .RepoDigests}}{{index .RepoDigests 0}}{{else}}{{.Id}}{{end}}"
-        ),
-        stdout = TRUE,
-        stderr = FALSE
-      )
-      if (length(rd) && nzchar(trimws(rd[1L]))) trimws(rd[1L]) else NA_character_
-    },
-    error = function(e) NA_character_,
-    warning = function(w) NA_character_
-  )
+  digest_line <- .image_digest_line(image, console = console)
   if (is.na(digest_line)) {
     digest_line <- sprintf("# %s (digest unavailable: not in the local image cache?)", image)
   }

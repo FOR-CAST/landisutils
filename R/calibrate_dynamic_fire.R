@@ -4090,9 +4090,10 @@ calibrate_dynamic_fire <- function(observed_targets_path, scenario_template, cfg
   }
 
   ## FORK cluster -- workers inherit the parent's environment including `pool`. Skipped entirely when
-  ## a multi-node PSOCK cluster is already up.
+  ## a multi-node PSOCK cluster is already up. Forked through `.fork_cluster()`, which collects the
+  ## parent's garbage first (see there).
   if (is.null(multi) && use_parallel && .Platform$OS.type != "windows") {
-    cl <- parallel::makeCluster(n_cores, type = "FORK")
+    cl <- .fork_cluster(n_cores)
     on.exit(parallel::stopCluster(cl), add = TRUE, after = FALSE)
     if (!is.null(pool)) {
       parallel::clusterApply(cl, seq_len(n_cores), function(i) {
@@ -4784,6 +4785,26 @@ calibrate_dynamic_fire <- function(observed_targets_path, scenario_template, cfg
 ## from the BC_HRV / gitanyow-partial-harvest report-pipeline templates;
 ## succession-backend-agnostic.
 
+## Fork only after a garbage collection.
+##
+## A forked child inherits the parent's heap, including objects that are unreachable but not yet
+## collected. When one of them holds an NNG resource -- crew and mirai leave a context behind for
+## every task, and anything else built on nanonext can too -- the child's first garbage collection
+## runs its finalizer, NNG's fork guard sees a forked process, and the child dies with SIGILL.
+## Measured: a validation that forked from a process which had run crew tasks lost all 40
+## replicates at once, each child trapping inside nanonext's finalizer for contexts. Collecting in
+## the parent first runs those finalizers where that is safe, so the children inherit nothing to
+## collect. Both fork sites in this package go through these two helpers.
+.fork_lapply <- function(X, FUN, ..., mc.cores) {
+  invisible(gc())
+  parallel::mclapply(X, FUN, ..., mc.cores = mc.cores)
+}
+
+.fork_cluster <- function(n) {
+  invisible(gc())
+  parallel::makeCluster(n, type = "FORK")
+}
+
 ## Fail loudly on any replicate a parallel map did not return properly.
 ##
 ## `parallel::mclapply()` reports a failed replicate in one of TWO ways, and testing for only
@@ -4938,7 +4959,7 @@ run_calibration_validation <- function(
     )
   }
   reps <- if (n_reps_i > 1L) {
-    parallel::mclapply(seq_len(n_reps_i), run_rep, mc.cores = n_reps_i, mc.preschedule = FALSE)
+    .fork_lapply(seq_len(n_reps_i), run_rep, mc.cores = n_reps_i, mc.preschedule = FALSE)
   } else {
     lapply(seq_len(n_reps_i), run_rep)
   }
