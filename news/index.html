@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.170</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.171</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,6 +41,11 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.171" id="landisutils-00171">landisutils 0.0.171<a class="anchor" aria-label="anchor" href="#landisutils-00171"></a></h2>
+<ul><li>
+<code><a href="../reference/landis_overstory_mortality_share.html">landis_overstory_mortality_share()</a></code> reads the core species file under the name <code>scenario.txt</code> gives it, rather than a hardcoded <code>species.txt</code>. <code>writeSpecies()</code> names that file <code>species-core.txt</code>, so for every scenario this package writes the hardcoded name was absent, the function’s all-files guard returned <code>NULL</code>, and <code><a href="../reference/loss_from_stats.html">loss_from_stats()</a></code> scored the <code>mortality</code> component as 0. The zero was structural, not a fit: it was identical for every parameter set, so a parameter whose only route into the objective is that component had no gradient at all. On a completed 25-generation Dynamic Fire calibration (2026-10-09) <code>comp_mortality</code> was exactly 0 in all 519 evaluations and the share was <code>NULL</code> in all 20 validation replicates, leaving <code>DamageAgeMultiplier</code> at a rank correlation of -0.036 with the total loss. The name now comes from the <code>Species</code> directive, the same lookup the calibration scenario builder already used, and falls back to <code>species.txt</code> when there is no directive to read, so the LANDIS-II examples keep working. Any calibration fitted with <code>weights["mortality"] &gt; 0</code> before this release scored one component fewer than it recorded; refit it.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.170" id="landisutils-00170">landisutils 0.0.170<a class="anchor" aria-label="anchor" href="#landisutils-00170"></a></h2>
 <ul><li>

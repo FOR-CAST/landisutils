@@ -38,8 +38,11 @@ of its scenario:
 
 - `initial-communities.csv` / `.tif` – the cohorts on each cell.
 
-- `species.txt` – longevity, which the damage table's age thresholds are
-  shares of.
+- the core species file – longevity, which the damage table's age
+  thresholds are shares of. Its name is read from `scenario.txt`'s
+  `Species` directive, since `writeSpecies()` names it
+  `species-core.txt` while the LANDIS-II examples use `species.txt`; the
+  latter is the fallback when there is no directive to read.
 
 - `DynamicFire_Spp_Table.csv` – each species' fire tolerance.
 

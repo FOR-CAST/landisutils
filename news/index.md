@@ -1,5 +1,28 @@
 # Changelog
 
+## landisutils 0.0.171
+
+- [`landis_overstory_mortality_share()`](https://for-cast.github.io/landisutils/reference/landis_overstory_mortality_share.md)
+  reads the core species file under the name `scenario.txt` gives it,
+  rather than a hardcoded `species.txt`. `writeSpecies()` names that
+  file `species-core.txt`, so for every scenario this package writes the
+  hardcoded name was absent, the function’s all-files guard returned
+  `NULL`, and
+  [`loss_from_stats()`](https://for-cast.github.io/landisutils/reference/loss_from_stats.md)
+  scored the `mortality` component as 0. The zero was structural, not a
+  fit: it was identical for every parameter set, so a parameter whose
+  only route into the objective is that component had no gradient at
+  all. On a completed 25-generation Dynamic Fire calibration
+  (2026-10-09) `comp_mortality` was exactly 0 in all 519 evaluations and
+  the share was `NULL` in all 20 validation replicates, leaving
+  `DamageAgeMultiplier` at a rank correlation of -0.036 with the total
+  loss. The name now comes from the `Species` directive, the same lookup
+  the calibration scenario builder already used, and falls back to
+  `species.txt` when there is no directive to read, so the LANDIS-II
+  examples keep working. Any calibration fitted with
+  `weights["mortality"] > 0` before this release scored one component
+  fewer than it recorded; refit it.
+
 ## landisutils 0.0.170
 
 - [`observed_fire_sizes()`](https://for-cast.github.io/landisutils/reference/observed_fire_sizes.md)

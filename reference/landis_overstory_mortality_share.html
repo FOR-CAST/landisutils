@@ -15,7 +15,7 @@ that burns hot at ground level without crowning, the two disagree by constructio
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.170</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.171</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -82,7 +82,10 @@ when the replicate holds no severity maps or is missing one of the files above.<
 0 inactive, 1 active and unburned, 2 burned with no cohort damaged, and severity + 2 for
 a damaged cell, so a cell's severity class is its map value MINUS TWO.</p></li>
 <li><p><code>initial-communities.csv</code> / <code>.tif</code> – the cohorts on each cell.</p></li>
-<li><p><code>species.txt</code> – longevity, which the damage table's age thresholds are shares of.</p></li>
+<li><p>the core species file – longevity, which the damage table's age thresholds are shares
+of. Its name is read from <code>scenario.txt</code>'s <code>Species</code> directive, since <code>writeSpecies()</code>
+names it <code>species-core.txt</code> while the LANDIS-II examples use <code>species.txt</code>; the latter is
+the fallback when there is no directive to read.</p></li>
 <li><p><code>DynamicFire_Spp_Table.csv</code> – each species' fire tolerance.</p></li>
 <li><p><code>dynamic-fire.txt</code> – the <code>FireDamageTable</code>, mapping severity minus tolerance to the
 oldest cohort killed, as a percentage of longevity.</p></li>
