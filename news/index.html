@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.171</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.173</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,6 +41,18 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.173" id="landisutils-00173">landisutils 0.0.173<a class="anchor" aria-label="anchor" href="#landisutils-00173"></a></h2>
+<ul><li>
+<code><a href="../reference/landis_run_docker.html">landis_run_docker()</a></code> and <code><a href="../reference/fps_run_docker.html">fps_run_docker()</a></code> now record the image digest in <code>docker_image.log</code>. Since 0.0.19 they passed <code>docker image inspect</code> its <code>--format</code> template unquoted through <code><a href="https://rdrr.io/r/base/system2.html" class="external-link">system2()</a></code>, which runs a shell; the shell split the template at its spaces, the command failed, and every sidecar held only the note that the digest was unavailable. Both now quote every argument, in one shared helper.</li>
+<li>
+<code><a href="../reference/landis_image_info.html">landis_image_info()</a></code> reports a sidecar that holds only that note with <code>source = "recorded"</code>, not <code>"captured"</code>, and <code><a href="../reference/prov_landis_container.html">prov_landis_container()</a></code> labels it “recorded at run time; digest not captured”. It used to report the note itself as the image name and call the run captured.</li>
+</ul></div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.172" id="landisutils-00172">landisutils 0.0.172<a class="anchor" aria-label="anchor" href="#landisutils-00172"></a></h2>
+<ul><li>
+<code><a href="../reference/run_calibration_validation.html">run_calibration_validation()</a></code> and the single-host FORK cluster of <code><a href="../reference/calibrate_dynamic_fire.html">calibrate_dynamic_fire()</a></code> now run a garbage collection before they fork. A forked child inherits objects that are unreachable but not yet collected, and when one holds an NNG context or socket (crew and mirai leave one behind for every task), the child’s first garbage collection runs its finalizer and NNG’s fork guard kills the child with SIGILL. A validation that forked from a process which had run crew tasks lost all 40 replicates this way, and left their containers running. Collecting first runs those finalizers in the parent, where they are safe. <code>nanonext</code> joins Suggests, for the regression test.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.171" id="landisutils-00171">landisutils 0.0.171<a class="anchor" aria-label="anchor" href="#landisutils-00171"></a></h2>
 <ul><li>

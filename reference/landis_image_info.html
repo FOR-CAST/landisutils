@@ -13,7 +13,7 @@ pins the exact runtime image; an image tag alone is mutable."><meta property="og
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.171</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.173</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -74,6 +74,12 @@ pins the exact runtime image; an image tag alone is mutable.</p>
     <p>A named list with <code>image_name</code>, <code>image_digest</code>, and <code>source</code>:</p><dl><dt><code>"captured"</code></dt>
 <dd><p>Sidecar present (authoritative; the digest pins
 the runtime).</p></dd>
+
+<dt><code>"recorded"</code></dt>
+<dd><p>Sidecar present but holding only a note that the
+digest was unavailable, so the image reference, whose tag is
+mutable, is all the run recorded. Every sidecar written before
+landisutils 0.0.173 is of this kind.</p></dd>
 
 <dt><code>"option"</code></dt>
 <dd><p>Sidecar absent; image name read from the

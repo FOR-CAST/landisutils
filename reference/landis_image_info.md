@@ -27,6 +27,13 @@ A named list with `image_name`, `image_digest`, and `source`:
 
   Sidecar present (authoritative; the digest pins the runtime).
 
+- `"recorded"`:
+
+  Sidecar present but holding only a note that the digest was
+  unavailable, so the image reference, whose tag is mutable, is all the
+  run recorded. Every sidecar written before landisutils 0.0.173 is of
+  this kind.
+
 - `"option"`:
 
   Sidecar absent; image name read from the `landisutils.docker.image`
