@@ -95,6 +95,33 @@ parse_landis_log_versions <- function(path) {
   )
 }
 
+## The image's digest for the `docker_image.log` sidecar: `<repo>@sha256:<64hex>`, or the
+## content-addressable Id of a locally built image, or NA when the console cannot report either.
+## `system2()` runs its command through a shell, so every argument is quoted: unquoted, the shell
+## split the `--format` template at its spaces, `docker image inspect` failed, and every sidecar
+## recorded only that the digest was unavailable.
+.image_digest_line <- function(image, console = "docker") {
+  tryCatch(
+    {
+      rd <- system2(
+        console,
+        c(
+          "image",
+          "inspect",
+          shQuote(image),
+          "--format",
+          shQuote("{{if .RepoDigests}}{{index .RepoDigests 0}}{{else}}{{.Id}}{{end}}")
+        ),
+        stdout = TRUE,
+        stderr = FALSE
+      )
+      if (length(rd) && nzchar(trimws(rd[1L]))) trimws(rd[1L]) else NA_character_
+    },
+    error = function(e) NA_character_,
+    warning = function(w) NA_character_
+  )
+}
+
 #' Read the LANDIS-II Docker image reference used for a run
 #'
 #' Looks for `<run_dir>/rep*/log/docker_image.log`, a one-line sidecar of the
@@ -109,6 +136,10 @@ parse_landis_log_versions <- function(path) {
 #'   \describe{
 #'     \item{`"captured"`}{Sidecar present (authoritative; the digest pins
 #'       the runtime).}
+#'     \item{`"recorded"`}{Sidecar present but holding only a note that the
+#'       digest was unavailable, so the image reference, whose tag is
+#'       mutable, is all the run recorded. Every sidecar written before
+#'       landisutils 0.0.173 is of this kind.}
 #'     \item{`"option"`}{Sidecar absent; image name read from the
 #'       `landisutils.docker.image` option on the current host (best-effort;
 #'       the tag is mutable).}
@@ -126,6 +157,14 @@ landis_image_info <- function(run_dir) {
   logs <- list.files(run_dir, pattern = "^docker_image\\.log$", recursive = TRUE, full.names = TRUE)
   if (length(logs) > 0L) {
     ref <- trimws(readLines(logs[1L], warn = FALSE)[1L])
+    if (startsWith(ref, "#")) {
+      ## The writer's note when it could not read the digest: `# <image> (digest unavailable: ...)`.
+      return(list(
+        image_name = sub("^#\\s*(\\S+).*$", "\\1", ref),
+        image_digest = NA_character_,
+        source = "recorded"
+      ))
+    }
     parts <- strsplit(ref, "@", fixed = TRUE)[[1L]]
     return(list(
       image_name = parts[1L],
@@ -217,6 +256,7 @@ prov_landis_container <- function(run_dir) {
   source_str <- switch(
     img$source,
     captured = "captured at run time",
+    recorded = "recorded at run time; digest not captured",
     option = "from current `landisutils.docker.image` option (not captured at run time)",
     local = "local install (no container)"
   )

@@ -734,25 +734,7 @@ landis_run_docker <- function(
   ## the digest is the canonical identifier of the bytes that ran. RepoDigests
   ## carries `<repo>@sha256:<64hex>` for any image with a known registry origin;
   ## locally-built images fall back to the content-addressable Id (`sha256:...`).
-  digest_line <- tryCatch(
-    {
-      rd <- system2(
-        "docker",
-        c(
-          "image",
-          "inspect",
-          image,
-          "--format",
-          "{{if .RepoDigests}}{{index .RepoDigests 0}}{{else}}{{.Id}}{{end}}"
-        ),
-        stdout = TRUE,
-        stderr = FALSE
-      )
-      if (length(rd) && nzchar(trimws(rd[1L]))) trimws(rd[1L]) else NA_character_
-    },
-    error = function(e) NA_character_,
-    warning = function(w) NA_character_
-  )
+  digest_line <- .image_digest_line(image)
   if (is.na(digest_line)) {
     digest_line <- sprintf("# %s (digest unavailable: not present in local image cache?)", image)
   }

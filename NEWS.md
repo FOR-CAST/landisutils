@@ -1,3 +1,8 @@
+# landisutils 0.0.173
+
+* `landis_run_docker()` and `fps_run_docker()` now record the image digest in `docker_image.log`. Since 0.0.19 they passed `docker image inspect` its `--format` template unquoted through `system2()`, which runs a shell; the shell split the template at its spaces, the command failed, and every sidecar held only the note that the digest was unavailable. Both now quote every argument, in one shared helper.
+* `landis_image_info()` reports a sidecar that holds only that note with `source = "recorded"`, not `"captured"`, and `prov_landis_container()` labels it "recorded at run time; digest not captured". It used to report the note itself as the image name and call the run captured.
+
 # landisutils 0.0.172
 
 * `run_calibration_validation()` and the single-host FORK cluster of `calibrate_dynamic_fire()` now run a garbage collection before they fork. A forked child inherits objects that are unreachable but not yet collected, and when one holds an NNG context or socket (crew and mirai leave one behind for every task), the child's first garbage collection runs its finalizer and NNG's fork guard kills the child with SIGILL. A validation that forked from a process which had run crew tasks lost all 40 replicates this way, and left their containers running. Collecting first runs those finalizers in the parent, where they are safe. `nanonext` joins Suggests, for the regression test.

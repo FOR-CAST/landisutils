@@ -15,6 +15,10 @@ A named list with \code{image_name}, \code{image_digest}, and \code{source}:
 \describe{
 \item{\code{"captured"}}{Sidecar present (authoritative; the digest pins
 the runtime).}
+\item{\code{"recorded"}}{Sidecar present but holding only a note that the
+digest was unavailable, so the image reference, whose tag is
+mutable, is all the run recorded. Every sidecar written before
+landisutils 0.0.173 is of this kind.}
 \item{\code{"option"}}{Sidecar absent; image name read from the
 \code{landisutils.docker.image} option on the current host (best-effort;
 the tag is mutable).}
