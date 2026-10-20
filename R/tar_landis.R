@@ -370,6 +370,30 @@ read_landis_resource_logs <- function(run_dir) {
   val * (mult[[unit]] %||% 1)
 }
 
+## One `docker stats` sample of a container's memory use, in bytes, or NA when there is none. A
+## container that exits between the run loop's liveness check and this call makes `docker stats`
+## exit 1. That is a missing sample, not a fault, so it gives NA rather than the warning
+## `system2()` raised for every such race. `run` is `processx::run()`, replaceable in tests.
+.docker_mem_sample <- function(container_name, run = processx::run) {
+  r <- tryCatch(
+    run(
+      "docker",
+      c("stats", "--no-stream", "--format", "{{.MemUsage}}", container_name),
+      error_on_status = FALSE
+    ),
+    error = function(e) NULL
+  )
+  if (is.null(r) || !identical(as.integer(r$status), 0L)) {
+    return(NA_real_)
+  }
+  lines <- strsplit(r$stdout, "\n", fixed = TRUE)[[1L]]
+  lines <- lines[nzchar(trimws(lines))]
+  if (!length(lines)) {
+    return(NA_real_)
+  }
+  .parse_docker_mem_bytes(lines[[1L]])
+}
+
 ## Post-completion watchdog decision (pure; see landis_run_docker()).
 ## Returns TRUE when the grace period after the "Model run is complete." marker
 ## has elapsed and the container should be SIGTERMed. A non-finite `timeout`
@@ -888,17 +912,9 @@ landis_run_docker <- function(
           stream_jitter_frac
         )
       }
-      stats_raw <- tryCatch(
-        system2(
-          "docker",
-          c("stats", "--no-stream", "--format", "{{.MemUsage}}", container_name),
-          stdout = TRUE,
-          stderr = FALSE
-        ),
-        error = function(e) character(0)
-      )
-      if (length(stats_raw) && nzchar(trimws(stats_raw[1L]))) {
-        peak_mem_bytes <- max(peak_mem_bytes, .parse_docker_mem_bytes(stats_raw[1L]))
+      mem <- .docker_mem_sample(container_name)
+      if (!is.na(mem)) {
+        peak_mem_bytes <- max(peak_mem_bytes, mem)
       }
       if (!completion_seen && fs::file_exists(stdout_log)) {
         ## Cheap tail-grep: read the file as raw lines and look for the marker.
