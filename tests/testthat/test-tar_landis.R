@@ -214,3 +214,16 @@ testthat::test_that("tar_landis(work_root=) runs under scratch but tracks the fi
   ## the explicit work_root literal is baked into the staged run dir
   testthat::expect_match(cmd_chr, "/scratch/work", fixed = TRUE)
 })
+
+testthat::test_that(".docker_mem_sample() parses a sample, and gives NA without a warning when the container has gone", {
+  sample_mem <- landisutils:::.docker_mem_sample
+  fake <- function(status, stdout = "") {
+    function(...) list(status = status, stdout = stdout, stderr = "")
+  }
+  testthat::expect_equal(sample_mem("c", run = fake(0L, "1.5GiB / 10GiB\n")), 1.5 * 1024^3)
+  ## `docker stats` exits 1 for a container that stopped between the liveness check and the poll.
+  testthat::expect_no_warning(gone <- sample_mem("c", run = fake(1L)))
+  testthat::expect_identical(gone, NA_real_)
+  testthat::expect_identical(sample_mem("c", run = fake(0L, "\n")), NA_real_)
+  testthat::expect_identical(sample_mem("c", run = function(...) stop("no docker")), NA_real_)
+})

@@ -479,7 +479,7 @@ plot_growth_structures <- function(
         if (has_strata) {
           paste0(
             "median cell carbon within each starting-age class; the spacing ",
-            "between lines is stand age, not parameters\n"
+            "between lines is mostly stand age, not parameters\n"
           )
         } else {
           "median and interquartile range over the cells sharing each composition\n"
