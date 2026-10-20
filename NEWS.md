@@ -1,3 +1,8 @@
+# landisutils 0.0.174
+
+* `landis_run_docker()` no longer warns when a container exits between its liveness check and the `docker stats` poll that tracks peak memory. `docker stats` then exits 1, which `system2()` reported as a warning on the target; the poll now runs through `processx::run()` and counts that sample as missing.
+* `plot_growth_structures()`'s subtitle, with starting-age classes, says the spacing between lines is mostly stand age, not parameters. The parameter set also moves it, by less than the starting age does.
+
 # landisutils 0.0.173
 
 * `landis_run_docker()` and `fps_run_docker()` now record the image digest in `docker_image.log`. Since 0.0.19 they passed `docker image inspect` its `--format` template unquoted through `system2()`, which runs a shell; the shell split the template at its spaces, the command failed, and every sidecar held only the note that the digest was unavailable. Both now quote every argument, in one shared helper.
