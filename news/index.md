@@ -1,5 +1,19 @@
 # Changelog
 
+## landisutils 0.0.174
+
+- [`landis_run_docker()`](https://for-cast.github.io/landisutils/reference/landis_run_docker.md)
+  no longer warns when a container exits between its liveness check and
+  the `docker stats` poll that tracks peak memory. `docker stats` then
+  exits 1, which [`system2()`](https://rdrr.io/r/base/system2.html)
+  reported as a warning on the target; the poll now runs through
+  [`processx::run()`](http://processx.r-lib.org/reference/run.md) and
+  counts that sample as missing.
+- [`plot_growth_structures()`](https://for-cast.github.io/landisutils/reference/plot_growth_structures.md)’s
+  subtitle, with starting-age classes, says the spacing between lines is
+  mostly stand age, not parameters. The parameter set also moves it, by
+  less than the starting age does.
+
 ## landisutils 0.0.173
 
 - [`landis_run_docker()`](https://for-cast.github.io/landisutils/reference/landis_run_docker.md)

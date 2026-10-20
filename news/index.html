@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.173</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.174</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,6 +41,13 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.174" id="landisutils-00174">landisutils 0.0.174<a class="anchor" aria-label="anchor" href="#landisutils-00174"></a></h2>
+<ul><li>
+<code><a href="../reference/landis_run_docker.html">landis_run_docker()</a></code> no longer warns when a container exits between its liveness check and the <code>docker stats</code> poll that tracks peak memory. <code>docker stats</code> then exits 1, which <code><a href="https://rdrr.io/r/base/system2.html" class="external-link">system2()</a></code> reported as a warning on the target; the poll now runs through <code><a href="http://processx.r-lib.org/reference/run.html" class="external-link">processx::run()</a></code> and counts that sample as missing.</li>
+<li>
+<code><a href="../reference/plot_growth_structures.html">plot_growth_structures()</a></code>’s subtitle, with starting-age classes, says the spacing between lines is mostly stand age, not parameters. The parameter set also moves it, by less than the starting age does.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.173" id="landisutils-00173">landisutils 0.0.173<a class="anchor" aria-label="anchor" href="#landisutils-00173"></a></h2>
 <ul><li>
