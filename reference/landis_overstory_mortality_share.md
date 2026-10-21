@@ -44,7 +44,12 @@ of its scenario:
   `species-core.txt` while the LANDIS-II examples use `species.txt`; the
   latter is the fallback when there is no directive to read.
 
-- `DynamicFire_Spp_Table.csv` – each species' fire tolerance.
+- the Dynamic Fire per-species table – each species' fire tolerance. Its
+  name is read from `dynamic-fire.txt`'s `Species_CSV_File` directive,
+  since `DynamicFire$new()` names it `dynamic-fire-species.csv` while
+  this package's own `df_input()` default and the LANDIS-II examples use
+  `DynamicFire_Spp_Table.csv`; the latter is the fallback when there is
+  no directive to read.
 
 - `dynamic-fire.txt` – the `FireDamageTable`, mapping severity minus
   tolerance to the oldest cohort killed, as a percentage of longevity.

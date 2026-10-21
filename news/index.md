@@ -1,5 +1,25 @@
 # Changelog
 
+## landisutils 0.0.175
+
+- [`landis_overstory_mortality_share()`](https://for-cast.github.io/landisutils/reference/landis_overstory_mortality_share.md)
+  now resolves the Dynamic Fire per-species table from
+  `dynamic-fire.txt`’s `Species_CSV_File` directive instead of a
+  hardcoded `DynamicFire_Spp_Table.csv`, falling back to that name when
+  no directive is present. `DynamicFire$new()` writes the table as
+  `dynamic-fire-species.csv`, so the function’s all-files guard returned
+  `NULL` for every scenario this package writes and the `mortality` loss
+  component scored a STRUCTURAL ZERO – identical for every parameter
+  set, leaving `DamageAgeMultiplier` with no gradient through its only
+  route into the loss. This is the same defect 0.0.171 fixed for the
+  core species file, one file over: it was still exactly zero through a
+  10-replicate baseline validation run on 2026-10-20 to measure it, with
+  `overstory_mortality` `NULL` in all ten replicates and the core
+  species file resolving correctly. Both names now come from their
+  directives, and the suite missed both because the test fixture is
+  modelled on the upstream LANDIS-II example rather than on this
+  package’s own writers.
+
 ## landisutils 0.0.174
 
 - [`landis_run_docker()`](https://for-cast.github.io/landisutils/reference/landis_run_docker.md)

@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.174</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.175</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,6 +41,11 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.175" id="landisutils-00175">landisutils 0.0.175<a class="anchor" aria-label="anchor" href="#landisutils-00175"></a></h2>
+<ul><li>
+<code><a href="../reference/landis_overstory_mortality_share.html">landis_overstory_mortality_share()</a></code> now resolves the Dynamic Fire per-species table from <code>dynamic-fire.txt</code>’s <code>Species_CSV_File</code> directive instead of a hardcoded <code>DynamicFire_Spp_Table.csv</code>, falling back to that name when no directive is present. <code>DynamicFire$new()</code> writes the table as <code>dynamic-fire-species.csv</code>, so the function’s all-files guard returned <code>NULL</code> for every scenario this package writes and the <code>mortality</code> loss component scored a STRUCTURAL ZERO – identical for every parameter set, leaving <code>DamageAgeMultiplier</code> with no gradient through its only route into the loss. This is the same defect 0.0.171 fixed for the core species file, one file over: it was still exactly zero through a 10-replicate baseline validation run on 2026-10-20 to measure it, with <code>overstory_mortality</code> <code>NULL</code> in all ten replicates and the core species file resolving correctly. Both names now come from their directives, and the suite missed both because the test fixture is modelled on the upstream LANDIS-II example rather than on this package’s own writers.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.174" id="landisutils-00174">landisutils 0.0.174<a class="anchor" aria-label="anchor" href="#landisutils-00174"></a></h2>
 <ul><li>
