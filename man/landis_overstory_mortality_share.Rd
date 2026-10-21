@@ -31,7 +31,11 @@ a damaged cell, so a cell's severity class is its map value MINUS TWO.
 of. Its name is read from \code{scenario.txt}'s \code{Species} directive, since \code{writeSpecies()}
 names it \code{species-core.txt} while the LANDIS-II examples use \code{species.txt}; the latter is
 the fallback when there is no directive to read.
-\item \code{DynamicFire_Spp_Table.csv} -- each species' fire tolerance.
+\item the Dynamic Fire per-species table -- each species' fire tolerance. Its name is read
+from \code{dynamic-fire.txt}'s \code{Species_CSV_File} directive, since \code{DynamicFire$new()}
+names it \code{dynamic-fire-species.csv} while this package's own \code{df_input()} default
+and the LANDIS-II examples use \code{DynamicFire_Spp_Table.csv}; the latter is the
+fallback when there is no directive to read.
 \item \code{dynamic-fire.txt} -- the \code{FireDamageTable}, mapping severity minus tolerance to the
 oldest cohort killed, as a percentage of longevity.
 }

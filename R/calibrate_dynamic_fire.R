@@ -331,7 +331,11 @@ parse_dynamic_fire_logs <- function(rep_dir, pixel_area_ha = 1.0) {
 #'         of. Its name is read from `scenario.txt`'s `Species` directive, since `writeSpecies()`
 #'         names it `species-core.txt` while the LANDIS-II examples use `species.txt`; the latter is
 #'         the fallback when there is no directive to read.
-#'   \item `DynamicFire_Spp_Table.csv` -- each species' fire tolerance.
+#'   \item the Dynamic Fire per-species table -- each species' fire tolerance. Its name is read
+#'         from `dynamic-fire.txt`'s `Species_CSV_File` directive, since `DynamicFire$new()`
+#'         names it `dynamic-fire-species.csv` while this package's own `df_input()` default
+#'         and the LANDIS-II examples use `DynamicFire_Spp_Table.csv`; the latter is the
+#'         fallback when there is no directive to read.
 #'   \item `dynamic-fire.txt` -- the `FireDamageTable`, mapping severity minus tolerance to the
 #'         oldest cohort killed, as a percentage of longevity.
 #' }
@@ -358,7 +362,17 @@ landis_overstory_mortality_share <- function(rep_dir) {
   sev_files <- fs::dir_ls(fire_dir, regexp = "severity-\\d+\\.tif$", type = "file")
   ic_csv <- fs::path(rep_dir, "initial-communities.csv")
   ic_tif <- fs::path(rep_dir, "initial-communities.tif")
-  spp_csv <- fs::path(rep_dir, "DynamicFire_Spp_Table.csv")
+  ## Resolve the Dynamic Fire species table the way `dynamic-fire.txt` NAMES it, for exactly the
+  ## reason the core species file below is resolved that way -- and this is the SAME defect, one file
+  ## over. `DynamicFire$new()` writes this table as `dynamic-fire-species.csv` and records the name
+  ## in the extension's own `Species_CSV_File` directive, so the hardcoded `DynamicFire_Spp_Table.csv`
+  ## (the name only landisutils' own `df_input()` default uses) is absent from every scenario this
+  ## package writes. The all-files guard then returned NULL again, and `comp_mortality` stayed a
+  ## STRUCTURAL ZERO through the 2026-10-09 search AND through the 2026-10-20 baseline validation
+  ## that was run to measure it: `overstory_mortality` was NULL in all 10 replicates, with the core
+  ## species file resolving correctly. Fixing one of the two names in 0.0.171 moved the failure
+  ## rather than removing it, which is why both are now read from their directives.
+  spp_csv <- .calibration_df_species_file(rep_dir)
   ## Resolve the species file the way the scenario NAMES it, not by guessing. `writeSpecies()`
   ## defaults to `species-core.txt`, so a hardcoded `species.txt` is absent from every scenario this
   ## package writes, the all-files guard below returns NULL, and the component scores a STRUCTURAL
@@ -2582,6 +2596,18 @@ save_observed_fire_targets <- function(
 ## falls back to "species.txt" (some scenarios name it "species-core.txt").
 .calibration_species_file <- function(dir) {
   .calibration_directive_file(dir, "scenario.txt", "Species", "species.txt")
+}
+
+## The Dynamic Fire per-species table the extension config references (the dynamic-fire.txt
+## `Species_CSV_File` directive); falls back to "DynamicFire_Spp_Table.csv", which is only this
+## package's own `df_input()` default -- `DynamicFire$new()` writes "dynamic-fire-species.csv".
+.calibration_df_species_file <- function(dir) {
+  .calibration_directive_file(
+    dir,
+    "dynamic-fire.txt",
+    "Species_CSV_File",
+    "DynamicFire_Spp_Table.csv"
+  )
 }
 
 #' Build a calibration spinup scenario directory

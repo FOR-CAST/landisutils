@@ -1277,6 +1277,44 @@ test_that("landis_overstory_mortality_share() falls back to species.txt without 
   expect_equal(landis_overstory_mortality_share(dir)$share, 2 / 3)
 })
 
+test_that("landis_overstory_mortality_share() reads the CSV dynamic-fire.txt names", {
+  ## REGRESSION, and the SAME defect one file over. 0.0.171 resolved the core species file but left
+  ## `DynamicFire_Spp_Table.csv` hardcoded, and `DynamicFire$new()` writes that table as
+  ## `dynamic-fire-species.csv` -- recording the name in its own `Species_CSV_File` directive. So the
+  ## all-files guard went on returning NULL for every scenario this package writes, and
+  ## `comp_mortality` was STILL exactly zero through a 10-replicate baseline validation run on
+  ## 2026-10-20 specifically to measure it: `overstory_mortality` was NULL in all 10 replicates while
+  ## the core species file resolved correctly. Both names are now read from their directives.
+  ##
+  ## The fixture writes the sample config's name, which is why the suite caught neither: a fixture
+  ## modelled on the upstream example does not exercise what this package's own writers produce.
+  dir <- .mk_mortality_rep(list(c(3L, 3L, 3L, 1L)))
+  fs::file_move(
+    fs::path(dir, "DynamicFire_Spp_Table.csv"),
+    fs::path(dir, "dynamic-fire-species.csv")
+  )
+  txt <- readLines(fs::path(dir, "dynamic-fire.txt"))
+  writeLines(
+    sub("^(\\s*Species_CSV_File\\s+).*$", "\\1dynamic-fire-species.csv", txt),
+    fs::path(dir, "dynamic-fire.txt")
+  )
+
+  m <- landis_overstory_mortality_share(dir)
+
+  expect_equal(m$burned_cells, 3L)
+  expect_equal(m$share, 2 / 3)
+})
+
+test_that("landis_overstory_mortality_share() falls back to DynamicFire_Spp_Table.csv", {
+  ## The LANDIS-II examples name it that and ship no directive to read, so the old name has to keep
+  ## working here too -- the fix resolves the name rather than replacing one guess with another.
+  dir <- .mk_mortality_rep(list(c(3L, 3L, 3L, 1L)))
+  txt <- readLines(fs::path(dir, "dynamic-fire.txt"))
+  writeLines(txt[!grepl("Species_CSV_File", txt)], fs::path(dir, "dynamic-fire.txt"))
+
+  expect_equal(landis_overstory_mortality_share(dir)$share, 2 / 3)
+})
+
 test_that("landis_overstory_mortality_share() kills everything at severity 5", {
   ## The extension kills all cohorts at severity 5 whatever their tolerance, so the old cohort
   ## that survived class 1 dies here.
