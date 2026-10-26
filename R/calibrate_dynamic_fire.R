@@ -186,6 +186,15 @@ calibration_par_names <- function() {
 #'   the scenario directory). Must contain `fire/dynamic-fire-event-log.csv`
 #'   and `fire/dynamic-fire-summary-log.csv`.
 #' @param pixel_area_ha Numeric. Hectares per cell. Default `1.0`.
+#' @param by_class,engine_rule Logical. Passed to [landis_overstory_mortality_share()], which gives
+#'   `overstory_mortality`: `by_class` adds its per-class cell counts, and `engine_rule` makes the
+#'   damage table's age test in single precision, as the extension does.
+#' @param event_fields Logical. Add five columns to `events`, in this order after the default ones:
+#'   `selected_size` (double, the log's `SelectedSizeOrDuration`), `season` (character, the index
+#'   in `FireSeason`: `"0"`, `"1"` or `"2"`), and `size_bin`, `init_row` and `init_col` (integer,
+#'   `SizeBin`, `InitSiteRow` and `InitSiteColumn`). A log with no events gives the columns typed
+#'   and empty; a log with events that lacks one of the five source columns is an error naming it.
+#'   `FALSE`, the default, leaves `events` as it was.
 #'
 #' @returns Named list with `n_fires_by_year` (tibble: `year`, `n_fires`),
 #'   `fire_sizes_ha` (sorted numeric vector), `events` (per-event tibble),
@@ -220,8 +229,17 @@ calibration_par_names <- function() {
 #'
 #' @export
 
-parse_dynamic_fire_logs <- function(rep_dir, pixel_area_ha = 1.0) {
+parse_dynamic_fire_logs <- function(
+  rep_dir,
+  pixel_area_ha = 1.0,
+  by_class = FALSE,
+  engine_rule = FALSE,
+  event_fields = FALSE
+) {
   stopifnot(fs::dir_exists(rep_dir), is.numeric(pixel_area_ha), pixel_area_ha > 0)
+  .stop_unless_flag(by_class, "by_class")
+  .stop_unless_flag(engine_rule, "engine_rule")
+  .stop_unless_flag(event_fields, "event_fields")
   event_path <- fs::path(rep_dir, "fire", "dynamic-fire-event-log.csv")
   summary_path <- fs::path(rep_dir, "fire", "dynamic-fire-summary-log.csv")
   if (!fs::file_exists(event_path) || !fs::file_exists(summary_path)) {
@@ -290,6 +308,25 @@ parse_dynamic_fire_logs <- function(rep_dir, pixel_area_ha = 1.0) {
       )
     )
     fire_sizes_ha <- sort(as.numeric(events_tbl$sites) * pixel_area_ha)
+    if (event_fields) {
+      src <- c("SelectedSizeOrDuration", "FireSeason", "SizeBin", "InitSiteRow", "InitSiteColumn")
+      gone <- setdiff(src, names(events))
+      if (length(gone) > 0L) {
+        stop(
+          "Dynamic Fire event log ",
+          event_path,
+          " lacks ",
+          paste(gone, collapse = ", "),
+          "; `event_fields` cannot be read",
+          call. = FALSE
+        )
+      }
+      events_tbl$selected_size <- as.numeric(events$SelectedSizeOrDuration)
+      events_tbl$season <- as.character(as.integer(events$FireSeason))
+      events_tbl$size_bin <- as.integer(events$SizeBin)
+      events_tbl$init_row <- as.integer(events$InitSiteRow)
+      events_tbl$init_col <- as.integer(events$InitSiteColumn)
+    }
   } else {
     events_tbl <- tibble::tibble(
       year = integer(0),
@@ -298,6 +335,13 @@ parse_dynamic_fire_logs <- function(rep_dir, pixel_area_ha = 1.0) {
       sites = integer(0),
       mean_severity = numeric(0)
     )
+    if (event_fields) {
+      events_tbl$selected_size <- numeric(0)
+      events_tbl$season <- character(0)
+      events_tbl$size_bin <- integer(0)
+      events_tbl$init_row <- integer(0)
+      events_tbl$init_col <- integer(0)
+    }
     fire_sizes_ha <- numeric(0)
   }
 
@@ -309,7 +353,11 @@ parse_dynamic_fire_logs <- function(rep_dir, pixel_area_ha = 1.0) {
     n_events = nrow(events_tbl),
     area_by_fuel_ha = .read_burned_area_by_fuel(rep_dir, pixel_area_ha),
     ## NULL from a mock simulator, or from a rep that kept no severity maps.
-    overstory_mortality = landis_overstory_mortality_share(rep_dir)
+    overstory_mortality = landis_overstory_mortality_share(
+      rep_dir,
+      by_class = by_class,
+      engine_rule = engine_rule
+    )
   )
 }
 
@@ -328,9 +376,10 @@ parse_dynamic_fire_logs <- function(rep_dir, pixel_area_ha = 1.0) {
 #'         a damaged cell, so a cell's severity class is its map value MINUS TWO.
 #'   \item `initial-communities.csv` / `.tif` -- the cohorts on each cell.
 #'   \item the core species file -- longevity, which the damage table's age thresholds are shares
-#'         of. Its name is read from `scenario.txt`'s `Species` directive, since `writeSpecies()`
-#'         names it `species-core.txt` while the LANDIS-II examples use `species.txt`; the latter is
-#'         the fallback when there is no directive to read.
+#'         of. Its name is read from `scenario.txt`'s `Species` directive, since
+#'         `prepSpeciesData(type = "core")` names it `species-core.txt` while the LANDIS-II
+#'         examples use `species.txt`; the latter is the fallback when there is no directive to
+#'         read.
 #'   \item the Dynamic Fire per-species table -- each species' fire tolerance. Its name is read
 #'         from `dynamic-fire.txt`'s `Species_CSV_File` directive, since `DynamicFire$new()`
 #'         names it `dynamic-fire-species.csv` while this package's own `df_input()` default
@@ -340,20 +389,38 @@ parse_dynamic_fire_logs <- function(rep_dir, pixel_area_ha = 1.0) {
 #'         oldest cohort killed, as a percentage of longevity.
 #' }
 #'
-#' A cohort dies when severity is 5 (the extension kills everything at that severity, whatever the
-#' tolerance) or when its age is at or below that percentage of its species' longevity. Composition
+#' The dominant cohort of each map code is the one [landis_dominant_cohorts()] returns, and whether
+#' it died is decided by [fire_cohort_killed()]: it dies when severity is 5 (the extension kills
+#' everything at that severity, whatever the tolerance) or when its age is at or below the
+#' percentage of its species' longevity that the damage table gives for severity minus tolerance.
+#' A cell on a map code with no dominant cohort counts as burned but never as killed. Composition
 #' is read at time zero, so a cell that burns twice in one replicate is scored on its original
 #' cohorts; in a calibration run, where succession is frozen, only reburns are affected.
 #'
 #' @param rep_dir Character. Path to the replicate directory.
 #'
+#' @param by_class Logical. Also return the burned cells counted by timestep, map code and severity
+#'   class?
+#'
+#' @param engine_rule Logical. Make the damage table's age test in single precision, as the
+#'   extension does, rather than in double precision? See [fire_cohort_killed()].
+#'
 #' @returns A list with `burned_cells`, `high_cells` and `share` (NA when nothing burned), or NULL
-#'   when the replicate holds no severity maps or is missing one of the files above.
+#'   when the replicate holds no severity maps, is missing one of the files above, or has no cohort
+#'   of a species with both a tolerance and a longevity. With `by_class = TRUE` the list also holds
+#'   `by_class`, a tibble of integer columns `timestep`, `MapCode`, `class` and `cells`: the burned
+#'   cells of the severity map of each timestep, by the cell's map code (NA where the
+#'   initial-communities map has none) and severity class (0 for a cell burned with no cohort
+#'   damaged), in that order. Its `cells` sum to `burned_cells`, and the `cells` of the rows in
+#'   which [fire_cohort_killed()] kills the [landis_dominant_cohorts()] cohort of `MapCode` sum to
+#'   `high_cells`.
 #'
 #' @family Dynamic Fire calibration helpers
 #'
 #' @export
-landis_overstory_mortality_share <- function(rep_dir) {
+landis_overstory_mortality_share <- function(rep_dir, by_class = FALSE, engine_rule = FALSE) {
+  .stop_unless_flag(by_class, "by_class")
+  .stop_unless_flag(engine_rule, "engine_rule")
   stopifnot(fs::dir_exists(rep_dir))
   fire_dir <- fs::path(rep_dir, "fire")
   if (!fs::dir_exists(fire_dir)) {
@@ -373,15 +440,16 @@ landis_overstory_mortality_share <- function(rep_dir) {
   ## species file resolving correctly. Fixing one of the two names in 0.0.171 moved the failure
   ## rather than removing it, which is why both are now read from their directives.
   spp_csv <- .calibration_df_species_file(rep_dir)
-  ## Resolve the species file the way the scenario NAMES it, not by guessing. `writeSpecies()`
-  ## defaults to `species-core.txt`, so a hardcoded `species.txt` is absent from every scenario this
-  ## package writes, the all-files guard below returns NULL, and the component scores a STRUCTURAL
-  ## ZERO -- identical for every parameter set, so nothing that reaches the loss only through it has
-  ## any gradient. Measured on a completed 25-generation search (2026-10-09): `comp_mortality` was
-  ## exactly 0 in all 519 evaluations and `overstory_mortality` NULL in all 20 validation replicates,
-  ## leaving `DamageAgeMultiplier` unconstrained at rho -0.036 to the total loss. The scenario builder
-  ## in this same file already reads the `Species` directive (`.calibration_species_file()`); this is
-  ## the same lookup, with the old hardcoded name kept only as the fallback.
+  ## Resolve the species file the way the scenario NAMES it, not by guessing.
+  ## `prepSpeciesData(type = "core")` defaults to `species-core.txt`, so a hardcoded `species.txt`
+  ## is absent from every scenario this package writes, the all-files guard below returns NULL, and
+  ## the component scores a STRUCTURAL ZERO -- identical for every parameter set, so nothing that
+  ## reaches the loss only through it has any gradient. Measured on a completed 25-generation search
+  ## (2026-10-09): `comp_mortality` was exactly 0 in all 519 evaluations and `overstory_mortality`
+  ## NULL in all 20 validation replicates, leaving `DamageAgeMultiplier` unconstrained at rho -0.036
+  ## to the total loss. The scenario builder in this same file already reads the `Species` directive
+  ## (`.calibration_species_file()`); this is the same lookup, with the old hardcoded name kept only
+  ## as the fallback.
   spp_txt <- .calibration_species_file(rep_dir)
   fire_txt <- fs::path(rep_dir, "dynamic-fire.txt")
   if (
@@ -390,28 +458,21 @@ landis_overstory_mortality_share <- function(rep_dir) {
     return(NULL)
   }
 
-  tol <- .read_fire_tolerance(spp_csv)
-  longevity <- .read_species_longevity(spp_txt)
-  damage <- .read_fire_damage_table(fire_txt)
-
-  ## Per map code, the age of the dominant cohort as a share of its species' longevity, and that
-  ## species' tolerance -- all the severity-independent part of the decision, computed once.
-  ic <- utils::read.csv(ic_csv)
-  stopifnot(all(c("MapCode", "SpeciesName", "CohortAge", "CohortBiomass") %in% names(ic)))
-  ic <- ic[ic$SpeciesName %in% names(tol) & ic$SpeciesName %in% names(longevity), , drop = FALSE]
-  if (nrow(ic) == 0L) {
+  ## Per map code, the dominant cohort's age, its species' longevity and its tolerance -- all the
+  ## severity-independent part of the decision, read once.
+  dom <- landis_dominant_cohorts(rep_dir)
+  if (is.null(dom)) {
     return(NULL)
   }
-  ic <- ic[order(ic$MapCode, -ic$CohortBiomass), , drop = FALSE]
-  dom <- ic[!duplicated(ic$MapCode), , drop = FALSE]
-  dom$age_share <- 100 * dom$CohortAge / longevity[dom$SpeciesName]
-  dom$tol <- tol[dom$SpeciesName]
+  damage <- .read_fire_damage_table(fire_txt)
+  damage <- data.frame(pct = damage$pct, diff = damage$diff)
 
   ic_r <- read_landis_raster(as.character(ic_tif))
   codes <- terra::values(ic_r, mat = FALSE)
 
   burned_cells <- 0L
   high_cells <- 0L
+  counted <- list()
   for (f in as.character(sev_files)) {
     sev <- terra::values(read_landis_raster(f), mat = FALSE)
     burned <- which(!is.na(sev) & sev >= 2)
@@ -419,29 +480,229 @@ landis_overstory_mortality_share <- function(rep_dir) {
       next
     }
     burned_cells <- burned_cells + length(burned)
-    ## Severity class from the map value, and the oldest cohort that class kills on this cell.
+    ## Severity class from the map value. A class of 0 is the map's value 2: the extension burned
+    ## the cell and damaged NO cohort (user guide 3.1). Its severity is not recorded, so re-deriving
+    ## mortality from the damage table there would invent a severity of 0 and, at any tolerance the
+    ## table reaches, score a share of those cells as having lost their dominant cohort -- against
+    ## the extension's own statement that nothing was killed. fire_cohort_killed() kills nothing at
+    ## class 0, and those cells stay in the denominator, because the observed reference counts every
+    ## assessed pixel inside a fire perimeter including the unburned ones. A cell whose map code has
+    ## no dominant cohort reaches it as NA, which also kills nothing.
     class <- sev[burned] - 2L
     idx <- match(codes[burned], dom$MapCode)
-    ok <- !is.na(idx)
-    if (!any(ok)) {
-      next
+    killed <- fire_cohort_killed(
+      class,
+      dom$CohortAge[idx],
+      dom$longevity[idx],
+      dom$tolerance[idx],
+      damage,
+      engine_rule = engine_rule
+    )
+    high_cells <- high_cells + sum(killed)
+    if (by_class) {
+      counted[[length(counted) + 1L]] <- tibble::tibble(
+        timestep = .severity_map_timestep(f),
+        MapCode = as.integer(codes[burned]),
+        class = as.integer(class)
+      )
     }
-    ## A class of 0 is the map's value 2: the extension burned the cell and damaged NO cohort
-    ## (user guide 3.1). Its severity is not recorded, so re-deriving mortality from the damage
-    ## table there would invent a severity of 0 and, at any tolerance the table reaches, score a
-    ## share of those cells as having lost their dominant cohort -- against the extension's own
-    ## statement that nothing was killed. They stay in the denominator, because the observed
-    ## reference counts every assessed pixel inside a fire perimeter including the unburned ones.
-    damaged <- class[ok] >= 1L
-    diff <- class[ok] - dom$tol[idx[ok]]
-    killed_to <- .damage_age_pct(damage, diff)
-    high_cells <- high_cells + sum(damaged & (class[ok] >= 5 | dom$age_share[idx[ok]] <= killed_to))
   }
-  list(
+  out <- list(
     burned_cells = burned_cells,
     high_cells = high_cells,
     share = if (burned_cells > 0L) high_cells / burned_cells else NA_real_
   )
+  if (by_class) {
+    ## The empty template keeps the columns, and their type, when nothing burned.
+    cells <- dplyr::bind_rows(c(
+      list(tibble::tibble(timestep = integer(), MapCode = integer(), class = integer())),
+      counted
+    ))
+    ## count() sorts by its groups and keeps NA as a group, so a burned cell with no map code is
+    ## counted rather than dropped.
+    out$by_class <- dplyr::count(cells, .data$timestep, .data$MapCode, .data$class, name = "cells")
+  }
+  out
+}
+
+## The timestep of a `severity-<t>.tif` map, from its file name (internal).
+.severity_map_timestep <- function(path) {
+  as.integer(sub("^.*severity-(\\d+)\\.tif$", "\\1", fs::path_file(path)))
+}
+
+## Stop unless `x` is a single TRUE or FALSE (internal); `arg` names it in the error.
+.stop_unless_flag <- function(x, arg) {
+  if (!isTRUE(x) && !isFALSE(x)) {
+    stop("`", arg, "` must be TRUE or FALSE", call. = FALSE)
+  }
+  invisible(x)
+}
+
+#' Dominant cohort of each initial community
+#'
+#' The cohort holding the most biomass on each map code of a replicate's initial communities,
+#' among cohorts of species that have both a fire tolerance and a longevity. These are the cohorts
+#' [landis_overstory_mortality_share()] scores. With [fire_cohort_killed()], they score the
+#' share's `by_class` counts at any damage table without re-reading the replicate.
+#'
+#' The files are those [landis_overstory_mortality_share()] reads: `initial-communities.csv`, the
+#' core species file `scenario.txt` names (longevity) and the Dynamic Fire species table
+#' `dynamic-fire.txt` names (fire tolerance), each falling back to the LANDIS-II example's name
+#' when there is no directive to read. A species missing from either species file cannot be
+#' dominant, whatever its biomass. A tie on biomass goes to the cohort listed first.
+#'
+#' @param dir Character. Path to the replicate or scenario directory.
+#'
+#' @returns A data.frame with one row per map code that has such a cohort, in map-code order:
+#'   `MapCode` (integer), `SpeciesName` (character), and `CohortAge`, `CohortBiomass`, `longevity`
+#'   and `tolerance` (double). NULL when one of the three files is missing or no cohort's species is
+#'   in both species files.
+#'
+#' @family Dynamic Fire calibration helpers
+#'
+#' @export
+landis_dominant_cohorts <- function(dir) {
+  if (!fs::dir_exists(dir)) {
+    stop("Directory '", dir, "' does not exist", call. = FALSE)
+  }
+  ic_csv <- fs::path(dir, "initial-communities.csv")
+  spp_csv <- .calibration_df_species_file(dir)
+  spp_txt <- .calibration_species_file(dir)
+  if (!all(fs::file_exists(c(ic_csv, spp_csv, spp_txt)))) {
+    return(NULL)
+  }
+
+  tol <- .read_fire_tolerance(spp_csv)
+  longevity <- .read_species_longevity(spp_txt)
+
+  ic <- utils::read.csv(ic_csv)
+  lacking <- setdiff(c("MapCode", "SpeciesName", "CohortAge", "CohortBiomass"), names(ic))
+  if (length(lacking) > 0L) {
+    stop(ic_csv, " has no column ", paste(lacking, collapse = ", "), call. = FALSE)
+  }
+  ic <- ic[ic$SpeciesName %in% names(tol) & ic$SpeciesName %in% names(longevity), , drop = FALSE]
+  if (nrow(ic) == 0L) {
+    return(NULL)
+  }
+  ## `order()` is stable, so a tie on biomass keeps file order.
+  ic <- ic[order(ic$MapCode, -ic$CohortBiomass), , drop = FALSE]
+  dom <- ic[!duplicated(ic$MapCode), , drop = FALSE]
+  data.frame(
+    MapCode = as.integer(dom$MapCode),
+    SpeciesName = as.character(dom$SpeciesName),
+    CohortAge = as.numeric(dom$CohortAge),
+    CohortBiomass = as.numeric(dom$CohortBiomass),
+    longevity = unname(as.numeric(longevity[dom$SpeciesName])),
+    tolerance = unname(as.numeric(tol[dom$SpeciesName]))
+  )
+}
+
+#' Whether a fire kills a cohort
+#'
+#' Dynamic Fire's damage rule for one cohort, vectorised over cells or cohorts. Severity 5 kills
+#' every cohort. At severities 1 to 4, the `FireDamageTable` row that severity minus the species'
+#' fire tolerance picks -- the row with the largest difference at or below it, as
+#' [base::findInterval()] finds it -- gives the oldest cohort killed, as a percentage of
+#' longevity, and the cohort dies when its age is at or below that share. Below the table's
+#' smallest difference nothing dies. Any other severity, including the 0 of a burned cell in which
+#' no cohort was damaged, kills nothing, and so does a missing value in any input.
+#'
+#' By default the age test is made in double precision, `100 * age / longevity <= pct`, as
+#' [landis_overstory_mortality_share()] has always made it. With `engine_rule = TRUE` it is made
+#' as the extension makes it (`Event.cs`, lines 484-490): `pct / 100 >= age / longevity`, with
+#' `age / longevity` rounded to single precision. The two can differ only where `age / longevity`
+#' is within single-precision rounding of a threshold, as it is when the threshold is a whole
+#' number of years: at 10 % of 300 years, a 30-year-old cohort dies by the first test and survives
+#' the second.
+#'
+#' @param severity Numeric. Severity class: a severity map's value minus 2.
+#'
+#' @param age,longevity,tolerance Numeric. The cohort's age, and its species' longevity and fire
+#'   tolerance. Each has length 1 or the length of `severity`.
+#'
+#' @param fire_damage_table data.frame. The `FireDamageTable`, in [defaultFireDamageTable()]'s
+#'   column order: the percentage of longevity first, severity minus tolerance second. Rows may be
+#'   in any order.
+#'
+#' @param engine_rule Logical. Make the age test in single precision, as the extension does?
+#'
+#' @returns Logical, one per `severity`: TRUE where the cohort dies.
+#'
+#' @family Dynamic Fire calibration helpers
+#'
+#' @export
+#'
+#' @examples
+#' ## Tolerance 3 and a 100-year-old cohort of a 300-year species: severity 1 spares it, 2 and 5
+#' ## kill it.
+#' fire_cohort_killed(c(1, 2, 5), 100, 300, 3, defaultFireDamageTable())
+fire_cohort_killed <- function(
+  severity,
+  age,
+  longevity,
+  tolerance,
+  fire_damage_table,
+  engine_rule = FALSE
+) {
+  .stop_unless_flag(engine_rule, "engine_rule")
+  tbl <- fire_damage_table
+  if (!is.data.frame(tbl)) {
+    stop("`fire_damage_table` must be a data.frame", call. = FALSE)
+  }
+  if (nrow(tbl) == 0L) {
+    stop("`fire_damage_table` has no rows", call. = FALSE)
+  }
+  if (ncol(tbl) < 2L) {
+    stop(
+      "`fire_damage_table` needs two columns: percentage of longevity, then severity minus ",
+      "tolerance",
+      call. = FALSE
+    )
+  }
+  pct <- tbl[[1L]]
+  dif <- tbl[[2L]]
+  if (!is.numeric(pct) || !is.numeric(dif) || anyNA(pct) || anyNA(dif)) {
+    stop(
+      "`fire_damage_table`'s first two columns must be numeric, with no missing values",
+      call. = FALSE
+    )
+  }
+  n <- length(severity)
+  lens <- lengths(list(age, longevity, tolerance))
+  if (any(lens != 1L & lens != n)) {
+    stop(
+      "`age`, `longevity` and `tolerance` must each have length 1 or the length of `severity` (",
+      n,
+      ")",
+      call. = FALSE
+    )
+  }
+  ord <- order(dif)
+  pct <- pct[ord]
+  dif <- dif[ord]
+  age <- rep_len(age, n)
+  longevity <- rep_len(longevity, n)
+  tolerance <- rep_len(tolerance, n)
+
+  ok <- !is.na(severity) & !is.na(age) & !is.na(longevity) & !is.na(tolerance)
+  killed <- ok & severity == 5
+  at <- which(ok & severity %in% 1:4)
+  row <- findInterval(severity[at] - tolerance[at], dif)
+  at <- at[row > 0L]
+  row <- row[row > 0L]
+  dies <- if (engine_rule) {
+    pct[row] / 100 >= .as_float32(age[at] / longevity[at])
+  } else {
+    100 * age[at] / longevity[at] <= pct[row]
+  }
+  ## %in% makes an undefined comparison (0 / 0) a survival rather than an NA.
+  killed[at] <- dies %in% TRUE
+  killed
+}
+
+## `x` rounded to single precision and back (internal), as a C# `float` holds it.
+.as_float32 <- function(x) {
+  readBin(writeBin(as.double(x), raw(), size = 4L), "double", size = 4L, n = length(x))
 }
 
 ## Species fire tolerances from a Dynamic Fire `Species_CSV_File` (internal).
@@ -505,18 +766,6 @@ landis_overstory_mortality_share <- function(rep_dir) {
   stopifnot(length(out$pct) >= 1L)
   ord <- order(out$diff)
   list(pct = out$pct[ord], diff = out$diff[ord])
-}
-
-## The oldest cohort killed (percent of longevity) at each severity-minus-tolerance difference
-## (internal). Below the table's smallest difference nothing is killed; at or above its largest,
-## everything is.
-.damage_age_pct <- function(damage, diff) {
-  out <- numeric(length(diff))
-  hit <- findInterval(diff, damage$diff)
-  out[hit == 0L] <- 0
-  keep <- hit > 0L
-  out[keep] <- damage$pct[hit[keep]]
-  out
 }
 
 ## The FuelTypeTable of a `dynamic-fire.txt` (internal): `Index`, `Base` and `Surface` for each fuel
@@ -3164,6 +3413,10 @@ run_calibration_spinup <- function(
 #'   to `parse_failures.log` under the scratch root.
 #' @param parse_retries Integer >= 0. Extra attempts after a parse times out or
 #'   its process dies. An error the parser raises is not retried. Default 2.
+#' @param parse_options List of options for [parse_dynamic_fire_logs()], by name: any of
+#'   `by_class`, `engine_rule` and `event_fields`, each TRUE or FALSE. A replicate's directory is
+#'   deleted once it is parsed, so the parse must keep whatever is wanted from it. Applies to the
+#'   in-process parse and the isolated one alike. Default `list()` parses as before.
 #'
 #' @returns The output of [parse_dynamic_fire_logs()] for the trial's `rep01/`.
 #'
@@ -3184,8 +3437,10 @@ sim_landis <- function(
   retries = 0L,
   trial_timeout_sec = NULL,
   parse_timeout_sec = 600,
-  parse_retries = 2L
+  parse_retries = 2L,
+  parse_options = list()
 ) {
+  .check_parse_options(parse_options)
   if (is.null(names(par_vec)) && !is.null(par_names)) {
     names(par_vec) <- par_names
   }
@@ -3294,14 +3549,15 @@ sim_landis <- function(
   }
 
   result <- if (is.null(parse_timeout_sec)) {
-    parse_dynamic_fire_logs(rep_dir, pixel_area_ha = pixel_area_ha)
+    do.call(parse_dynamic_fire_logs, c(list(rep_dir, pixel_area_ha = pixel_area_ha), parse_options))
   } else {
     .parse_rep_isolated(
       rep_dir,
       pixel_area_ha = pixel_area_ha,
       timeout_sec = parse_timeout_sec,
       retries = parse_retries,
-      log_path = fs::path(scratch_root, "parse_failures.log")
+      log_path = fs::path(scratch_root, "parse_failures.log"),
+      parse_options = parse_options
     )
   }
   trial_succeeded <- TRUE ## triggers scratch cleanup in the on.exit handler
@@ -3336,8 +3592,10 @@ sim_landis <- function(
   timeout_sec,
   retries = 2L,
   parser = parse_dynamic_fire_logs,
-  log_path = NULL
+  log_path = NULL,
+  parse_options = list()
 ) {
+  .check_parse_options(parse_options)
   stopifnot(is.numeric(timeout_sec), length(timeout_sec) == 1L, timeout_sec > 0, retries >= 0L)
   ## The version check applies to the package's own parser; a stand-in (tests) carries no namespace.
   own_parser <- identical(environmentName(environment(parser)), "landisutils")
@@ -3352,7 +3610,7 @@ sim_landis <- function(
     t0 <- proc.time()[["elapsed"]]
     res <- tryCatch(
       callr::r(
-        function(parser, rep_dir, pixel_area_ha, ver) {
+        function(parser, rep_dir, pixel_area_ha, parse_options, ver) {
           if (!is.na(ver)) {
             got <- as.character(utils::packageVersion("landisutils"))
             if (!identical(got, ver)) {
@@ -3361,7 +3619,7 @@ sim_landis <- function(
           }
           warns <- character(0)
           value <- withCallingHandlers(
-            parser(rep_dir, pixel_area_ha = pixel_area_ha),
+            do.call(parser, c(list(rep_dir, pixel_area_ha = pixel_area_ha), parse_options)),
             warning = function(cnd) {
               warns <<- c(warns, conditionMessage(cnd))
               invokeRestart("muffleWarning")
@@ -3369,7 +3627,13 @@ sim_landis <- function(
           )
           list(value = value, warnings = warns)
         },
-        args = list(parser = parser, rep_dir = rep_dir, pixel_area_ha = pixel_area_ha, ver = ver),
+        args = list(
+          parser = parser,
+          rep_dir = rep_dir,
+          pixel_area_ha = pixel_area_ha,
+          parse_options = parse_options,
+          ver = ver
+        ),
         libpath = libpath,
         user_profile = FALSE,
         timeout = timeout_sec,
@@ -3415,6 +3679,37 @@ sim_landis <- function(
     msg,
     call. = FALSE
   )
+}
+
+## Stop unless `parse_options` is a list of uniquely named `by_class`, `engine_rule` and
+## `event_fields`, each TRUE or FALSE (internal). These are the parser's own switches, checked up
+## front so a mistake stops before a replicate is simulated rather than after it is deleted.
+.check_parse_options <- function(parse_options) {
+  if (!is.list(parse_options)) {
+    stop("`parse_options` must be a list", call. = FALSE)
+  }
+  nm <- names(parse_options)
+  if (length(parse_options) > 0L && (is.null(nm) || anyNA(nm) || any(nm == ""))) {
+    stop("every element of `parse_options` must be named", call. = FALSE)
+  }
+  if (anyDuplicated(nm) > 0L) {
+    stop("`parse_options` names `", nm[anyDuplicated(nm)], "` more than once", call. = FALSE)
+  }
+  bad <- setdiff(nm, c("by_class", "engine_rule", "event_fields"))
+  if (length(bad) > 0L) {
+    stop(
+      "`parse_options` has an unknown element `",
+      bad[1L],
+      "`; the options are by_class, engine_rule and event_fields",
+      call. = FALSE
+    )
+  }
+  for (k in nm) {
+    if (!isTRUE(parse_options[[k]]) && !isFALSE(parse_options[[k]])) {
+      stop("`parse_options$", k, "` must be TRUE or FALSE", call. = FALSE)
+    }
+  }
+  invisible(parse_options)
 }
 
 #' Standalone-R Dynamic Fire reimplementation (stub)
@@ -4911,6 +5206,8 @@ calibrate_dynamic_fire <- function(observed_targets_path, scenario_template, cfg
 #'   do not collide).
 #' @param base_seed Base seed for the validation reps (`base_seed + i` per
 #'   rep).
+#' @param parse_options List of options for [parse_dynamic_fire_logs()], handed to each
+#'   replicate's [sim_landis()]; see there. Checked before the pool starts. Default `list()`.
 #'
 #' @return A list with `reps`, `best_params`, `observed`, `pixel_area_ha`,
 #'   `sim_years`, `n_reps`, `loss`, `pool_image`, and `pool_digest`.
@@ -4925,8 +5222,10 @@ run_calibration_validation <- function(
   cfg,
   n_reps = 20L,
   scratch_root,
-  base_seed = 99999L
+  base_seed = 99999L,
+  parse_options = list()
 ) {
+  .check_parse_options(parse_options)
   stopifnot(
     is.character(scenario_template),
     is.numeric(best_params),
@@ -4981,7 +5280,8 @@ run_calibration_validation <- function(
       ## Same rationale as the search: one transient container fault should not
       ## discard the whole validation. `cfg$retries` is what the calibration used.
       retries = as.integer(cfg$retries %||% 0L),
-      parse_timeout_sec = if ("parse_timeout_sec" %in% names(cfg)) cfg$parse_timeout_sec else 600
+      parse_timeout_sec = if ("parse_timeout_sec" %in% names(cfg)) cfg$parse_timeout_sec else 600,
+      parse_options = parse_options
     )
   }
   reps <- if (n_reps_i > 1L) {
