@@ -4,14 +4,31 @@
 \alias{landis_overstory_mortality_share}
 \title{Share of burned area that lost its dominant cohort}
 \usage{
-landis_overstory_mortality_share(rep_dir)
+landis_overstory_mortality_share(
+  rep_dir,
+  by_class = FALSE,
+  engine_rule = FALSE
+)
 }
 \arguments{
 \item{rep_dir}{Character. Path to the replicate directory.}
+
+\item{by_class}{Logical. Also return the burned cells counted by timestep, map code and severity
+class?}
+
+\item{engine_rule}{Logical. Make the damage table's age test in single precision, as the
+extension does, rather than in double precision? See \code{\link[=fire_cohort_killed]{fire_cohort_killed()}}.}
 }
 \value{
 A list with \code{burned_cells}, \code{high_cells} and \code{share} (NA when nothing burned), or NULL
-when the replicate holds no severity maps or is missing one of the files above.
+when the replicate holds no severity maps, is missing one of the files above, or has no cohort
+of a species with both a tolerance and a longevity. With \code{by_class = TRUE} the list also holds
+\code{by_class}, a tibble of integer columns \code{timestep}, \code{MapCode}, \code{class} and \code{cells}: the burned
+cells of the severity map of each timestep, by the cell's map code (NA where the
+initial-communities map has none) and severity class (0 for a cell burned with no cohort
+damaged), in that order. Its \code{cells} sum to \code{burned_cells}, and the \code{cells} of the rows in
+which \code{\link[=fire_cohort_killed]{fire_cohort_killed()}} kills the \code{\link[=landis_dominant_cohorts]{landis_dominant_cohorts()}} cohort of \code{MapCode} sum to
+\code{high_cells}.
 }
 \description{
 The proportion of a replicate's burned cells in which the cohort holding the most biomass was
@@ -28,9 +45,10 @@ Everything needed is in the replicate directory, because a run is a copy of its 
 a damaged cell, so a cell's severity class is its map value MINUS TWO.
 \item \code{initial-communities.csv} / \code{.tif} -- the cohorts on each cell.
 \item the core species file -- longevity, which the damage table's age thresholds are shares
-of. Its name is read from \code{scenario.txt}'s \code{Species} directive, since \code{writeSpecies()}
-names it \code{species-core.txt} while the LANDIS-II examples use \code{species.txt}; the latter is
-the fallback when there is no directive to read.
+of. Its name is read from \code{scenario.txt}'s \code{Species} directive, since
+\code{prepSpeciesData(type = "core")} names it \code{species-core.txt} while the LANDIS-II
+examples use \code{species.txt}; the latter is the fallback when there is no directive to
+read.
 \item the Dynamic Fire per-species table -- each species' fire tolerance. Its name is read
 from \code{dynamic-fire.txt}'s \code{Species_CSV_File} directive, since \code{DynamicFire$new()}
 names it \code{dynamic-fire-species.csv} while this package's own \code{df_input()} default
@@ -40,8 +58,11 @@ fallback when there is no directive to read.
 oldest cohort killed, as a percentage of longevity.
 }
 
-A cohort dies when severity is 5 (the extension kills everything at that severity, whatever the
-tolerance) or when its age is at or below that percentage of its species' longevity. Composition
+The dominant cohort of each map code is the one \code{\link[=landis_dominant_cohorts]{landis_dominant_cohorts()}} returns, and whether
+it died is decided by \code{\link[=fire_cohort_killed]{fire_cohort_killed()}}: it dies when severity is 5 (the extension kills
+everything at that severity, whatever the tolerance) or when its age is at or below the
+percentage of its species' longevity that the damage table gives for severity minus tolerance.
+A cell on a map code with no dominant cohort counts as burned but never as killed. Composition
 is read at time zero, so a cell that burns twice in one replicate is scored on its original
 cohorts; in a calibration run, where succession is frozen, only reburns are affected.
 }
@@ -59,6 +80,8 @@ Other Dynamic Fire calibration helpers:
 \code{\link[=calibration_par_names]{calibration_par_names()}},
 \code{\link[=dedup_community_snapshot]{dedup_community_snapshot()}},
 \code{\link[=default_severity_prior_sturtevant2009]{default_severity_prior_sturtevant2009()}},
+\code{\link[=fire_cohort_killed]{fire_cohort_killed()}},
+\code{\link[=landis_dominant_cohorts]{landis_dominant_cohorts()}},
 \code{\link[=loss_from_stats]{loss_from_stats()}},
 \code{\link[=observed_fire_sizes]{observed_fire_sizes()}},
 \code{\link[=parse_dynamic_fire_logs]{parse_dynamic_fire_logs()}},

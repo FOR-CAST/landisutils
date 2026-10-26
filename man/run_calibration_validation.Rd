@@ -11,7 +11,8 @@ run_calibration_validation(
   cfg,
   n_reps = 20L,
   scratch_root,
-  base_seed = 99999L
+  base_seed = 99999L,
+  parse_options = list()
 )
 }
 \arguments{
@@ -35,6 +36,9 @@ do not collide).}
 
 \item{base_seed}{Base seed for the validation reps (\code{base_seed + i} per
 rep).}
+
+\item{parse_options}{List of options for \code{\link[=parse_dynamic_fire_logs]{parse_dynamic_fire_logs()}}, handed to each
+replicate's \code{\link[=sim_landis]{sim_landis()}}; see there. Checked before the pool starts. Default \code{list()}.}
 }
 \value{
 A list with \code{reps}, \code{best_params}, \code{observed}, \code{pixel_area_ha},
@@ -60,6 +64,8 @@ Other Dynamic Fire calibration helpers:
 \code{\link[=calibration_par_names]{calibration_par_names()}},
 \code{\link[=dedup_community_snapshot]{dedup_community_snapshot()}},
 \code{\link[=default_severity_prior_sturtevant2009]{default_severity_prior_sturtevant2009()}},
+\code{\link[=fire_cohort_killed]{fire_cohort_killed()}},
+\code{\link[=landis_dominant_cohorts]{landis_dominant_cohorts()}},
 \code{\link[=landis_overstory_mortality_share]{landis_overstory_mortality_share()}},
 \code{\link[=loss_from_stats]{loss_from_stats()}},
 \code{\link[=observed_fire_sizes]{observed_fire_sizes()}},

@@ -18,7 +18,8 @@ sim_landis(
   retries = 0L,
   trial_timeout_sec = NULL,
   parse_timeout_sec = 600,
-  parse_retries = 2L
+  parse_retries = 2L,
+  parse_options = list()
 )
 }
 \arguments{
@@ -86,6 +87,11 @@ to \code{parse_failures.log} under the scratch root.}
 
 \item{parse_retries}{Integer >= 0. Extra attempts after a parse times out or
 its process dies. An error the parser raises is not retried. Default 2.}
+
+\item{parse_options}{List of options for \code{\link[=parse_dynamic_fire_logs]{parse_dynamic_fire_logs()}}, by name: any of
+\code{by_class}, \code{engine_rule} and \code{event_fields}, each TRUE or FALSE. A replicate's directory is
+deleted once it is parsed, so the parse must keep whatever is wanted from it. Applies to the
+in-process parse and the isolated one alike. Default \code{list()} parses as before.}
 }
 \value{
 The output of \code{\link[=parse_dynamic_fire_logs]{parse_dynamic_fire_logs()}} for the trial's \verb{rep01/}.
@@ -119,6 +125,8 @@ Other Dynamic Fire calibration helpers:
 \code{\link[=calibration_par_names]{calibration_par_names()}},
 \code{\link[=dedup_community_snapshot]{dedup_community_snapshot()}},
 \code{\link[=default_severity_prior_sturtevant2009]{default_severity_prior_sturtevant2009()}},
+\code{\link[=fire_cohort_killed]{fire_cohort_killed()}},
+\code{\link[=landis_dominant_cohorts]{landis_dominant_cohorts()}},
 \code{\link[=landis_overstory_mortality_share]{landis_overstory_mortality_share()}},
 \code{\link[=loss_from_stats]{loss_from_stats()}},
 \code{\link[=observed_fire_sizes]{observed_fire_sizes()}},
