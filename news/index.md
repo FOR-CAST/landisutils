@@ -1,5 +1,18 @@
 # Changelog
 
+## landisutils 0.0.178
+
+- [`plot_growth_calibration()`](https://for-cast.github.io/landisutils/reference/plot_growth_calibration.md)
+  and
+  [`plot_growth_candidate()`](https://for-cast.github.io/landisutils/reference/plot_growth_candidate.md)
+  key only the reference sources they draw. The “Reference” legend
+  always listed SORTIE, TIPSY and VDYP, so a figure without a VDYP
+  series showed a VDYP key with no line.
+  [`scale_linetype_growth_reference()`](https://for-cast.github.io/landisutils/reference/scale_linetype_growth_reference.md)
+  gains `sources`, which the two plots pass; each source keeps its
+  linetype on every figure. `NULL`, the default, keys every source as
+  before.
+
 ## landisutils 0.0.177
 
 - [`write_fps_raw_out_parquet()`](https://for-cast.github.io/landisutils/reference/write_fps_raw_out_parquet.md)

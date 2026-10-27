@@ -1,12 +1,21 @@
 # Consistent linetype scale for reference curves
 
-Consistent linetype scale for reference curves
+Each reference source (SORTIE, TIPSY, VDYP) keeps the same linetype on
+every figure, whichever sources a figure draws.
 
 ## Usage
 
 ``` r
-scale_linetype_growth_reference()
+scale_linetype_growth_reference(sources = NULL)
 ```
+
+## Arguments
+
+- sources:
+
+  Character or `NULL`. The reference sources the plot draws; only these
+  get a legend key. `NULL` (the default) keys every source, drawn or
+  not.
 
 ## Value
 
