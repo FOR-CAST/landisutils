@@ -11,7 +11,11 @@ crowning, the two disagree by construction.
 ## Usage
 
 ``` r
-landis_overstory_mortality_share(rep_dir)
+landis_overstory_mortality_share(
+  rep_dir,
+  by_class = FALSE,
+  engine_rule = FALSE
+)
 ```
 
 ## Arguments
@@ -20,11 +24,33 @@ landis_overstory_mortality_share(rep_dir)
 
   Character. Path to the replicate directory.
 
+- by_class:
+
+  Logical. Also return the burned cells counted by timestep, map code
+  and severity class?
+
+- engine_rule:
+
+  Logical. Make the damage table's age test in single precision, as the
+  extension does, rather than in double precision? See
+  [`fire_cohort_killed()`](https://for-cast.github.io/landisutils/reference/fire_cohort_killed.md).
+
 ## Value
 
 A list with `burned_cells`, `high_cells` and `share` (NA when nothing
-burned), or NULL when the replicate holds no severity maps or is missing
-one of the files above.
+burned), or NULL when the replicate holds no severity maps, is missing
+one of the files above, or has no cohort of a species with both a
+tolerance and a longevity. With `by_class = TRUE` the list also holds
+`by_class`, a tibble of integer columns `timestep`, `MapCode`, `class`
+and `cells`: the burned cells of the severity map of each timestep, by
+the cell's map code (NA where the initial-communities map has none) and
+severity class (0 for a cell burned with no cohort damaged), in that
+order. Its `cells` sum to `burned_cells`, and the `cells` of the rows in
+which
+[`fire_cohort_killed()`](https://for-cast.github.io/landisutils/reference/fire_cohort_killed.md)
+kills the
+[`landis_dominant_cohorts()`](https://for-cast.github.io/landisutils/reference/landis_dominant_cohorts.md)
+cohort of `MapCode` sum to `high_cells`.
 
 ## Details
 
@@ -40,7 +66,7 @@ of its scenario:
 
 - the core species file – longevity, which the damage table's age
   thresholds are shares of. Its name is read from `scenario.txt`'s
-  `Species` directive, since `writeSpecies()` names it
+  `Species` directive, since `prepSpeciesData(type = "core")` names it
   `species-core.txt` while the LANDIS-II examples use `species.txt`; the
   latter is the fallback when there is no directive to read.
 
@@ -54,9 +80,15 @@ of its scenario:
 - `dynamic-fire.txt` – the `FireDamageTable`, mapping severity minus
   tolerance to the oldest cohort killed, as a percentage of longevity.
 
-A cohort dies when severity is 5 (the extension kills everything at that
-severity, whatever the tolerance) or when its age is at or below that
-percentage of its species' longevity. Composition is read at time zero,
+The dominant cohort of each map code is the one
+[`landis_dominant_cohorts()`](https://for-cast.github.io/landisutils/reference/landis_dominant_cohorts.md)
+returns, and whether it died is decided by
+[`fire_cohort_killed()`](https://for-cast.github.io/landisutils/reference/fire_cohort_killed.md):
+it dies when severity is 5 (the extension kills everything at that
+severity, whatever the tolerance) or when its age is at or below the
+percentage of its species' longevity that the damage table gives for
+severity minus tolerance. A cell on a map code with no dominant cohort
+counts as burned but never as killed. Composition is read at time zero,
 so a cell that burns twice in one replicate is scored on its original
 cohorts; in a calibration run, where succession is frozen, only reburns
 are affected.
@@ -76,6 +108,8 @@ Other Dynamic Fire calibration helpers:
 [`calibration_par_names()`](https://for-cast.github.io/landisutils/reference/calibration_par_names.md),
 [`dedup_community_snapshot()`](https://for-cast.github.io/landisutils/reference/dedup_community_snapshot.md),
 [`default_severity_prior_sturtevant2009()`](https://for-cast.github.io/landisutils/reference/default_severity_prior_sturtevant2009.md),
+[`fire_cohort_killed()`](https://for-cast.github.io/landisutils/reference/fire_cohort_killed.md),
+[`landis_dominant_cohorts()`](https://for-cast.github.io/landisutils/reference/landis_dominant_cohorts.md),
 [`loss_from_stats()`](https://for-cast.github.io/landisutils/reference/loss_from_stats.md),
 [`observed_fire_sizes()`](https://for-cast.github.io/landisutils/reference/observed_fire_sizes.md),
 [`parse_dynamic_fire_logs()`](https://for-cast.github.io/landisutils/reference/parse_dynamic_fire_logs.md),

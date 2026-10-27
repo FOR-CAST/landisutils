@@ -22,7 +22,8 @@ sim_landis(
   retries = 0L,
   trial_timeout_sec = NULL,
   parse_timeout_sec = 600,
-  parse_retries = 2L
+  parse_retries = 2L,
+  parse_options = list()
 )
 ```
 
@@ -133,6 +134,16 @@ sim_landis(
   Integer \>= 0. Extra attempts after a parse times out or its process
   dies. An error the parser raises is not retried. Default 2.
 
+- parse_options:
+
+  List of options for
+  [`parse_dynamic_fire_logs()`](https://for-cast.github.io/landisutils/reference/parse_dynamic_fire_logs.md),
+  by name: any of `by_class`, `engine_rule` and `event_fields`, each
+  TRUE or FALSE. A replicate's directory is deleted once it is parsed,
+  so the parse must keep whatever is wanted from it. Applies to the
+  in-process parse and the isolated one alike. Default
+  [`list()`](https://rdrr.io/r/base/list.html) parses as before.
+
 ## Value
 
 The output of
@@ -165,6 +176,8 @@ Other Dynamic Fire calibration helpers:
 [`calibration_par_names()`](https://for-cast.github.io/landisutils/reference/calibration_par_names.md),
 [`dedup_community_snapshot()`](https://for-cast.github.io/landisutils/reference/dedup_community_snapshot.md),
 [`default_severity_prior_sturtevant2009()`](https://for-cast.github.io/landisutils/reference/default_severity_prior_sturtevant2009.md),
+[`fire_cohort_killed()`](https://for-cast.github.io/landisutils/reference/fire_cohort_killed.md),
+[`landis_dominant_cohorts()`](https://for-cast.github.io/landisutils/reference/landis_dominant_cohorts.md),
 [`landis_overstory_mortality_share()`](https://for-cast.github.io/landisutils/reference/landis_overstory_mortality_share.md),
 [`loss_from_stats()`](https://for-cast.github.io/landisutils/reference/loss_from_stats.md),
 [`observed_fire_sizes()`](https://for-cast.github.io/landisutils/reference/observed_fire_sizes.md),

@@ -137,6 +137,7 @@
 <url><loc>https://for-cast.github.io/landisutils/reference/elevationCostRange.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/exitRoadType.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/extract_landscape_cohort_structures.html</loc></url>
+<url><loc>https://for-cast.github.io/landisutils/reference/fire_cohort_killed.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/fps_output_files.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/fps_pools.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/fps_run_docker.html</loc></url>
@@ -286,6 +287,7 @@
 <url><loc>https://for-cast.github.io/landisutils/reference/landis_datatype.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/landis_dep_files.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/landis_directive.html</loc></url>
+<url><loc>https://for-cast.github.io/landisutils/reference/landis_dominant_cohorts.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/landis_find.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/landis_find_docker.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/landis_image_info.html</loc></url>

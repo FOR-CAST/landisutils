@@ -244,6 +244,9 @@
 - [`extract_landscape_cohort_structures()`](https://for-cast.github.io/landisutils/reference/extract_landscape_cohort_structures.md)
   : Extract distinct cohort structures from the initial communities
 
+- [`fire_cohort_killed()`](https://for-cast.github.io/landisutils/reference/fire_cohort_killed.md)
+  : Whether a fire kills a cohort
+
 - [`fps_output_files()`](https://for-cast.github.io/landisutils/reference/fps_output_files.md)
   : Files FPSM writes into its working directory
 
@@ -586,6 +589,9 @@
 
 - [`landis_datatype()`](https://for-cast.github.io/landisutils/reference/landis_datatype.md)
   : Pick a raster pixel type LANDIS-II can read
+
+- [`landis_dominant_cohorts()`](https://for-cast.github.io/landisutils/reference/landis_dominant_cohorts.md)
+  : Dominant cohort of each initial community
 
 - [`landis_find()`](https://for-cast.github.io/landisutils/reference/landis_find.md)
   : Find the LANDIS-II console for a local installation

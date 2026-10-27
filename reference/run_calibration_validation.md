@@ -17,7 +17,8 @@ run_calibration_validation(
   cfg,
   n_reps = 20L,
   scratch_root,
-  base_seed = 99999L
+  base_seed = 99999L,
+  parse_options = list()
 )
 ```
 
@@ -58,6 +59,15 @@ run_calibration_validation(
 
   Base seed for the validation reps (`base_seed + i` per rep).
 
+- parse_options:
+
+  List of options for
+  [`parse_dynamic_fire_logs()`](https://for-cast.github.io/landisutils/reference/parse_dynamic_fire_logs.md),
+  handed to each replicate's
+  [`sim_landis()`](https://for-cast.github.io/landisutils/reference/sim_landis.md);
+  see there. Checked before the pool starts. Default
+  [`list()`](https://rdrr.io/r/base/list.html).
+
 ## Value
 
 A list with `reps`, `best_params`, `observed`, `pixel_area_ha`,
@@ -78,6 +88,8 @@ Other Dynamic Fire calibration helpers:
 [`calibration_par_names()`](https://for-cast.github.io/landisutils/reference/calibration_par_names.md),
 [`dedup_community_snapshot()`](https://for-cast.github.io/landisutils/reference/dedup_community_snapshot.md),
 [`default_severity_prior_sturtevant2009()`](https://for-cast.github.io/landisutils/reference/default_severity_prior_sturtevant2009.md),
+[`fire_cohort_killed()`](https://for-cast.github.io/landisutils/reference/fire_cohort_killed.md),
+[`landis_dominant_cohorts()`](https://for-cast.github.io/landisutils/reference/landis_dominant_cohorts.md),
 [`landis_overstory_mortality_share()`](https://for-cast.github.io/landisutils/reference/landis_overstory_mortality_share.md),
 [`loss_from_stats()`](https://for-cast.github.io/landisutils/reference/loss_from_stats.md),
 [`observed_fire_sizes()`](https://for-cast.github.io/landisutils/reference/observed_fire_sizes.md),

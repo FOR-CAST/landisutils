@@ -1,5 +1,59 @@
 # Changelog
 
+## landisutils 0.0.176
+
+- [`landis_overstory_mortality_share()`](https://for-cast.github.io/landisutils/reference/landis_overstory_mortality_share.md)
+  gains `by_class`, which adds the replicate’s burned cells counted by
+  timestep, map code and severity class, as an integer tibble `by_class`
+  (`timestep`, `MapCode`, `class`, `cells`). A burned cell with no map
+  code is counted under an NA `MapCode`, and class 0 is a cell burned
+  with no cohort damaged. Refitting the damage table needs these counts:
+  with the dominant cohorts and the kill rule below, they let the share
+  be recomputed at another damage table from the same severity maps.
+  `FALSE`, the default, leaves the result as it was.
+- New
+  [`landis_dominant_cohorts()`](https://for-cast.github.io/landisutils/reference/landis_dominant_cohorts.md)
+  returns, for each map code, the cohort that
+  [`landis_overstory_mortality_share()`](https://for-cast.github.io/landisutils/reference/landis_overstory_mortality_share.md)
+  scores: the largest-biomass cohort of a species with both a fire
+  tolerance and a longevity, with ties going to the cohort listed first.
+  It reads the same files, under the same directive-resolved names.
+- New
+  [`fire_cohort_killed()`](https://for-cast.github.io/landisutils/reference/fire_cohort_killed.md)
+  exports the share’s kill rule: severity 5 kills, and severities 1 to 4
+  kill a cohort whose age is at or below the damage table’s percentage
+  of longevity for severity minus tolerance. The share now calls it.
+  With `engine_rule = TRUE` (also a new argument of the share) the age
+  test is made in single precision, as Dynamic Fire makes it, so a
+  cohort exactly at a threshold can survive where the default test kills
+  it.
+- [`parse_dynamic_fire_logs()`](https://for-cast.github.io/landisutils/reference/parse_dynamic_fire_logs.md)
+  gains `event_fields`, which appends five columns to `events`:
+  `selected_size` (the log’s `SelectedSizeOrDuration`), `season` (the
+  index in `FireSeason`, as `"0"`, `"1"` or `"2"`), `size_bin`
+  (`SizeBin`), and `init_row` and `init_col` (`InitSiteRow` and
+  `InitSiteColumn`). It also passes `by_class` and `engine_rule` to
+  [`landis_overstory_mortality_share()`](https://for-cast.github.io/landisutils/reference/landis_overstory_mortality_share.md).
+- [`sim_landis()`](https://for-cast.github.io/landisutils/reference/sim_landis.md),
+  `.parse_rep_isolated()` and
+  [`run_calibration_validation()`](https://for-cast.github.io/landisutils/reference/run_calibration_validation.md)
+  gain `parse_options`, a list of those three options that every parse,
+  in-process or in the isolated child, applies. It is needed because a
+  replicate is deleted once parsed, so the options must be given before
+  the run. A malformed list stops before anything is simulated.
+- With every new option at its default, the output is 0.0.175’s for
+  valid cohorts. The one change is in
+  [`fire_cohort_killed()`](https://for-cast.github.io/landisutils/reference/fire_cohort_killed.md)
+  and so in the share, for invalid cohorts. 0.0.175 killed a dominant
+  cohort of age 0 when severity minus tolerance was below the table’s
+  smallest difference, where
+  [`fire_cohort_killed()`](https://for-cast.github.io/landisutils/reference/fire_cohort_killed.md)
+  kills nothing. It returned an NA `high_cells` when a dominant cohort’s
+  `CohortAge` was NA, and counted such a cohort as killed at class 5; a
+  missing input now kills nothing. It also counted as killed a cohort at
+  a class above 5 (map values of 8 or more, which the extension never
+  writes); 0.0.176 kills none.
+
 ## landisutils 0.0.175
 
 - [`landis_overstory_mortality_share()`](https://for-cast.github.io/landisutils/reference/landis_overstory_mortality_share.md)

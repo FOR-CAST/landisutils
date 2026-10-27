@@ -8,7 +8,13 @@ statistics suitable for loss-function comparison.
 ## Usage
 
 ``` r
-parse_dynamic_fire_logs(rep_dir, pixel_area_ha = 1)
+parse_dynamic_fire_logs(
+  rep_dir,
+  pixel_area_ha = 1,
+  by_class = FALSE,
+  engine_rule = FALSE,
+  event_fields = FALSE
+)
 ```
 
 ## Arguments
@@ -22,6 +28,25 @@ parse_dynamic_fire_logs(rep_dir, pixel_area_ha = 1)
 - pixel_area_ha:
 
   Numeric. Hectares per cell. Default `1.0`.
+
+- by_class, engine_rule:
+
+  Logical. Passed to
+  [`landis_overstory_mortality_share()`](https://for-cast.github.io/landisutils/reference/landis_overstory_mortality_share.md),
+  which gives `overstory_mortality`: `by_class` adds its per-class cell
+  counts, and `engine_rule` makes the damage table's age test in single
+  precision, as the extension does.
+
+- event_fields:
+
+  Logical. Add five columns to `events`, in this order after the default
+  ones: `selected_size` (double, the log's `SelectedSizeOrDuration`),
+  `season` (character, the index in `FireSeason`: `"0"`, `"1"` or
+  `"2"`), and `size_bin`, `init_row` and `init_col` (integer, `SizeBin`,
+  `InitSiteRow` and `InitSiteColumn`). A log with no events gives the
+  columns typed and empty; a log with events that lacks one of the five
+  source columns is an error naming it. `FALSE`, the default, leaves
+  `events` as it was.
 
 ## Value
 
@@ -91,6 +116,8 @@ Other Dynamic Fire calibration helpers:
 [`calibration_par_names()`](https://for-cast.github.io/landisutils/reference/calibration_par_names.md),
 [`dedup_community_snapshot()`](https://for-cast.github.io/landisutils/reference/dedup_community_snapshot.md),
 [`default_severity_prior_sturtevant2009()`](https://for-cast.github.io/landisutils/reference/default_severity_prior_sturtevant2009.md),
+[`fire_cohort_killed()`](https://for-cast.github.io/landisutils/reference/fire_cohort_killed.md),
+[`landis_dominant_cohorts()`](https://for-cast.github.io/landisutils/reference/landis_dominant_cohorts.md),
 [`landis_overstory_mortality_share()`](https://for-cast.github.io/landisutils/reference/landis_overstory_mortality_share.md),
 [`loss_from_stats()`](https://for-cast.github.io/landisutils/reference/loss_from_stats.md),
 [`observed_fire_sizes()`](https://for-cast.github.io/landisutils/reference/observed_fire_sizes.md),
