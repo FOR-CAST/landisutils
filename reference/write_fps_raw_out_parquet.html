@@ -15,7 +15,7 @@ embedded as a data column so several per-scenario roots can be unioned."><meta p
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.176</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.177</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -93,6 +93,14 @@ it is derived from <code>src_path</code>, skipping an <code>fps/</code> working 
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>The written parquet path.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
+    <p>A header-only <code>FPS_raw_out.csv</code> is FPSM's output for a run that sent no
+carbon to the product sector, such as one with no harvest. It publishes a
+zero-row partition with the same columns, so such a run is recorded like any
+other, and an error is left to mean a failure. A file with no header is still
+an error.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

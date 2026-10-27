@@ -46,6 +46,14 @@ write_fps_raw_out_parquet(
 
 The written parquet path.
 
+## Details
+
+A header-only `FPS_raw_out.csv` is FPSM's output for a run that sent no
+carbon to the product sector, such as one with no harvest. It publishes
+a zero-row partition with the same columns, so such a run is recorded
+like any other, and an error is left to mean a failure. A file with no
+header is still an error.
+
 ## See also
 
 Other FPSM helpers:

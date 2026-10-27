@@ -13,7 +13,7 @@ is skipped when deriving the labels, so both layouts work."><meta property="og:i
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.176</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.177</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -76,8 +76,10 @@ scenario label is derived from <code>paths</code>.</p></dd>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A tibble with leading <code>scenario</code> / <code>replicate</code> columns and the eight
-FPSM output fields, <code>To_Gas/Pool</code> renamed to <code>ToPool</code>. Amounts are tonnes of
-carbon (see the file header note on units).</p>
+FPSM output fields, <code>To_Gas/Pool</code> renamed to <code>ToPool</code>: six integer codes and
+two double amounts, in tonnes of carbon (see the file header note on units).
+A header-only file, which FPSM writes when no carbon reached the product
+sector, gives zero rows with the same columns.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

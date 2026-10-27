@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.176</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.177</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,6 +41,13 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.177" id="landisutils-00177">landisutils 0.0.177<a class="anchor" aria-label="anchor" href="#landisutils-00177"></a></h2>
+<ul><li>
+<code><a href="../reference/write_fps_raw_out_parquet.html">write_fps_raw_out_parquet()</a></code> publishes a zero-row partition for a header-only <code>FPS_raw_out.csv</code>, which is FPSM’s output for a run that sends no carbon to the product sector, such as one with no harvest. It used to stop with “empty input”, so every replicate of a run that does not harvest errored, and a pipeline that skips errored branches could not tell those from a failed FPSM run. The replicate label now comes from the path, as the scenario’s did. A file with no header is still an error.</li>
+<li>
+<code><a href="../reference/read_fps_raw_out.html">read_fps_raw_out()</a></code> reads the six codes as integer and the two amounts as double, instead of letting <code><a href="https://rdrr.io/r/utils/read.table.html" class="external-link">utils::read.csv()</a></code> guess. A header-only file used to read as logical columns, and an amount column whose values were all whole read as integer in one replicate and double in another, so the replicates’ partitions did not share a schema.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.176" id="landisutils-00176">landisutils 0.0.176<a class="anchor" aria-label="anchor" href="#landisutils-00176"></a></h2>
 <ul><li>

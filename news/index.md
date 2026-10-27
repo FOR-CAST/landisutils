@@ -1,5 +1,24 @@
 # Changelog
 
+## landisutils 0.0.177
+
+- [`write_fps_raw_out_parquet()`](https://for-cast.github.io/landisutils/reference/write_fps_raw_out_parquet.md)
+  publishes a zero-row partition for a header-only `FPS_raw_out.csv`,
+  which is FPSM’s output for a run that sends no carbon to the product
+  sector, such as one with no harvest. It used to stop with “empty
+  input”, so every replicate of a run that does not harvest errored, and
+  a pipeline that skips errored branches could not tell those from a
+  failed FPSM run. The replicate label now comes from the path, as the
+  scenario’s did. A file with no header is still an error.
+- [`read_fps_raw_out()`](https://for-cast.github.io/landisutils/reference/read_fps_raw_out.md)
+  reads the six codes as integer and the two amounts as double, instead
+  of letting
+  [`utils::read.csv()`](https://rdrr.io/r/utils/read.table.html) guess.
+  A header-only file used to read as logical columns, and an amount
+  column whose values were all whole read as integer in one replicate
+  and double in another, so the replicates’ partitions did not share a
+  schema.
+
 ## landisutils 0.0.176
 
 - [`landis_overstory_mortality_share()`](https://for-cast.github.io/landisutils/reference/landis_overstory_mortality_share.md)

@@ -26,8 +26,10 @@ read_fps_raw_out(paths, run_name = NULL)
 ## Value
 
 A tibble with leading `scenario` / `replicate` columns and the eight
-FPSM output fields, `To_Gas/Pool` renamed to `ToPool`. Amounts are
-tonnes of carbon (see the file header note on units).
+FPSM output fields, `To_Gas/Pool` renamed to `ToPool`: six integer codes
+and two double amounts, in tonnes of carbon (see the file header note on
+units). A header-only file, which FPSM writes when no carbon reached the
+product sector, gives zero rows with the same columns.
 
 ## See also
 
