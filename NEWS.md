@@ -1,3 +1,8 @@
+# landisutils 0.0.177
+
+* `write_fps_raw_out_parquet()` publishes a zero-row partition for a header-only `FPS_raw_out.csv`, which is FPSM's output for a run that sends no carbon to the product sector, such as one with no harvest. It used to stop with "empty input", so every replicate of a run that does not harvest errored, and a pipeline that skips errored branches could not tell those from a failed FPSM run. The replicate label now comes from the path, as the scenario's did. A file with no header is still an error.
+* `read_fps_raw_out()` reads the six codes as integer and the two amounts as double, instead of letting `utils::read.csv()` guess. A header-only file used to read as logical columns, and an amount column whose values were all whole read as integer in one replicate and double in another, so the replicates' partitions did not share a schema.
+
 # landisutils 0.0.176
 
 * `landis_overstory_mortality_share()` gains `by_class`, which adds the replicate's burned cells counted by timestep, map code and severity class, as an integer tibble `by_class` (`timestep`, `MapCode`, `class`, `cells`). A burned cell with no map code is counted under an NA `MapCode`, and class 0 is a cell burned with no cohort damaged. Refitting the damage table needs these counts: with the dominant cohorts and the kill rule below, they let the share be recomputed at another damage table from the same severity maps. `FALSE`, the default, leaves the result as it was.

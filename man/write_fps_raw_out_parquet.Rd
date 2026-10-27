@@ -32,6 +32,13 @@ is written to a temporary file and then \code{\link[fs:file_move]{fs::file_move(
 concurrent reader or a retried write never sees a partial file. \code{scenario} is
 embedded as a data column so several per-scenario roots can be unioned.
 }
+\details{
+A header-only \code{FPS_raw_out.csv} is FPSM's output for a run that sent no
+carbon to the product sector, such as one with no harvest. It publishes a
+zero-row partition with the same columns, so such a run is recorded like any
+other, and an error is left to mean a failure. A file with no header is still
+an error.
+}
 \seealso{
 Other FPSM helpers:
 \code{\link[=fps_output_files]{fps_output_files()}},

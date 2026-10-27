@@ -32,6 +32,31 @@
 ## Types carrying the annual end-of-year stock reports.
 .fps_stock_types <- c(product = 5L, special = 4L)
 
+## Column classes of `FPS_raw_out.csv`, in file order. Fixed rather than
+## inferred: a header-only file, which FPSM writes when no carbon reached the
+## product sector, would read as logical, and an amount column whose values
+## happen to be whole would read as integer in one replicate and double in
+## another, so the replicates' parquet partitions would not share a schema.
+.fps_raw_out_classes <- c(rep("integer", 6L), "numeric", "numeric")
+
+## Scenario and replicate labels from the path of one `FPS_raw_out.csv`,
+## skipping a trailing `fps/` working directory so both run layouts derive alike.
+.fps_run_labels <- function(path, run_name = NULL) {
+  dirs <- fs::path_split(fs::path_dir(path))[[1L]]
+  if (length(dirs) && identical(utils::tail(dirs, 1L), "fps")) {
+    dirs <- utils::head(dirs, -1L)
+  }
+  list(
+    scenario = if (is.null(run_name)) {
+      utils::tail(utils::head(dirs, -1L), 1L)
+    } else {
+      basename(run_name)
+    },
+    replicate = utils::tail(dirs, 1L),
+    scenario_dir = fs::path_join(utils::head(dirs, -1L))
+  )
+}
+
 #' Read one or more FPSM `FPS_raw_out.csv` files
 #'
 #' Attaches `scenario` / `replicate` labels derived from the directory structure.
@@ -44,8 +69,10 @@
 #'   scenario label is derived from `paths`.
 #'
 #' @returns A tibble with leading `scenario` / `replicate` columns and the eight
-#'   FPSM output fields, `To_Gas/Pool` renamed to `ToPool`. Amounts are tonnes of
-#'   carbon (see the file header note on units).
+#'   FPSM output fields, `To_Gas/Pool` renamed to `ToPool`: six integer codes and
+#'   two double amounts, in tonnes of carbon (see the file header note on units).
+#'   A header-only file, which FPSM writes when no carbon reached the product
+#'   sector, gives zero rows with the same columns.
 #'
 #' @family FPSM helpers
 #'
@@ -55,18 +82,8 @@ read_fps_raw_out <- function(paths, run_name = NULL) {
     return(tibble::tibble())
   }
   purrr::map(paths, function(p) {
-    dirs <- fs::path_split(fs::path_dir(p))[[1L]]
-    ## Skip a trailing `fps/` working directory so both layouts derive alike.
-    if (length(dirs) && identical(utils::tail(dirs, 1L), "fps")) {
-      dirs <- utils::head(dirs, -1L)
-    }
-    replicate_dir <- utils::tail(dirs, 1L)
-    scenario_label <- if (is.null(run_name)) {
-      utils::tail(utils::head(dirs, -1L), 1L)
-    } else {
-      basename(run_name)
-    }
-    df <- utils::read.csv(p, strip.white = TRUE)
+    labels <- .fps_run_labels(p, run_name)
+    df <- utils::read.csv(p, strip.white = TRUE, colClasses = .fps_raw_out_classes)
     names(df) <- c(
       "Type",
       "YearCreated",
@@ -78,7 +95,7 @@ read_fps_raw_out <- function(paths, run_name = NULL) {
       "AmountRetained"
     )
     tibble::as_tibble(df) |>
-      dplyr::mutate(scenario = scenario_label, replicate = replicate_dir, .before = 1L)
+      dplyr::mutate(scenario = labels$scenario, replicate = labels$replicate, .before = 1L)
   }) |>
     dplyr::bind_rows()
 }
@@ -182,6 +199,12 @@ fps_stocks_by_pool <- function(raw) {
 #' concurrent reader or a retried write never sees a partial file. `scenario` is
 #' embedded as a data column so several per-scenario roots can be unioned.
 #'
+#' A header-only `FPS_raw_out.csv` is FPSM's output for a run that sent no
+#' carbon to the product sector, such as one with no harvest. It publishes a
+#' zero-row partition with the same columns, so such a run is recorded like any
+#' other, and an error is left to mean a failure. A file with no header is still
+#' an error.
+#'
 #' @param src_path Path to one replicate's `FPS_raw_out.csv`.
 #' @param scenario_dir Scenario directory to publish under. When `NULL` (default)
 #'   it is derived from `src_path`, skipping an `fps/` working directory.
@@ -201,20 +224,12 @@ write_fps_raw_out_parquet <- function(
   staging_dir = NULL
 ) {
   .need("arrow", "Writing a parquet summary")
+  stopifnot(length(src_path) == 1L)
+  ## The labels come from the path, not the rows, so a zero-row file has them too.
+  labels <- .fps_run_labels(src_path)
   df <- read_fps_raw_out(src_path)
-  if (nrow(df) == 0L) {
-    stop("write_fps_raw_out_parquet(): empty input for ", src_path, call. = FALSE)
-  }
-  rep <- unique(df$replicate)
-  stopifnot(length(unique(df$scenario)) == 1L, length(rep) == 1L)
-  if (is.null(scenario_dir)) {
-    dirs <- fs::path_split(fs::path_dir(src_path))[[1L]]
-    if (length(dirs) && identical(utils::tail(dirs, 1L), "fps")) {
-      dirs <- utils::head(dirs, -1L)
-    }
-    scenario_dir <- fs::path_join(utils::head(dirs, -1L))
-  }
-  dst_dir <- fs::path(scenario_dir, subdir, paste0("replicate=", rep))
+  scenario_dir <- scenario_dir %||% labels$scenario_dir
+  dst_dir <- fs::path(scenario_dir, subdir, paste0("replicate=", labels$replicate))
   fs::dir_create(dst_dir)
   dst <- fs::path(dst_dir, "part-0.parquet")
   tmp_root <- staging_dir %||% dst_dir
