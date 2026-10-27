@@ -256,3 +256,42 @@ test_that("only series that are drawn get a legend key", {
   expect_false("ground plots, age-binned (scored)" %in% keys(NULL, TRUE))
   expect_true("ground plots, age-binned (scored)" %in% keys(binned, FALSE))
 })
+
+test_that("the reference legend keys only the sources drawn, each in its own linetype", {
+  ## get_guide_data() arrived in ggplot2 3.5.0.
+  skip_if_not_installed("ggplot2", "3.5.0")
+  age <- seq(0, 200, 10)
+  ref_line <- function(src) {
+    data.frame(source = src, age = age, aboveground_c_mg_ha = age / 2)
+  }
+  obs <- data.frame(
+    source = "Ground plots",
+    age = seq(20, 140, 10),
+    aboveground_c_mg_ha = seq(10, 130, 10),
+    bec_label = "ICHmc2",
+    leading_raw = "AA"
+  )
+  cur <- data.frame(age = 1:150, aboveground_c_mg_ha = seq(0, 100, length.out = 150))
+  key <- function(p) {
+    g <- ggplot2::get_guide_data(p, "linetype")
+    stats::setNames(as.character(g$linetype), g$.label)
+  }
+
+  ## VDYP is not drawn, so it gets no key -- it used to get one with no line.
+  ref <- dplyr::bind_rows(obs, ref_line("SORTIE"), ref_line("TIPSY"))
+  expect_identical(key(plot_growth_calibration("Sp1", cur, ref)), c(SORTIE = "solid", TIPSY = "14"))
+  expect_identical(
+    key(plot_growth_candidate("Sp1", cur, NULL, ref)),
+    c(SORTIE = "solid", TIPSY = "14")
+  )
+
+  ## TIPSY alone keeps its own linetype rather than taking SORTIE's solid line.
+  tipsy <- dplyr::bind_rows(obs, ref_line("TIPSY"))
+  expect_identical(key(plot_growth_calibration("Sp1", cur, tipsy)), c(TIPSY = "14"))
+
+  ## No reference curve at all: no linetype legend, and the plot still builds.
+  expect_null(ggplot2::get_guide_data(plot_growth_calibration("Sp1", cur, obs), "linetype"))
+
+  ## Called bare, the exported scale still keys every source.
+  expect_identical(scale_linetype_growth_reference()$get_limits(), c("SORTIE", "TIPSY", "VDYP"))
+})
