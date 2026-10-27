@@ -1076,11 +1076,12 @@ growth_best_candidates <- function(
 
 
 ## Reference-series appearance, defined once so a linetype means the same thing
-## on every figure. Without `drop = FALSE` ggplot assigns linetypes from the
-## levels PRESENT, so a panel with only TIPSY would draw it solid -- exactly the
-## key that means SORTIE everywhere else.
-## Every modelled source needs an entry here, not just a linetype anyone likes: the scale is built
-## with `limits = names(...)` and `na.translate = FALSE`, so a source missing from this vector is
+## on every figure. The vector is NAMED so ggplot matches each source to its own
+## entry; matched by position, a panel with only TIPSY would draw it solid --
+## exactly the key that means SORTIE everywhere else. The plots cut the scale's
+## limits down to the sources they draw, so no key is left without a line.
+## Every modelled source needs an entry here, not just a linetype anyone likes: the scale takes its
+## limits from `names(...)` with `na.translate = FALSE`, so a source missing from this vector is
 ## DROPPED FROM THE PLOT rather than drawn in some default style. That is how the VDYP series came
 ## to be scored, filtered in, and still invisible -- the only symptom was a
 ## "Removed N rows containing missing values (geom_line)" warning.

@@ -1,3 +1,7 @@
+# landisutils 0.0.178
+
+* `plot_growth_calibration()` and `plot_growth_candidate()` key only the reference sources they draw. The "Reference" legend always listed SORTIE, TIPSY and VDYP, so a figure without a VDYP series showed a VDYP key with no line. `scale_linetype_growth_reference()` gains `sources`, which the two plots pass; each source keeps its linetype on every figure. `NULL`, the default, keys every source as before.
+
 # landisutils 0.0.177
 
 * `write_fps_raw_out_parquet()` publishes a zero-row partition for a header-only `FPS_raw_out.csv`, which is FPSM's output for a run that sends no carbon to the product sector, such as one with no harvest. It used to stop with "empty input", so every replicate of a run that does not harvest errored, and a pipeline that skips errored branches could not tell those from a failed FPSM run. The replicate label now comes from the path, as the scenario's did. A file with no header is still an error.

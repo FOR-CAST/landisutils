@@ -4,13 +4,19 @@
 \alias{scale_linetype_growth_reference}
 \title{Consistent linetype scale for reference curves}
 \usage{
-scale_linetype_growth_reference()
+scale_linetype_growth_reference(sources = NULL)
+}
+\arguments{
+\item{sources}{Character or \code{NULL}. The reference sources the plot draws;
+only these get a legend key. \code{NULL} (the default) keys every source, drawn
+or not.}
 }
 \value{
 A ggplot2 scale.
 }
 \description{
-Consistent linetype scale for reference curves
+Each reference source (SORTIE, TIPSY, VDYP) keeps the same linetype on every
+figure, whichever sources a figure draws.
 }
 \seealso{
 Other growth calibration helpers:

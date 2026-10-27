@@ -4,14 +4,27 @@ utils::globalVariables("count")
 
 #' Consistent linetype scale for reference curves
 #'
+#' Each reference source (SORTIE, TIPSY, VDYP) keeps the same linetype on every
+#' figure, whichever sources a figure draws.
+#'
+#' @param sources Character or `NULL`. The reference sources the plot draws;
+#'   only these get a legend key. `NULL` (the default) keys every source, drawn
+#'   or not.
+#'
 #' @return A ggplot2 scale.
 #' @family growth calibration helpers
 #' @export
-scale_linetype_growth_reference <- function() {
+scale_linetype_growth_reference <- function(sources = NULL) {
   .need("ggplot2", "Building a growth-reference scale")
+  ## Cutting the limits down does not move a linetype: `values` is NAMED, so each
+  ## source is matched to its own entry rather than by position.
+  limits <- names(.growth_reference_linetypes)
+  if (!is.null(sources)) {
+    limits <- intersect(limits, as.character(sources))
+  }
   ggplot2::scale_linetype_manual(
     values = .growth_reference_linetypes,
-    limits = names(.growth_reference_linetypes),
+    limits = limits,
     drop = FALSE,
     na.translate = FALSE
   )
@@ -165,7 +178,7 @@ plot_growth_calibration <- function(
     } else {
       ggplot2::scale_shape_manual(values = c(16, 17, 15, 3, 7, 8, 4, 10, 12))
     }) +
-    scale_linetype_growth_reference() +
+    scale_linetype_growth_reference(unique(model$source)) +
     ggplot2::coord_cartesian(xlim = c(0, x_max)) +
     ggplot2::labs(
       x = "Stand age (years)",
@@ -506,7 +519,7 @@ plot_growth_candidate <- function(
       linewidth = 1
     ) +
     ggplot2::scale_colour_manual(values = pal, breaks = names(pal), limits = names(pal)) +
-    scale_linetype_growth_reference() +
+    scale_linetype_growth_reference(unique(model$source)) +
     ## Without this the observation keys inherit the line geom and read as
     ## curves, which is exactly the confusion the legend is meant to remove.
     ## Explicit order: ggplot2 otherwise sequences the guides by how the scales
