@@ -4,7 +4,13 @@
 \alias{parse_dynamic_fire_logs}
 \title{Parse a Dynamic Fire run's event and summary logs}
 \usage{
-parse_dynamic_fire_logs(rep_dir, pixel_area_ha = 1)
+parse_dynamic_fire_logs(
+  rep_dir,
+  pixel_area_ha = 1,
+  by_class = FALSE,
+  engine_rule = FALSE,
+  event_fields = FALSE
+)
 }
 \arguments{
 \item{rep_dir}{Character. Path to the per-rep directory (the \verb{rep01/} under
@@ -12,6 +18,17 @@ the scenario directory). Must contain \code{fire/dynamic-fire-event-log.csv}
 and \code{fire/dynamic-fire-summary-log.csv}.}
 
 \item{pixel_area_ha}{Numeric. Hectares per cell. Default \code{1.0}.}
+
+\item{by_class, engine_rule}{Logical. Passed to \code{\link[=landis_overstory_mortality_share]{landis_overstory_mortality_share()}}, which gives
+\code{overstory_mortality}: \code{by_class} adds its per-class cell counts, and \code{engine_rule} makes the
+damage table's age test in single precision, as the extension does.}
+
+\item{event_fields}{Logical. Add five columns to \code{events}, in this order after the default ones:
+\code{selected_size} (double, the log's \code{SelectedSizeOrDuration}), \code{season} (character, the index
+in \code{FireSeason}: \code{"0"}, \code{"1"} or \code{"2"}), and \code{size_bin}, \code{init_row} and \code{init_col} (integer,
+\code{SizeBin}, \code{InitSiteRow} and \code{InitSiteColumn}). A log with no events gives the columns typed
+and empty; a log with events that lacks one of the five source columns is an error naming it.
+\code{FALSE}, the default, leaves \code{events} as it was.}
 }
 \value{
 Named list with \code{n_fires_by_year} (tibble: \code{year}, \code{n_fires}),
@@ -79,6 +96,8 @@ Other Dynamic Fire calibration helpers:
 \code{\link[=calibration_par_names]{calibration_par_names()}},
 \code{\link[=dedup_community_snapshot]{dedup_community_snapshot()}},
 \code{\link[=default_severity_prior_sturtevant2009]{default_severity_prior_sturtevant2009()}},
+\code{\link[=fire_cohort_killed]{fire_cohort_killed()}},
+\code{\link[=landis_dominant_cohorts]{landis_dominant_cohorts()}},
 \code{\link[=landis_overstory_mortality_share]{landis_overstory_mortality_share()}},
 \code{\link[=loss_from_stats]{loss_from_stats()}},
 \code{\link[=observed_fire_sizes]{observed_fire_sizes()}},
