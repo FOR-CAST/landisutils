@@ -14,8 +14,10 @@ scenario label is derived from \code{paths}.}
 }
 \value{
 A tibble with leading \code{scenario} / \code{replicate} columns and the eight
-FPSM output fields, \code{To_Gas/Pool} renamed to \code{ToPool}. Amounts are tonnes of
-carbon (see the file header note on units).
+FPSM output fields, \code{To_Gas/Pool} renamed to \code{ToPool}: six integer codes and
+two double amounts, in tonnes of carbon (see the file header note on units).
+A header-only file, which FPSM writes when no carbon reached the product
+sector, gives zero rows with the same columns.
 }
 \description{
 Attaches \code{scenario} / \code{replicate} labels derived from the directory structure.

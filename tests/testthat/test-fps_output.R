@@ -97,3 +97,43 @@ test_that("fps_stocks_by_pool() labels product and special pools", {
   expect_equal(sp$stock_tC[sp$year == 1L & sp$pool == 1000L], 5)
   expect_false(3L %in% sp$year)
 })
+
+test_that("a header-only file reads as zero rows with the full, typed schema", {
+  d <- withr::local_tempdir()
+  raw <- read_fps_raw_out(.write_raw(fs::path(d, "ScenA", "rep01", "fps"), character(0)))
+  expect_identical(nrow(raw), 0L)
+  expect_type(raw$Type, "integer")
+  expect_type(raw$ToPool, "integer")
+  expect_type(raw$AmountRetained, "double")
+  expect_type(raw$scenario, "character")
+})
+
+test_that("amounts read as double even when every value is whole", {
+  d <- withr::local_tempdir()
+  raw <- read_fps_raw_out(.write_raw(fs::path(d, "ScenA", "rep01"), "4, 1, 1, 0, 1000, 1000, 0, 5"))
+  expect_type(raw$AmountEmitted, "double")
+  expect_type(raw$AmountRetained, "double")
+})
+
+test_that("a header-only file publishes a zero-row partition beside a full one", {
+  skip_if_not_installed("arrow")
+  d <- withr::local_tempdir()
+  scen <- fs::path(d, "ScenA")
+  empty <- write_fps_raw_out_parquet(.write_raw(fs::path(scen, "rep01", "fps"), character(0)))
+  full <- write_fps_raw_out_parquet(.write_raw(fs::path(scen, "rep02", "fps"), .fixture_rows))
+  expect_true(all(fs::file_exists(c(empty, full))))
+  expect_match(empty, "replicate=rep01")
+
+  ds <- open_fps_raw_out_dataset(fs::path(scen, "_aggregates", "fps_raw_out"))
+  pl <- fps_pools(dplyr::collect(ds))
+  expect_identical(unique(pl$replicate), "rep02")
+  expect_equal(pl$products_tC[pl$year == 1L], 10)
+})
+
+test_that("a file with no header is still an error", {
+  d <- withr::local_tempdir()
+  p <- fs::path(d, "ScenA", "rep01", "FPS_raw_out.csv")
+  fs::dir_create(fs::path_dir(p))
+  fs::file_create(p)
+  expect_error(write_fps_raw_out_parquet(p))
+})
