@@ -1268,9 +1268,19 @@ default_severity_prior_sturtevant2009 <- function() {
 #'   `size_tail`, `area_fuel`, `severity`, `mortality`, `area_burned`. Missing
 #'   components default to 0, so an existing caller's weights keep their
 #'   meaning when a component is added.
+#' @param severity_weighting One of `"event"`, `"area"` or `"cell"`: what one
+#'   unit of the simulated severity distribution is. `"event"` gives every fire
+#'   one vote regardless of size and is the default, for backwards
+#'   compatibility; the observed reference is a share of burned AREA, so it is
+#'   the setting that compares unlike quantities. `"area"` weights each fire's
+#'   mean severity by the area it burned. `"cell"` uses the severity of every
+#'   burned cell and so also drops the per-fire averaging, but it requires
+#'   replicates parsed with `by_class = TRUE` and errors without them. Defaults
+#'   to `getOption("landisutils.calibration.severity_weighting", "event")`.
 #'
 #' @returns Named list with `total` (the scalar minimised by DEoptim),
-#'   `components` (per-component contributions), and `weights` (echoed weights).
+#'   `components` (per-component contributions), `weights` (echoed weights),
+#'   and `severity_weighting` (how the severity component was counted).
 #'
 #' @family Dynamic Fire calibration helpers
 #'
@@ -1279,8 +1289,10 @@ default_severity_prior_sturtevant2009 <- function() {
 loss_from_stats <- function(
   reps,
   observed,
-  weights = c(count = 1, size = 1, size_tail = 1, area_fuel = 0, severity = 0)
+  weights = c(count = 1, size = 1, size_tail = 1, area_fuel = 0, severity = 0),
+  severity_weighting = getOption("landisutils.calibration.severity_weighting", "event")
 ) {
+  severity_weighting <- match.arg(severity_weighting, c("event", "area", "cell"))
   stopifnot(is.list(reps), length(reps) >= 1L, is.list(observed))
   ## `is.list(reps)` is satisfied by a list holding NULLs, and that is not a theoretical gap:
   ## `parallel::mclapply()` returns NULL for a replicate whose child process died, so a caller
@@ -1442,7 +1454,7 @@ loss_from_stats <- function(
   ## L_severity: chi-squared on severity-class proportions.
   ## Active when observed$primary$severity_dist is non-NULL.
   L_severity <- if (!is.null(primary$severity_dist)) {
-    .chi_sq_severity(reps, primary$severity_dist)
+    .chi_sq_severity(reps, primary$severity_dist, weighting = severity_weighting)
   } else {
     0.0
   }
@@ -1561,7 +1573,9 @@ loss_from_stats <- function(
   w[names(weights)] <- weights
   total <- sum(w * components)
 
-  list(total = total, components = components, weights = w)
+  ## `severity_weighting` is recorded because it decides what the severity component MEANS, and a
+  ## stored result that does not say which setting produced it cannot be compared with another.
+  list(total = total, components = components, weights = w, severity_weighting = severity_weighting)
 }
 
 ## Chi-squared on burn-area-by-base-fuel-type proportions (internal).
@@ -1680,28 +1694,89 @@ loss_from_stats <- function(
 }
 
 ## Chi-squared on severity-class proportions (internal).
-.chi_sq_severity <- function(reps, severity_dist) {
-  sim_sev <- unlist(
-    lapply(reps, function(r) {
-      if (nrow(r$events) == 0L) {
-        return(numeric(0))
+##
+## `weighting` chooses what one unit of the simulated distribution IS, which is the largest single
+## choice in this comparison and was implicit until now:
+##
+##   "event" -- one vote per fire, whatever its size. The historical behaviour and still the
+##              default. The observed reference is not measured this way, so this is the one
+##              setting known to be comparing unlike quantities.
+##   "area"  -- each fire's mean severity weighted by the area it burned, which is the weighting
+##              the observed side already uses. Needs nothing a replicate does not already carry.
+##   "cell"  -- the severity of every burned cell, from the per-class counts
+##              `landis_overstory_mortality_share(by_class = TRUE)` collects. Also drops the
+##              per-fire averaging, so a fire that is half unburned and half crowning contributes
+##              to both tails instead of to the middle.
+##
+## On this landscape the three are not small variations on each other: measured over 92 search
+## replicates the high class held 9% of the simulated distribution counted per event, 60% counted
+## per area and 63% counted per cell, against 17% observed. Changing this changes which parameters
+## the search prefers, so it is recorded in the fitted result rather than read from an option alone.
+.chi_sq_severity <- function(reps, severity_dist, weighting = c("event", "area", "cell")) {
+  weighting <- match.arg(weighting)
+
+  if (identical(weighting, "cell")) {
+    sim_counts <- .severity_cell_counts(reps)
+    if (is.null(sim_counts)) {
+      ## No replicate carried per-class counts. Scoring per event instead would silently answer a
+      ## different question, and returning the empty-run sentinel would read as a perfect fit, so
+      ## this is the one case that stops.
+      stop(
+        "severity weighting \"cell\" needs the per-class burned-cell counts, and no replicate ",
+        "carries them. Parse with `by_class = TRUE` (see `parse_options` of ",
+        "run_calibration_validation() and sim_landis()), which must be set BEFORE the run: a ",
+        "replicate is parsed once and then deleted.",
+        call. = FALSE
+      )
+    }
+    if (sum(sim_counts) == 0) {
+      return(1.0)
+    }
+  } else {
+    sim_sev <- unlist(
+      lapply(reps, function(r) {
+        if (nrow(r$events) == 0L) {
+          return(numeric(0))
+        }
+        r$events$mean_severity
+      }),
+      use.names = FALSE
+    )
+    if (length(sim_sev) == 0L) {
+      return(1.0)
+    }
+    ## Bin MeanSeverity (continuous, ~0-5) into integer classes 1-5 using
+    ## half-integer boundaries.
+    sim_bins <- cut(
+      sim_sev,
+      breaks = c(-Inf, 1.5, 2.5, 3.5, 4.5, Inf),
+      labels = c("1", "2", "3", "4", "5"),
+      right = TRUE
+    )
+    if (identical(weighting, "area")) {
+      ## `sites` is the event's burned area in cells. Summed per bin rather than counted, so a
+      ## large fire carries the weight its area earns. tapply() drops empty bins to NA, which
+      ## would propagate through the proportions, so they are zeroed.
+      w <- unlist(
+        lapply(reps, function(r) {
+          if (nrow(r$events) == 0L) {
+            return(numeric(0))
+          }
+          as.numeric(r$events$sites)
+        }),
+        use.names = FALSE
+      )
+      agg <- tapply(w, sim_bins, sum)
+      agg[is.na(agg)] <- 0
+      sim_counts <- stats::setNames(as.numeric(agg), levels(sim_bins))
+      if (sum(sim_counts) == 0) {
+        return(1.0)
       }
-      r$events$mean_severity
-    }),
-    use.names = FALSE
-  )
-  if (length(sim_sev) == 0L) {
-    return(1.0)
+    } else {
+      sim_counts <- table(sim_bins)
+    }
   }
-  ## Bin MeanSeverity (continuous, ~0-5) into integer classes 1-5 using
-  ## half-integer boundaries.
-  sim_bins <- cut(
-    sim_sev,
-    breaks = c(-Inf, 1.5, 2.5, 3.5, 4.5, Inf),
-    labels = c("1", "2", "3", "4", "5"),
-    right = TRUE
-  )
-  sim_counts <- table(sim_bins)
+
   sim_p <- as.numeric(sim_counts) / sum(sim_counts)
   obs_p <- as.numeric(severity_dist[names(sim_counts)])
   obs_p[is.na(obs_p)] <- 0
@@ -1745,6 +1820,33 @@ loss_from_stats <- function(
   nbins <- length(sim_p)
   obs_p_smoothed <- (obs_p + alpha) / (1 + nbins * alpha)
   sum((sim_p - obs_p_smoothed)^2 / obs_p_smoothed)
+}
+
+## Burned cells by severity class 1..5, pooled over replicates (internal).
+##
+## Returns a named numeric vector over "1".."5", or NULL when no replicate carries `by_class` --
+## the caller distinguishes "not collected" from "nothing burned", which look the same in a bare
+## count. Class 0 (burned with no cohort damaged) is dropped: the observed reference is a
+## distribution over the five severity classes, so counting a sixth category on the simulated side
+## only would shift every proportion.
+.severity_cell_counts <- function(reps) {
+  classes <- as.character(1:5)
+  out <- stats::setNames(numeric(length(classes)), classes)
+  seen <- FALSE
+  for (r in reps) {
+    bc <- r$overstory_mortality$by_class
+    if (is.null(bc) || nrow(bc) == 0L) {
+      next
+    }
+    seen <- TRUE
+    k <- as.character(bc$class)
+    keep <- k %in% classes
+    if (any(keep)) {
+      agg <- tapply(as.numeric(bc$cells[keep]), k[keep], sum)
+      out[names(agg)] <- out[names(agg)] + as.numeric(agg)
+    }
+  }
+  if (!seen) NULL else out
 }
 
 #' Apply per-base-fuel-type IgnProb multipliers to a FuelTypeTable
@@ -3947,6 +4049,22 @@ sim_mock <- function(
       call. = FALSE
     )
   }
+  ## Per-cell severity scoring reads counts that only a parse with `by_class = TRUE` collects, and
+  ## a replicate is parsed once and then deleted. Caught here rather than at the first trial: this
+  ## check costs nothing and the alternative is a multi-day search aborting minutes after launch,
+  ## or -- worse, if the weight is 0 -- running to completion having never scored what was asked.
+  if (identical(cfg$severity_weighting, "cell") && !isTRUE(cfg$parse_options$by_class)) {
+    stop(
+      "cfg$severity_weighting is \"cell\", which needs the per-class burned-cell counts, but ",
+      "cfg$parse_options$by_class is not TRUE. Set `parse_options = list(by_class = TRUE)` in ",
+      "cfg: the option must be given BEFORE the run, because a replicate is parsed once and then ",
+      "deleted.",
+      call. = FALSE
+    )
+  }
+  if (!is.null(cfg$severity_weighting)) {
+    cfg$severity_weighting <- match.arg(cfg$severity_weighting, c("event", "area", "cell"))
+  }
   if (
     .weight_gt0(w, "area_burned") &&
       (is.null(primary$fire_sizes_ha) || length(primary$fire_sizes_ha) == 0L)
@@ -4505,7 +4623,16 @@ calibrate_dynamic_fire <- function(observed_targets_path, scenario_template, cfg
         parse_timeout_sec = if ("parse_timeout_sec" %in% names(cfg)) cfg$parse_timeout_sec else 600
       )
     })
-    .loss <- loss_from_stats(reps, observed, weights)
+    ## Severity weighting comes from `cfg`, not from the ambient option: a PSOCK worker does not
+    ## inherit the controller's options, so an option-only setting would score the SEARCH on one
+    ## weighting and the validation on another, with nothing reporting the disagreement.
+    .loss <- loss_from_stats(
+      reps,
+      observed,
+      weights,
+      severity_weighting = cfg$severity_weighting %||%
+        getOption("landisutils.calibration.severity_weighting", "event")
+    )
     ## Append a row to this worker's trial-trace CSV. Header is written
     ## lazily on the first write of each PID.
     .write_trial_trace_row(
@@ -5293,7 +5420,13 @@ run_calibration_validation <- function(
 
   observed <- readRDS(observed_targets_path)
   .check_observed_pixel_area(observed, scenario_template)
-  loss <- loss_from_stats(reps = reps, observed = observed, weights = cfg$weights)
+  loss <- loss_from_stats(
+    reps = reps,
+    observed = observed,
+    weights = cfg$weights,
+    severity_weighting = cfg$severity_weighting %||%
+      getOption("landisutils.calibration.severity_weighting", "event")
+  )
 
   list(
     reps = reps,

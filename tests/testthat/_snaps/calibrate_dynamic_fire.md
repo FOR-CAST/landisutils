@@ -30,6 +30,15 @@
       Error:
       ! DamageAgeMultiplier of 1.5 scales the fire damage table past 100 % of longevity, which the user guide (2.16.2) does not allow
 
+# severity_weighting 'cell' errors when no replicate carries by_class
+
+    Code
+      loss_from_stats(list(.sev_fixture()), .sev_observed, weights = c(severity = 1),
+      severity_weighting = "cell")
+    Condition
+      Error:
+      ! severity weighting "cell" needs the per-class burned-cell counts, and no replicate carries them. Parse with `by_class = TRUE` (see `parse_options` of run_calibration_validation() and sim_landis()), which must be set BEFORE the run: a replicate is parsed once and then deleted.
+
 # .scenario_template_digest() warns instead of silently returning NULL
 
     Code

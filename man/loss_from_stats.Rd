@@ -7,7 +7,8 @@
 loss_from_stats(
   reps,
   observed,
-  weights = c(count = 1, size = 1, size_tail = 1, area_fuel = 0, severity = 0)
+  weights = c(count = 1, size = 1, size_tail = 1, area_fuel = 0, severity = 0),
+  severity_weighting = getOption("landisutils.calibration.severity_weighting", "event")
 )
 }
 \arguments{
@@ -24,10 +25,21 @@ loss_from_stats(
 \code{size_tail}, \code{area_fuel}, \code{severity}, \code{mortality}, \code{area_burned}. Missing
 components default to 0, so an existing caller's weights keep their
 meaning when a component is added.}
+
+\item{severity_weighting}{One of \code{"event"}, \code{"area"} or \code{"cell"}: what one
+unit of the simulated severity distribution is. \code{"event"} gives every fire
+one vote regardless of size and is the default, for backwards
+compatibility; the observed reference is a share of burned AREA, so it is
+the setting that compares unlike quantities. \code{"area"} weights each fire's
+mean severity by the area it burned. \code{"cell"} uses the severity of every
+burned cell and so also drops the per-fire averaging, but it requires
+replicates parsed with \code{by_class = TRUE} and errors without them. Defaults
+to \code{getOption("landisutils.calibration.severity_weighting", "event")}.}
 }
 \value{
 Named list with \code{total} (the scalar minimised by DEoptim),
-\code{components} (per-component contributions), and \code{weights} (echoed weights).
+\code{components} (per-component contributions), \code{weights} (echoed weights),
+and \code{severity_weighting} (how the severity component was counted).
 }
 \description{
 Combines per-replicate \code{\link[=parse_dynamic_fire_logs]{parse_dynamic_fire_logs()}} outputs into the multi-

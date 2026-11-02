@@ -1021,7 +1021,7 @@ test_that("loss_from_stats() Tier 1 returns finite count + size components", {
     )
   )
   loss <- loss_from_stats(list(rep1), observed)
-  expect_named(loss, c("total", "components", "weights"))
+  expect_named(loss, c("total", "components", "weights", "severity_weighting"))
   expect_named(
     loss$components,
     c("count", "size", "size_tail", "area_fuel", "severity", "mortality", "area_burned")
@@ -2306,6 +2306,121 @@ test_that("L_severity activates when observed$primary$severity_dist is non-NULL"
   loss <- loss_from_stats(list(rep1), observed, weights = c(severity = 1))
   expect_true(is.finite(loss$components[["severity"]]))
   expect_true(loss$components[["severity"]] >= 0)
+})
+
+## The fixture below is built so the three weightings MUST disagree: one tiny fire that crowns and
+## one large fire that barely burns. Counted per fire they are 50/50; counted by the area they
+## burned the gentle fire is 99% of the distribution. A weighting that is read but not applied, or
+## applied to the wrong column, therefore cannot reproduce these numbers.
+##
+## Expected values are the documented formula worked by hand, not a second call into the package:
+## collapse to (low, medium, high), Laplace-smooth the observed side by alpha = 0.01 over 3 bins,
+## then sum((sim - obs_s)^2 / obs_s). With a flat observed prior of 0.2 per class the smoothed
+## reference is (0.398058, 0.203883, 0.398058).
+.sev_fixture <- function(by_class = NULL) {
+  rep1 <- list(
+    n_fires_by_year = tibble::tibble(year = 1:5, n_fires = c(0, 1, 0, 1, 0)),
+    fire_sizes_ha = c(1, 99),
+    events = tibble::tibble(
+      year = c(2L, 4L),
+      eco = "MOCK",
+      init_fuel = 2L,
+      sites = c(1L, 99L),
+      mean_severity = c(5.0, 1.0)
+    )
+  )
+  if (!is.null(by_class)) {
+    rep1$overstory_mortality <- list(
+      burned_cells = sum(by_class$cells),
+      high_cells = 0L,
+      share = 0,
+      by_class = by_class
+    )
+  }
+  rep1
+}
+
+.sev_observed <- list(
+  primary = list(
+    lambda_obs = 1,
+    n_fires_by_year = tibble::tibble(year = 1:10, n = rep(1L, 10)),
+    fire_sizes_ha = c(5, 10, 30, 60, 120),
+    severity_dist = c("1" = 0.2, "2" = 0.2, "3" = 0.2, "4" = 0.2, "5" = 0.2)
+  )
+)
+
+test_that("severity_weighting decides what one unit of the distribution is", {
+  by_class <- tibble::tibble(
+    timestep = c(1L, 1L),
+    MapCode = c(1L, 1L),
+    class = c(1L, 5L),
+    cells = c(90L, 10L)
+  )
+
+  per_event <- loss_from_stats(
+    list(.sev_fixture()),
+    .sev_observed,
+    weights = c(severity = 1),
+    severity_weighting = "event"
+  )
+  per_area <- loss_from_stats(
+    list(.sev_fixture()),
+    .sev_observed,
+    weights = c(severity = 1),
+    severity_weighting = "area"
+  )
+  per_cell <- loss_from_stats(
+    list(.sev_fixture(by_class)),
+    .sev_observed,
+    weights = c(severity = 1),
+    severity_weighting = "cell"
+  )
+
+  expect_equal(per_event$components[["severity"]], 0.256098, tolerance = 1e-5)
+  expect_equal(per_area$components[["severity"]], 1.462454, tolerance = 1e-5)
+  expect_equal(per_cell$components[["severity"]], 1.060000, tolerance = 1e-5)
+
+  ## Each result says how it was counted, so a stored fit can be compared with another.
+  expect_identical(per_event$severity_weighting, "event")
+  expect_identical(per_area$severity_weighting, "area")
+  expect_identical(per_cell$severity_weighting, "cell")
+})
+
+test_that("severity_weighting defaults to the historical per-event counting", {
+  explicit <- loss_from_stats(
+    list(.sev_fixture()),
+    .sev_observed,
+    weights = c(severity = 1),
+    severity_weighting = "event"
+  )
+  defaulted <- loss_from_stats(list(.sev_fixture()), .sev_observed, weights = c(severity = 1))
+  expect_equal(
+    defaulted$components[["severity"]],
+    explicit$components[["severity"]],
+    tolerance = 1e-12
+  )
+  expect_identical(defaulted$severity_weighting, "event")
+})
+
+test_that("severity_weighting honours the option when no argument is given", {
+  withr::local_options(landisutils.calibration.severity_weighting = "area")
+  l <- loss_from_stats(list(.sev_fixture()), .sev_observed, weights = c(severity = 1))
+  expect_equal(l$components[["severity"]], 1.462454, tolerance = 1e-5)
+  expect_identical(l$severity_weighting, "area")
+})
+
+test_that("severity_weighting 'cell' errors when no replicate carries by_class", {
+  ## Scoring per event instead would answer a different question in silence, and the empty-run
+  ## sentinel would read as a perfect fit, so this is the one case that stops rather than degrades.
+  expect_snapshot(
+    error = TRUE,
+    loss_from_stats(
+      list(.sev_fixture()),
+      .sev_observed,
+      weights = c(severity = 1),
+      severity_weighting = "cell"
+    )
+  )
 })
 
 test_that("L_severity contributes 0 when severity_dist is NULL", {
