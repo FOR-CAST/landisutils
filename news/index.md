@@ -1,5 +1,43 @@
 # Changelog
 
+## landisutils 0.0.179
+
+- [`loss_from_stats()`](https://for-cast.github.io/landisutils/reference/loss_from_stats.md)
+  gains `severity_weighting`, which chooses what one unit of the
+  simulated severity distribution is. `"event"`, the default and the
+  historical behaviour, gives every fire one vote whatever its size;
+  `"area"` weights each fire’s mean severity by the area it burned;
+  `"cell"` uses the severity of every burned cell, which also drops the
+  per-fire averaging, so a fire that is half unburned and half crowning
+  contributes to both tails instead of to the middle. The observed
+  reference is a share of burned AREA, so `"event"` is the one setting
+  known to compare unlike quantities, and it remains the default only
+  because changing it changes which parameters a search prefers. The
+  three are not small variations on each other: measured over 92
+  replicates of one landscape the high class held 9 percent of the
+  simulated distribution counted per event, 60 percent counted per area
+  and 63 percent counted per cell, against 17 percent observed, and the
+  chi-squared against the observation ran 0.39, 1.31 and 1.46. The
+  setting used is returned as `severity_weighting` alongside `total`,
+  `components` and `weights`, because a stored fit that does not say how
+  its severity component was counted cannot be compared with another.
+- [`calibrate_dynamic_fire()`](https://for-cast.github.io/landisutils/reference/calibrate_dynamic_fire.md)
+  and
+  [`run_calibration_validation()`](https://for-cast.github.io/landisutils/reference/run_calibration_validation.md)
+  take the weighting from `cfg$severity_weighting`, falling back to
+  `getOption("landisutils.calibration.severity_weighting", "event")`. It
+  comes from `cfg` rather than the option alone because a PSOCK worker
+  does not inherit the controller’s options, which would otherwise score
+  the search on one weighting and the validation on another with nothing
+  reporting the disagreement.
+- [`calibrate_dynamic_fire()`](https://for-cast.github.io/landisutils/reference/calibrate_dynamic_fire.md)
+  stops at its pre-flight when `cfg$severity_weighting` is `"cell"`
+  while `cfg$parse_options$by_class` is not `TRUE`. Those per-class
+  counts are collected only at parse time, and a replicate is parsed
+  once and then deleted, so without the check a multi-day search either
+  aborts minutes after launch or, where the severity weight is zero,
+  runs to completion having never scored what was asked for.
+
 ## landisutils 0.0.178
 
 - [`plot_growth_calibration()`](https://for-cast.github.io/landisutils/reference/plot_growth_calibration.md)

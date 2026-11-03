@@ -12,7 +12,8 @@ from
 loss_from_stats(
   reps,
   observed,
-  weights = c(count = 1, size = 1, size_tail = 1, area_fuel = 0, severity = 0)
+  weights = c(count = 1, size = 1, size_tail = 1, area_fuel = 0, severity = 0),
+  severity_weighting = getOption("landisutils.calibration.severity_weighting", "event")
 )
 ```
 
@@ -41,10 +42,24 @@ loss_from_stats(
   components default to 0, so an existing caller's weights keep their
   meaning when a component is added.
 
+- severity_weighting:
+
+  One of `"event"`, `"area"` or `"cell"`: what one unit of the simulated
+  severity distribution is. `"event"` gives every fire one vote
+  regardless of size and is the default, for backwards compatibility;
+  the observed reference is a share of burned AREA, so it is the setting
+  that compares unlike quantities. `"area"` weights each fire's mean
+  severity by the area it burned. `"cell"` uses the severity of every
+  burned cell and so also drops the per-fire averaging, but it requires
+  replicates parsed with `by_class = TRUE` and errors without them.
+  Defaults to
+  `getOption("landisutils.calibration.severity_weighting", "event")`.
+
 ## Value
 
 Named list with `total` (the scalar minimised by DEoptim), `components`
-(per-component contributions), and `weights` (echoed weights).
+(per-component contributions), `weights` (echoed weights), and
+`severity_weighting` (how the severity component was counted).
 
 ## Details
 

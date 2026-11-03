@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.178</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.179</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,6 +41,15 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.179" id="landisutils-00179">landisutils 0.0.179<a class="anchor" aria-label="anchor" href="#landisutils-00179"></a></h2>
+<ul><li>
+<code><a href="../reference/loss_from_stats.html">loss_from_stats()</a></code> gains <code>severity_weighting</code>, which chooses what one unit of the simulated severity distribution is. <code>"event"</code>, the default and the historical behaviour, gives every fire one vote whatever its size; <code>"area"</code> weights each fire’s mean severity by the area it burned; <code>"cell"</code> uses the severity of every burned cell, which also drops the per-fire averaging, so a fire that is half unburned and half crowning contributes to both tails instead of to the middle. The observed reference is a share of burned AREA, so <code>"event"</code> is the one setting known to compare unlike quantities, and it remains the default only because changing it changes which parameters a search prefers. The three are not small variations on each other: measured over 92 replicates of one landscape the high class held 9 percent of the simulated distribution counted per event, 60 percent counted per area and 63 percent counted per cell, against 17 percent observed, and the chi-squared against the observation ran 0.39, 1.31 and 1.46. The setting used is returned as <code>severity_weighting</code> alongside <code>total</code>, <code>components</code> and <code>weights</code>, because a stored fit that does not say how its severity component was counted cannot be compared with another.</li>
+<li>
+<code><a href="../reference/calibrate_dynamic_fire.html">calibrate_dynamic_fire()</a></code> and <code><a href="../reference/run_calibration_validation.html">run_calibration_validation()</a></code> take the weighting from <code>cfg$severity_weighting</code>, falling back to <code>getOption("landisutils.calibration.severity_weighting", "event")</code>. It comes from <code>cfg</code> rather than the option alone because a PSOCK worker does not inherit the controller’s options, which would otherwise score the search on one weighting and the validation on another with nothing reporting the disagreement.</li>
+<li>
+<code><a href="../reference/calibrate_dynamic_fire.html">calibrate_dynamic_fire()</a></code> stops at its pre-flight when <code>cfg$severity_weighting</code> is <code>"cell"</code> while <code>cfg$parse_options$by_class</code> is not <code>TRUE</code>. Those per-class counts are collected only at parse time, and a replicate is parsed once and then deleted, so without the check a multi-day search either aborts minutes after launch or, where the severity weight is zero, runs to completion having never scored what was asked for.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.178" id="landisutils-00178">landisutils 0.0.178<a class="anchor" aria-label="anchor" href="#landisutils-00178"></a></h2>
 <ul><li>
