@@ -12,7 +12,7 @@ run_calibration_validation(
   n_reps = 20L,
   scratch_root,
   base_seed = 99999L,
-  parse_options = list()
+  parse_options = NULL
 )
 }
 \arguments{
@@ -38,7 +38,9 @@ do not collide).}
 rep).}
 
 \item{parse_options}{List of options for \code{\link[=parse_dynamic_fire_logs]{parse_dynamic_fire_logs()}}, handed to each
-replicate's \code{\link[=sim_landis]{sim_landis()}}; see there. Checked before the pool starts. Default \code{list()}.}
+replicate's \code{\link[=sim_landis]{sim_landis()}}; see there. Checked before the pool starts. \code{NULL}, the default,
+takes \code{cfg$parse_options}, so a validation collects whatever the search it validates
+collected; pass a list explicitly to override that.}
 }
 \value{
 A list with \code{reps}, \code{best_params}, \code{observed}, \code{pixel_area_ha},

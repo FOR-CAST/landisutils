@@ -2409,6 +2409,62 @@ test_that("severity_weighting honours the option when no argument is given", {
   expect_identical(l$severity_weighting, "area")
 })
 
+test_that("the search passes cfg$parse_options to every trial", {
+  ## Regression. `severity_weighting = "cell"` reads per-class counts that only a parse with
+  ## `by_class = TRUE` collects, and a replicate is parsed once and then deleted. The pre-flight
+  ## checks the CONFIG, so a search could satisfy it and then fail on its first evaluation because
+  ## nothing carried the setting from cfg into the trial's parse. That is a multi-day run dying
+  ## minutes after launch, and it passed every other test in this file.
+  skip_if_not_installed("DEoptim")
+  seen <- new.env(parent = emptyenv())
+  seen$opts <- "never called"
+  orig <- sim_mock
+  local_mocked_bindings(sim_mock = function(..., parse_options = NULL) {
+    seen$opts <- parse_options
+    orig(...)
+  })
+
+  observed <- list(
+    primary = list(
+      lambda_obs = 4,
+      n_fires_by_year = tibble::tibble(year = 1:20, n = sample.int(8, 20, replace = TRUE)),
+      fire_sizes_ha = sort(stats::rlnorm(50, 3, 2))
+    )
+  )
+  observed$fru59 <- observed$primary
+  obs_path <- withr::local_tempfile(fileext = ".rds")
+  saveRDS(observed, obs_path)
+
+  scen_dir <- withr::local_tempdir()
+  writeLines(c("LandisData  \"Scenario\""), fs::path(scen_dir, "scenario.txt"))
+
+  cfg <- list(
+    ## Two parameters and two iterations, not one of each: DEoptim indexes its own `storepop`
+    ## in a way that fails outright for a single-parameter search.
+    lower = c(SeverityCalibrationFactor = 0.5, IgnProb_Deciduous = 0),
+    upper = c(SeverityCalibrationFactor = 2.5, IgnProb_Deciduous = 1.5),
+    NP = 6L,
+    itermax = 2L,
+    n_reps = 1L,
+    sim_years = 5L,
+    weights = c(count = 1),
+    n_cores = 1L,
+    parallel = FALSE,
+    simulator = "mock",
+    base_seed = 12345L,
+    trace = FALSE,
+    parse_options = list(by_class = TRUE)
+  )
+
+  suppressWarnings(calibrate_dynamic_fire(
+    scenario_template = fs::path(scen_dir, "scenario.txt"),
+    observed_targets_path = obs_path,
+    out_dir = withr::local_tempdir(),
+    cfg = cfg
+  ))
+  expect_identical(seen$opts, list(by_class = TRUE))
+})
+
 test_that("severity_weighting 'cell' errors when no replicate carries by_class", {
   ## Scoring per event instead would answer a different question in silence, and the empty-run
   ## sentinel would read as a perfect fit, so this is the one case that stops rather than degrades.

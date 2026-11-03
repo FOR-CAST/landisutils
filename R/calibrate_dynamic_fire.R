@@ -4620,7 +4620,12 @@ calibrate_dynamic_fire <- function(observed_targets_path, scenario_template, cfg
         ## see sim_landis()'s `trial_timeout_sec` docs. NULL keeps the historical wait-forever.
         trial_timeout_sec = cfg$trial_timeout_sec,
         ## Bound the parse of a finished replicate the same way; see `parse_timeout_sec` there.
-        parse_timeout_sec = if ("parse_timeout_sec" %in% names(cfg)) cfg$parse_timeout_sec else 600
+        parse_timeout_sec = if ("parse_timeout_sec" %in% names(cfg)) cfg$parse_timeout_sec else 600,
+        ## What the parse collects, which has to be decided BEFORE the run: a replicate is parsed
+        ## once and then deleted. Without this the pre-flight would accept
+        ## `severity_weighting = "cell"` and every trial would then fail for want of the per-class
+        ## counts, which is a multi-day search dying on its first evaluation.
+        parse_options = cfg$parse_options %||% list()
       )
     })
     ## Severity weighting comes from `cfg`, not from the ambient option: a PSOCK worker does not
@@ -5334,7 +5339,9 @@ calibrate_dynamic_fire <- function(observed_targets_path, scenario_template, cfg
 #' @param base_seed Base seed for the validation reps (`base_seed + i` per
 #'   rep).
 #' @param parse_options List of options for [parse_dynamic_fire_logs()], handed to each
-#'   replicate's [sim_landis()]; see there. Checked before the pool starts. Default `list()`.
+#'   replicate's [sim_landis()]; see there. Checked before the pool starts. `NULL`, the default,
+#'   takes `cfg$parse_options`, so a validation collects whatever the search it validates
+#'   collected; pass a list explicitly to override that.
 #'
 #' @return A list with `reps`, `best_params`, `observed`, `pixel_area_ha`,
 #'   `sim_years`, `n_reps`, `loss`, `pool_image`, and `pool_digest`.
@@ -5350,8 +5357,16 @@ run_calibration_validation <- function(
   n_reps = 20L,
   scratch_root,
   base_seed = 99999L,
-  parse_options = list()
+  parse_options = NULL
 ) {
+  ## Default to the config's own setting rather than to an empty list. A validation scored with
+  ## `cfg$severity_weighting = "cell"` needs the per-class counts, and nothing in a bare
+  ## `parse_options = list()` would have collected them -- the caller would have had to repeat the
+  ## setting at every call site and keep it in step with cfg by hand. An explicit argument still
+  ## wins, for a caller that wants a different parse from the one the search used.
+  if (is.null(parse_options)) {
+    parse_options <- cfg$parse_options %||% list()
+  }
   .check_parse_options(parse_options)
   stopifnot(
     is.character(scenario_template),
