@@ -18,7 +18,7 @@ run_calibration_validation(
   n_reps = 20L,
   scratch_root,
   base_seed = 99999L,
-  parse_options = list()
+  parse_options = NULL
 )
 ```
 
@@ -65,8 +65,9 @@ run_calibration_validation(
   [`parse_dynamic_fire_logs()`](https://for-cast.github.io/landisutils/reference/parse_dynamic_fire_logs.md),
   handed to each replicate's
   [`sim_landis()`](https://for-cast.github.io/landisutils/reference/sim_landis.md);
-  see there. Checked before the pool starts. Default
-  [`list()`](https://rdrr.io/r/base/list.html).
+  see there. Checked before the pool starts. `NULL`, the default, takes
+  `cfg$parse_options`, so a validation collects whatever the search it
+  validates collected; pass a list explicitly to override that.
 
 ## Value
 

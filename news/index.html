@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.179</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.180</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,6 +41,13 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.180" id="landisutils-00180">landisutils 0.0.180<a class="anchor" aria-label="anchor" href="#landisutils-00180"></a></h2>
+<ul><li>
+<code><a href="../reference/calibrate_dynamic_fire.html">calibrate_dynamic_fire()</a></code> passes <code>cfg$parse_options</code> to every trial’s parse. 0.0.179 added the pre-flight that rejects <code>severity_weighting = "cell"</code> without <code>parse_options$by_class</code>, but nothing then carried the setting from <code>cfg</code> into the trial, so a search could satisfy the pre-flight and fail on its first evaluation for want of the per-class counts – a multi-day run dying minutes after launch, and one that every other test in the suite passed.</li>
+<li>
+<code><a href="../reference/run_calibration_validation.html">run_calibration_validation()</a></code>’s <code>parse_options</code> defaults to <code>NULL</code>, which takes <code>cfg$parse_options</code>, instead of to an empty list. A validation scored with <code>cfg$severity_weighting = "cell"</code> needs the same per-class counts the search collected, and with the old default every caller had to repeat the setting at each call site and keep it in step with <code>cfg</code> by hand. Passing a list explicitly still overrides it.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.179" id="landisutils-00179">landisutils 0.0.179<a class="anchor" aria-label="anchor" href="#landisutils-00179"></a></h2>
 <ul><li>

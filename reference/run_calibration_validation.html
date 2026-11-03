@@ -13,7 +13,7 @@ goodness-of-fit that calibrate_dynamic_fire() does not retain."><meta property="
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.179</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.180</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -65,7 +65,7 @@ goodness-of-fit that <code><a href="calibrate_dynamic_fire.html">calibrate_dynam
 <span>  n_reps <span class="op">=</span> <span class="fl">20L</span>,</span>
 <span>  <span class="va">scratch_root</span>,</span>
 <span>  base_seed <span class="op">=</span> <span class="fl">99999L</span>,</span>
-<span>  parse_options <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span></span>
+<span>  parse_options <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -110,7 +110,9 @@ rep).</p></dd>
 
 <dt id="arg-parse-options">parse_options<a class="anchor" aria-label="anchor" href="#arg-parse-options"></a></dt>
 <dd><p>List of options for <code><a href="parse_dynamic_fire_logs.html">parse_dynamic_fire_logs()</a></code>, handed to each
-replicate's <code><a href="sim_landis.html">sim_landis()</a></code>; see there. Checked before the pool starts. Default <code><a href="https://rdrr.io/r/base/list.html" class="external-link">list()</a></code>.</p></dd>
+replicate's <code><a href="sim_landis.html">sim_landis()</a></code>; see there. Checked before the pool starts. <code>NULL</code>, the default,
+takes <code>cfg$parse_options</code>, so a validation collects whatever the search it validates
+collected; pass a list explicitly to override that.</p></dd>
 
 </dl></div>
     <div class="section level2">

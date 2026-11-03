@@ -1,5 +1,23 @@
 # Changelog
 
+## landisutils 0.0.180
+
+- [`calibrate_dynamic_fire()`](https://for-cast.github.io/landisutils/reference/calibrate_dynamic_fire.md)
+  passes `cfg$parse_options` to every trial’s parse. 0.0.179 added the
+  pre-flight that rejects `severity_weighting = "cell"` without
+  `parse_options$by_class`, but nothing then carried the setting from
+  `cfg` into the trial, so a search could satisfy the pre-flight and
+  fail on its first evaluation for want of the per-class counts – a
+  multi-day run dying minutes after launch, and one that every other
+  test in the suite passed.
+- [`run_calibration_validation()`](https://for-cast.github.io/landisutils/reference/run_calibration_validation.md)’s
+  `parse_options` defaults to `NULL`, which takes `cfg$parse_options`,
+  instead of to an empty list. A validation scored with
+  `cfg$severity_weighting = "cell"` needs the same per-class counts the
+  search collected, and with the old default every caller had to repeat
+  the setting at each call site and keep it in step with `cfg` by hand.
+  Passing a list explicitly still overrides it.
+
 ## landisutils 0.0.179
 
 - [`loss_from_stats()`](https://for-cast.github.io/landisutils/reference/loss_from_stats.md)
