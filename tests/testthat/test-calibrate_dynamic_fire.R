@@ -4082,3 +4082,37 @@ test_that("both calibration drivers take the parse limit from cfg, and can switc
     )
   }
 })
+
+test_that("fire_cohort_mortality equals fire_cohort_killed without a share", {
+  tab <- defaultFireDamageTable()
+  sev <- c(0, 1, 2, 3, 4, 5, NA)
+  expect_identical(
+    fire_cohort_mortality(sev, 100, 300, 3, tab),
+    as.numeric(fire_cohort_killed(sev, 100, 300, 3, tab))
+  )
+})
+
+test_that("a share replaces the table below severity 5, at any age", {
+  tab <- defaultFireDamageTable()
+  m <- fire_cohort_mortality(
+    c(0, 1, 4, 5),
+    c(10, 600, 600, 600),
+    650,
+    1,
+    tab,
+    ground_fire_kill = 0.3
+  )
+  expect_equal(m, c(0, 0.3, 0.3, 1))
+  expect_equal(fire_cohort_mortality(c(1, 5), 600, 650, 1, tab, ground_fire_kill = 0), c(0, 1))
+})
+
+test_that("a vector share applies per element and NA falls back to the table", {
+  tab <- defaultFireDamageTable()
+  m <- fire_cohort_mortality(c(1, 1, 5), 100, 300, 3, tab, ground_fire_kill = c(0.4, NA, NA))
+  expect_equal(m, c(0.4, as.numeric(fire_cohort_killed(1, 100, 300, 3, tab)), 1))
+})
+
+test_that("ground_fire_kill outside [0, 1] stops", {
+  expect_error(fire_cohort_mortality(1, 10, 650, 1, defaultFireDamageTable(), 1.2), "0 and 1")
+  expect_error(fire_cohort_mortality(1, 10, 650, 1, defaultFireDamageTable(), -0.1), "0 and 1")
+})

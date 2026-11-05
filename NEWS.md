@@ -1,5 +1,6 @@
 # landisutils 0.0.180
 
+* New `fire_cohort_mortality()`, the expected mortality of a cohort under Dynamic Fire's optional per-species `GroundFireKill`: below severity 5 the species leaves the damage table and all its cohorts die together in a burned cell with that probability. Without a value it equals `as.numeric(fire_cohort_killed())`, which is unchanged. `landis_dominant_cohorts()` gains a `ground_fire_kill` column, read from the species CSV (NA without a value or a column).
 * `calibrate_dynamic_fire()` passes `cfg$parse_options` to every trial's parse. 0.0.179 added the pre-flight that rejects `severity_weighting = "cell"` without `parse_options$by_class`, but nothing then carried the setting from `cfg` into the trial, so a search could satisfy the pre-flight and fail on its first evaluation for want of the per-class counts -- a multi-day run dying minutes after launch, and one that every other test in the suite passed.
 * `run_calibration_validation()`'s `parse_options` defaults to `NULL`, which takes `cfg$parse_options`, instead of to an empty list. A validation scored with `cfg$severity_weighting = "cell"` needs the same per-class counts the search collected, and with the old default every caller had to repeat the setting at each call site and keep it in step with `cfg` by hand. Passing a list explicitly still overrides it.
 

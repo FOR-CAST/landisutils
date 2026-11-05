@@ -555,7 +555,8 @@ landis_overstory_mortality_share <- function(rep_dir, by_class = FALSE, engine_r
 #'
 #' @returns A data.frame with one row per map code that has such a cohort, in map-code order:
 #'   `MapCode` (integer), `SpeciesName` (character), and `CohortAge`, `CohortBiomass`, `longevity`
-#'   and `tolerance` (double). NULL when one of the three files is missing or no cohort's species is
+#'   and `tolerance` (double), and `ground_fire_kill` (double: the species' `GroundFireKill`, NA
+#'   where the species table has no value or no such column). NULL when one of the three files is missing or no cohort's species is
 #'   in both species files.
 #'
 #' @family Dynamic Fire calibration helpers
@@ -573,6 +574,7 @@ landis_dominant_cohorts <- function(dir) {
   }
 
   tol <- .read_fire_tolerance(spp_csv)
+  gfk <- .read_ground_fire_kill(spp_csv)
   longevity <- .read_species_longevity(spp_txt)
 
   ic <- utils::read.csv(ic_csv)
@@ -593,7 +595,8 @@ landis_dominant_cohorts <- function(dir) {
     CohortAge = as.numeric(dom$CohortAge),
     CohortBiomass = as.numeric(dom$CohortBiomass),
     longevity = unname(as.numeric(longevity[dom$SpeciesName])),
-    tolerance = unname(as.numeric(tol[dom$SpeciesName]))
+    tolerance = unname(as.numeric(tol[dom$SpeciesName])),
+    ground_fire_kill = unname(as.numeric(gfk[dom$SpeciesName]))
   )
 }
 
@@ -700,9 +703,85 @@ fire_cohort_killed <- function(
   killed
 }
 
+#' Expected mortality of a cohort in a fire
+#'
+#' The companion of [fire_cohort_killed()] for species with a `GroundFireKill`. Where the value is
+#' NA the answer is `fire_cohort_killed()`'s, as 0 or 1. Where a species has a value, Dynamic Fire
+#' takes it out of the damage table below severity 5: in each burned cell all its cohorts die
+#' together with that probability, whatever their age. This returns that probability.
+#'
+#' Severity 5 gives 1. Severity 1 to 4 gives `ground_fire_kill`. Severity 0, a burned cell in which
+#' no cohort was damaged, gives 0. A `ground_fire_kill` of 0 is a value (the species leaves the
+#' table and never dies below severity 5), not an absent one.
+#'
+#' @inheritParams fire_cohort_killed
+#'
+#' @param ground_fire_kill Numeric. The species' `GroundFireKill`, between 0 and 1, or NA for none.
+#'   Length 1 or the length of `severity`.
+#'
+#' @returns Numeric, one per `severity`: the probability that the cohort dies.
+#'
+#' @family Dynamic Fire calibration helpers
+#'
+#' @export
+#'
+#' @examples
+#' ## A species that dies below severity 5 in 30 % of burned cells, at any age.
+#' fire_cohort_mortality(c(0, 1, 4, 5), 600, 650, 1, defaultFireDamageTable(), 0.3)
+fire_cohort_mortality <- function(
+  severity,
+  age,
+  longevity,
+  tolerance,
+  fire_damage_table,
+  ground_fire_kill = NA_real_,
+  engine_rule = FALSE
+) {
+  n <- length(severity)
+  if (!is.numeric(ground_fire_kill) && !all(is.na(ground_fire_kill))) {
+    stop("`ground_fire_kill` must be numeric", call. = FALSE)
+  }
+  if (!length(ground_fire_kill) %in% c(1L, n)) {
+    stop(
+      "`ground_fire_kill` must have length 1 or the length of `severity` (",
+      n,
+      ")",
+      call. = FALSE
+    )
+  }
+  if (any(ground_fire_kill < 0 | ground_fire_kill > 1, na.rm = TRUE)) {
+    stop("`ground_fire_kill` must be between 0 and 1", call. = FALSE)
+  }
+  out <- as.numeric(fire_cohort_killed(
+    severity,
+    age,
+    longevity,
+    tolerance,
+    fire_damage_table,
+    engine_rule
+  ))
+  gfk <- rep_len(as.numeric(ground_fire_kill), n)
+  has <- !is.na(gfk) & !is.na(severity)
+  out[has & severity %in% 1:4] <- gfk[has & severity %in% 1:4]
+  out[has & severity == 0] <- 0
+  out[has & severity == 5] <- 1
+  out
+}
+
 ## `x` rounded to single precision and back (internal), as a C# `float` holds it.
 .as_float32 <- function(x) {
   readBin(writeBin(as.double(x), raw(), size = 4L), "double", size = 4L, n = length(x))
+}
+
+## Species `GroundFireKill` from a Dynamic Fire `Species_CSV_File` (internal); NA where blank or
+## where the column is absent.
+.read_ground_fire_kill <- function(path) {
+  df <- utils::read.csv(path)
+  codes <- trimws(as.character(df$SpeciesCode))
+  if (!"GroundFireKill" %in% names(df)) {
+    return(stats::setNames(rep(NA_real_, length(codes)), codes))
+  }
+  stats::setNames(suppressWarnings(as.numeric(df$GroundFireKill)), codes)
 }
 
 ## Species fire tolerances from a Dynamic Fire `Species_CSV_File` (internal).

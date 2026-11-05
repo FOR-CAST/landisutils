@@ -164,6 +164,7 @@ Other Dynamic Fire calibration helpers:
 \code{\link[=dedup_community_snapshot]{dedup_community_snapshot()}},
 \code{\link[=default_severity_prior_sturtevant2009]{default_severity_prior_sturtevant2009()}},
 \code{\link[=fire_cohort_killed]{fire_cohort_killed()}},
+\code{\link[=fire_cohort_mortality]{fire_cohort_mortality()}},
 \code{\link[=landis_dominant_cohorts]{landis_dominant_cohorts()}},
 \code{\link[=landis_overstory_mortality_share]{landis_overstory_mortality_share()}},
 \code{\link[=loss_from_stats]{loss_from_stats()}},
