@@ -313,3 +313,26 @@ test_that("plot_growth_calibration orders its guides explicitly, whatever the sp
   expect_equal(ord("linetype"), 1L)
   expect_equal(ord("fill"), 2L)
 })
+
+test_that("plot_growth_candidate(candidate_curve = NULL) keys no candidate line", {
+  obs <- data.frame(
+    source = "Ground plots",
+    age = seq(20, 140, 10),
+    aboveground_c_mg_ha = seq(10, 130, 10),
+    leading_raw = "AA"
+  )
+  cur <- data.frame(age = 1:150, aboveground_c_mg_ha = seq(0, 100, length.out = 150))
+  limits <- function(cand) {
+    plot_growth_candidate(
+      "Sp1",
+      cur,
+      cand,
+      obs,
+      candidate_label = "my candidate"
+    )$scales$get_scales("colour")$limits
+  }
+
+  expect_false("my candidate" %in% limits(NULL))
+  expect_true("current parameters" %in% limits(NULL))
+  expect_true("my candidate" %in% limits(cur))
+})

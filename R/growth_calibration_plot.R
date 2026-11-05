@@ -304,10 +304,10 @@ plot_growth_candidate <- function(
   ## left in `pal` with no layer behind it renders as a key with no glyph -- a legend entry for
   ## something absent from the panel. Both can now be absent: `density = TRUE` replaces the per-plot
   ## points with a hex density that has its own scale, and `binned = NULL` drops the binned series.
-  pal <- stats::setNames(
-    unname(growth_plot_palette()[c("current", "candidate")]),
-    c(current_label, candidate_label)
-  )
+  pal <- stats::setNames(unname(growth_plot_palette()[["current"]]), current_label)
+  if (!is.null(candidate_curve)) {
+    pal <- c(pal, stats::setNames(unname(growth_plot_palette()[["candidate"]]), candidate_label))
+  }
   if (!isTRUE(density)) {
     pal <- c(pal, stats::setNames(growth_plot_palette()[["plots"]], plots_label))
   }

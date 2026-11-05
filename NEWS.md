@@ -7,6 +7,7 @@
 * `run_calibration_validation()`'s `parse_options` defaults to `NULL`, which takes `cfg$parse_options`, instead of to an empty list. A validation scored with `cfg$severity_weighting = "cell"` needs the same per-class counts the search collected, and with the old default every caller had to repeat the setting at each call site and keep it in step with `cfg` by hand. Passing a list explicitly still overrides it.
 * `plot_growth_calibration(density = TRUE)` sets an explicit `order` on its guides ("Reference" first, then "Weighted plot density"). ggplot2 otherwise ordered them by an internal hash, so one species' panel drew them the other way round from its siblings.
 * `extract_landscape_cohort_structures()` names its count column `n_cells`, not `n_communities`: it counts initial-community map codes, which before `CleanMapCodes()` is one grid cell each, not communities. `read_landscape_cohort_structures()` still reads a file written with the old name and returns it as `n_cells`.
+* `plot_growth_candidate(candidate_curve = NULL)` no longer adds a legend key for a candidate line it does not draw.
 
 # landisutils 0.0.179
 
