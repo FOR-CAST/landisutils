@@ -11,7 +11,7 @@ utils::globalVariables(c(
   "level_source", "level_source_requested", "level_source_used", "lon", "Longevity", "longevity",
   "mANPPproportion", "map_code", "MapCode", "mature_from", "mature_to", "maxANPP", "maxB",
   "MaxSize", "MeanSize", "MinSize", "MONTH", "Month", "mort_shp", "MortalityCurve",
-  "mortalityshape", "n_bins", "n_communities", "newAge", "newB", "newPixelGroup", "note",
+  "mortalityshape", "n_bins", "n_cells", "newAge", "newB", "newPixelGroup", "note",
   "pIgnition", "pixelGroup", "plot_quantile", "plots_sparse", "plots_warn_below", "PolyID",
   "PostFireRegen", "postfireregen", "Prcp", "ProbMortality", "rank", "RelH", "resproutage_max",
   "resproutage_min", "resproutprob", "RH", "SeedDispDistEff", "SeedDispDistMax",

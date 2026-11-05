@@ -14,7 +14,7 @@ and \code{Age} (the \code{landis_ic_data_list} target).}
 }
 \value{
 A tibble with one row per cohort: \code{structure_id}, \code{n_cohorts},
-\code{species}, \code{cohort_age}, \code{n_communities}.
+\code{species}, \code{cohort_age}, \code{n_cells}.
 }
 \description{
 Reduces the landscape's initial communities to the distinct \strong{structures}
@@ -24,8 +24,10 @@ communities collapse to roughly 1.7k structures with one or two cohorts,
 which is what makes a structure-aware calibration tractable at all.
 }
 \details{
-\code{n_communities} is carried so downstream work can weight or subset structures
-by how much of the landscape they actually represent.
+\code{n_cells} is carried so downstream work can weight or subset structures
+by how much of the landscape they actually represent. It counts initial-community
+map codes, which before \code{CleanMapCodes()} is one grid cell per code, so it is a cell
+count and not a count of distinct communities.
 }
 \seealso{
 Other growth calibration helpers:

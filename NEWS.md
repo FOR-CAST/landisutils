@@ -6,6 +6,7 @@
 * `calibrate_dynamic_fire()` passes `cfg$parse_options` to every trial's parse. 0.0.179 added the pre-flight that rejects `severity_weighting = "cell"` without `parse_options$by_class`, but nothing then carried the setting from `cfg` into the trial, so a search could satisfy the pre-flight and fail on its first evaluation for want of the per-class counts -- a multi-day run dying minutes after launch, and one that every other test in the suite passed.
 * `run_calibration_validation()`'s `parse_options` defaults to `NULL`, which takes `cfg$parse_options`, instead of to an empty list. A validation scored with `cfg$severity_weighting = "cell"` needs the same per-class counts the search collected, and with the old default every caller had to repeat the setting at each call site and keep it in step with `cfg` by hand. Passing a list explicitly still overrides it.
 * `plot_growth_calibration(density = TRUE)` sets an explicit `order` on its guides ("Reference" first, then "Weighted plot density"). ggplot2 otherwise ordered them by an internal hash, so one species' panel drew them the other way round from its siblings.
+* `extract_landscape_cohort_structures()` names its count column `n_cells`, not `n_communities`: it counts initial-community map codes, which before `CleanMapCodes()` is one grid cell each, not communities. `read_landscape_cohort_structures()` still reads a file written with the old name and returns it as `n_cells`.
 
 # landisutils 0.0.179
 

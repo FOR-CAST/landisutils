@@ -14,19 +14,21 @@
 #' @param path Character. Path to `landscape_cohort_structures.csv`.
 #'
 #' @return A tibble with `structure_id`, `n_cohorts`, `species`, `cohort_age` and
-#'   `n_communities`.
+#'   `n_cells` (an older file's `n_communities` is read as `n_cells`).
 #' @family growth calibration helpers
 #' @export
 read_landscape_cohort_structures <- function(path) {
   stopifnot(file.exists(path))
   utils::read.csv(path, stringsAsFactors = FALSE) |>
     tibble::as_tibble() |>
+    ## Older files call the column `n_communities`.
+    dplyr::rename(dplyr::any_of(c(n_cells = "n_communities"))) |>
     dplyr::transmute(
       structure_id = as.character(.data$structure_id),
       n_cohorts = as.integer(.data$n_cohorts),
       species = as.character(.data$species),
       cohort_age = as.integer(.data$cohort_age),
-      n_communities = as.integer(.data$n_communities)
+      n_cells = as.integer(.data$n_cells)
     )
 }
 

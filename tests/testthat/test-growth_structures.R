@@ -109,7 +109,7 @@ test_that("read_landscape_cohort_structures() returns the documented schema", {
   )
   s <- read_landscape_cohort_structures(p)
 
-  expect_named(s, c("structure_id", "n_cohorts", "species", "cohort_age", "n_communities"))
+  expect_named(s, c("structure_id", "n_cohorts", "species", "cohort_age", "n_cells"))
   expect_type(s$cohort_age, "integer")
   expect_type(s$structure_id, "character")
 })
@@ -401,4 +401,32 @@ test_that("plot_growth_structures() will not parse a display label for species",
     "no `species_set` column"
   )
   expect_null(p$labels$caption)
+})
+
+test_that("extract_landscape_cohort_structures() counts cells, and says so", {
+  ic <- data.frame(
+    MapCode = c(1, 2, 3, 3),
+    SpeciesCode = c("Aa", "Aa", "Aa", "Bb"),
+    Age = c(10, 10, 10, 30)
+  )
+  s <- extract_landscape_cohort_structures(ic)
+  expect_named(s, c("structure_id", "n_cohorts", "species", "cohort_age", "n_cells"))
+  ## two map codes carry the single Aa:10 cohort
+  expect_equal(s$n_cells[s$n_cohorts == 1L], 2L)
+})
+
+test_that("read_landscape_cohort_structures() accepts the legacy n_communities column", {
+  p <- withr::local_tempfile(fileext = ".csv")
+  utils::write.csv(
+    data.frame(
+      structure_id = "S00001",
+      n_cohorts = 1,
+      species = "Aa",
+      cohort_age = 10,
+      n_communities = 7
+    ),
+    p,
+    row.names = FALSE
+  )
+  expect_equal(read_landscape_cohort_structures(p)$n_cells, 7L)
 })
