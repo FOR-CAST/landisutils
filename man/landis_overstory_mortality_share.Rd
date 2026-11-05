@@ -86,6 +86,7 @@ Other Dynamic Fire calibration helpers:
 \code{\link[=default_severity_prior_sturtevant2009]{default_severity_prior_sturtevant2009()}},
 \code{\link[=fire_cohort_killed]{fire_cohort_killed()}},
 \code{\link[=fire_cohort_mortality]{fire_cohort_mortality()}},
+\code{\link[=ground_fire_kill_par_names]{ground_fire_kill_par_names()}},
 \code{\link[=landis_dominant_cohorts]{landis_dominant_cohorts()}},
 \code{\link[=loss_from_stats]{loss_from_stats()}},
 \code{\link[=observed_fire_sizes]{observed_fire_sizes()}},

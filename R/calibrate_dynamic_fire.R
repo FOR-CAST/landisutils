@@ -45,6 +45,56 @@ calibration_par_names <- function() {
   )
 }
 
+#' Parameter names that set a species' ground-fire kill
+#'
+#' A calibration can fit the extension's optional per-species `GroundFireKill` (a probability
+#' between 0 and 1). The parameter for species `Hw` is `GroundFireKill_Hw`; pass such names in
+#' the `par_vec` of [patch_fire_config()] alongside those of [calibration_par_names()].
+#'
+#' @param species Character. Species codes, as in the `SpeciesCode` column of the Dynamic Fire
+#'   species table.
+#'
+#' @returns Character vector, `paste0("GroundFireKill_", species)`.
+#'
+#' @family Dynamic Fire calibration helpers
+#'
+#' @export
+ground_fire_kill_par_names <- function(species) {
+  paste0("GroundFireKill_", species)
+}
+
+## `par_vec` names that set a species' ground-fire kill (internal).
+.is_ground_fire_kill_par <- function(nms) {
+  grepl("^GroundFireKill_[A-Za-z]+$", nms)
+}
+
+## Species table with the `GroundFireKill` column set from `gfk` (named by species code), or
+## NULL after checking when `gfk` is empty (internal). Other columns are kept as text, so their
+## values are not reformatted; species not named get a blank.
+.with_ground_fire_kill <- function(spp_csv, gfk) {
+  if (length(gfk) == 0L) {
+    return(NULL)
+  }
+  if (any(is.na(gfk) | gfk < 0 | gfk > 1)) {
+    stop("GroundFireKill must be between 0 and 1, not ", toString(gfk), call. = FALSE)
+  }
+  df <- utils::read.csv(
+    spp_csv,
+    colClasses = "character",
+    na.strings = character(0),
+    check.names = FALSE
+  )
+  codes <- trimws(df$SpeciesCode)
+  unknown <- setdiff(names(gfk), codes)
+  if (length(unknown) > 0L) {
+    stop("GroundFireKill species not in ", spp_csv, ": ", toString(unknown), call. = FALSE)
+  }
+  df$GroundFireKill <- ""
+  hit <- match(names(gfk), codes)
+  df$GroundFireKill[hit] <- sprintf("%.15g", unname(gfk))
+  df
+}
+
 ## The two ignition-rate parameters are alternatives, not companions (internal).
 ##
 ## `NumFires` sets every fire ecoregion's rate to one value; `NumFiresMultiplier` scales each
@@ -1097,7 +1147,10 @@ fire_cohort_mortality <- function(
 #' of the template so trials don't collide.
 #'
 #' @param scenario_dir Character. Directory containing `dynamic-fire.txt`.
-#' @param par_vec Numeric. Named vector keyed by [calibration_par_names()].
+#' @param par_vec Numeric. Named vector keyed by [calibration_par_names()], and optionally by
+#'   [ground_fire_kill_par_names()]. A `GroundFireKill_<code>` entry sets the `GroundFireKill`
+#'   column of the species table the config names (`Species_CSV_File`): the value for that
+#'   species, a blank for every other. Without such an entry the table is not touched.
 #'
 #' @returns Character scalar: absolute path to the patched `dynamic-fire.txt`.
 #'
@@ -1110,8 +1163,14 @@ patch_fire_config <- function(scenario_dir, par_vec) {
     is.numeric(par_vec),
     !is.null(names(par_vec)),
     length(par_vec) > 0L,
-    all(names(par_vec) %in% calibration_par_names())
+    all(names(par_vec) %in% calibration_par_names() | .is_ground_fire_kill_par(names(par_vec)))
   )
+  gfk_idx <- .is_ground_fire_kill_par(names(par_vec))
+  gfk <- stats::setNames(
+    as.numeric(par_vec[gfk_idx]),
+    sub("^GroundFireKill_", "", names(par_vec)[gfk_idx])
+  )
+  par_vec <- par_vec[!gfk_idx]
   .check_num_fires_params(names(par_vec))
   ## A SUBSET is allowed, and an absent name means "leave the template's value alone". Requiring
   ## all nine forced every calibration to search every dimension, including ones a project sets
@@ -1124,6 +1183,11 @@ patch_fire_config <- function(scenario_dir, par_vec) {
     stop("dynamic-fire.txt not found in ", scenario_dir, call. = FALSE)
   }
   lines <- readLines(fire_txt)
+
+  ## The species table is checked before anything is written, so a bad name or value leaves the
+  ## trial's files as they were.
+  spp_csv <- .calibration_df_species_file(scenario_dir)
+  spp_new <- .with_ground_fire_kill(spp_csv, gfk)
 
   ## 1. SeverityCalibrationFactor scalar (skipped entirely when not calibrated)
   if ("SeverityCalibrationFactor" %in% names(par_vec)) {
@@ -1286,6 +1350,9 @@ patch_fire_config <- function(scenario_dir, par_vec) {
   }
 
   writeLines(lines, fire_txt)
+  if (!is.null(spp_new)) {
+    utils::write.csv(spp_new, spp_csv, row.names = FALSE, quote = FALSE, eol = "\n")
+  }
   fs::path_real(fire_txt)
 }
 
