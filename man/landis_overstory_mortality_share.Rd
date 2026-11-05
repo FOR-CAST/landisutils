@@ -65,6 +65,10 @@ percentage of its species' longevity that the damage table gives for severity mi
 A cell on a map code with no dominant cohort counts as burned but never as killed. Composition
 is read at time zero, so a cell that burns twice in one replicate is scored on its original
 cohorts; in a calibration run, where succession is frozen, only reburns are affected.
+
+When a species' \code{GroundFireKill} is set, \code{high_cells} is the expected number of cells that lose
+their dominant cohort (\code{\link[=fire_cohort_mortality]{fire_cohort_mortality()}}), so it can be fractional, and the function
+stops unless \code{Landis-log.txt} shows the extension applied each value.
 }
 \seealso{
 Other Dynamic Fire calibration helpers:

@@ -397,6 +397,10 @@ parse_dynamic_fire_logs <- function(
 #' is read at time zero, so a cell that burns twice in one replicate is scored on its original
 #' cohorts; in a calibration run, where succession is frozen, only reburns are affected.
 #'
+#' When a species' `GroundFireKill` is set, `high_cells` is the expected number of cells that lose
+#' their dominant cohort ([fire_cohort_mortality()]), so it can be fractional, and the function
+#' stops unless `Landis-log.txt` shows the extension applied each value.
+#'
 #' @param rep_dir Character. Path to the replicate directory.
 #'
 #' @param by_class Logical. Also return the burned cells counted by timestep, map code and severity
@@ -466,12 +470,14 @@ landis_overstory_mortality_share <- function(rep_dir, by_class = FALSE, engine_r
   }
   damage <- .read_fire_damage_table(fire_txt)
   damage <- data.frame(pct = damage$pct, diff = damage$diff)
+  .check_ground_fire_kill_logged(rep_dir, spp_csv)
 
   ic_r <- read_landis_raster(as.character(ic_tif))
   codes <- terra::values(ic_r, mat = FALSE)
 
   burned_cells <- 0L
-  high_cells <- 0L
+  fractional <- any(!is.na(dom$ground_fire_kill))
+  high_cells <- if (fractional) 0 else 0L
   counted <- list()
   for (f in as.character(sev_files)) {
     sev <- terra::values(read_landis_raster(f), mat = FALSE)
@@ -490,15 +496,18 @@ landis_overstory_mortality_share <- function(rep_dir, by_class = FALSE, engine_r
     ## no dominant cohort reaches it as NA, which also kills nothing.
     class <- sev[burned] - 2L
     idx <- match(codes[burned], dom$MapCode)
-    killed <- fire_cohort_killed(
+    ## Expected mortality: 0 or 1 where no species carries a `GroundFireKill`, the species' value
+    ## at severity 1 to 4 where one does, so `high_cells` is then a fractional cell count.
+    killed <- fire_cohort_mortality(
       class,
       dom$CohortAge[idx],
       dom$longevity[idx],
       dom$tolerance[idx],
       damage,
+      ground_fire_kill = dom$ground_fire_kill[idx],
       engine_rule = engine_rule
     )
-    high_cells <- high_cells + sum(killed)
+    high_cells <- high_cells + if (fractional) sum(killed) else as.integer(sum(killed))
     if (by_class) {
       counted[[length(counted) + 1L]] <- tibble::tibble(
         timestep = .severity_map_timestep(f),
@@ -523,6 +532,50 @@ landis_overstory_mortality_share <- function(rep_dir, by_class = FALSE, engine_r
     out$by_class <- dplyr::count(cells, .data$timestep, .data$MapCode, .data$class, name = "cells")
   }
   out
+}
+
+## Stop unless `Landis-log.txt` lists every `GroundFireKill` the species table sets (internal).
+## The extension writes `Ground-fire kill: <code> <value>[, ...]` once at initialisation when any
+## species has a value. A build that ignores the column writes nothing, and scoring the share with
+## a rule the run did not apply would be silently wrong. Values are compared as numbers, because
+## C# formats doubles its own way.
+.check_ground_fire_kill_logged <- function(rep_dir, spp_csv) {
+  gfk <- .read_ground_fire_kill(spp_csv)
+  want <- data.frame(SpeciesName = names(gfk), ground_fire_kill = unname(gfk))
+  want <- want[!is.na(want$ground_fire_kill), , drop = FALSE]
+  if (nrow(want) == 0L) {
+    return(invisible(NULL))
+  }
+  log_file <- fs::path(rep_dir, "Landis-log.txt")
+  lines <- if (fs::file_exists(log_file)) readLines(log_file, warn = FALSE) else character()
+  hit <- sub("^.*Ground-fire kill:\\s*", "", grep("Ground-fire kill:", lines, value = TRUE))
+  logged <- list()
+  for (h in hit) {
+    for (pair in strsplit(h, ",", fixed = TRUE)[[1]]) {
+      tok <- strsplit(trimws(pair), "\\s+")[[1]]
+      if (length(tok) == 2L) {
+        logged[[tok[[1]]]] <- suppressWarnings(as.numeric(tok[[2]]))
+      }
+    }
+  }
+  ok <- vapply(
+    seq_len(nrow(want)),
+    function(i) {
+      v <- logged[[want$SpeciesName[[i]]]]
+      !is.null(v) && !is.na(v) && abs(v - want$ground_fire_kill[[i]]) <= 1e-9
+    },
+    logical(1)
+  )
+  if (!all(ok)) {
+    stop(
+      "the species table sets GroundFireKill but Landis-log.txt does not say the extension ",
+      "applied it (",
+      paste(want$SpeciesName[!ok], collapse = ", "),
+      "): the build in use may ignore the column",
+      call. = FALSE
+    )
+  }
+  invisible(NULL)
 }
 
 ## The timestep of a `severity-<t>.tif` map, from its file name (internal).

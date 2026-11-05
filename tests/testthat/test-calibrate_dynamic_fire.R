@@ -1192,7 +1192,12 @@ test_that("save_observed_fire_targets() backfills NBAC with NFDB (year-aligned p
 
 ## A minimal replicate directory: one row of cells, so the reader's vertical flip cannot
 ## reorder them, plus the five files the mortality calculation reads.
-.mk_mortality_rep <- function(severity, env = parent.frame()) {
+.mk_mortality_rep <- function(
+  severity,
+  ground_fire_kill = NULL,
+  log_line = NULL,
+  env = parent.frame()
+) {
   dir <- withr::local_tempdir(.local_envir = env)
   fs::dir_create(fs::path(dir, "fire"))
   fs::file_copy(
@@ -1208,11 +1213,17 @@ test_that("save_observed_fire_targets() backfills NBAC with NFDB (year-aligned p
     ),
     fs::path(dir, "species.txt")
   )
-  utils::write.csv(
-    data.frame(SpeciesCode = c("Hw", "At"), FireTolerance = c(1L, 1L)),
-    fs::path(dir, "DynamicFire_Spp_Table.csv"),
-    row.names = FALSE
-  )
+  spp <- data.frame(SpeciesCode = c("Hw", "At"), FireTolerance = c(1L, 1L))
+  if (!is.null(ground_fire_kill)) {
+    spp$GroundFireKill <- ground_fire_kill
+  }
+  utils::write.csv(spp, fs::path(dir, "DynamicFire_Spp_Table.csv"), row.names = FALSE)
+  if (!is.null(log_line)) {
+    writeLines(
+      c("2026-11-02 17:13:19,100 -    Reading in something", log_line, "more"),
+      fs::path(dir, "Landis-log.txt")
+    )
+  }
   ## Map code 1's dominant cohort is young (300 of 650 years), code 2's is old (640).
   utils::write.csv(
     data.frame(
@@ -1245,6 +1256,49 @@ test_that("landis_overstory_mortality_share() counts cells that lost their domin
   expect_equal(m$burned_cells, 3L)
   expect_equal(m$high_cells, 2L)
   expect_equal(m$share, 2 / 3)
+})
+
+test_that("landis_overstory_mortality_share() scores a ground-fire kill share", {
+  ## Every dominant cohort is Hw, so class 1 cells score the species' value, not 0 or 1.
+  dir <- .mk_mortality_rep(
+    list(c(3L, 3L, 3L, 1L)),
+    ground_fire_kill = c(0.4, NA),
+    log_line = "2026-11-02 17:13:20,382 -    Ground-fire kill: Hw 0.4"
+  )
+  m <- landis_overstory_mortality_share(dir, by_class = TRUE)
+
+  expect_equal(m$burned_cells, 3L)
+  expect_equal(m$share, 0.4)
+  expect_equal(sum(m$by_class$cells), 3L)
+})
+
+test_that("landis_overstory_mortality_share() compares the logged value as a number", {
+  dir <- .mk_mortality_rep(
+    list(c(3L, 3L, 3L, 1L)),
+    ground_fire_kill = c(0.35, NA),
+    log_line = "   Ground-fire kill: At 0.1, Hw 0.35000000000000003"
+  )
+  expect_equal(landis_overstory_mortality_share(dir)$share, 0.35)
+})
+
+test_that("landis_overstory_mortality_share() stops when the log does not show the kill applied", {
+  msg <- "the species table sets GroundFireKill but Landis-log.txt does not say the extension applied it"
+  no_line <- .mk_mortality_rep(list(c(3L, 3L, 3L, 1L)), ground_fire_kill = c(0.4, NA))
+  expect_error(landis_overstory_mortality_share(no_line), msg, fixed = TRUE)
+
+  other_line <- .mk_mortality_rep(
+    list(c(3L, 3L, 3L, 1L)),
+    ground_fire_kill = c(0.4, NA),
+    log_line = "   Ground-fire kill: Hw 0.5"
+  )
+  expect_error(landis_overstory_mortality_share(other_line), msg, fixed = TRUE)
+
+  missing_sp <- .mk_mortality_rep(
+    list(c(3L, 3L, 3L, 1L)),
+    ground_fire_kill = c(0.4, 0.2),
+    log_line = "   Ground-fire kill: Hw 0.4"
+  )
+  expect_error(landis_overstory_mortality_share(missing_sp), msg, fixed = TRUE)
 })
 
 test_that("landis_overstory_mortality_share() reads the species file scenario.txt names", {
