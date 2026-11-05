@@ -295,3 +295,21 @@ test_that("the reference legend keys only the sources drawn, each in its own lin
   ## Called bare, the exported scale still keys every source.
   expect_identical(scale_linetype_growth_reference()$get_limits(), c("SORTIE", "TIPSY", "VDYP"))
 })
+
+test_that("plot_growth_calibration orders its guides explicitly, whatever the species", {
+  skip_if_not_installed("hexbin")
+  reference <- tibble::tibble(
+    source = c(rep("Ground plots", 60), rep("SORTIE", 20)),
+    age = c(seq(20, 200, length.out = 60), seq(10, 200, length.out = 20)),
+    aboveground_c_mg_ha = c(seq(10, 180, length.out = 60), seq(5, 150, length.out = 20)),
+    bec_label = "ICHmc",
+    leading_raw = "PL",
+    plot_weight = c(seq(0.05, 1, length.out = 60), rep(NA_real_, 20))
+  )
+  curve <- tibble::tibble(age = 1:200, aboveground_c_mg_ha = seq(1, 180, length.out = 200))
+  p <- plot_growth_calibration("Pl", curve, reference, density = TRUE)
+
+  ord <- function(aes) p$guides$guides[[aes]]$params$order %||% p$guides$guides[[aes]]$order
+  expect_equal(ord("linetype"), 1L)
+  expect_equal(ord("fill"), 2L)
+})
