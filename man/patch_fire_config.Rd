@@ -9,7 +9,10 @@ patch_fire_config(scenario_dir, par_vec)
 \arguments{
 \item{scenario_dir}{Character. Directory containing \code{dynamic-fire.txt}.}
 
-\item{par_vec}{Numeric. Named vector keyed by \code{\link[=calibration_par_names]{calibration_par_names()}}.}
+\item{par_vec}{Numeric. Named vector keyed by \code{\link[=calibration_par_names]{calibration_par_names()}}, and optionally by
+\code{\link[=ground_fire_kill_par_names]{ground_fire_kill_par_names()}}. A \verb{GroundFireKill_<code>} entry sets the \code{GroundFireKill}
+column of the species table the config names (\code{Species_CSV_File}): the value for that
+species, a blank for every other. Without such an entry the table is not touched.}
 }
 \value{
 Character scalar: absolute path to the patched \code{dynamic-fire.txt}.
@@ -55,6 +58,8 @@ Other Dynamic Fire calibration helpers:
 \code{\link[=dedup_community_snapshot]{dedup_community_snapshot()}},
 \code{\link[=default_severity_prior_sturtevant2009]{default_severity_prior_sturtevant2009()}},
 \code{\link[=fire_cohort_killed]{fire_cohort_killed()}},
+\code{\link[=fire_cohort_mortality]{fire_cohort_mortality()}},
+\code{\link[=ground_fire_kill_par_names]{ground_fire_kill_par_names()}},
 \code{\link[=landis_dominant_cohorts]{landis_dominant_cohorts()}},
 \code{\link[=landis_overstory_mortality_share]{landis_overstory_mortality_share()}},
 \code{\link[=loss_from_stats]{loss_from_stats()}},

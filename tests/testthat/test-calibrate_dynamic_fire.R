@@ -1192,7 +1192,12 @@ test_that("save_observed_fire_targets() backfills NBAC with NFDB (year-aligned p
 
 ## A minimal replicate directory: one row of cells, so the reader's vertical flip cannot
 ## reorder them, plus the five files the mortality calculation reads.
-.mk_mortality_rep <- function(severity, env = parent.frame()) {
+.mk_mortality_rep <- function(
+  severity,
+  ground_fire_kill = NULL,
+  log_line = NULL,
+  env = parent.frame()
+) {
   dir <- withr::local_tempdir(.local_envir = env)
   fs::dir_create(fs::path(dir, "fire"))
   fs::file_copy(
@@ -1208,11 +1213,17 @@ test_that("save_observed_fire_targets() backfills NBAC with NFDB (year-aligned p
     ),
     fs::path(dir, "species.txt")
   )
-  utils::write.csv(
-    data.frame(SpeciesCode = c("Hw", "At"), FireTolerance = c(1L, 1L)),
-    fs::path(dir, "DynamicFire_Spp_Table.csv"),
-    row.names = FALSE
-  )
+  spp <- data.frame(SpeciesCode = c("Hw", "At"), FireTolerance = c(1L, 1L))
+  if (!is.null(ground_fire_kill)) {
+    spp$GroundFireKill <- ground_fire_kill
+  }
+  utils::write.csv(spp, fs::path(dir, "DynamicFire_Spp_Table.csv"), row.names = FALSE)
+  if (!is.null(log_line)) {
+    writeLines(
+      c("2026-11-02 17:13:19,100 -    Reading in something", log_line, "more"),
+      fs::path(dir, "Landis-log.txt")
+    )
+  }
   ## Map code 1's dominant cohort is young (300 of 650 years), code 2's is old (640).
   utils::write.csv(
     data.frame(
@@ -1245,6 +1256,49 @@ test_that("landis_overstory_mortality_share() counts cells that lost their domin
   expect_equal(m$burned_cells, 3L)
   expect_equal(m$high_cells, 2L)
   expect_equal(m$share, 2 / 3)
+})
+
+test_that("landis_overstory_mortality_share() scores a ground-fire kill share", {
+  ## Every dominant cohort is Hw, so class 1 cells score the species' value, not 0 or 1.
+  dir <- .mk_mortality_rep(
+    list(c(3L, 3L, 3L, 1L)),
+    ground_fire_kill = c(0.4, NA),
+    log_line = "2026-11-02 17:13:20,382 -    Ground-fire kill: Hw 0.4"
+  )
+  m <- landis_overstory_mortality_share(dir, by_class = TRUE)
+
+  expect_equal(m$burned_cells, 3L)
+  expect_equal(m$share, 0.4)
+  expect_equal(sum(m$by_class$cells), 3L)
+})
+
+test_that("landis_overstory_mortality_share() compares the logged value as a number", {
+  dir <- .mk_mortality_rep(
+    list(c(3L, 3L, 3L, 1L)),
+    ground_fire_kill = c(0.35, NA),
+    log_line = "   Ground-fire kill: At 0.1, Hw 0.35000000000000003"
+  )
+  expect_equal(landis_overstory_mortality_share(dir)$share, 0.35)
+})
+
+test_that("landis_overstory_mortality_share() stops when the log does not show the kill applied", {
+  msg <- "the species table sets GroundFireKill but Landis-log.txt does not say the extension applied it"
+  no_line <- .mk_mortality_rep(list(c(3L, 3L, 3L, 1L)), ground_fire_kill = c(0.4, NA))
+  expect_error(landis_overstory_mortality_share(no_line), msg, fixed = TRUE)
+
+  other_line <- .mk_mortality_rep(
+    list(c(3L, 3L, 3L, 1L)),
+    ground_fire_kill = c(0.4, NA),
+    log_line = "   Ground-fire kill: Hw 0.5"
+  )
+  expect_error(landis_overstory_mortality_share(other_line), msg, fixed = TRUE)
+
+  missing_sp <- .mk_mortality_rep(
+    list(c(3L, 3L, 3L, 1L)),
+    ground_fire_kill = c(0.4, 0.2),
+    log_line = "   Ground-fire kill: Hw 0.4"
+  )
+  expect_error(landis_overstory_mortality_share(missing_sp), msg, fixed = TRUE)
 })
 
 test_that("landis_overstory_mortality_share() reads the species file scenario.txt names", {
@@ -4081,4 +4135,117 @@ test_that("both calibration drivers take the parse limit from cfg, and can switc
       'parse_timeout_sec\\s*=\\s*if\\s*\\(\\s*"parse_timeout_sec"\\s*%in%\\s*names\\(cfg\\)\\s*\\)\\s*cfg\\$parse_timeout_sec'
     )
   }
+})
+
+test_that("fire_cohort_mortality equals fire_cohort_killed without a share", {
+  tab <- defaultFireDamageTable()
+  sev <- c(0, 1, 2, 3, 4, 5, NA)
+  expect_identical(
+    fire_cohort_mortality(sev, 100, 300, 3, tab),
+    as.numeric(fire_cohort_killed(sev, 100, 300, 3, tab))
+  )
+})
+
+test_that("a share replaces the table below severity 5, at any age", {
+  tab <- defaultFireDamageTable()
+  m <- fire_cohort_mortality(
+    c(0, 1, 4, 5),
+    c(10, 600, 600, 600),
+    650,
+    1,
+    tab,
+    ground_fire_kill = 0.3
+  )
+  expect_equal(m, c(0, 0.3, 0.3, 1))
+  expect_equal(fire_cohort_mortality(c(1, 5), 600, 650, 1, tab, ground_fire_kill = 0), c(0, 1))
+})
+
+test_that("a vector share applies per element and NA falls back to the table", {
+  tab <- defaultFireDamageTable()
+  m <- fire_cohort_mortality(c(1, 1, 5), 100, 300, 3, tab, ground_fire_kill = c(0.4, NA, NA))
+  expect_equal(m, c(0.4, as.numeric(fire_cohort_killed(1, 100, 300, 3, tab)), 1))
+})
+
+test_that("ground_fire_kill outside [0, 1] stops", {
+  expect_error(fire_cohort_mortality(1, 10, 650, 1, defaultFireDamageTable(), 1.2), "0 and 1")
+  expect_error(fire_cohort_mortality(1, 10, 650, 1, defaultFireDamageTable(), -0.1), "0 and 1")
+})
+
+.gfk_trial_dir <- function(gfk_col = NULL) {
+  d <- withr::local_tempdir(.local_envir = parent.frame())
+  fs::file_copy(
+    system.file("testdata", "dynamic-fire-sample.txt", package = "landisutils"),
+    fs::path(d, "dynamic-fire.txt")
+  )
+  spp <- data.frame(
+    SpeciesCode = c("Hw", "At", "Cw"),
+    FireTolerance = c(1L, 2L, 3L),
+    Note = c("a", "b", "c")
+  )
+  if (!is.null(gfk_col)) {
+    spp$GroundFireKill <- gfk_col
+  }
+  utils::write.csv(spp, fs::path(d, "DynamicFire_Spp_Table.csv"), row.names = FALSE, quote = FALSE)
+  d
+}
+
+test_that("ground_fire_kill_par_names() prefixes the species codes", {
+  expect_equal(
+    ground_fire_kill_par_names(c("Hw", "Cw")),
+    c("GroundFireKill_Hw", "GroundFireKill_Cw")
+  )
+})
+
+test_that("patch_fire_config() writes GroundFireKill for the named species only", {
+  d <- .gfk_trial_dir()
+  patch_fire_config(d, c(DamageAgeMultiplier = 0.5, GroundFireKill_Hw = 0.35))
+  csv <- fs::path(d, "DynamicFire_Spp_Table.csv")
+  expect_equal(
+    readLines(csv),
+    c("SpeciesCode,FireTolerance,Note,GroundFireKill", "Hw,1,a,0.35", "At,2,b,", "Cw,3,c,")
+  )
+  gfk <- landisutils:::.read_ground_fire_kill(csv)
+  expect_equal(gfk[["Hw"]], 0.35, tolerance = 1e-9)
+  expect_true(all(is.na(gfk[c("At", "Cw")])))
+  ## the other parameter is applied as before
+  expect_match(
+    paste(readLines(fs::path(d, "dynamic-fire.txt")), collapse = "\n"),
+    "FireDamageTable"
+  )
+})
+
+test_that("patch_fire_config() replaces an existing GroundFireKill column", {
+  d <- .gfk_trial_dir(gfk_col = c(0.9, 0.1, 0.2))
+  patch_fire_config(d, c(GroundFireKill_Hw = 0, GroundFireKill_Cw = 0.5))
+  expect_equal(
+    readLines(fs::path(d, "DynamicFire_Spp_Table.csv")),
+    c("SpeciesCode,FireTolerance,Note,GroundFireKill", "Hw,1,a,0", "At,2,b,", "Cw,3,c,0.5")
+  )
+})
+
+test_that("patch_fire_config() stops on an unknown species code or a value outside [0, 1]", {
+  d <- .gfk_trial_dir()
+  expect_error(patch_fire_config(d, c(GroundFireKill_HW = 0.3)), "HW")
+  expect_error(patch_fire_config(d, c(GroundFireKill_Hw = 1.2)), "0 and 1")
+  expect_error(patch_fire_config(d, c(GroundFireKill_Hw = -0.1)), "0 and 1")
+})
+
+test_that("patch_fire_config() leaves the species CSV byte-identical without a GroundFireKill name", {
+  d <- .gfk_trial_dir(gfk_col = c(0.9, 0.1, 0.2))
+  csv <- fs::path(d, "DynamicFire_Spp_Table.csv")
+  before <- readBin(csv, "raw", file.size(csv))
+  patch_fire_config(d, c(DamageAgeMultiplier = 0.5))
+  expect_identical(readBin(csv, "raw", file.size(csv)), before)
+})
+
+test_that("patch_fire_config() finds the species CSV through Species_CSV_File", {
+  d <- .gfk_trial_dir()
+  fs::file_move(fs::path(d, "DynamicFire_Spp_Table.csv"), fs::path(d, "dynamic-fire-species.csv"))
+  txt <- readLines(fs::path(d, "dynamic-fire.txt"))
+  writeLines(
+    sub("^(\\s*Species_CSV_File\\s+).*$", "\\1dynamic-fire-species.csv", txt),
+    fs::path(d, "dynamic-fire.txt")
+  )
+  patch_fire_config(d, c(GroundFireKill_At = 0.2))
+  expect_equal(readLines(fs::path(d, "dynamic-fire-species.csv"))[3], "At,2,b,0.2")
 })

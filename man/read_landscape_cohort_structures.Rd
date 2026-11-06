@@ -11,7 +11,7 @@ read_landscape_cohort_structures(path)
 }
 \value{
 A tibble with \code{structure_id}, \code{n_cohorts}, \code{species}, \code{cohort_age} and
-\code{n_communities}.
+\code{n_cells} (an older file's \code{n_communities} is read as \code{n_cells}).
 }
 \description{
 Reads the table written from \code{\link[=extract_landscape_cohort_structures]{extract_landscape_cohort_structures()}}, which

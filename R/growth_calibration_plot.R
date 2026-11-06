@@ -179,6 +179,14 @@ plot_growth_calibration <- function(
       ggplot2::scale_shape_manual(values = c(16, 17, 15, 3, 7, 8, 4, 10, 12))
     }) +
     scale_linetype_growth_reference(unique(model$source)) +
+    ## Explicit order: without it ggplot2 sequences the guides by an internal hash,
+    ## so one species drew the density bar above "Reference" and the others below.
+    (if (isTRUE(density)) {
+      ggplot2::guides(
+        linetype = ggplot2::guide_legend(order = 1L),
+        fill = ggplot2::guide_colourbar(order = 2L)
+      )
+    }) +
     ggplot2::coord_cartesian(xlim = c(0, x_max)) +
     ggplot2::labs(
       x = "Stand age (years)",
@@ -296,10 +304,10 @@ plot_growth_candidate <- function(
   ## left in `pal` with no layer behind it renders as a key with no glyph -- a legend entry for
   ## something absent from the panel. Both can now be absent: `density = TRUE` replaces the per-plot
   ## points with a hex density that has its own scale, and `binned = NULL` drops the binned series.
-  pal <- stats::setNames(
-    unname(growth_plot_palette()[c("current", "candidate")]),
-    c(current_label, candidate_label)
-  )
+  pal <- stats::setNames(unname(growth_plot_palette()[["current"]]), current_label)
+  if (!is.null(candidate_curve)) {
+    pal <- c(pal, stats::setNames(unname(growth_plot_palette()[["candidate"]]), candidate_label))
+  }
   if (!isTRUE(density)) {
     pal <- c(pal, stats::setNames(growth_plot_palette()[["plots"]], plots_label))
   }

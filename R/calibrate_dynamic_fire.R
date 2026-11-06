@@ -45,6 +45,56 @@ calibration_par_names <- function() {
   )
 }
 
+#' Parameter names that set a species' ground-fire kill
+#'
+#' A calibration can fit the extension's optional per-species `GroundFireKill` (a probability
+#' between 0 and 1). The parameter for species `Hw` is `GroundFireKill_Hw`; pass such names in
+#' the `par_vec` of [patch_fire_config()] alongside those of [calibration_par_names()].
+#'
+#' @param species Character. Species codes, as in the `SpeciesCode` column of the Dynamic Fire
+#'   species table.
+#'
+#' @returns Character vector, `paste0("GroundFireKill_", species)`.
+#'
+#' @family Dynamic Fire calibration helpers
+#'
+#' @export
+ground_fire_kill_par_names <- function(species) {
+  paste0("GroundFireKill_", species)
+}
+
+## `par_vec` names that set a species' ground-fire kill (internal).
+.is_ground_fire_kill_par <- function(nms) {
+  grepl("^GroundFireKill_[A-Za-z]+$", nms)
+}
+
+## Species table with the `GroundFireKill` column set from `gfk` (named by species code), or
+## NULL after checking when `gfk` is empty (internal). Other columns are kept as text, so their
+## values are not reformatted; species not named get a blank.
+.with_ground_fire_kill <- function(spp_csv, gfk) {
+  if (length(gfk) == 0L) {
+    return(NULL)
+  }
+  if (any(is.na(gfk) | gfk < 0 | gfk > 1)) {
+    stop("GroundFireKill must be between 0 and 1, not ", toString(gfk), call. = FALSE)
+  }
+  df <- utils::read.csv(
+    spp_csv,
+    colClasses = "character",
+    na.strings = character(0),
+    check.names = FALSE
+  )
+  codes <- trimws(df$SpeciesCode)
+  unknown <- setdiff(names(gfk), codes)
+  if (length(unknown) > 0L) {
+    stop("GroundFireKill species not in ", spp_csv, ": ", toString(unknown), call. = FALSE)
+  }
+  df$GroundFireKill <- ""
+  hit <- match(names(gfk), codes)
+  df$GroundFireKill[hit] <- sprintf("%.15g", unname(gfk))
+  df
+}
+
 ## The two ignition-rate parameters are alternatives, not companions (internal).
 ##
 ## `NumFires` sets every fire ecoregion's rate to one value; `NumFiresMultiplier` scales each
@@ -397,6 +447,10 @@ parse_dynamic_fire_logs <- function(
 #' is read at time zero, so a cell that burns twice in one replicate is scored on its original
 #' cohorts; in a calibration run, where succession is frozen, only reburns are affected.
 #'
+#' When a species' `GroundFireKill` is set, `high_cells` is the expected number of cells that lose
+#' their dominant cohort ([fire_cohort_mortality()]), so it can be fractional, and the function
+#' stops unless `Landis-log.txt` shows the extension applied each value.
+#'
 #' @param rep_dir Character. Path to the replicate directory.
 #'
 #' @param by_class Logical. Also return the burned cells counted by timestep, map code and severity
@@ -466,12 +520,14 @@ landis_overstory_mortality_share <- function(rep_dir, by_class = FALSE, engine_r
   }
   damage <- .read_fire_damage_table(fire_txt)
   damage <- data.frame(pct = damage$pct, diff = damage$diff)
+  .check_ground_fire_kill_logged(rep_dir, spp_csv)
 
   ic_r <- read_landis_raster(as.character(ic_tif))
   codes <- terra::values(ic_r, mat = FALSE)
 
   burned_cells <- 0L
-  high_cells <- 0L
+  fractional <- any(!is.na(dom$ground_fire_kill))
+  high_cells <- if (fractional) 0 else 0L
   counted <- list()
   for (f in as.character(sev_files)) {
     sev <- terra::values(read_landis_raster(f), mat = FALSE)
@@ -490,15 +546,18 @@ landis_overstory_mortality_share <- function(rep_dir, by_class = FALSE, engine_r
     ## no dominant cohort reaches it as NA, which also kills nothing.
     class <- sev[burned] - 2L
     idx <- match(codes[burned], dom$MapCode)
-    killed <- fire_cohort_killed(
+    ## Expected mortality: 0 or 1 where no species carries a `GroundFireKill`, the species' value
+    ## at severity 1 to 4 where one does, so `high_cells` is then a fractional cell count.
+    killed <- fire_cohort_mortality(
       class,
       dom$CohortAge[idx],
       dom$longevity[idx],
       dom$tolerance[idx],
       damage,
+      ground_fire_kill = dom$ground_fire_kill[idx],
       engine_rule = engine_rule
     )
-    high_cells <- high_cells + sum(killed)
+    high_cells <- high_cells + if (fractional) sum(killed) else as.integer(sum(killed))
     if (by_class) {
       counted[[length(counted) + 1L]] <- tibble::tibble(
         timestep = .severity_map_timestep(f),
@@ -523,6 +582,50 @@ landis_overstory_mortality_share <- function(rep_dir, by_class = FALSE, engine_r
     out$by_class <- dplyr::count(cells, .data$timestep, .data$MapCode, .data$class, name = "cells")
   }
   out
+}
+
+## Stop unless `Landis-log.txt` lists every `GroundFireKill` the species table sets (internal).
+## The extension writes `Ground-fire kill: <code> <value>[, ...]` once at initialisation when any
+## species has a value. A build that ignores the column writes nothing, and scoring the share with
+## a rule the run did not apply would be silently wrong. Values are compared as numbers, because
+## C# formats doubles its own way.
+.check_ground_fire_kill_logged <- function(rep_dir, spp_csv) {
+  gfk <- .read_ground_fire_kill(spp_csv)
+  want <- data.frame(SpeciesName = names(gfk), ground_fire_kill = unname(gfk))
+  want <- want[!is.na(want$ground_fire_kill), , drop = FALSE]
+  if (nrow(want) == 0L) {
+    return(invisible(NULL))
+  }
+  log_file <- fs::path(rep_dir, "Landis-log.txt")
+  lines <- if (fs::file_exists(log_file)) readLines(log_file, warn = FALSE) else character()
+  hit <- sub("^.*Ground-fire kill:\\s*", "", grep("Ground-fire kill:", lines, value = TRUE))
+  logged <- list()
+  for (h in hit) {
+    for (pair in strsplit(h, ",", fixed = TRUE)[[1]]) {
+      tok <- strsplit(trimws(pair), "\\s+")[[1]]
+      if (length(tok) == 2L) {
+        logged[[tok[[1]]]] <- suppressWarnings(as.numeric(tok[[2]]))
+      }
+    }
+  }
+  ok <- vapply(
+    seq_len(nrow(want)),
+    function(i) {
+      v <- logged[[want$SpeciesName[[i]]]]
+      !is.null(v) && !is.na(v) && abs(v - want$ground_fire_kill[[i]]) <= 1e-9
+    },
+    logical(1)
+  )
+  if (!all(ok)) {
+    stop(
+      "the species table sets GroundFireKill but Landis-log.txt does not say the extension ",
+      "applied it (",
+      paste(want$SpeciesName[!ok], collapse = ", "),
+      "): the build in use may ignore the column",
+      call. = FALSE
+    )
+  }
+  invisible(NULL)
 }
 
 ## The timestep of a `severity-<t>.tif` map, from its file name (internal).
@@ -555,7 +658,8 @@ landis_overstory_mortality_share <- function(rep_dir, by_class = FALSE, engine_r
 #'
 #' @returns A data.frame with one row per map code that has such a cohort, in map-code order:
 #'   `MapCode` (integer), `SpeciesName` (character), and `CohortAge`, `CohortBiomass`, `longevity`
-#'   and `tolerance` (double). NULL when one of the three files is missing or no cohort's species is
+#'   and `tolerance` (double), and `ground_fire_kill` (double: the species' `GroundFireKill`, NA
+#'   where the species table has no value or no such column). NULL when one of the three files is missing or no cohort's species is
 #'   in both species files.
 #'
 #' @family Dynamic Fire calibration helpers
@@ -573,6 +677,7 @@ landis_dominant_cohorts <- function(dir) {
   }
 
   tol <- .read_fire_tolerance(spp_csv)
+  gfk <- .read_ground_fire_kill(spp_csv)
   longevity <- .read_species_longevity(spp_txt)
 
   ic <- utils::read.csv(ic_csv)
@@ -593,7 +698,8 @@ landis_dominant_cohorts <- function(dir) {
     CohortAge = as.numeric(dom$CohortAge),
     CohortBiomass = as.numeric(dom$CohortBiomass),
     longevity = unname(as.numeric(longevity[dom$SpeciesName])),
-    tolerance = unname(as.numeric(tol[dom$SpeciesName]))
+    tolerance = unname(as.numeric(tol[dom$SpeciesName])),
+    ground_fire_kill = unname(as.numeric(gfk[dom$SpeciesName]))
   )
 }
 
@@ -700,9 +806,85 @@ fire_cohort_killed <- function(
   killed
 }
 
+#' Expected mortality of a cohort in a fire
+#'
+#' The companion of [fire_cohort_killed()] for species with a `GroundFireKill`. Where the value is
+#' NA the answer is `fire_cohort_killed()`'s, as 0 or 1. Where a species has a value, Dynamic Fire
+#' takes it out of the damage table below severity 5: in each burned cell all its cohorts die
+#' together with that probability, whatever their age. This returns that probability.
+#'
+#' Severity 5 gives 1. Severity 1 to 4 gives `ground_fire_kill`. Severity 0, a burned cell in which
+#' no cohort was damaged, gives 0. A `ground_fire_kill` of 0 is a value (the species leaves the
+#' table and never dies below severity 5), not an absent one.
+#'
+#' @inheritParams fire_cohort_killed
+#'
+#' @param ground_fire_kill Numeric. The species' `GroundFireKill`, between 0 and 1, or NA for none.
+#'   Length 1 or the length of `severity`.
+#'
+#' @returns Numeric, one per `severity`: the probability that the cohort dies.
+#'
+#' @family Dynamic Fire calibration helpers
+#'
+#' @export
+#'
+#' @examples
+#' ## A species that dies below severity 5 in 30 % of burned cells, at any age.
+#' fire_cohort_mortality(c(0, 1, 4, 5), 600, 650, 1, defaultFireDamageTable(), 0.3)
+fire_cohort_mortality <- function(
+  severity,
+  age,
+  longevity,
+  tolerance,
+  fire_damage_table,
+  ground_fire_kill = NA_real_,
+  engine_rule = FALSE
+) {
+  n <- length(severity)
+  if (!is.numeric(ground_fire_kill) && !all(is.na(ground_fire_kill))) {
+    stop("`ground_fire_kill` must be numeric", call. = FALSE)
+  }
+  if (!length(ground_fire_kill) %in% c(1L, n)) {
+    stop(
+      "`ground_fire_kill` must have length 1 or the length of `severity` (",
+      n,
+      ")",
+      call. = FALSE
+    )
+  }
+  if (any(ground_fire_kill < 0 | ground_fire_kill > 1, na.rm = TRUE)) {
+    stop("`ground_fire_kill` must be between 0 and 1", call. = FALSE)
+  }
+  out <- as.numeric(fire_cohort_killed(
+    severity,
+    age,
+    longevity,
+    tolerance,
+    fire_damage_table,
+    engine_rule
+  ))
+  gfk <- rep_len(as.numeric(ground_fire_kill), n)
+  has <- !is.na(gfk) & !is.na(severity)
+  out[has & severity %in% 1:4] <- gfk[has & severity %in% 1:4]
+  out[has & severity == 0] <- 0
+  out[has & severity == 5] <- 1
+  out
+}
+
 ## `x` rounded to single precision and back (internal), as a C# `float` holds it.
 .as_float32 <- function(x) {
   readBin(writeBin(as.double(x), raw(), size = 4L), "double", size = 4L, n = length(x))
+}
+
+## Species `GroundFireKill` from a Dynamic Fire `Species_CSV_File` (internal); NA where blank or
+## where the column is absent.
+.read_ground_fire_kill <- function(path) {
+  df <- utils::read.csv(path)
+  codes <- trimws(as.character(df$SpeciesCode))
+  if (!"GroundFireKill" %in% names(df)) {
+    return(stats::setNames(rep(NA_real_, length(codes)), codes))
+  }
+  stats::setNames(suppressWarnings(as.numeric(df$GroundFireKill)), codes)
 }
 
 ## Species fire tolerances from a Dynamic Fire `Species_CSV_File` (internal).
@@ -965,7 +1147,10 @@ fire_cohort_killed <- function(
 #' of the template so trials don't collide.
 #'
 #' @param scenario_dir Character. Directory containing `dynamic-fire.txt`.
-#' @param par_vec Numeric. Named vector keyed by [calibration_par_names()].
+#' @param par_vec Numeric. Named vector keyed by [calibration_par_names()], and optionally by
+#'   [ground_fire_kill_par_names()]. A `GroundFireKill_<code>` entry sets the `GroundFireKill`
+#'   column of the species table the config names (`Species_CSV_File`): the value for that
+#'   species, a blank for every other. Without such an entry the table is not touched.
 #'
 #' @returns Character scalar: absolute path to the patched `dynamic-fire.txt`.
 #'
@@ -978,8 +1163,14 @@ patch_fire_config <- function(scenario_dir, par_vec) {
     is.numeric(par_vec),
     !is.null(names(par_vec)),
     length(par_vec) > 0L,
-    all(names(par_vec) %in% calibration_par_names())
+    all(names(par_vec) %in% calibration_par_names() | .is_ground_fire_kill_par(names(par_vec)))
   )
+  gfk_idx <- .is_ground_fire_kill_par(names(par_vec))
+  gfk <- stats::setNames(
+    as.numeric(par_vec[gfk_idx]),
+    sub("^GroundFireKill_", "", names(par_vec)[gfk_idx])
+  )
+  par_vec <- par_vec[!gfk_idx]
   .check_num_fires_params(names(par_vec))
   ## A SUBSET is allowed, and an absent name means "leave the template's value alone". Requiring
   ## all nine forced every calibration to search every dimension, including ones a project sets
@@ -992,6 +1183,11 @@ patch_fire_config <- function(scenario_dir, par_vec) {
     stop("dynamic-fire.txt not found in ", scenario_dir, call. = FALSE)
   }
   lines <- readLines(fire_txt)
+
+  ## The species table is checked before anything is written, so a bad name or value leaves the
+  ## trial's files as they were.
+  spp_csv <- .calibration_df_species_file(scenario_dir)
+  spp_new <- .with_ground_fire_kill(spp_csv, gfk)
 
   ## 1. SeverityCalibrationFactor scalar (skipped entirely when not calibrated)
   if ("SeverityCalibrationFactor" %in% names(par_vec)) {
@@ -1154,6 +1350,9 @@ patch_fire_config <- function(scenario_dir, par_vec) {
   }
 
   writeLines(lines, fire_txt)
+  if (!is.null(spp_new)) {
+    utils::write.csv(spp_new, spp_csv, row.names = FALSE, quote = FALSE, eol = "\n")
+  }
   fs::path_real(fire_txt)
 }
 

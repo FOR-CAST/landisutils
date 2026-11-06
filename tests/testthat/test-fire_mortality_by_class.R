@@ -84,7 +84,8 @@
   CohortAge = c(30, 29, 31, 170),
   CohortBiomass = c(100, 100, 100, 50),
   longevity = c(300, 300, 300, 200),
-  tolerance = c(3, 3, 3, 1)
+  tolerance = c(3, 3, 3, 1),
+  ground_fire_kill = rep(NA_real_, 4)
 )
 
 ## bb00cf64f's (0.0.175's) landis_overstory_mortality_share() and .damage_age_pct(), verbatim but
@@ -196,6 +197,20 @@
 test_that("landis_dominant_cohorts() takes the largest cohort with tolerance and longevity", {
   d <- .mk_class_rep()
   expect_identical(landis_dominant_cohorts(d), .class_dom)
+})
+
+test_that("landis_dominant_cohorts() reads GroundFireKill, blank as NA", {
+  d <- .mk_class_rep()
+  utils::write.csv(
+    data.frame(
+      SpeciesCode = c("Hw", "At", "Sx"),
+      FireTolerance = c(3L, 1L, 2L),
+      GroundFireKill = c(0.25, NA, 0.5)
+    ),
+    fs::path(d, "dynamic-fire-species.csv"),
+    row.names = FALSE
+  )
+  expect_equal(landis_dominant_cohorts(d)$ground_fire_kill, c(0.25, 0.25, 0.25, NA))
 })
 
 test_that("landis_dominant_cohorts() breaks a biomass tie by file order", {

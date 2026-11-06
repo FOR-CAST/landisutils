@@ -337,8 +337,8 @@ growth_structure_design <- function(
 
   if (!is.null(max_structures)) {
     keep <- structures |>
-      dplyr::distinct(.data$structure_id, .data$n_communities) |>
-      dplyr::slice_max(.data$n_communities, n = max_structures, with_ties = FALSE)
+      dplyr::distinct(.data$structure_id, .data$n_cells) |>
+      dplyr::slice_max(.data$n_cells, n = max_structures, with_ties = FALSE)
     structures <- dplyr::semi_join(structures, keep, by = "structure_id")
   }
 
@@ -434,7 +434,7 @@ growth_structure_design <- function(
     dplyr::select(
       map_code,
       structure_id,
-      n_communities,
+      n_cells,
       swept_species,
       species,
       landis_species,
@@ -458,15 +458,17 @@ growth_structure_design <- function(
 #' communities collapse to roughly 1.7k structures with one or two cohorts,
 #' which is what makes a structure-aware calibration tractable at all.
 #'
-#' `n_communities` is carried so downstream work can weight or subset structures
-#' by how much of the landscape they actually represent.
+#' `n_cells` is carried so downstream work can weight or subset structures
+#' by how much of the landscape they actually represent. It counts initial-community
+#' map codes, which before `CleanMapCodes()` is one grid cell per code, so it is a cell
+#' count and not a count of distinct communities.
 #'
 #' @param ic A data frame of initial communities with `MapCode`, `SpeciesCode`,
 #'   and `Age` (the `landis_ic_data_list` target).
 #' @param max_cohorts Integer. Largest community size to retain.
 #'
 #' @return A tibble with one row per cohort: `structure_id`, `n_cohorts`,
-#'   `species`, `cohort_age`, `n_communities`.
+#'   `species`, `cohort_age`, `n_cells`.
 #' @family growth calibration helpers
 #' @export
 extract_landscape_cohort_structures <- function(ic, max_cohorts = 2L) {
@@ -489,8 +491,8 @@ extract_landscape_cohort_structures <- function(ic, max_cohorts = 2L) {
     )
 
   weights <- per_community |>
-    dplyr::count(.data$structure_key, .data$n_cohorts, name = "n_communities") |>
-    dplyr::arrange(dplyr::desc(.data$n_communities), .data$structure_key) |>
+    dplyr::count(.data$structure_key, .data$n_cohorts, name = "n_cells") |>
+    dplyr::arrange(dplyr::desc(.data$n_cells), .data$structure_key) |>
     dplyr::mutate(structure_id = sprintf("S%05d", dplyr::row_number()))
 
   weights |>
@@ -502,7 +504,7 @@ extract_landscape_cohort_structures <- function(ic, max_cohorts = 2L) {
       n_cohorts = as.integer(.data$n_cohorts),
       species = .data$species,
       cohort_age = as.integer(.data$cohort_age),
-      n_communities = as.integer(.data$n_communities)
+      n_cells = as.integer(.data$n_cells)
     ) |>
     dplyr::arrange(.data$structure_id, .data$species, .data$cohort_age)
 }

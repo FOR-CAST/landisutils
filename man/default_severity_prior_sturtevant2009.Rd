@@ -37,6 +37,8 @@ Other Dynamic Fire calibration helpers:
 \code{\link[=calibration_par_names]{calibration_par_names()}},
 \code{\link[=dedup_community_snapshot]{dedup_community_snapshot()}},
 \code{\link[=fire_cohort_killed]{fire_cohort_killed()}},
+\code{\link[=fire_cohort_mortality]{fire_cohort_mortality()}},
+\code{\link[=ground_fire_kill_par_names]{ground_fire_kill_par_names()}},
 \code{\link[=landis_dominant_cohorts]{landis_dominant_cohorts()}},
 \code{\link[=landis_overstory_mortality_share]{landis_overstory_mortality_share()}},
 \code{\link[=loss_from_stats]{loss_from_stats()}},

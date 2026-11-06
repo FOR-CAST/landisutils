@@ -12,7 +12,8 @@ landis_dominant_cohorts(dir)
 \value{
 A data.frame with one row per map code that has such a cohort, in map-code order:
 \code{MapCode} (integer), \code{SpeciesName} (character), and \code{CohortAge}, \code{CohortBiomass}, \code{longevity}
-and \code{tolerance} (double). NULL when one of the three files is missing or no cohort's species is
+and \code{tolerance} (double), and \code{ground_fire_kill} (double: the species' \code{GroundFireKill}, NA
+where the species table has no value or no such column). NULL when one of the three files is missing or no cohort's species is
 in both species files.
 }
 \description{
@@ -43,6 +44,8 @@ Other Dynamic Fire calibration helpers:
 \code{\link[=dedup_community_snapshot]{dedup_community_snapshot()}},
 \code{\link[=default_severity_prior_sturtevant2009]{default_severity_prior_sturtevant2009()}},
 \code{\link[=fire_cohort_killed]{fire_cohort_killed()}},
+\code{\link[=fire_cohort_mortality]{fire_cohort_mortality()}},
+\code{\link[=ground_fire_kill_par_names]{ground_fire_kill_par_names()}},
 \code{\link[=landis_overstory_mortality_share]{landis_overstory_mortality_share()}},
 \code{\link[=loss_from_stats]{loss_from_stats()}},
 \code{\link[=observed_fire_sizes]{observed_fire_sizes()}},
