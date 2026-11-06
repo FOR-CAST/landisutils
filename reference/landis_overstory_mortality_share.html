@@ -15,7 +15,7 @@ that burns hot at ground level without crowning, the two disagree by constructio
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.180</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.181</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -122,6 +122,9 @@ percentage of its species' longevity that the damage table gives for severity mi
 A cell on a map code with no dominant cohort counts as burned but never as killed. Composition
 is read at time zero, so a cell that burns twice in one replicate is scored on its original
 cohorts; in a calibration run, where succession is frozen, only reburns are affected.</p>
+<p>When a species' <code>GroundFireKill</code> is set, <code>high_cells</code> is the expected number of cells that lose
+their dominant cohort (<code><a href="fire_cohort_mortality.html">fire_cohort_mortality()</a></code>), so it can be fractional, and the function
+stops unless <code>Landis-log.txt</code> shows the extension applied each value.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
@@ -139,6 +142,8 @@ cohorts; in a calibration run, where succession is frozen, only reburns are affe
 <code><a href="dedup_community_snapshot.html">dedup_community_snapshot()</a></code>,
 <code><a href="default_severity_prior_sturtevant2009.html">default_severity_prior_sturtevant2009()</a></code>,
 <code><a href="fire_cohort_killed.html">fire_cohort_killed()</a></code>,
+<code><a href="fire_cohort_mortality.html">fire_cohort_mortality()</a></code>,
+<code><a href="ground_fire_kill_par_names.html">ground_fire_kill_par_names()</a></code>,
 <code><a href="landis_dominant_cohorts.html">landis_dominant_cohorts()</a></code>,
 <code><a href="loss_from_stats.html">loss_from_stats()</a></code>,
 <code><a href="observed_fire_sizes.html">observed_fire_sizes()</a></code>,

@@ -93,6 +93,12 @@ so a cell that burns twice in one replicate is scored on its original
 cohorts; in a calibration run, where succession is frozen, only reburns
 are affected.
 
+When a species' `GroundFireKill` is set, `high_cells` is the expected
+number of cells that lose their dominant cohort
+([`fire_cohort_mortality()`](https://for-cast.github.io/landisutils/reference/fire_cohort_mortality.md)),
+so it can be fractional, and the function stops unless `Landis-log.txt`
+shows the extension applied each value.
+
 ## See also
 
 Other Dynamic Fire calibration helpers:
@@ -109,6 +115,8 @@ Other Dynamic Fire calibration helpers:
 [`dedup_community_snapshot()`](https://for-cast.github.io/landisutils/reference/dedup_community_snapshot.md),
 [`default_severity_prior_sturtevant2009()`](https://for-cast.github.io/landisutils/reference/default_severity_prior_sturtevant2009.md),
 [`fire_cohort_killed()`](https://for-cast.github.io/landisutils/reference/fire_cohort_killed.md),
+[`fire_cohort_mortality()`](https://for-cast.github.io/landisutils/reference/fire_cohort_mortality.md),
+[`ground_fire_kill_par_names()`](https://for-cast.github.io/landisutils/reference/ground_fire_kill_par_names.md),
 [`landis_dominant_cohorts()`](https://for-cast.github.io/landisutils/reference/landis_dominant_cohorts.md),
 [`loss_from_stats()`](https://for-cast.github.io/landisutils/reference/loss_from_stats.md),
 [`observed_fire_sizes()`](https://for-cast.github.io/landisutils/reference/observed_fire_sizes.md),

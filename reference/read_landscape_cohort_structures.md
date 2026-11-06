@@ -20,7 +20,7 @@ read_landscape_cohort_structures(path)
 ## Value
 
 A tibble with `structure_id`, `n_cohorts`, `species`, `cohort_age` and
-`n_communities`.
+`n_cells` (an older file's `n_communities` is read as `n_cells`).
 
 ## See also
 

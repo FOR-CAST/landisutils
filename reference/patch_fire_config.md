@@ -40,7 +40,13 @@ patch_fire_config(scenario_dir, par_vec)
 - par_vec:
 
   Numeric. Named vector keyed by
-  [`calibration_par_names()`](https://for-cast.github.io/landisutils/reference/calibration_par_names.md).
+  [`calibration_par_names()`](https://for-cast.github.io/landisutils/reference/calibration_par_names.md),
+  and optionally by
+  [`ground_fire_kill_par_names()`](https://for-cast.github.io/landisutils/reference/ground_fire_kill_par_names.md).
+  A `GroundFireKill_<code>` entry sets the `GroundFireKill` column of
+  the species table the config names (`Species_CSV_File`): the value for
+  that species, a blank for every other. Without such an entry the table
+  is not touched.
 
 ## Value
 
@@ -67,6 +73,8 @@ Other Dynamic Fire calibration helpers:
 [`dedup_community_snapshot()`](https://for-cast.github.io/landisutils/reference/dedup_community_snapshot.md),
 [`default_severity_prior_sturtevant2009()`](https://for-cast.github.io/landisutils/reference/default_severity_prior_sturtevant2009.md),
 [`fire_cohort_killed()`](https://for-cast.github.io/landisutils/reference/fire_cohort_killed.md),
+[`fire_cohort_mortality()`](https://for-cast.github.io/landisutils/reference/fire_cohort_mortality.md),
+[`ground_fire_kill_par_names()`](https://for-cast.github.io/landisutils/reference/ground_fire_kill_par_names.md),
 [`landis_dominant_cohorts()`](https://for-cast.github.io/landisutils/reference/landis_dominant_cohorts.md),
 [`landis_overstory_mortality_share()`](https://for-cast.github.io/landisutils/reference/landis_overstory_mortality_share.md),
 [`loss_from_stats()`](https://for-cast.github.io/landisutils/reference/loss_from_stats.md),

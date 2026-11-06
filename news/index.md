@@ -1,5 +1,49 @@
 # Changelog
 
+## landisutils 0.0.181
+
+- New
+  [`fire_cohort_mortality()`](https://for-cast.github.io/landisutils/reference/fire_cohort_mortality.md),
+  the expected mortality of a cohort under Dynamic Fire’s optional
+  per-species `GroundFireKill`: below severity 5 the species leaves the
+  damage table and all its cohorts die together in a burned cell with
+  that probability. Without a value it equals
+  `as.numeric(fire_cohort_killed())`, which is unchanged.
+  [`landis_dominant_cohorts()`](https://for-cast.github.io/landisutils/reference/landis_dominant_cohorts.md)
+  gains a `ground_fire_kill` column, read from the species CSV (NA
+  without a value or a column).
+- [`landis_overstory_mortality_share()`](https://for-cast.github.io/landisutils/reference/landis_overstory_mortality_share.md)
+  scores the share with
+  [`fire_cohort_mortality()`](https://for-cast.github.io/landisutils/reference/fire_cohort_mortality.md),
+  so a species’ `GroundFireKill` counts as its value at severity 1 to 4
+  (`high_cells` is then the expected number of cells, possibly
+  fractional). It stops unless `Landis-log.txt` carries the extension’s
+  `Ground-fire kill:` line with each value of the species table,
+  compared as numbers. A replicate without the column scores as before.
+- [`patch_fire_config()`](https://for-cast.github.io/landisutils/reference/patch_fire_config.md)
+  accepts `GroundFireKill_<code>` names (see new
+  [`ground_fire_kill_par_names()`](https://for-cast.github.io/landisutils/reference/ground_fire_kill_par_names.md))
+  and writes them to the `GroundFireKill` column of the species table
+  the config names, with a blank for every other species, so a
+  calibration trial can carry the extension’s per-species ground-fire
+  kill. A code not in the table, or a value outside 0 to 1, stops.
+  Without such a name the table is left untouched;
+  [`calibration_par_names()`](https://for-cast.github.io/landisutils/reference/calibration_par_names.md)
+  is unchanged.
+- `plot_growth_calibration(density = TRUE)` sets an explicit `order` on
+  its guides (“Reference” first, then “Weighted plot density”). ggplot2
+  otherwise ordered them by an internal hash, so one species’ panel drew
+  them the other way round from its siblings.
+- [`extract_landscape_cohort_structures()`](https://for-cast.github.io/landisutils/reference/extract_landscape_cohort_structures.md)
+  names its count column `n_cells`, not `n_communities`: it counts
+  initial-community map codes, which before `CleanMapCodes()` is one
+  grid cell each, not communities.
+  [`read_landscape_cohort_structures()`](https://for-cast.github.io/landisutils/reference/read_landscape_cohort_structures.md)
+  still reads a file written with the old name and returns it as
+  `n_cells`.
+- `plot_growth_candidate(candidate_curve = NULL)` no longer adds a
+  legend key for a candidate line it does not draw.
+
 ## landisutils 0.0.180
 
 - [`calibrate_dynamic_fire()`](https://for-cast.github.io/landisutils/reference/calibrate_dynamic_fire.md)

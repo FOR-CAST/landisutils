@@ -15,7 +15,7 @@ which is what makes a structure-aware calibration tractable at all."><meta prope
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.180</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.181</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -79,12 +79,14 @@ and <code>Age</code> (the <code>landis_ic_data_list</code> target).</p></dd>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A tibble with one row per cohort: <code>structure_id</code>, <code>n_cohorts</code>,
-<code>species</code>, <code>cohort_age</code>, <code>n_communities</code>.</p>
+<code>species</code>, <code>cohort_age</code>, <code>n_cells</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p><code>n_communities</code> is carried so downstream work can weight or subset structures
-by how much of the landscape they actually represent.</p>
+    <p><code>n_cells</code> is carried so downstream work can weight or subset structures
+by how much of the landscape they actually represent. It counts initial-community
+map codes, which before <code>CleanMapCodes()</code> is one grid cell per code, so it is a cell
+count and not a count of distinct communities.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

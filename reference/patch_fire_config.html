@@ -45,7 +45,7 @@ whereas the age column is a percentage of longevity and scales smoothly.
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.180</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.181</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -114,7 +114,10 @@ whereas the age column is a percentage of longevity and scales smoothly.</p></li
 
 
 <dt id="arg-par-vec">par_vec<a class="anchor" aria-label="anchor" href="#arg-par-vec"></a></dt>
-<dd><p>Numeric. Named vector keyed by <code><a href="calibration_par_names.html">calibration_par_names()</a></code>.</p></dd>
+<dd><p>Numeric. Named vector keyed by <code><a href="calibration_par_names.html">calibration_par_names()</a></code>, and optionally by
+<code><a href="ground_fire_kill_par_names.html">ground_fire_kill_par_names()</a></code>. A <code>GroundFireKill_&lt;code&gt;</code> entry sets the <code>GroundFireKill</code>
+column of the species table the config names (<code>Species_CSV_File</code>): the value for that
+species, a blank for every other. Without such an entry the table is not touched.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -142,6 +145,8 @@ of the template so trials don't collide.</p>
 <code><a href="dedup_community_snapshot.html">dedup_community_snapshot()</a></code>,
 <code><a href="default_severity_prior_sturtevant2009.html">default_severity_prior_sturtevant2009()</a></code>,
 <code><a href="fire_cohort_killed.html">fire_cohort_killed()</a></code>,
+<code><a href="fire_cohort_mortality.html">fire_cohort_mortality()</a></code>,
+<code><a href="ground_fire_kill_par_names.html">ground_fire_kill_par_names()</a></code>,
 <code><a href="landis_dominant_cohorts.html">landis_dominant_cohorts()</a></code>,
 <code><a href="landis_overstory_mortality_share.html">landis_overstory_mortality_share()</a></code>,
 <code><a href="loss_from_stats.html">loss_from_stats()</a></code>,

@@ -431,6 +431,9 @@ scenario(
 - [`fire_cohort_killed()`](https://for-cast.github.io/landisutils/reference/fire_cohort_killed.md)
   : Whether a fire kills a cohort
 
+- [`fire_cohort_mortality()`](https://for-cast.github.io/landisutils/reference/fire_cohort_mortality.md)
+  : Expected mortality of a cohort in a fire
+
 - [`fps_output_files()`](https://for-cast.github.io/landisutils/reference/fps_output_files.md)
   : Files FPSM writes into its working directory
 
@@ -467,6 +470,9 @@ scenario(
 - [`get_fwi_daily()`](https://for-cast.github.io/landisutils/reference/get_fwi_daily.md)
   : Fetch a single year of daily BioSIM Fire Weather Index for one
   location batch
+
+- [`ground_fire_kill_par_names()`](https://for-cast.github.io/landisutils/reference/ground_fire_kill_par_names.md)
+  : Parameter names that set a species' ground-fire kill
 
 - [`growth_add_objective()`](https://for-cast.github.io/landisutils/reference/growth_add_objective.md)
   : Rank fit statistics

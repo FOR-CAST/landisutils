@@ -27,12 +27,15 @@ extract_landscape_cohort_structures(ic, max_cohorts = 2L)
 ## Value
 
 A tibble with one row per cohort: `structure_id`, `n_cohorts`,
-`species`, `cohort_age`, `n_communities`.
+`species`, `cohort_age`, `n_cells`.
 
 ## Details
 
-`n_communities` is carried so downstream work can weight or subset
-structures by how much of the landscape they actually represent.
+`n_cells` is carried so downstream work can weight or subset structures
+by how much of the landscape they actually represent. It counts
+initial-community map codes, which before `CleanMapCodes()` is one grid
+cell per code, so it is a cell count and not a count of distinct
+communities.
 
 ## See also
 

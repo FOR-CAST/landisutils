@@ -13,7 +13,7 @@ share's by_class counts at any damage table without re-reading the replicate."><
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.180</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.181</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -72,7 +72,8 @@ share's <code>by_class</code> counts at any damage table without re-reading the 
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A data.frame with one row per map code that has such a cohort, in map-code order:
 <code>MapCode</code> (integer), <code>SpeciesName</code> (character), and <code>CohortAge</code>, <code>CohortBiomass</code>, <code>longevity</code>
-and <code>tolerance</code> (double). NULL when one of the three files is missing or no cohort's species is
+and <code>tolerance</code> (double), and <code>ground_fire_kill</code> (double: the species' <code>GroundFireKill</code>, NA
+where the species table has no value or no such column). NULL when one of the three files is missing or no cohort's species is
 in both species files.</p>
     </div>
     <div class="section level2">
@@ -99,6 +100,8 @@ dominant, whatever its biomass. A tie on biomass goes to the cohort listed first
 <code><a href="dedup_community_snapshot.html">dedup_community_snapshot()</a></code>,
 <code><a href="default_severity_prior_sturtevant2009.html">default_severity_prior_sturtevant2009()</a></code>,
 <code><a href="fire_cohort_killed.html">fire_cohort_killed()</a></code>,
+<code><a href="fire_cohort_mortality.html">fire_cohort_mortality()</a></code>,
+<code><a href="ground_fire_kill_par_names.html">ground_fire_kill_par_names()</a></code>,
 <code><a href="landis_overstory_mortality_share.html">landis_overstory_mortality_share()</a></code>,
 <code><a href="loss_from_stats.html">loss_from_stats()</a></code>,
 <code><a href="observed_fire_sizes.html">observed_fire_sizes()</a></code>,
