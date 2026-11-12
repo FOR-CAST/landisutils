@@ -37,6 +37,8 @@ Other ForCS helpers:
 \code{\link[=insertRootDynamics]{insertRootDynamics()}},
 \code{\link[=insertSpeciesParameters]{insertSpeciesParameters()}},
 \code{\link[=insertSpinUp]{insertSpinUp()}},
+\code{\link[=insertSpinUpLastDisturbanceMap]{insertSpinUpLastDisturbanceMap()}},
+\code{\link[=insertSpinUpReturnIntervals]{insertSpinUpReturnIntervals()}},
 \code{\link[=prepClimateFile]{prepClimateFile()}},
 \code{\link[=prepDisturbanceMatrixFile]{prepDisturbanceMatrixFile()}},
 \code{\link[=prepSnagFile]{prepSnagFile()}}
@@ -68,6 +70,12 @@ One of \code{"WardSeedDispersal"}, \code{"NoDispersal"}, \code{"UniversalDispers
     \item{\code{MapOutputInterval}}{Integer. Map output interval (years); \code{0} writes no maps.}
 
     \item{\code{SpinUp}}{\code{data.frame}.}
+
+    \item{\code{SpinUpReturnIntervals}}{(Optional) \code{data.frame} or \code{NULL}.}
+
+    \item{\code{SpinUpLastDisturbanceMap}}{(Optional) Character path or \code{NULL}.}
+
+    \item{\code{SpinUpLastDisturbanceCodes}}{(Optional) \code{data.frame} or \code{NULL}.}
 
     \item{\code{AvailableLightBiomass}}{\code{data.frame}.}
 
@@ -128,6 +136,9 @@ scenario configuration. See \link{LandisExtension} for the contract.}
   ForCSMapControl = NULL,
   MapOutputInterval = NULL,
   SpinUp = NULL,
+  SpinUpReturnIntervals = NULL,
+  SpinUpLastDisturbanceMap = NULL,
+  SpinUpLastDisturbanceCodes = NULL,
   AvailableLightBiomass = NULL,
   LightEstablishmentTable = NULL,
   SpeciesParameters = NULL,
@@ -166,6 +177,15 @@ four columns: Biomass, DOM_Pools, Fluxes, Summary intervals).}
       \item{\code{MapOutputInterval}}{Integer. Map output interval (years); \code{0} writes no maps.}
       \item{\code{SpinUp}}{\code{data.frame} (one row, four columns: On/Off Flag,
 Biomass Spin-up Flag, Tolerance \%, Max Iterations).}
+      \item{\code{SpinUpReturnIntervals}}{(Optional) \code{data.frame} with columns \code{Ecoregion} (character),
+\code{ReturnInterval} (integer >= 1, years), \code{CycleDisturbance} and \code{LastDisturbance}
+(each \code{"fire 1"} to \code{"fire 5"}, or a single-word disturbance type). The spin-up of a
+listed ecoregion cycles a stand of the return interval's age. \code{NULL} (default) omits it.}
+      \item{\code{SpinUpLastDisturbanceMap}}{(Optional) Character. Relative path to a GeoTIFF of
+last-disturbance codes that override the ecoregion's \code{LastDisturbance} cell by cell.
+Needs \code{SpinUpReturnIntervals} and \code{SpinUpLastDisturbanceCodes}.}
+      \item{\code{SpinUpLastDisturbanceCodes}}{(Optional) \code{data.frame} with columns \code{Code} (unique
+integer >= 1) and \code{LastDisturbance} (as above), meaning of each code in the map.}
       \item{\code{AvailableLightBiomass}}{\code{data.frame}.}
       \item{\code{LightEstablishmentTable}}{\code{data.frame}.}
       \item{\code{SpeciesParameters}}{\code{data.frame} with 10 columns: \code{Species},

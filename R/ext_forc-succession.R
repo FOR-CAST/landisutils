@@ -48,6 +48,15 @@ ForCS <- R6Class(
     #' @param MapOutputInterval Integer. Map output interval (years); `0` writes no maps.
     #' @param SpinUp `data.frame` (one row, four columns: On/Off Flag,
     #'   Biomass Spin-up Flag, Tolerance %, Max Iterations).
+    #' @param SpinUpReturnIntervals (Optional) `data.frame` with columns `Ecoregion` (character),
+    #'   `ReturnInterval` (integer >= 1, years), `CycleDisturbance` and `LastDisturbance`
+    #'   (each `"fire 1"` to `"fire 5"`, or a single-word disturbance type). The spin-up of a
+    #'   listed ecoregion cycles a stand of the return interval's age. `NULL` (default) omits it.
+    #' @param SpinUpLastDisturbanceMap (Optional) Character. Relative path to a GeoTIFF of
+    #'   last-disturbance codes that override the ecoregion's `LastDisturbance` cell by cell.
+    #'   Needs `SpinUpReturnIntervals` and `SpinUpLastDisturbanceCodes`.
+    #' @param SpinUpLastDisturbanceCodes (Optional) `data.frame` with columns `Code` (unique
+    #'   integer >= 1) and `LastDisturbance` (as above), meaning of each code in the map.
     #' @param AvailableLightBiomass `data.frame`.
     #' @param LightEstablishmentTable `data.frame`.
     #' @param SpeciesParameters `data.frame` with 10 columns: `Species`,
@@ -74,6 +83,9 @@ ForCS <- R6Class(
       ForCSMapControl = NULL,
       MapOutputInterval = NULL,
       SpinUp = NULL,
+      SpinUpReturnIntervals = NULL,
+      SpinUpLastDisturbanceMap = NULL,
+      SpinUpLastDisturbanceCodes = NULL,
       AvailableLightBiomass = NULL,
       LightEstablishmentTable = NULL,
       SpeciesParameters = NULL,
@@ -106,6 +118,9 @@ ForCS <- R6Class(
       self$ForCSMapControl <- ForCSMapControl
       self$MapOutputInterval <- MapOutputInterval
       self$SpinUp <- SpinUp
+      self$SpinUpReturnIntervals <- SpinUpReturnIntervals
+      self$SpinUpLastDisturbanceMap <- SpinUpLastDisturbanceMap
+      self$SpinUpLastDisturbanceCodes <- SpinUpLastDisturbanceCodes
       self$AvailableLightBiomass <- AvailableLightBiomass
       self$LightEstablishmentTable <- LightEstablishmentTable
       self$SpeciesParameters <- SpeciesParameters
@@ -163,6 +178,30 @@ ForCS <- R6Class(
         character(0)
       }
 
+      spinup_return_lines <- if (!is.null(self$SpinUpReturnIntervals)) {
+        insertSpinUpReturnIntervals(self$SpinUpReturnIntervals)
+      } else {
+        character(0)
+      }
+      if (!is.null(self$SpinUpLastDisturbanceMap)) {
+        stopifnot(
+          "`SpinUpLastDisturbanceMap` needs `SpinUpReturnIntervals`" = !is.null(
+            self$SpinUpReturnIntervals
+          ),
+          "`SpinUpLastDisturbanceMap` needs `SpinUpLastDisturbanceCodes`" = !is.null(
+            self$SpinUpLastDisturbanceCodes
+          )
+        )
+      }
+      spinup_map_lines <- if (!is.null(self$SpinUpLastDisturbanceMap)) {
+        insertSpinUpLastDisturbanceMap(
+          self$SpinUpLastDisturbanceMap,
+          self$SpinUpLastDisturbanceCodes
+        )
+      } else {
+        character(0)
+      }
+
       writeLines(
         c(
           insertLandisData(private$.LandisData),
@@ -177,6 +216,8 @@ ForCS <- R6Class(
           insertForCSMapControl(self$ForCSMapControl),
           insertValue("MapOutputInterval", self$MapOutputInterval),
           insertSpinUp(self$SpinUp),
+          spinup_return_lines,
+          spinup_map_lines,
           insertAvailableLightBiomass(self$AvailableLightBiomass),
           insertLightEstablishmentTable(self$LightEstablishmentTable),
           insertSpeciesParameters(self$SpeciesParameters),
@@ -197,6 +238,9 @@ ForCS <- R6Class(
       self$add_file(self$DisturbanceMatrixFile)
       if (!is.null(self$SnagFile)) {
         self$add_file(self$SnagFile)
+      }
+      if (!is.null(self$SpinUpLastDisturbanceMap)) {
+        self$add_file(self$SpinUpLastDisturbanceMap)
       }
       ## ForCS v4 CSV files written by insert*() above
       self$add_file("ForCS_EcoSppDOMParameters.csv")
@@ -219,6 +263,9 @@ ForCS <- R6Class(
     .ForCSMapControl = NULL,
     .MapOutputInterval = NULL,
     .SpinUp = NULL,
+    .SpinUpReturnIntervals = NULL,
+    .SpinUpLastDisturbanceMap = NULL,
+    .SpinUpLastDisturbanceCodes = NULL,
     .AvailableLightBiomass = NULL,
     .LightEstablishmentTable = NULL,
     .SpeciesParameters = NULL,
@@ -334,6 +381,44 @@ ForCS <- R6Class(
         stopifnot(inherits(value, "data.frame"), nrow(value) == 1L, ncol(value) == 4L)
 
         private$.SpinUp <- value
+      }
+    },
+
+    #' @field SpinUpReturnIntervals (Optional) `data.frame` or `NULL`.
+    SpinUpReturnIntervals = function(value) {
+      if (missing(value)) {
+        return(private$.SpinUpReturnIntervals)
+      } else {
+        if (!is.null(value)) {
+          .check_spinup_return_intervals(value)
+        }
+        private$.SpinUpReturnIntervals <- value
+      }
+    },
+
+    #' @field SpinUpLastDisturbanceMap (Optional) Character path or `NULL`.
+    SpinUpLastDisturbanceMap = function(value) {
+      if (missing(value)) {
+        return(private$.SpinUpLastDisturbanceMap)
+      } else {
+        if (is.null(value) || length(value) == 0L) {
+          private$.SpinUpLastDisturbanceMap <- NULL
+        } else {
+          stopifnot(is.character(value), length(value) == 1L, nzchar(value))
+          private$.SpinUpLastDisturbanceMap <- .relPath(value, self$path)
+        }
+      }
+    },
+
+    #' @field SpinUpLastDisturbanceCodes (Optional) `data.frame` or `NULL`.
+    SpinUpLastDisturbanceCodes = function(value) {
+      if (missing(value)) {
+        return(private$.SpinUpLastDisturbanceCodes)
+      } else {
+        if (!is.null(value)) {
+          .check_spinup_last_disturbance_codes(value)
+        }
+        private$.SpinUpLastDisturbanceCodes <- value
       }
     },
 
@@ -673,6 +758,120 @@ insertSpinUp <- function(df) {
     apply(df, 1, function(x) {
       glue::glue_collapse(x, sep = "  ")
     }),
+    glue::glue("") ## add blank line after each item group
+  )
+}
+
+## A spin-up disturbance as ForCS's parser reads it: "fire" and a severity of 1 to 5, or one word.
+## The tables are whitespace-delimited, so a two-word type such as "land use" cannot be written.
+.valid_spinup_disturbance <- function(x) {
+  is.character(x) &&
+    !is.na(x) &&
+    (grepl("^fire [1-5]$", x) || (grepl("^[A-Za-z0-9_-]+$", x) && !identical(tolower(x), "fire")))
+}
+
+.check_spinup_disturbances <- function(x, column) {
+  ok <- vapply(as.character(x), .valid_spinup_disturbance, logical(1))
+  if (!all(ok)) {
+    stop(
+      sprintf(
+        "`%s` must be 'fire 1' to 'fire 5' or a single-word disturbance type; got %s",
+        column,
+        paste0("'", x[!ok], "'", collapse = ", ")
+      ),
+      call. = FALSE
+    )
+  }
+  invisible(x)
+}
+
+.check_spinup_return_intervals <- function(df) {
+  cols <- c("Ecoregion", "ReturnInterval", "CycleDisturbance", "LastDisturbance")
+  stopifnot(inherits(df, "data.frame"), nrow(df) >= 1L, all(cols %in% names(df)))
+  stopifnot(
+    "`Ecoregion` must be single words, without NA" = is.character(df$Ecoregion) &&
+      !anyNA(df$Ecoregion) &&
+      all(grepl("^\\S+$", df$Ecoregion)),
+    "`Ecoregion` must not repeat" = !anyDuplicated(df$Ecoregion),
+    "`ReturnInterval` must be whole numbers >= 1" = is.numeric(df$ReturnInterval) &&
+      !anyNA(df$ReturnInterval) &&
+      all(df$ReturnInterval >= 1) &&
+      all(df$ReturnInterval == round(df$ReturnInterval))
+  )
+  .check_spinup_disturbances(df$CycleDisturbance, "CycleDisturbance")
+  .check_spinup_disturbances(df$LastDisturbance, "LastDisturbance")
+  invisible(df)
+}
+
+.check_spinup_last_disturbance_codes <- function(df) {
+  stopifnot(
+    inherits(df, "data.frame"),
+    nrow(df) >= 1L,
+    all(c("Code", "LastDisturbance") %in% names(df))
+  )
+  stopifnot(
+    "`Code` must be whole numbers >= 1" = is.numeric(df$Code) &&
+      !anyNA(df$Code) &&
+      all(df$Code >= 1) &&
+      all(df$Code == round(df$Code)),
+    "`Code` must not repeat" = !anyDuplicated(df$Code)
+  )
+  .check_spinup_disturbances(df$LastDisturbance, "LastDisturbance")
+  invisible(df)
+}
+
+#' Specify `SpinUpReturnIntervals` for Forest Carbon Succession (ForCS) extension
+#'
+#' Optional table, written after `SpinUp`. The spin-up of a listed ecoregion cycles a stand of
+#' the return interval's age instead of the present stand's age.
+#'
+#' @param df data.frame with columns `Ecoregion` (character, unique), `ReturnInterval`
+#'   (whole years >= 1), `CycleDisturbance` and `LastDisturbance` (each `"fire 1"` to
+#'   `"fire 5"`, or a single-word disturbance type; two-word types are not supported).
+#'
+#' @returns character vector of lines
+#'
+#' @family ForCS helpers
+#'
+#' @export
+insertSpinUpReturnIntervals <- function(df) {
+  .check_spinup_return_intervals(df)
+
+  c(
+    glue::glue("SpinUpReturnIntervals"),
+    glue::glue(">> Ecoregion  ReturnInterval  CycleDisturbance  LastDisturbance"),
+    glue::glue(">> ------------------------------------------------------------"),
+    glue::glue(
+      "{df$Ecoregion}  {format(df$ReturnInterval, scientific = FALSE, trim = TRUE)}  ",
+      "{df$CycleDisturbance}  {df$LastDisturbance}"
+    ),
+    glue::glue("") ## add blank line after each item group
+  )
+}
+
+#' Specify `SpinUpLastDisturbanceMap` for Forest Carbon Succession (ForCS) extension
+#'
+#' Optional map and code table, written after `SpinUpReturnIntervals`. A cell's code overrides
+#' its ecoregion's `LastDisturbance`; code 0, or a code not in the table, keeps the ecoregion's.
+#'
+#' @param path Character. Relative path to the GeoTIFF of codes.
+#' @param codes data.frame with columns `Code` (unique whole numbers >= 1) and
+#'   `LastDisturbance` (`"fire 1"` to `"fire 5"`, or a single-word disturbance type).
+#'
+#' @returns character vector of lines
+#'
+#' @family ForCS helpers
+#'
+#' @export
+insertSpinUpLastDisturbanceMap <- function(path, codes) {
+  stopifnot(is.character(path), length(path) == 1L, nzchar(path))
+  .check_spinup_last_disturbance_codes(codes)
+
+  c(
+    glue::glue("SpinUpLastDisturbanceMap  {path}"),
+    glue::glue(">> Code  LastDisturbance"),
+    glue::glue(">> ---------------------"),
+    glue::glue("{format(codes$Code, scientific = FALSE, trim = TRUE)}  {codes$LastDisturbance}"),
     glue::glue("") ## add blank line after each item group
   )
 }
