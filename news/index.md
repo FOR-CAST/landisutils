@@ -1,5 +1,30 @@
 # Changelog
 
+## landisutils 0.0.183
+
+- New calibration plots that take plain data frames and return a ggplot
+  with no title, verdict or caption, so projects that score their
+  calibrations differently can share them. Every check is optional: a
+  reference can be a bare target value.
+  - [`calibration_box_stats()`](https://for-cast.github.io/landisutils/reference/calibration_box_stats.md):
+    box statistics with the whiskers at chosen quantiles (a check’s
+    range, not 1.5 IQR), and the values beyond them. The quantiles are
+    interpolated (type 7), not order statistics.
+  - [`replicate_percentile()`](https://for-cast.github.io/landisutils/reference/replicate_percentile.md):
+    the mid-rank percentile of a value among simulated replicates, ties
+    counted as half.
+  - [`plot_calibration_replicates()`](https://for-cast.github.io/landisutils/reference/plot_calibration_replicates.md):
+    one box of per-replicate values with each reference value in a
+    column beside it, labelled with its percentile among the replicates.
+  - [`plot_calibration_groups()`](https://for-cast.github.io/landisutils/reference/plot_calibration_groups.md):
+    an observed and a simulated box for each group, with diamonds at the
+    values compared. A group with one observed value and no draws shows
+    it as a point, with its interval as a bar when one is given.
+  - [`plot_fire_regime_multipliers()`](https://for-cast.github.io/landisutils/reference/plot_fire_regime_multipliers.md):
+    multipliers of a baseline fire regime (count, size, area) on a log
+    scale, as steps through periods or as points across categories such
+    as climate envelopes, with an optional second facet.
+
 ## landisutils 0.0.182
 
 - `ForCS` writes the two optional spin-up inputs of ForCS 4.2.0, after

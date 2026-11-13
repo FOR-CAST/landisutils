@@ -65,6 +65,7 @@
 <url><loc>https://for-cast.github.io/landisutils/reference/build_calibration_scenario_template.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/build_calibration_spinup_scenario.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/calibrate_dynamic_fire.html</loc></url>
+<url><loc>https://for-cast.github.io/landisutils/reference/calibration_box_stats.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/calibration_events.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/calibration_par_names.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/calibration_plot_palette.html</loc></url>
@@ -321,9 +322,12 @@
 <url><loc>https://for-cast.github.io/landisutils/reference/plot_calibration_convergence.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/plot_calibration_fire_counts.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/plot_calibration_fire_sizes.html</loc></url>
+<url><loc>https://for-cast.github.io/landisutils/reference/plot_calibration_groups.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/plot_calibration_loss.html</loc></url>
+<url><loc>https://for-cast.github.io/landisutils/reference/plot_calibration_replicates.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/plot_calibration_severity.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/plot_calibration_severity_by_size.html</loc></url>
+<url><loc>https://for-cast.github.io/landisutils/reference/plot_fire_regime_multipliers.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/plot_growth_calibration.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/plot_growth_candidate.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/plot_growth_factorial_sensitivity.html</loc></url>
@@ -380,6 +384,7 @@
 <url><loc>https://for-cast.github.io/landisutils/reference/read_landscape_cohort_structures.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/repair_fwi_daily.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/repair_fwi_exponent.html</loc></url>
+<url><loc>https://for-cast.github.io/landisutils/reference/replicate_percentile.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/roadType.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/run_calibration_spinup.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/run_calibration_validation.html</loc></url>

@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.182</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.183</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,6 +41,21 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.183" id="landisutils-00183">landisutils 0.0.183<a class="anchor" aria-label="anchor" href="#landisutils-00183"></a></h2>
+<ul><li>New calibration plots that take plain data frames and return a ggplot with no title, verdict or caption, so projects that score their calibrations differently can share them. Every check is optional: a reference can be a bare target value.
+<ul><li>
+<code><a href="../reference/calibration_box_stats.html">calibration_box_stats()</a></code>: box statistics with the whiskers at chosen quantiles (a check’s range, not 1.5 IQR), and the values beyond them. The quantiles are interpolated (type 7), not order statistics.</li>
+<li>
+<code><a href="../reference/replicate_percentile.html">replicate_percentile()</a></code>: the mid-rank percentile of a value among simulated replicates, ties counted as half.</li>
+<li>
+<code><a href="../reference/plot_calibration_replicates.html">plot_calibration_replicates()</a></code>: one box of per-replicate values with each reference value in a column beside it, labelled with its percentile among the replicates.</li>
+<li>
+<code><a href="../reference/plot_calibration_groups.html">plot_calibration_groups()</a></code>: an observed and a simulated box for each group, with diamonds at the values compared. A group with one observed value and no draws shows it as a point, with its interval as a bar when one is given.</li>
+<li>
+<code><a href="../reference/plot_fire_regime_multipliers.html">plot_fire_regime_multipliers()</a></code>: multipliers of a baseline fire regime (count, size, area) on a log scale, as steps through periods or as points across categories such as climate envelopes, with an optional second facet.</li>
+</ul></li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.182" id="landisutils-00182">landisutils 0.0.182<a class="anchor" aria-label="anchor" href="#landisutils-00182"></a></h2>
 <ul><li>

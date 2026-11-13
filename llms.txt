@@ -353,6 +353,9 @@ scenario(
 - [`calibrate_dynamic_fire()`](https://for-cast.github.io/landisutils/reference/calibrate_dynamic_fire.md)
   : DEoptim driver for Dynamic Fire calibration
 
+- [`calibration_box_stats()`](https://for-cast.github.io/landisutils/reference/calibration_box_stats.md)
+  : Box-and-whisker statistics with whiskers at chosen quantiles
+
 - [`calibration_events()`](https://for-cast.github.io/landisutils/reference/calibration_events.md)
   : Pool the per-replicate fire-event logs
 
@@ -888,14 +891,23 @@ scenario(
 - [`plot_calibration_fire_sizes()`](https://for-cast.github.io/landisutils/reference/plot_calibration_fire_sizes.md)
   : Plot observed against simulated fire sizes
 
+- [`plot_calibration_groups()`](https://for-cast.github.io/landisutils/reference/plot_calibration_groups.md)
+  : Plot observed against simulated spreads, group by group
+
 - [`plot_calibration_loss()`](https://for-cast.github.io/landisutils/reference/plot_calibration_loss.md)
   : Plot the weighted contribution of each objective component
+
+- [`plot_calibration_replicates()`](https://for-cast.github.io/landisutils/reference/plot_calibration_replicates.md)
+  : Plot simulated replicates against reference values
 
 - [`plot_calibration_severity()`](https://for-cast.github.io/landisutils/reference/plot_calibration_severity.md)
   : Plot observed against simulated burn-severity classes
 
 - [`plot_calibration_severity_by_size()`](https://for-cast.github.io/landisutils/reference/plot_calibration_severity_by_size.md)
   : Plot simulated fire size against fire severity
+
+- [`plot_fire_regime_multipliers()`](https://for-cast.github.io/landisutils/reference/plot_fire_regime_multipliers.md)
+  : Plot projected fire-regime multipliers against a baseline
 
 - [`plot_growth_calibration()`](https://for-cast.github.io/landisutils/reference/plot_growth_calibration.md)
   : Plot a species' growth curve against its references
@@ -1121,6 +1133,9 @@ scenario(
 
 - [`repair_fwi_exponent()`](https://for-cast.github.io/landisutils/reference/repair_fwi_exponent.md)
   : Repair BioSIM's sign-dropped scientific-notation exponents
+
+- [`replicate_percentile()`](https://for-cast.github.io/landisutils/reference/replicate_percentile.md)
+  : Mid-rank percentile of a value among simulated replicates
 
 - [`roadType()`](https://for-cast.github.io/landisutils/reference/roadType.md)
   : Construct a non-exit road type
