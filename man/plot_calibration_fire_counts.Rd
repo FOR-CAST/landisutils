@@ -21,13 +21,18 @@ still never produce the extreme years that carry most of the area burned.
 }
 \seealso{
 Other calibration plots:
+\code{\link[=calibration_box_stats]{calibration_box_stats()}},
 \code{\link[=calibration_events]{calibration_events()}},
 \code{\link[=calibration_plot_palette]{calibration_plot_palette()}},
 \code{\link[=plot_calibration_area_by_fuel]{plot_calibration_area_by_fuel()}},
 \code{\link[=plot_calibration_convergence]{plot_calibration_convergence()}},
 \code{\link[=plot_calibration_fire_sizes]{plot_calibration_fire_sizes()}},
+\code{\link[=plot_calibration_groups]{plot_calibration_groups()}},
 \code{\link[=plot_calibration_loss]{plot_calibration_loss()}},
+\code{\link[=plot_calibration_replicates]{plot_calibration_replicates()}},
 \code{\link[=plot_calibration_severity]{plot_calibration_severity()}},
-\code{\link[=plot_calibration_severity_by_size]{plot_calibration_severity_by_size()}}
+\code{\link[=plot_calibration_severity_by_size]{plot_calibration_severity_by_size()}},
+\code{\link[=plot_fire_regime_multipliers]{plot_fire_regime_multipliers()}},
+\code{\link[=replicate_percentile]{replicate_percentile()}}
 }
 \concept{calibration plots}
