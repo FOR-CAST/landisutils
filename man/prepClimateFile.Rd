@@ -38,6 +38,8 @@ Other ForCS helpers:
 \code{\link[=insertRootDynamics]{insertRootDynamics()}},
 \code{\link[=insertSpeciesParameters]{insertSpeciesParameters()}},
 \code{\link[=insertSpinUp]{insertSpinUp()}},
+\code{\link[=insertSpinUpLastDisturbanceMap]{insertSpinUpLastDisturbanceMap()}},
+\code{\link[=insertSpinUpReturnIntervals]{insertSpinUpReturnIntervals()}},
 \code{\link[=prepDisturbanceMatrixFile]{prepDisturbanceMatrixFile()}},
 \code{\link[=prepSnagFile]{prepSnagFile()}}
 }

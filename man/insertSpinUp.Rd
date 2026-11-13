@@ -31,6 +31,8 @@ Other ForCS helpers:
 \code{\link[=insertOutputTables]{insertOutputTables()}},
 \code{\link[=insertRootDynamics]{insertRootDynamics()}},
 \code{\link[=insertSpeciesParameters]{insertSpeciesParameters()}},
+\code{\link[=insertSpinUpLastDisturbanceMap]{insertSpinUpLastDisturbanceMap()}},
+\code{\link[=insertSpinUpReturnIntervals]{insertSpinUpReturnIntervals()}},
 \code{\link[=prepClimateFile]{prepClimateFile()}},
 \code{\link[=prepDisturbanceMatrixFile]{prepDisturbanceMatrixFile()}},
 \code{\link[=prepSnagFile]{prepSnagFile()}}

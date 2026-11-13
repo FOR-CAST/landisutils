@@ -514,7 +514,92 @@ testthat::test_that("ForCS can be written without a SnagFile", {
   testthat::expect_error(ext_forcs$SpinupMortalityFraction <- c(0.1, 0.2))
   testthat::expect_error(ext_forcs$SpinupMortalityFraction <- "0.1")
 
+  ## SpinUpReturnIntervals / SpinUpLastDisturbanceMap: optional, between SpinUp and
+  ## AvailableLightBiomass.
+  ext_forcs$SpinupMortalityFraction <- NULL
+  ext_forcs$write()
+  base_contents <- readLines(file.path(tmp_pth, ext_forcs$files[1]))
+  testthat::expect_false(any(grepl(
+    "^SpinUpReturnIntervals|^SpinUpLastDisturbanceMap",
+    base_contents
+  )))
+
+  file.create(file.path(tmp_pth, "ld.tif"))
+  ri <- data.frame(
+    Ecoregion = "eco1",
+    ReturnInterval = 250L,
+    CycleDisturbance = "fire 4",
+    LastDisturbance = "harvest"
+  )
+  codes <- data.frame(Code = c(1L, 2L), LastDisturbance = c("harvest", "fire 4"))
+
+  ## a map without a table errors
+  ext_forcs$SpinUpLastDisturbanceMap <- file.path(tmp_pth, "ld.tif")
+  testthat::expect_error(ext_forcs$write(), "SpinUpReturnIntervals")
+  ext_forcs$SpinUpReturnIntervals <- ri
+  testthat::expect_error(ext_forcs$write(), "SpinUpLastDisturbanceCodes")
+  ext_forcs$SpinUpLastDisturbanceCodes <- codes
+  ext_forcs$write()
+  contents_ld <- readLines(file.path(tmp_pth, ext_forcs$files[1]))
+  i_su <- grep("^SpinUp\\s*$", contents_ld)
+  i_ri <- grep("^SpinUpReturnIntervals\\s*$", contents_ld)
+  i_map <- grep("^SpinUpLastDisturbanceMap\\s+ld\\.tif\\s*$", contents_ld)
+  i_alb <- grep("^AvailableLightBiomass", contents_ld)
+  testthat::expect_length(c(i_su, i_ri, i_map, i_alb), 4L)
+  testthat::expect_true(i_su < i_ri && i_ri < i_map && i_map < i_alb)
+  testthat::expect_true("ld.tif" %in% ext_forcs$files)
+
+  ## unsetting restores the previous output exactly
+  ext_forcs$SpinUpLastDisturbanceMap <- NULL
+  ext_forcs$SpinUpLastDisturbanceCodes <- NULL
+  ext_forcs$SpinUpReturnIntervals <- NULL
+  ext_forcs$write()
+  testthat::expect_identical(readLines(file.path(tmp_pth, ext_forcs$files[1])), base_contents)
+
   withr::deferred_run()
+})
+
+## ---- insertSpinUpReturnIntervals / insertSpinUpLastDisturbanceMap ------------------------------
+
+testthat::test_that("insertSpinUpReturnIntervals writes the table ForCS reads", {
+  ri <- data.frame(
+    Ecoregion = "eco1",
+    ReturnInterval = 250L,
+    CycleDisturbance = "fire 4",
+    LastDisturbance = "harvest"
+  )
+  lines <- as.character(insertSpinUpReturnIntervals(ri))
+  testthat::expect_identical(lines[1], "SpinUpReturnIntervals")
+  testthat::expect_length(grep("^\\s*eco1\\s+250\\s+fire 4\\s+harvest\\s*$", lines), 1L)
+
+  bad <- function(...) {
+    insertSpinUpReturnIntervals(utils::modifyList(ri, list(...)))
+  }
+  testthat::expect_error(bad(CycleDisturbance = "fire 6"))
+  testthat::expect_error(bad(CycleDisturbance = "fire"))
+  testthat::expect_error(bad(LastDisturbance = ""))
+  testthat::expect_error(bad(LastDisturbance = "land use"))
+  testthat::expect_error(bad(ReturnInterval = 0L))
+  testthat::expect_error(insertSpinUpReturnIntervals(rbind(ri, ri)))
+  testthat::expect_no_error(bad(CycleDisturbance = "fire 1", LastDisturbance = "wind"))
+})
+
+testthat::test_that("insertSpinUpLastDisturbanceMap writes the map and its codes", {
+  codes <- data.frame(Code = c(1L, 2L), LastDisturbance = c("harvest", "fire 4"))
+  lines <- as.character(insertSpinUpLastDisturbanceMap("ld.tif", codes))
+  testthat::expect_identical(lines[1], "SpinUpLastDisturbanceMap  ld.tif")
+  testthat::expect_length(grep("^\\s*1\\s+harvest\\s*$", lines), 1L)
+  testthat::expect_length(grep("^\\s*2\\s+fire 4\\s*$", lines), 1L)
+
+  codes0 <- codes
+  codes0$Code[1] <- 0L
+  testthat::expect_error(insertSpinUpLastDisturbanceMap("ld.tif", codes0))
+  codes_dup <- codes
+  codes_dup$Code[2] <- 1L
+  testthat::expect_error(insertSpinUpLastDisturbanceMap("ld.tif", codes_dup))
+  codes_bad <- codes
+  codes_bad$LastDisturbance[1] <- "fire 7"
+  testthat::expect_error(insertSpinUpLastDisturbanceMap("ld.tif", codes_bad))
 })
 
 ## ---- insertAvailableLightBiomass ----------------------------------------------------------------

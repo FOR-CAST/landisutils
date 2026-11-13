@@ -1,3 +1,7 @@
+# landisutils 0.0.182
+
+* `ForCS` writes the two optional spin-up inputs of ForCS 4.2.0, after `SpinUp`: `SpinUpReturnIntervals` (a table of return interval, cycle disturbance and last disturbance per ecoregion) and `SpinUpLastDisturbanceMap` (a GeoTIFF of codes that override the ecoregion's last disturbance cell by cell, with its code table). New constructor arguments `SpinUpReturnIntervals`, `SpinUpLastDisturbanceMap` and `SpinUpLastDisturbanceCodes`, and new `insertSpinUpReturnIntervals()` and `insertSpinUpLastDisturbanceMap()`. A disturbance is `fire 1` to `fire 5` or a single word; ForCS's two-word types (`land use`) cannot be written. Without these arguments the file is unchanged.
+
 # landisutils 0.0.181
 
 * New `fire_cohort_mortality()`, the expected mortality of a cohort under Dynamic Fire's optional per-species `GroundFireKill`: below severity 5 the species leaves the damage table and all its cohorts die together in a burned cell with that probability. Without a value it equals `as.numeric(fire_cohort_killed())`, which is unchanged. `landis_dominant_cohorts()` gains a `ground_fire_kill` column, read from the species CSV (NA without a value or a column).
