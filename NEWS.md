@@ -1,4 +1,4 @@
-# landisutils (development version)
+# landisutils 0.0.182
 
 * `ForCS` writes the two optional spin-up inputs of ForCS 4.2.0, after `SpinUp`: `SpinUpReturnIntervals` (a table of return interval, cycle disturbance and last disturbance per ecoregion) and `SpinUpLastDisturbanceMap` (a GeoTIFF of codes that override the ecoregion's last disturbance cell by cell, with its code table). New constructor arguments `SpinUpReturnIntervals`, `SpinUpLastDisturbanceMap` and `SpinUpLastDisturbanceCodes`, and new `insertSpinUpReturnIntervals()` and `insertSpinUpLastDisturbanceMap()`. A disturbance is `fire 1` to `fire 5` or a single word; ForCS's two-word types (`land use`) cannot be written. Without these arguments the file is unchanged.
 
