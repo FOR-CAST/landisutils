@@ -555,3 +555,470 @@ plot_calibration_severity_by_size <- function(stats, breaks = c(0, 10, 100, 1000
   attr(gg, "size_summary") <- summ
   gg
 }
+
+## "1st", "22nd", "69th": a percentile as the plots label it.
+.calibration_ordinal <- function(x) {
+  x <- round(x)
+  suffix <- ifelse(x %% 100 %in% 11:13, "th", c("th", "st", "nd", "rd", rep("th", 6))[x %% 10 + 1])
+  paste0(x, suffix)
+}
+
+.check_whiskers <- function(whiskers) {
+  ok <- is.numeric(whiskers) &&
+    length(whiskers) == 2L &&
+    all(is.finite(whiskers)) &&
+    whiskers[[1]] >= 0 &&
+    whiskers[[1]] <= 0.25 &&
+    whiskers[[2]] >= 0.75 &&
+    whiskers[[2]] <= 1
+  if (!ok) {
+    stop(
+      "`whiskers` must be two probabilities, the lower at most 0.25 and the upper at least 0.75.",
+      call. = FALSE
+    )
+  }
+  invisible(whiskers)
+}
+
+#' Box-and-whisker statistics with whiskers at chosen quantiles
+#'
+#' The quartiles and median for the box, and whiskers at the `whiskers`
+#' quantiles rather than at 1.5 times the interquartile range, so that a
+#' whisker can mark the range a calibration check uses (its 5th and 95th
+#' percentiles, say).
+#'
+#' All five values are [stats::quantile()] type 7: INTERPOLATED quantiles,
+#' not order statistics. With 40 values the 5th percentile falls between the
+#' second and third smallest, so a check defined as "the second lowest
+#' replicate" will not match the lower whisker exactly.
+#'
+#' @param x Numeric. Non-finite values are dropped.
+#' @param whiskers The quantiles the whiskers reach: two probabilities, the
+#'   lower at most 0.25 and the upper at least 0.75.
+#'
+#' @returns A list: `stats`, a one-row data frame with `ymin`, `lower`,
+#'   `middle`, `upper` and `ymax` (the names `ggplot2::geom_boxplot(stat =
+#'   "identity")` takes), and `out`, the values beyond the whiskers.
+#'
+#' @family calibration plots
+#' @export
+#' @examples
+#' calibration_box_stats(1:20, whiskers = c(0.1, 0.9))
+calibration_box_stats <- function(x, whiskers = c(0.05, 0.95)) {
+  .check_whiskers(whiskers)
+  x <- x[is.finite(x)]
+  if (length(x) == 0L) {
+    stop("`x` holds no finite value.", call. = FALSE)
+  }
+  q <- stats::quantile(x, c(whiskers[[1]], 0.25, 0.5, 0.75, whiskers[[2]]), names = FALSE, type = 7)
+  list(
+    stats = data.frame(
+      ymin = q[[1]],
+      lower = q[[2]],
+      middle = q[[3]],
+      upper = q[[4]],
+      ymax = q[[5]]
+    ),
+    out = x[x < q[[1]] | x > q[[5]]]
+  )
+}
+
+#' Mid-rank percentile of a value among simulated replicates
+#'
+#' `100 * (mean(sim < x) + 0.5 * mean(sim == x))`: the share of replicates
+#' below `x`, counting ties as half. Pass both sides on the scale a check uses;
+#' a value compared with rounded totals should be rounded the same way first,
+#' so a tie is a tie.
+#'
+#' @param sim Numeric, one value per replicate. Non-finite values are dropped.
+#' @param x Numeric, the value(s) to place.
+#'
+#' @returns Numeric, one percentile per element of `x`, or `NA` where `x` is
+#'   not finite or `sim` holds no finite value.
+#'
+#' @family calibration plots
+#' @export
+#' @examples
+#' replicate_percentile(1:10, c(0.5, 5, 5.5, 11))
+replicate_percentile <- function(sim, x) {
+  sim <- sim[is.finite(sim)]
+  vapply(
+    x,
+    function(v) {
+      if (length(sim) == 0L || !is.finite(v)) {
+        return(NA_real_)
+      }
+      100 * (mean(sim < v) + 0.5 * mean(sim == v))
+    },
+    numeric(1)
+  )
+}
+
+#' Plot simulated replicates against reference values
+#'
+#' One box of per-replicate values ([calibration_box_stats()]: quartiles and
+#' median, whiskers at `whiskers`, the replicates beyond them as dots), with
+#' each reference beside it in a column of its own, labelled with its value and
+#' its [replicate_percentile()] among the replicates. Dashed lines at the
+#' whiskers' ends run across the panel, so each reference reads against them.
+#'
+#' Whether the whiskers are an acceptance range or only a spread is the
+#' caller's to say: a calibration that scores pooled statistics, not
+#' replicates, should say the box is a spread.
+#'
+#' @param values Numeric, one value per replicate.
+#' @param references Optional data frame with `name` and `value`, one row per
+#'   reference value (a recorded value, a target), in the order to draw them.
+#' @param whiskers See [calibration_box_stats()].
+#' @param label Optional function turning a value into its label text; the
+#'   default prints three significant figures. Units are the caller's.
+#' @param name The label of the replicates' column.
+#'
+#' @returns A ggplot object with no title or axis titles.
+#'
+#' @family calibration plots
+#' @export
+#' @examples
+#' if (requireNamespace("ggplot2", quietly = TRUE)) {
+#'   plot_calibration_replicates(
+#'     c(3, 5, 6, 8, 9, 10, 11, 12, 14, 16, 20, 26, 39),
+#'     data.frame(name = c("Record", "Target"), value = c(15.3, 13.5))
+#'   )
+#' }
+plot_calibration_replicates <- function(
+  values,
+  references = NULL,
+  whiskers = c(0.05, 0.95),
+  label = NULL,
+  name = "Simulated"
+) {
+  .need("ggplot2", "plot_calibration_replicates()")
+  bad_ref <- !is.null(references) &&
+    (!is.data.frame(references) || !all(c("name", "value") %in% names(references)))
+  if (bad_ref) {
+    stop("`references` must be a data frame with `name` and `value`.", call. = FALSE)
+  }
+  label <- label %||% function(v) format(signif(v, 3), trim = TRUE, drop0trailing = TRUE)
+  pal <- calibration_plot_palette()
+  box <- calibration_box_stats(values, whiskers)
+  n_ref <- if (is.null(references)) 0L else nrow(references)
+  ref <- if (n_ref > 0L) {
+    data.frame(
+      x = 1L + seq_len(n_ref),
+      y = references$value,
+      text = sprintf(
+        "%s\n%s percentile\nof the replicates",
+        label(references$value),
+        .calibration_ordinal(replicate_percentile(values, references$value))
+      )
+    )
+  }
+  ends <- data.frame(
+    y = c(box$stats$ymin, box$stats$ymax),
+    text = sprintf(
+      "%s percentile, %s",
+      .calibration_ordinal(100 * whiskers),
+      label(c(box$stats$ymin, box$stats$ymax))
+    )
+  )
+  right <- n_ref + 1.6
+  gg <- ggplot2::ggplot() +
+    ggplot2::geom_hline(
+      data = ends,
+      ggplot2::aes(yintercept = .data$y),
+      colour = pal[["simulated"]],
+      linewidth = 0.4,
+      linetype = "22"
+    ) +
+    ggplot2::geom_text(
+      data = ends,
+      ggplot2::aes(x = right - 0.05, y = .data$y, label = .data$text),
+      hjust = 1,
+      vjust = -0.4,
+      size = 3.4,
+      colour = pal[["muted"]]
+    ) +
+    ggplot2::geom_boxplot(
+      data = cbind(x = 1, box$stats),
+      ggplot2::aes(
+        x = .data$x,
+        ymin = .data$ymin,
+        lower = .data$lower,
+        middle = .data$middle,
+        upper = .data$upper,
+        ymax = .data$ymax,
+        group = 1
+      ),
+      stat = "identity",
+      width = 0.45,
+      fill = pal[["simulated"]],
+      alpha = 0.35,
+      colour = pal[["simulated"]],
+      linewidth = 0.8
+    ) +
+    ggplot2::geom_point(
+      data = data.frame(x = rep(1, length(box$out)), y = box$out),
+      ggplot2::aes(.data$x, .data$y),
+      colour = pal[["simulated"]],
+      size = 2.4
+    )
+  if (n_ref > 0L) {
+    gg <- gg +
+      ggplot2::geom_point(
+        data = ref,
+        ggplot2::aes(.data$x, .data$y),
+        colour = pal[["observed"]],
+        size = 4.2
+      ) +
+      ggplot2::geom_text(
+        data = ref,
+        ggplot2::aes(.data$x, .data$y, label = .data$text),
+        hjust = -0.18,
+        size = 3.5,
+        lineheight = 0.9,
+        colour = pal[["muted"]]
+      )
+  }
+  gg +
+    ggplot2::scale_x_continuous(
+      breaks = seq_len(n_ref + 1L),
+      labels = c(name, if (n_ref > 0L) references$name),
+      limits = c(0.5, right),
+      expand = ggplot2::expansion(0)
+    ) +
+    ggplot2::scale_y_continuous(expand = ggplot2::expansion(mult = c(0.02, 0.06))) +
+    ggplot2::labs(x = NULL, y = NULL) +
+    .calibration_theme() +
+    ggplot2::theme(panel.grid.major.x = ggplot2::element_blank())
+}
+
+#' Plot observed against simulated spreads, group by group
+#'
+#' For each group, an observed and a simulated box side by side
+#' ([calibration_box_stats()]), with diamonds at the values the caller
+#' compares. Groups are drawn in the order of `spread$group`'s factor levels,
+#' or of first appearance.
+#'
+#' A group with no observed values in `spread` (a record with one value and no
+#' resampling) has its observed side drawn from `reference`: a point, and a
+#' whisker-only bar where `lower` and `upper` are given. Observed values beyond
+#' the whiskers are not dotted, since resampling draws are not observations;
+#' simulated replicates beyond them are. A diamond marks a compared value only
+#' on a side drawn as a box. Whether a group passes any check is the caller's
+#' to say, through `note`.
+#'
+#' @param spread Data frame with `group`, `source` (`"observed"` or
+#'   `"simulated"`) and `value`, one row per draw or replicate.
+#' @param reference Optional data frame, one row per group: `group`, and any of
+#'   `observed` (the observed value compared), `simulated` (the simulated value
+#'   compared, e.g. pooled over replicates), `lower` and `upper` (an interval
+#'   around the observed value) and `note` (text printed above the group).
+#' @param whiskers See [calibration_box_stats()].
+#' @param labels Legend labels for the two sources.
+#'
+#' @returns A ggplot object with no title or axis titles.
+#'
+#' @family calibration plots
+#' @export
+#' @examples
+#' if (requireNamespace("ggplot2", quietly = TRUE)) {
+#'   spread <- data.frame(
+#'     group = rep(c("A", "B"), each = 60),
+#'     source = rep(rep(c("observed", "simulated"), each = 30), 2),
+#'     value = c(seq(0.2, 0.5, length.out = 30), seq(0.25, 0.45, length.out = 30),
+#'               seq(0.1, 0.4, length.out = 30), seq(0, 0.6, length.out = 30))
+#'   )
+#'   plot_calibration_groups(spread, data.frame(group = c("A", "B"), note = c("inside", "inside")))
+#' }
+plot_calibration_groups <- function(
+  spread,
+  reference = NULL,
+  whiskers = c(0.05, 0.95),
+  labels = c(observed = "Observed", simulated = "Simulated")
+) {
+  .need("ggplot2", "plot_calibration_groups()")
+  if (!is.data.frame(spread) || !all(c("group", "source", "value") %in% names(spread))) {
+    stop("`spread` must be a data frame with `group`, `source` and `value`.", call. = FALSE)
+  }
+  bad <- setdiff(unique(spread$source), c("observed", "simulated"))
+  if (length(bad)) {
+    stop(
+      "`spread$source` must be \"observed\" or \"simulated\", not: ",
+      paste(bad, collapse = ", "),
+      call. = FALSE
+    )
+  }
+  if (!is.null(reference) && (!is.data.frame(reference) || !"group" %in% names(reference))) {
+    stop("`reference` must be a data frame with a `group` column.", call. = FALSE)
+  }
+  .check_whiskers(whiskers)
+  pal <- calibration_plot_palette()
+  groups <- if (is.factor(spread$group)) {
+    levels(droplevels(spread$group))
+  } else {
+    unique(as.character(spread$group))
+  }
+  groups <- c(groups, setdiff(as.character(reference$group), groups))
+  ref_of <- function(g, col) {
+    if (is.null(reference) || !col %in% names(reference)) {
+      return(NA)
+    }
+    v <- reference[[col]][as.character(reference$group) == g]
+    if (length(v)) v[[1]] else NA
+  }
+  offset <- c(observed = -0.2, simulated = 0.2)
+  boxes <- list()
+  outs <- list()
+  points <- list()
+  bars <- list()
+  for (i in seq_along(groups)) {
+    g <- groups[[i]]
+    for (src in names(offset)) {
+      v <- spread$value[as.character(spread$group) == g & spread$source == src]
+      v <- v[is.finite(v)]
+      x <- i + offset[[src]]
+      if (length(v)) {
+        b <- calibration_box_stats(v, whiskers)
+        boxes[[length(boxes) + 1L]] <- data.frame(x = x, source = src, b$stats)
+        if (src == "simulated" && length(b$out)) {
+          outs[[length(outs) + 1L]] <- data.frame(x = x, y = b$out)
+        }
+      } else {
+        p <- ref_of(g, src)
+        if (is.finite(p)) {
+          points[[length(points) + 1L]] <- data.frame(x = x, y = p, source = src)
+        }
+        lo <- ref_of(g, "lower")
+        hi <- ref_of(g, "upper")
+        if (src == "observed" && is.finite(lo) && is.finite(hi)) {
+          bars[[length(bars) + 1L]] <- data.frame(x = x, lo = lo, hi = hi, source = src)
+        }
+      }
+    }
+  }
+  rbind_or_null <- function(l) if (length(l)) do.call(rbind, l) else NULL
+  boxes <- rbind_or_null(boxes)
+  outs <- rbind_or_null(outs)
+  points <- rbind_or_null(points)
+  bars <- rbind_or_null(bars)
+  ## A diamond marks a compared value on a box; a side drawn as a point is that value already.
+  marks <- if (!is.null(reference)) {
+    do.call(
+      rbind,
+      lapply(seq_along(groups), function(i) {
+        y <- c(ref_of(groups[[i]], "observed"), ref_of(groups[[i]], "simulated"))
+        data.frame(x = i + offset, y = as.numeric(y))
+      })
+    )
+  }
+  if (!is.null(marks)) {
+    marks <- marks[is.finite(marks$y) & marks$x %in% boxes$x, , drop = FALSE]
+  }
+  notes <- if (!is.null(reference) && "note" %in% names(reference)) {
+    n <- vapply(groups, function(g) as.character(ref_of(g, "note")), character(1))
+    data.frame(x = seq_along(groups), note = n)[!is.na(n) & nzchar(n), , drop = FALSE]
+  }
+  top <- max(c(boxes$ymax, outs$y, points$y, bars$hi, marks$y), na.rm = TRUE)
+  bottom <- min(c(boxes$ymin, outs$y, points$y, bars$lo, marks$y), na.rm = TRUE)
+  if (!is.finite(top)) {
+    stop("nothing to draw: `spread` and `reference` hold no finite value.", call. = FALSE)
+  }
+  span <- if (top > bottom) top - bottom else abs(top) + 1
+  if (!is.null(notes)) {
+    notes$y <- rep(top + 0.16 * span, nrow(notes))
+  }
+  gg <- ggplot2::ggplot()
+  if (!is.null(boxes)) {
+    gg <- gg +
+      ggplot2::geom_boxplot(
+        data = boxes,
+        ggplot2::aes(
+          x = .data$x,
+          ymin = .data$ymin,
+          lower = .data$lower,
+          middle = .data$middle,
+          upper = .data$upper,
+          ymax = .data$ymax,
+          group = .data$x,
+          colour = .data$source,
+          fill = .data$source
+        ),
+        stat = "identity",
+        width = 0.32,
+        alpha = 0.35,
+        linewidth = 0.8
+      )
+  }
+  if (!is.null(bars)) {
+    gg <- gg +
+      ggplot2::geom_errorbar(
+        data = bars,
+        ggplot2::aes(x = .data$x, ymin = .data$lo, ymax = .data$hi, colour = .data$source),
+        width = 0.12,
+        linewidth = 0.8
+      )
+  }
+  if (!is.null(points)) {
+    gg <- gg +
+      ggplot2::geom_point(
+        data = points,
+        ggplot2::aes(.data$x, .data$y, colour = .data$source),
+        size = 4
+      )
+  }
+  if (!is.null(outs)) {
+    gg <- gg +
+      ggplot2::geom_point(
+        data = outs,
+        ggplot2::aes(.data$x, .data$y),
+        colour = pal[["simulated"]],
+        size = 2.2
+      )
+  }
+  if (!is.null(marks) && nrow(marks)) {
+    gg <- gg +
+      ggplot2::geom_point(
+        data = marks,
+        ggplot2::aes(.data$x, .data$y),
+        shape = 23,
+        size = 3.4,
+        fill = "white",
+        colour = pal[["ink"]],
+        stroke = 1
+      )
+  }
+  if (!is.null(notes) && nrow(notes)) {
+    gg <- gg +
+      ggplot2::geom_text(
+        data = notes,
+        ggplot2::aes(.data$x, .data$y, label = .data$note),
+        vjust = 1,
+        size = 3.5,
+        lineheight = 0.95,
+        colour = pal[["muted"]]
+      )
+  }
+  gg +
+    ggplot2::scale_colour_manual(
+      values = c(observed = pal[["observed"]], simulated = pal[["simulated"]]),
+      labels = labels,
+      breaks = c("observed", "simulated"),
+      name = NULL,
+      aesthetics = c("colour", "fill")
+    ) +
+    ggplot2::scale_x_continuous(
+      breaks = seq_along(groups),
+      labels = groups,
+      limits = c(0.5, length(groups) + 0.5),
+      expand = ggplot2::expansion(0)
+    ) +
+    ggplot2::scale_y_continuous(
+      limits = c(
+        bottom - 0.04 * span,
+        top + (if (!is.null(notes) && nrow(notes)) 0.18 else 0.06) * span
+      )
+    ) +
+    ggplot2::labs(x = NULL, y = NULL) +
+    .calibration_theme() +
+    ggplot2::theme(panel.grid.major.x = ggplot2::element_blank())
+}

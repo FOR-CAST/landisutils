@@ -249,3 +249,110 @@ test_that("loss_from_stats() weights a subset without touching the others", {
   expect_equal(just_count$total, unname(full$components[["count"]]))
   expect_named(just_count$weights, .LOSS_COMPONENTS)
 })
+
+test_that("calibration_box_stats() puts the whiskers at the requested quantiles", {
+  b <- calibration_box_stats(c(NA, Inf, 1:20), whiskers = c(0.1, 0.9))
+  expect_equal(
+    unlist(b$stats, use.names = FALSE),
+    stats::quantile(1:20, c(0.1, 0.25, 0.5, 0.75, 0.9), names = FALSE)
+  )
+  expect_named(b$stats, c("ymin", "lower", "middle", "upper", "ymax"))
+  expect_equal(b$out, c(1, 2, 19, 20))
+  ## Interpolated, not order statistics: the 5th percentile of 1:40 lies between 2 and 3.
+  expect_equal(calibration_box_stats(1:40)$stats$ymin, 2.95)
+  expect_length(calibration_box_stats(rep(0.4, 5))$out, 0L)
+  expect_error(calibration_box_stats(1:10, c(0.3, 0.9)), "at most 0.25")
+  expect_error(calibration_box_stats(c(NA, NaN)), "no finite value")
+})
+
+test_that("replicate_percentile() counts ties as half", {
+  expect_equal(replicate_percentile(1:10, c(0.5, 5, 5.5, 11)), c(0, 45, 50, 100))
+  expect_equal(replicate_percentile(c(1, 2, 2, 3), 2), 50)
+  expect_identical(replicate_percentile(c(NA, NaN), 1), NA_real_)
+  expect_identical(replicate_percentile(1:3, NA), NA_real_)
+})
+
+test_that("plot_calibration_replicates() sets each reference beside the box", {
+  skip_if_not_installed("ggplot2")
+  v <- c(3, 5, 6, 8, 9, 10, 10.5, 11, 12, 14, 16, 20, 26, 39)
+  refs <- data.frame(name = c("Record", "Target"), value = c(15.3, 13.5))
+  gg <- plot_calibration_replicates(v, refs, label = function(x) sprintf("%.1f ha", x))
+  layers <- ggplot2::ggplot_build(gg)$data
+  q <- stats::quantile(v, c(0.05, 0.25, 0.5, 0.75, 0.95), names = FALSE)
+  expect_equal(layers[[1]]$yintercept, q[c(1, 5)])
+  box <- layers[[3]]
+  expect_equal(unlist(box[1, c("ymin", "lower", "middle", "upper", "ymax")], use.names = FALSE), q)
+  expect_equal(sort(layers[[4]]$y), v[v < q[[1]] | v > q[[5]]])
+  expect_equal(layers[[5]]$x, c(2, 3))
+  expect_identical(
+    layers[[6]]$label,
+    c("15.3 ha\n71st percentile\nof the replicates", "13.5 ha\n64th percentile\nof the replicates")
+  )
+  ## Without references only the box and its whisker lines are drawn.
+  expect_length(ggplot2::ggplot_build(plot_calibration_replicates(v))$data, 4L)
+  expect_error(plot_calibration_replicates(v, data.frame(value = 1)), "`name` and `value`")
+})
+
+## Two groups: A with draws on both sides, B with a single recorded value and an interval.
+.group_spread <- function() {
+  rbind(
+    data.frame(group = "A", source = "observed", value = seq(0.2, 0.5, length.out = 200)),
+    data.frame(
+      group = "A",
+      source = "simulated",
+      value = c(seq(0.25, 0.45, length.out = 38), 0.05, 0.9)
+    ),
+    data.frame(group = "B", source = "simulated", value = seq(0.1, 0.3, length.out = 40))
+  )
+}
+
+test_that("plot_calibration_groups() draws boxes where there are values and points where not", {
+  skip_if_not_installed("ggplot2")
+  ref <- data.frame(
+    group = c("A", "B"),
+    observed = c(0.35, 0.17),
+    simulated = c(0.36, 0.2),
+    lower = c(NA, 0.1),
+    upper = c(NA, 0.3),
+    note = c("inside", "not gated")
+  )
+  built <- ggplot2::ggplot_build(plot_calibration_groups(.group_spread(), ref))
+  boxes <- built$data[[1]]
+  ## A: observed left of simulated; B: simulated only.
+  expect_equal(boxes$x, c(0.8, 1.2, 2.2))
+  ## B's observed side: a whisker-only bar and a point from `reference`.
+  expect_equal(c(built$data[[2]]$ymin, built$data[[2]]$ymax), c(0.1, 0.3))
+  expect_equal(built$data[[3]]$y, 0.17)
+  ## Only simulated replicates beyond the whiskers are dotted: two each side of 40 (type 7).
+  s <- .group_spread()
+  beyond <- function(v) {
+    q <- stats::quantile(v, c(0.05, 0.95), names = FALSE)
+    sort(v[v < q[[1]] | v > q[[2]]])
+  }
+  dots <- built$data[[4]]
+  expect_setequal(dots$x, c(1.2, 2.2))
+  expect_equal(
+    sort(dots$y[dots$x == 1.2]),
+    beyond(s$value[s$group == "A" & s$source == "simulated"])
+  )
+  expect_equal(
+    sort(dots$y[dots$x == 2.2]),
+    beyond(s$value[s$group == "B" & s$source == "simulated"])
+  )
+  ## The diamonds: each group's compared values, on its boxes only (B's observed side is a point).
+  expect_equal(built$data[[5]]$y, c(0.35, 0.36, 0.2))
+  expect_identical(built$data[[6]]$label, c("inside", "not gated"))
+  expect_identical(built$layout$panel_params[[1]]$x$get_labels(), c("A", "B"))
+})
+
+test_that("plot_calibration_groups() works without a reference and checks its inputs", {
+  skip_if_not_installed("ggplot2")
+  s <- .group_spread()
+  s$group <- factor(s$group, levels = c("B", "A"))
+  built <- ggplot2::ggplot_build(plot_calibration_groups(s))
+  expect_identical(built$layout$panel_params[[1]]$x$get_labels(), c("B", "A"))
+  expect_length(built$data, 2L)
+  s$source[1] <- "record"
+  expect_error(plot_calibration_groups(s), "\"observed\" or \"simulated\"")
+  expect_error(plot_calibration_groups(data.frame(group = "A")), "`group`, `source` and `value`")
+})
