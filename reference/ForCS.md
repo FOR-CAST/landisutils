@@ -31,6 +31,8 @@ Other ForCS helpers:
 [`insertRootDynamics()`](https://for-cast.github.io/landisutils/reference/insertRootDynamics.md),
 [`insertSpeciesParameters()`](https://for-cast.github.io/landisutils/reference/insertSpeciesParameters.md),
 [`insertSpinUp()`](https://for-cast.github.io/landisutils/reference/insertSpinUp.md),
+[`insertSpinUpLastDisturbanceMap()`](https://for-cast.github.io/landisutils/reference/insertSpinUpLastDisturbanceMap.md),
+[`insertSpinUpReturnIntervals()`](https://for-cast.github.io/landisutils/reference/insertSpinUpReturnIntervals.md),
 [`prepClimateFile()`](https://for-cast.github.io/landisutils/reference/prepClimateFile.md),
 [`prepDisturbanceMatrixFile()`](https://for-cast.github.io/landisutils/reference/prepDisturbanceMatrixFile.md),
 [`prepSnagFile()`](https://for-cast.github.io/landisutils/reference/prepSnagFile.md)
@@ -82,6 +84,18 @@ Other ForCS helpers:
 - `SpinUp`:
 
   `data.frame`.
+
+- `SpinUpReturnIntervals`:
+
+  (Optional) `data.frame` or `NULL`.
+
+- `SpinUpLastDisturbanceMap`:
+
+  (Optional) Character path or `NULL`.
+
+- `SpinUpLastDisturbanceCodes`:
+
+  (Optional) `data.frame` or `NULL`.
 
 - `AvailableLightBiomass`:
 
@@ -165,6 +179,9 @@ Inherited methods
       ForCSMapControl = NULL,
       MapOutputInterval = NULL,
       SpinUp = NULL,
+      SpinUpReturnIntervals = NULL,
+      SpinUpLastDisturbanceMap = NULL,
+      SpinUpLastDisturbanceCodes = NULL,
       AvailableLightBiomass = NULL,
       LightEstablishmentTable = NULL,
       SpeciesParameters = NULL,
@@ -237,6 +254,25 @@ Inherited methods
 
   `data.frame` (one row, four columns: On/Off Flag, Biomass Spin-up
   Flag, Tolerance %, Max Iterations).
+
+- `SpinUpReturnIntervals`:
+
+  (Optional) `data.frame` with columns `Ecoregion` (character),
+  `ReturnInterval` (integer \>= 1, years), `CycleDisturbance` and
+  `LastDisturbance` (each `"fire 1"` to `"fire 5"`, or a single-word
+  disturbance type). The spin-up of a listed ecoregion cycles a stand of
+  the return interval's age. `NULL` (default) omits it.
+
+- `SpinUpLastDisturbanceMap`:
+
+  (Optional) Character. Relative path to a GeoTIFF of last-disturbance
+  codes that override the ecoregion's `LastDisturbance` cell by cell.
+  Needs `SpinUpReturnIntervals` and `SpinUpLastDisturbanceCodes`.
+
+- `SpinUpLastDisturbanceCodes`:
+
+  (Optional) `data.frame` with columns `Code` (unique integer \>= 1) and
+  `LastDisturbance` (as above), meaning of each code in the map.
 
 - `AvailableLightBiomass`:
 

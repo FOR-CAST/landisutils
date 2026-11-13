@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.181</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.182</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,6 +41,11 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.182" id="landisutils-00182">landisutils 0.0.182<a class="anchor" aria-label="anchor" href="#landisutils-00182"></a></h2>
+<ul><li>
+<code>ForCS</code> writes the two optional spin-up inputs of ForCS 4.2.0, after <code>SpinUp</code>: <code>SpinUpReturnIntervals</code> (a table of return interval, cycle disturbance and last disturbance per ecoregion) and <code>SpinUpLastDisturbanceMap</code> (a GeoTIFF of codes that override the ecoregion’s last disturbance cell by cell, with its code table). New constructor arguments <code>SpinUpReturnIntervals</code>, <code>SpinUpLastDisturbanceMap</code> and <code>SpinUpLastDisturbanceCodes</code>, and new <code><a href="../reference/insertSpinUpReturnIntervals.html">insertSpinUpReturnIntervals()</a></code> and <code><a href="../reference/insertSpinUpLastDisturbanceMap.html">insertSpinUpLastDisturbanceMap()</a></code>. A disturbance is <code>fire 1</code> to <code>fire 5</code> or a single word; ForCS’s two-word types (<code>land use</code>) cannot be written. Without these arguments the file is unchanged.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.181" id="landisutils-00181">landisutils 0.0.181<a class="anchor" aria-label="anchor" href="#landisutils-00181"></a></h2>
 <ul><li>New <code><a href="../reference/fire_cohort_mortality.html">fire_cohort_mortality()</a></code>, the expected mortality of a cohort under Dynamic Fire’s optional per-species <code>GroundFireKill</code>: below severity 5 the species leaves the damage table and all its cohorts die together in a burned cell with that probability. Without a value it equals <code>as.numeric(fire_cohort_killed())</code>, which is unchanged. <code><a href="../reference/landis_dominant_cohorts.html">landis_dominant_cohorts()</a></code> gains a <code>ground_fire_kill</code> column, read from the species CSV (NA without a value or a column).</li>

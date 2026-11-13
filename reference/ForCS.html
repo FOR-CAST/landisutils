@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.181</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.182</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -75,6 +75,8 @@ Shared scenario inputs:
 <code><a href="insertRootDynamics.html">insertRootDynamics()</a></code>,
 <code><a href="insertSpeciesParameters.html">insertSpeciesParameters()</a></code>,
 <code><a href="insertSpinUp.html">insertSpinUp()</a></code>,
+<code><a href="insertSpinUpLastDisturbanceMap.html">insertSpinUpLastDisturbanceMap()</a></code>,
+<code><a href="insertSpinUpReturnIntervals.html">insertSpinUpReturnIntervals()</a></code>,
 <code><a href="prepClimateFile.html">prepClimateFile()</a></code>,
 <code><a href="prepDisturbanceMatrixFile.html">prepDisturbanceMatrixFile()</a></code>,
 <code><a href="prepSnagFile.html">prepSnagFile()</a></code></p></div>
@@ -124,6 +126,18 @@ One of <code>"WardSeedDispersal"</code>, <code>"NoDispersal"</code>, <code>"Univ
 
     <dt><code>SpinUp</code></dt>
 <dd><p><code>data.frame</code>.</p></dd>
+
+
+    <dt><code>SpinUpReturnIntervals</code></dt>
+<dd><p>(Optional) <code>data.frame</code> or <code>NULL</code>.</p></dd>
+
+
+    <dt><code>SpinUpLastDisturbanceMap</code></dt>
+<dd><p>(Optional) Character path or <code>NULL</code>.</p></dd>
+
+
+    <dt><code>SpinUpLastDisturbanceCodes</code></dt>
+<dd><p>(Optional) <code>data.frame</code> or <code>NULL</code>.</p></dd>
 
 
     <dt><code>AvailableLightBiomass</code></dt>
@@ -201,6 +215,9 @@ scenario configuration. See <a href="LandisExtension.html">LandisExtension</a> f
 <span>  ForCSMapControl <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  MapOutputInterval <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  SpinUp <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  SpinUpReturnIntervals <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  SpinUpLastDisturbanceMap <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  SpinUpLastDisturbanceCodes <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  AvailableLightBiomass <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  LightEstablishmentTable <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  SpeciesParameters <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -259,6 +276,21 @@ four columns: Biomass, DOM_Pools, Fluxes, Summary intervals).</p></dd>
       <dt><code>SpinUp</code></dt>
 <dd><p><code>data.frame</code> (one row, four columns: On/Off Flag,
 Biomass Spin-up Flag, Tolerance %, Max Iterations).</p></dd>
+
+      <dt><code>SpinUpReturnIntervals</code></dt>
+<dd><p>(Optional) <code>data.frame</code> with columns <code>Ecoregion</code> (character),
+<code>ReturnInterval</code> (integer &gt;= 1, years), <code>CycleDisturbance</code> and <code>LastDisturbance</code>
+(each <code>"fire 1"</code> to <code>"fire 5"</code>, or a single-word disturbance type). The spin-up of a
+listed ecoregion cycles a stand of the return interval's age. <code>NULL</code> (default) omits it.</p></dd>
+
+      <dt><code>SpinUpLastDisturbanceMap</code></dt>
+<dd><p>(Optional) Character. Relative path to a GeoTIFF of
+last-disturbance codes that override the ecoregion's <code>LastDisturbance</code> cell by cell.
+Needs <code>SpinUpReturnIntervals</code> and <code>SpinUpLastDisturbanceCodes</code>.</p></dd>
+
+      <dt><code>SpinUpLastDisturbanceCodes</code></dt>
+<dd><p>(Optional) <code>data.frame</code> with columns <code>Code</code> (unique
+integer &gt;= 1) and <code>LastDisturbance</code> (as above), meaning of each code in the map.</p></dd>
 
       <dt><code>AvailableLightBiomass</code></dt>
 <dd><p><code>data.frame</code>.</p></dd>

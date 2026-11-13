@@ -559,6 +559,18 @@
 
   Specify `SpinUp` for Forest Carbon Succession (ForCS) extension
 
+- [`insertSpinUpLastDisturbanceMap()`](https://for-cast.github.io/landisutils/reference/insertSpinUpLastDisturbanceMap.md)
+  :
+
+  Specify `SpinUpLastDisturbanceMap` for Forest Carbon Succession
+  (ForCS) extension
+
+- [`insertSpinUpReturnIntervals()`](https://for-cast.github.io/landisutils/reference/insertSpinUpReturnIntervals.md)
+  :
+
+  Specify `SpinUpReturnIntervals` for Forest Carbon Succession (ForCS)
+  extension
+
 - [`insertSufficientLight()`](https://for-cast.github.io/landisutils/reference/insertSufficientLight.md)
   :
 

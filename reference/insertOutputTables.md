@@ -34,6 +34,8 @@ Other ForCS helpers:
 [`insertRootDynamics()`](https://for-cast.github.io/landisutils/reference/insertRootDynamics.md),
 [`insertSpeciesParameters()`](https://for-cast.github.io/landisutils/reference/insertSpeciesParameters.md),
 [`insertSpinUp()`](https://for-cast.github.io/landisutils/reference/insertSpinUp.md),
+[`insertSpinUpLastDisturbanceMap()`](https://for-cast.github.io/landisutils/reference/insertSpinUpLastDisturbanceMap.md),
+[`insertSpinUpReturnIntervals()`](https://for-cast.github.io/landisutils/reference/insertSpinUpReturnIntervals.md),
 [`prepClimateFile()`](https://for-cast.github.io/landisutils/reference/prepClimateFile.md),
 [`prepDisturbanceMatrixFile()`](https://for-cast.github.io/landisutils/reference/prepDisturbanceMatrixFile.md),
 [`prepSnagFile()`](https://for-cast.github.io/landisutils/reference/prepSnagFile.md)
