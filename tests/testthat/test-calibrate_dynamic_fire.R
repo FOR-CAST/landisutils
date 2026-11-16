@@ -1034,6 +1034,49 @@ test_that("loss_from_stats() Tier 1 returns finite count + size components", {
   expect_equal(loss$components[["severity"]], 0)
 })
 
+## Two replicates over scored years 1-4 (the year-0 row is dropped) and a payload WITHOUT zones,
+## built so every component can be derived by hand: the simulated sizes are the observed ones, so
+## `size` is 0, and both samples are under 20 fires, so `size_tail` is 0.
+.nz_fixture <- function() {
+  reps <- list(
+    list(
+      n_fires_by_year = tibble::tibble(year = 0:4, n_fires = c(0L, 1L, 0L, 2L, 1L)),
+      fire_sizes_ha = c(2, 4),
+      events = tibble::tibble(eco = "A", year = c(1L, 3L, 3L, 4L), sites = c(3L, 3L, 3L, 3L))
+    ),
+    list(
+      n_fires_by_year = tibble::tibble(year = 0:4, n_fires = c(0L, 2L, 1L, 1L, 0L)),
+      fire_sizes_ha = 6,
+      events = tibble::tibble(eco = "A", year = c(1L, 1L, 2L, 3L), sites = c(5L, 5L, 5L, 5L))
+    )
+  )
+  observed <- list(
+    primary = list(
+      lambda_obs = 1.5,
+      n_fires_by_year = tibble::tibble(year = 1:4, n = c(1L, 2L, 1L, 2L)),
+      fire_sizes_ha = c(2, 4, 6)
+    ),
+    pixel_area_ha = 1
+  )
+  list(reps = reps, observed = observed)
+}
+
+test_that("loss_from_stats() scores a payload without zones exactly as before", {
+  fx <- .nz_fixture()
+  loss <- loss_from_stats(
+    fx$reps,
+    fx$observed,
+    weights = c(count = 2, size = 1, size_tail = 1, area_burned = 1)
+  )
+  ## both replicates average 1 fire a year against an observed 1.5, sd(1, 2, 1, 2)
+  expect_equal(loss$components[["count"]], 0.5 / sd(c(1, 2, 1, 2)))
+  expect_equal(loss$components[["size"]], 0)
+  expect_equal(loss$components[["size_tail"]], 0)
+  ## 12 and 20 cells of 1 ha over 4 years: 4 ha/yr against 1.5 fires x 4 ha
+  expect_equal(loss$components[["area_burned"]], abs(log10(4 / 6)))
+  expect_equal(loss$total, 2 * 0.5 / sd(c(1, 2, 1, 2)) + abs(log10(4 / 6)))
+})
+
 test_that("bc_fuel_code_to_base() maps the 13 BC FUEL_TYPE_CD levels", {
   m <- bc_fuel_code_to_base()
   expect_length(m, 13L)
