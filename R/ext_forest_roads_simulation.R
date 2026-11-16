@@ -215,11 +215,22 @@ ForestRoadsSimulation <- R6Class(
         file.path(self$path, self$files[1])
       )
 
-      ## register the two required input rasters so downstream scenario
+      ## register every input raster the file names so downstream scenario
       ## collection / replicate staging picks them up (mirrors DynamicFire and
-      ## BiomassHarvest, which add_file() their map inputs after writing).
+      ## BiomassHarvest, which add_file() their map inputs after writing). The
+      ## optional rasters are "none" (any case, as the extension reads it) when unused.
       self$add_file(self$RasterOfBuildableZones)
       self$add_file(self$InitialRoadNetworkMap)
+      optional <- c(
+        self$CoarseElevationRaster,
+        self$FineElevationRaster,
+        self$CoarseWaterRaster,
+        self$FineWaterRaster,
+        self$SoilsRaster
+      )
+      for (f in optional[toupper(optional) != "NONE"]) {
+        self$add_file(f)
+      }
 
       return(invisible(self))
     }

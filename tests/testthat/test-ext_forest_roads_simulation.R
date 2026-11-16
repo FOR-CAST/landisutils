@@ -6,10 +6,22 @@ testthat::test_that("Forest Roads Simulation extension is properly created", {
 
   tmp_pth <- withr::local_tempdir("test_ForestRoads_")
 
-  ## write() registers the two required input rasters via add_file(), which
+  ## write() registers every input raster it names via add_file(), which
   ## checks they exist under `path`; create stand-ins so the write() succeeds.
+  rasters <- file.path(
+    "input",
+    "disturbances",
+    c(
+      "soils.tif",
+      "roads.tif",
+      "coarse_elevation.tif",
+      "fine_elevation.tif",
+      "coarse_water.tif",
+      "fine_water.tif"
+    )
+  )
   dir.create(file.path(tmp_pth, "input", "disturbances"), recursive = TRUE)
-  file.create(file.path(tmp_pth, "input", "disturbances", c("soils.tif", "roads.tif")))
+  file.create(file.path(tmp_pth, rasters))
 
   coarse_costs <- list(
     elevationCostRange(0, 9, 0),
@@ -87,6 +99,8 @@ testthat::test_that("Forest Roads Simulation extension is properly created", {
   ext$write()
 
   testthat::expect_true(all(file.exists(file.path(tmp_pth, ext$files))))
+  ## every raster the file names is staged with it (SoilsRaster is unset)
+  testthat::expect_setequal(ext$files[-1], rasters)
 
   contents <- readLines(file.path(tmp_pth, ext$files[1]))
   testthat::expect_true(any(grepl("^LandisData\\s+\"Forest Roads Simulation\"", contents)))
@@ -131,6 +145,42 @@ testthat::test_that("ForestRoadsSimulation requires Looping* params when Looping
   )
   ## missing LoopingMinDistance et al. -> error
   testthat::expect_error(ext$write())
+
+  withr::deferred_run()
+})
+
+testthat::test_that("ForestRoadsSimulation write() stages each optional raster it names", {
+  tmp_pth <- withr::local_tempdir("test_ForestRoads_")
+  file.create(file.path(tmp_pth, c("z.tif", "r.tif", "fw.tif")))
+
+  new_ext <- function(fine_water) {
+    ForestRoadsSimulation$new(
+      path = tmp_pth,
+      Timestep = 1L,
+      SkiddingDistance = 250,
+      RasterOfBuildableZones = "z.tif",
+      InitialRoadNetworkMap = "r.tif",
+      DistanceCost = 1,
+      CoarseElevationRaster = "NONE",
+      CoarseElevationCosts = list(elevationCostRange(0, 100, 0)),
+      CoarseWaterRaster = "none",
+      FineWaterRaster = fine_water,
+      FineWaterCost = 2,
+      RoadTypes = list(roadType(1L, "main", 1.0)),
+      RoadTypesForExitingWood = list(exitRoadType(2L, "exit"))
+    )
+  }
+
+  ## a raster set to "none", in any case, is not staged; a named one is
+  ext <- new_ext("fw.tif")
+  ext$write()
+  testthat::expect_identical(
+    ext$files,
+    c("forest-roads-simulation.txt", "z.tif", "r.tif", "fw.tif")
+  )
+
+  ## a named raster missing from `path` would leave the replicate without it
+  testthat::expect_error(new_ext("missing.tif")$write())
 
   withr::deferred_run()
 })
