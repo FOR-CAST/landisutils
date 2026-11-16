@@ -39,7 +39,12 @@ to \code{getOption("landisutils.calibration.severity_weighting", "event")}.}
 \value{
 Named list with \code{total} (the scalar minimised by DEoptim),
 \code{components} (per-component contributions), \code{weights} (echoed weights),
-and \code{severity_weighting} (how the severity component was counted).
+\code{severity_weighting} (how the severity component was counted), and
+\code{zones}: NULL without zones, otherwise a data.frame with one row per zone
+(\code{zone}, \code{calibrated}, \code{weight}, \code{lambda_obs}, \code{sim_rate}, \code{count_sd},
+\code{count_term}, the observed and simulated \code{n}, mean, median, 95th and 99th
+percentile fire size, and \code{area_ratio}, simulated over observed annual
+area burned).
 }
 \description{
 Combines per-replicate \code{\link[=parse_dynamic_fire_logs]{parse_dynamic_fire_logs()}} outputs into the multi-
@@ -119,6 +124,23 @@ All component values are unitless and non-negative; chi-squared components
 use a small epsilon in the denominator to avoid division by zero on empty
 observed bins.
 }
+\section{Fire zones}{
+
+When \code{observed$zones} is present (\code{\link[=save_observed_fire_targets]{save_observed_fire_targets()}} with
+\code{zones}), \code{L_count} is the sum over zones of \code{observed$zone_weights} times
+each zone's \verb{|mean simulated annual count - lambda_obs| / sd}, where \code{sd} is
+the zone's year-to-year sd floored at \code{sqrt(lambda_obs)}, the Poisson sd of
+an annual count (1 for a zone with no fires). A simulated fire belongs to
+the fire region its event log names (\code{events$eco}), counted over the same
+scored years as the landscape count; a region the payload does not name is
+an error. Every other component is computed on the whole landscape, as
+without zones.
+
+\verb{L_size_p99 = |log10(sim_p99) - log10(obs_p99)|} on the pooled, floored
+sizes once both samples hold at least 100 fires, else 0; weighted
+\code{size_p99}, 0 by default.
+}
+
 \seealso{
 Other Dynamic Fire calibration helpers:
 \code{\link[=apply_calibrated_damage_age]{apply_calibrated_damage_age()}},

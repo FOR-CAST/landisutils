@@ -1477,9 +1477,29 @@ default_severity_prior_sturtevant2009 <- function() {
 #'   replicates parsed with `by_class = TRUE` and errors without them. Defaults
 #'   to `getOption("landisutils.calibration.severity_weighting", "event")`.
 #'
+#' @section Fire zones:
+#' When `observed$zones` is present ([save_observed_fire_targets()] with
+#' `zones`), `L_count` is the sum over zones of `observed$zone_weights` times
+#' each zone's `|mean simulated annual count - lambda_obs| / sd`, where `sd` is
+#' the zone's year-to-year sd floored at `sqrt(lambda_obs)`, the Poisson sd of
+#' an annual count (1 for a zone with no fires). A simulated fire belongs to
+#' the fire region its event log names (`events$eco`), counted over the same
+#' scored years as the landscape count; a region the payload does not name is
+#' an error. Every other component is computed on the whole landscape, as
+#' without zones.
+#'
+#' `L_size_p99 = |log10(sim_p99) - log10(obs_p99)|` on the pooled, floored
+#' sizes once both samples hold at least 100 fires, else 0; weighted
+#' `size_p99`, 0 by default.
+#'
 #' @returns Named list with `total` (the scalar minimised by DEoptim),
 #'   `components` (per-component contributions), `weights` (echoed weights),
-#'   and `severity_weighting` (how the severity component was counted).
+#'   `severity_weighting` (how the severity component was counted), and
+#'   `zones`: NULL without zones, otherwise a data.frame with one row per zone
+#'   (`zone`, `calibrated`, `weight`, `lambda_obs`, `sim_rate`, `count_sd`,
+#'   `count_term`, the observed and simulated `n`, mean, median, 95th and 99th
+#'   percentile fire size, and `area_ratio`, simulated over observed annual
+#'   area burned).
 #'
 #' @family Dynamic Fire calibration helpers
 #'
@@ -1580,6 +1600,16 @@ loss_from_stats <- function(
   }
   L_count <- abs(mean(n_fires_per_year_per_rep) - primary$lambda_obs) / obs_sd
 
+  ## Per-zone counts, when the payload carries zones (save_observed_fire_targets(zones = )). The
+  ## landscape count above can match while one zone burns too often and another too rarely, and in
+  ## a range-of-variation study that misplaces the stand ages. `count` then becomes the weighted sum
+  ## of each zone's term; the table reports every zone, scored or not.
+  zone_tbl <- NULL
+  if (!is.null(observed$zones)) {
+    zone_tbl <- .zone_loss_table(reps, observed)
+    L_count <- sum(zone_tbl$weight * zone_tbl$count_term)
+  }
+
   ## L_size: pool simulated sizes across reps, compute KS distance to observed.
   ##
   ## Two corrections vs. the naive KS:
@@ -1639,6 +1669,16 @@ loss_from_stats <- function(
       if (is.finite(sim_q95) && is.finite(obs_q95) && sim_q95 > 0 && obs_q95 > 0) {
         L_size_tail <- abs(log10(sim_q95) - log10(obs_q95))
       }
+    }
+  }
+  ## The same comparison one step further into the tail. A 99th percentile is pinned by the largest
+  ## 1% of fires, so it needs 100 on each side before it describes anything but the single largest.
+  L_size_p99 <- 0.0
+  if (length(sim_sizes) >= 100L && length(obs_sizes) >= 100L) {
+    sim_p99 <- stats::quantile(sim_sizes, 0.99, names = FALSE)
+    obs_p99 <- stats::quantile(obs_sizes, 0.99, names = FALSE)
+    if (is.finite(sim_p99) && is.finite(obs_p99) && sim_p99 > 0 && obs_p99 > 0) {
+      L_size_p99 <- abs(log10(sim_p99) - log10(obs_p99))
     }
   }
 
@@ -1765,7 +1805,8 @@ loss_from_stats <- function(
     area_fuel = L_area_fuel,
     severity = L_severity,
     mortality = L_mortality,
-    area_burned = L_area_burned
+    area_burned = L_area_burned,
+    size_p99 = L_size_p99
   )
   stopifnot(identical(names(components), .LOSS_COMPONENTS))
   w <- stats::setNames(rep(0, length(components)), names(components))
@@ -1774,7 +1815,122 @@ loss_from_stats <- function(
 
   ## `severity_weighting` is recorded because it decides what the severity component MEANS, and a
   ## stored result that does not say which setting produced it cannot be compared with another.
-  list(total = total, components = components, weights = w, severity_weighting = severity_weighting)
+  list(
+    total = total,
+    components = components,
+    weights = w,
+    severity_weighting = severity_weighting,
+    zones = zone_tbl
+  )
+}
+
+## One row per observed fire zone (internal): the zone's count term and size diagnostics. A
+## simulated fire is attributed to the fire region the event log names (`events$eco`, the
+## FireSizesTable's EcoName), counted over the same scored years as the landscape `count`.
+##
+## The count term divides by the record's year-to-year sd, floored at the Poisson sd of an annual
+## count, sqrt(lambda): a zone with a handful of fires can record the same count every year, and an
+## sd of 0 would otherwise make its term unbounded. A zone with no fires at all falls back to 1.
+##
+## A simulated region the payload does not name is an error, not an unscored fire. It means the
+## size table and the observed targets were built from different zonings (or spellings: Dynamic Fire
+## names regions by EcoName), and scoring on would put every such fire outside every zone.
+.zone_loss_table <- function(reps, observed) {
+  zones <- observed$zones
+  zone_names <- names(zones)
+  weights <- observed$zone_weights
+  stopifnot(
+    !is.null(zone_names),
+    all(nzchar(zone_names)),
+    !is.null(weights),
+    setequal(names(weights), zone_names)
+  )
+  no_eco <- vapply(
+    reps,
+    function(r) !is.null(r$events) && nrow(r$events) > 0L && !"eco" %in% names(r$events),
+    logical(1)
+  )
+  if (any(no_eco)) {
+    stop(
+      "The payload scores fire counts by zone, but replicate(s) ",
+      paste(which(no_eco), collapse = ", "),
+      " carry events without a fire region (`eco`).",
+      call. = FALSE
+    )
+  }
+  sim_regions <- unique(unlist(lapply(reps, function(r) as.character(r$events$eco))))
+  unknown <- setdiff(sim_regions, zone_names)
+  if (length(unknown) > 0L) {
+    stop(
+      "Simulated fires burned in fire region(s) ",
+      paste(unknown, collapse = ", "),
+      " that the observed payload does not name (it names ",
+      paste(zone_names, collapse = ", "),
+      "). The FireSizesTable's EcoName and the payload's zones must be the same zoning.",
+      call. = FALSE
+    )
+  }
+  cell_ha <- observed$pixel_area_ha %||% 1.0
+  min_size_ha <- observed$min_size_ha %||% 0
+  scored <- lapply(reps, function(r) {
+    d <- .drop_initial_timestep(r$n_fires_by_year)
+    ev <- r$events
+    if (is.null(ev) || nrow(ev) == 0L) {
+      ev <- tibble::tibble(eco = character(0), year = integer(0), sites = integer(0))
+    }
+    list(n_years = max(1L, nrow(d)), events = ev[ev$year %in% d$year, , drop = FALSE])
+  })
+  q <- function(x, p) {
+    if (length(x) == 0L) NA_real_ else stats::quantile(x, p, type = 7, names = FALSE)
+  }
+  rows <- lapply(zone_names, function(z) {
+    obs <- zones[[z]]
+    lambda <- as.numeric(obs$lambda_obs)
+    obs_sd <- stats::sd(obs$n_fires_by_year$n)
+    count_sd <- max(if (is.finite(obs_sd)) obs_sd else 0, sqrt(lambda))
+    if (!is.finite(count_sd) || count_sd <= 0) {
+      count_sd <- 1
+    }
+    in_zone <- function(s) s$events$eco == z
+    sim_rate <- vapply(scored, function(s) sum(in_zone(s)) / s$n_years, numeric(1))
+    sim_area <- vapply(
+      scored,
+      function(s) sum(as.numeric(s$events$sites[in_zone(s)])) * cell_ha / s$n_years,
+      numeric(1)
+    )
+    sim_sizes <- unlist(lapply(scored, function(s) {
+      as.numeric(s$events$sites[in_zone(s)]) * cell_ha
+    }))
+    obs_sizes <- as.numeric(obs$fire_sizes_ha)
+    if (min_size_ha > 0) {
+      sim_sizes <- sim_sizes[sim_sizes >= min_size_ha]
+      obs_sizes <- obs_sizes[obs_sizes >= min_size_ha]
+    }
+    obs_mean <- if (length(obs_sizes) > 0L) mean(obs_sizes) else NA_real_
+    obs_area <- lambda * obs_mean
+    data.frame(
+      zone = z,
+      calibrated = isTRUE(obs$calibrated),
+      weight = unname(weights[[z]]),
+      lambda_obs = lambda,
+      sim_rate = mean(sim_rate),
+      count_sd = count_sd,
+      count_term = abs(mean(sim_rate) - lambda) / count_sd,
+      obs_n = length(obs_sizes),
+      obs_mean = obs_mean,
+      obs_median = q(obs_sizes, 0.5),
+      obs_q95 = q(obs_sizes, 0.95),
+      obs_p99 = q(obs_sizes, 0.99),
+      sim_n = length(sim_sizes),
+      sim_mean = if (length(sim_sizes) > 0L) mean(sim_sizes) else NA_real_,
+      sim_median = q(sim_sizes, 0.5),
+      sim_q95 = q(sim_sizes, 0.95),
+      sim_p99 = q(sim_sizes, 0.99),
+      area_ratio = if (is.finite(obs_area) && obs_area > 0) mean(sim_area) / obs_area else NA_real_,
+      stringsAsFactors = FALSE
+    )
+  })
+  do.call(rbind, rows)
 }
 
 ## Chi-squared on burn-area-by-base-fuel-type proportions (internal).

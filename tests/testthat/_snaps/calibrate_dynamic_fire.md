@@ -30,6 +30,14 @@
       Error:
       ! DamageAgeMultiplier of 1.5 scales the fire damage table past 100 % of longevity, which the user guide (2.16.2) does not allow
 
+# a simulated fire in a region the payload does not name is an error
+
+    Code
+      loss_from_stats(fx$reps, fx$observed)
+    Condition
+      Error:
+      ! Simulated fires burned in fire region(s) FRT13-hi that the observed payload does not name (it names A, B). The FireSizesTable's EcoName and the payload's zones must be the same zoning.
+
 # an ignition in a zone the table does not name is an error
 
     Code

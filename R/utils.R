@@ -240,7 +240,8 @@ truefalse <- function(x) {
   "area_fuel",
   "severity",
   "mortality",
-  "area_burned"
+  "area_burned",
+  "size_p99"
 )
 
 ## What `L_area_burned` scores when a replicate set burns nothing at all. `log10(0)` is `-Inf`, and
