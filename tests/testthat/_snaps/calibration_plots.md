@@ -30,6 +30,22 @@
       Error:
       ! `classes` must be 3 or 5.
 
+# weight_by = 'cells' needs replicates parsed with their per-class counts
+
+    Code
+      plot_calibration_severity(make_calibration_stats(), "cells")
+    Condition
+      Error:
+      ! `weight_by = "cells"` needs replicates parsed with `by_class = TRUE`; these carry no per-class cell counts.
+
+# by_zone needs a payload with zones
+
+    Code
+      plot_calibration_fire_sizes(make_calibration_stats(), by_zone = TRUE)
+    Condition
+      Error:
+      ! `by_zone = TRUE` needs an observed payload with zones (save_observed_fire_targets(zones = )).
+
 # malformed inputs are rejected with a useful message
 
     Code
@@ -68,7 +84,7 @@
       loss_from_stats(stats$reps, stats$observed, weights = NULL)
     Condition
       Error:
-      ! `weights` must be a non-empty, fully named, non-NA numeric vector over: count, size, size_tail, area_fuel, severity, mortality, area_burned.
+      ! `weights` must be a non-empty, fully named, non-NA numeric vector over: count, size, size_tail, area_fuel, severity, mortality, area_burned, size_p99.
 
 ---
 
@@ -76,7 +92,7 @@
       loss_from_stats(stats$reps, stats$observed, weights = c(1, 1))
     Condition
       Error:
-      ! `weights` must be a non-empty, fully named, non-NA numeric vector over: count, size, size_tail, area_fuel, severity, mortality, area_burned.
+      ! `weights` must be a non-empty, fully named, non-NA numeric vector over: count, size, size_tail, area_fuel, severity, mortality, area_burned, size_p99.
 
 ---
 
@@ -84,7 +100,7 @@
       loss_from_stats(stats$reps, stats$observed, weights = c(cnt = 2, size = 1))
     Condition
       Error:
-      ! unknown loss weight(s): cnt. Known components: count, size, size_tail, area_fuel, severity, mortality, area_burned.
+      ! unknown loss weight(s): cnt. Known components: count, size, size_tail, area_fuel, severity, mortality, area_burned, size_p99.
 
 ---
 
@@ -92,5 +108,5 @@
       loss_from_stats(stats$reps, stats$observed, weights = c(count = NA_real_))
     Condition
       Error:
-      ! `weights` must be a non-empty, fully named, non-NA numeric vector over: count, size, size_tail, area_fuel, severity, mortality, area_burned.
+      ! `weights` must be a non-empty, fully named, non-NA numeric vector over: count, size, size_tail, area_fuel, severity, mortality, area_burned, size_p99.
 

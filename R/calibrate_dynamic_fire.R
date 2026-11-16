@@ -1978,7 +1978,7 @@ loss_from_stats <- function(
     }
     sim_area_df <- do.call(
       rbind,
-      lapply(rep_dfs, function(d) .area_by_fuel_base(d)[, c("base", "area_ha")])
+      lapply(rep_dfs, function(d) area_by_fuel_base(d)[, c("base", "area_ha")])
     )
     sim_area_df <- sim_area_df[!is.na(sim_area_df$base), , drop = FALSE]
     if (nrow(sim_area_df) == 0L) {
@@ -2029,11 +2029,28 @@ loss_from_stats <- function(
   sum((sim_p - obs_p_smoothed)^2 / obs_p_smoothed)
 }
 
-## A replicate's `area_by_fuel_ha` with its `base` column (internal). One parsed before landisutils
-## 0.0.168 carries only `fuel_code`, the raw FuelType map value, which is the fuel-type index + 1.
-## Its base is decoded through `defaultFuelTypeTable()` -- right for a run whose FuelTypeTable kept
-## the default indices -- and that assumption is announced once per session.
-.area_by_fuel_base <- function(d) {
+#' A replicate's burned area by fuel type, with its base fuel type
+#'
+#' Returns a replicate's `area_by_fuel_ha` (from [parse_dynamic_fire_logs()])
+#' with its `base` column, the base fuel type of each fuel type in the run's own
+#' `FuelTypeTable`. A replicate parsed before landisutils 0.0.168 carries only
+#' `fuel_code`, the raw FuelType map value, which is the fuel-type index + 1;
+#' its base is then decoded through [defaultFuelTypeTable()] -- right for a run
+#' whose FuelTypeTable kept the default indices -- and that assumption is
+#' announced once per session.
+#'
+#' This is the decoding [loss_from_stats()]'s area-by-fuel term and
+#' [plot_calibration_area_by_fuel()] apply, exported so that a figure drawn
+#' outside the package reads simulated fuel types the same way.
+#'
+#' @param d A replicate's `area_by_fuel_ha` data frame.
+#'
+#' @returns `d` as a data frame with a `base` column.
+#'
+#' @family Dynamic Fire calibration helpers
+#'
+#' @export
+area_by_fuel_base <- function(d) {
   d <- as.data.frame(d)
   if (!"base" %in% names(d)) {
     .warn_once(
@@ -2071,7 +2088,7 @@ loss_from_stats <- function(
   weighting <- match.arg(weighting)
 
   if (identical(weighting, "cell")) {
-    sim_counts <- .severity_cell_counts(reps)
+    sim_counts <- severity_cell_counts(reps)
     if (is.null(sim_counts)) {
       ## No replicate carried per-class counts. Scoring per event instead would silently answer a
       ## different question, and returning the empty-run sentinel would read as a perfect fit, so
@@ -2177,14 +2194,26 @@ loss_from_stats <- function(
   sum((sim_p - obs_p_smoothed)^2 / obs_p_smoothed)
 }
 
-## Burned cells by severity class 1..5, pooled over replicates (internal).
-##
-## Returns a named numeric vector over "1".."5", or NULL when no replicate carries `by_class` --
-## the caller distinguishes "not collected" from "nothing burned", which look the same in a bare
-## count. Class 0 (burned with no cohort damaged) is dropped: the observed reference is a
-## distribution over the five severity classes, so counting a sixth category on the simulated side
-## only would shift every proportion.
-.severity_cell_counts <- function(reps) {
+#' Burned cells by severity class, pooled over replicates
+#'
+#' The simulated severity distribution counted per burned cell, which is what
+#' [loss_from_stats()] scores with `severity_weighting = "cell"` and what
+#' [plot_calibration_severity()] draws with `weight_by = "cells"`. Class 0
+#' (burned with no cohort damaged) is dropped: the observed reference is a
+#' distribution over the five severity classes, so counting a sixth category on
+#' the simulated side only would shift every proportion.
+#'
+#' @param reps List of [parse_dynamic_fire_logs()] results, parsed with
+#'   `by_class = TRUE`.
+#'
+#' @returns A named numeric vector over `"1"`..`"5"`, or NULL when no replicate
+#'   carries per-class counts -- so a caller can tell "not collected" from
+#'   "nothing burned", which look the same in a bare count.
+#'
+#' @family Dynamic Fire calibration helpers
+#'
+#' @export
+severity_cell_counts <- function(reps) {
   classes <- as.character(1:5)
   out <- stats::setNames(numeric(length(classes)), classes)
   seen <- FALSE

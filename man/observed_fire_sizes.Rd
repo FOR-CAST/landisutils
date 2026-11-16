@@ -79,6 +79,7 @@ Other Dynamic Fire calibration helpers:
 \code{\link[=apply_calibrated_hi_prop]{apply_calibrated_hi_prop()}},
 \code{\link[=apply_calibrated_ignprob]{apply_calibrated_ignprob()}},
 \code{\link[=apply_calibrated_num_fires]{apply_calibrated_num_fires()}},
+\code{\link[=area_by_fuel_base]{area_by_fuel_base()}},
 \code{\link[=bc_fuel_code_to_base]{bc_fuel_code_to_base()}},
 \code{\link[=bc_fuel_label_to_base]{bc_fuel_label_to_base()}},
 \code{\link[=build_calibration_scenario_template]{build_calibration_scenario_template()}},
@@ -98,6 +99,7 @@ Other Dynamic Fire calibration helpers:
 \code{\link[=run_calibration_spinup]{run_calibration_spinup()}},
 \code{\link[=run_calibration_validation]{run_calibration_validation()}},
 \code{\link[=save_observed_fire_targets]{save_observed_fire_targets()}},
+\code{\link[=severity_cell_counts]{severity_cell_counts()}},
 \code{\link[=sim_landis]{sim_landis()}},
 \code{\link[=sim_mock]{sim_mock()}},
 \code{\link[=sim_r_reimpl]{sim_r_reimpl()}}

@@ -138,6 +138,33 @@ calibration_events <- function(stats) {
   c(Low = sum(p[1:2]), Medium = p[[3]], High = sum(p[4:5]))
 }
 
+## Panel labels for the `by_zone` plots, named by zone: the zone's name, marked when it carries no
+## weight in the objective. Refuses a payload without zones, and a simulated fire in a region the
+## payload does not name -- the same zoning mismatch loss_from_stats() refuses.
+.calibration_zone_labels <- function(stats) {
+  zones <- stats$observed$zones
+  if (is.null(zones) || length(zones) == 0L) {
+    stop(
+      "`by_zone = TRUE` needs an observed payload with zones ",
+      "(save_observed_fire_targets(zones = )).",
+      call. = FALSE
+    )
+  }
+  unknown <- setdiff(unique(as.character(calibration_events(stats)$eco)), names(zones))
+  if (length(unknown) > 0L) {
+    stop(
+      "Simulated fires burned in fire region(s) ",
+      paste(unknown, collapse = ", "),
+      " that the observed payload does not name.",
+      call. = FALSE
+    )
+  }
+  w <- stats$observed$zone_weights
+  uncalibrated <- !is.null(w) & unname(w[names(zones)]) == 0
+  labels <- ifelse(uncalibrated, paste(names(zones), "(not calibrated)"), names(zones))
+  stats::setNames(labels, names(zones))
+}
+
 #' Plot the DEoptim search trace
 #'
 #' Draws the best objective value reached by each generation. When `stats` is
@@ -265,44 +292,105 @@ plot_calibration_loss <- function(stats, labels = NULL) {
 
 #' Plot observed against simulated fire sizes
 #'
-#' Empirical cumulative distributions on a log size axis. Both sides are
+#' Empirical cumulative distributions on a log size axis, or exceedance curves
+#' (the share of fires at least each size) on log-log axes. Both sides are
 #' truncated at the observed `min_size_ha` floor when the summary records one,
 #' matching the truncation the objective's size term applies.
 #'
+#' The exceedance scale is the one that shows the large-fire end: on a
+#' cumulative axis the top few percent of fires, which carry most of the area
+#' burned, are squeezed against 1. It marks the observed 95th and 99th
+#' percentiles as dashed lines.
+#'
 #' @param stats A `run_calibration_validation()` summary.
+#' @param scale `"ecdf"` (cumulative share, the default) or `"exceedance"`.
+#' @param by_zone Logical. One panel per fire zone, from the payload's
+#'   `$zones` (see [save_observed_fire_targets()]); a simulated fire belongs to
+#'   the fire region its event log names. Zones with no weight in the objective
+#'   are labelled "(not calibrated)".
 #'
 #' @returns A ggplot object.
 #'
 #' @family calibration plots
 #' @export
-plot_calibration_fire_sizes <- function(stats) {
+plot_calibration_fire_sizes <- function(stats, scale = c("ecdf", "exceedance"), by_zone = FALSE) {
   .need("ggplot2", "plot_calibration_fire_sizes()")
   .check_calibration_stats(stats, need = "fire_sizes_ha")
-  obs <- stats$observed$primary$fire_sizes_ha
-  sim <- unlist(lapply(stats$reps, function(r) r$fire_sizes_ha))
+  scale <- match.arg(scale)
   floor_ha <- stats$observed$min_size_ha
-  if (!is.null(floor_ha) && floor_ha > 0) {
-    obs <- obs[obs >= floor_ha]
-    sim <- sim[sim >= floor_ha]
+  part <- function(source, size, zone) {
+    size <- as.numeric(size)
+    size <- size[size > 0]
+    if (!is.null(floor_ha) && floor_ha > 0) {
+      size <- size[size >= floor_ha]
+    }
+    data.frame(source = rep(source, length(size)), size = size, zone = rep(zone, length(size)))
   }
-  df <- rbind(
-    data.frame(source = "observed", size = obs),
-    data.frame(source = "simulated", size = sim)
-  )
-  df <- df[df$size > 0, ]
+  if (isTRUE(by_zone)) {
+    labels <- .calibration_zone_labels(stats)
+    ev <- calibration_events(stats)
+    df <- do.call(
+      rbind,
+      lapply(names(labels), function(z) {
+        rbind(
+          part("observed", stats$observed$zones[[z]]$fire_sizes_ha, labels[[z]]),
+          part("simulated", ev$area_ha[ev$eco == z], labels[[z]])
+        )
+      })
+    )
+    df$zone <- factor(df$zone, levels = unname(labels))
+  } else {
+    df <- rbind(
+      part("observed", stats$observed$primary$fire_sizes_ha, "all"),
+      part("simulated", unlist(lapply(stats$reps, function(r) r$fire_sizes_ha)), "all")
+    )
+  }
   pal <- calibration_plot_palette()
+  cols <- c(observed = pal[["observed"]], simulated = pal[["simulated"]])
 
-  ggplot2::ggplot(df, ggplot2::aes(.data$size, colour = .data$source)) +
-    ggplot2::stat_ecdf(linewidth = 0.9) +
+  if (identical(scale, "ecdf")) {
+    gg <- ggplot2::ggplot(df, ggplot2::aes(.data$size, colour = .data$source)) +
+      ggplot2::stat_ecdf(linewidth = 0.9) +
+      ggplot2::labs(y = "cumulative share of fires")
+  } else {
+    df <- df[order(df$source, df$zone, df$size), ]
+    grp <- paste(df$source, df$zone)
+    df$exceedance <- stats::ave(df$size, grp, FUN = function(x) {
+      (length(x) - seq_along(x) + 1) / length(x)
+    })
+    obs <- df[df$source == "observed", ]
+    marks <- do.call(
+      rbind,
+      lapply(unique(as.character(obs$zone)), function(z) {
+        data.frame(
+          zone = z,
+          percentile = c("95th", "99th"),
+          size = stats::quantile(obs$size[obs$zone == z], c(0.95, 0.99), type = 7, names = FALSE)
+        )
+      })
+    )
+    if (is.factor(df$zone)) {
+      marks$zone <- factor(marks$zone, levels = levels(df$zone))
+    }
+    gg <- ggplot2::ggplot(df, ggplot2::aes(.data$size, .data$exceedance, colour = .data$source)) +
+      ggplot2::geom_step(direction = "vh", linewidth = 0.9) +
+      ggplot2::geom_vline(
+        data = marks,
+        ggplot2::aes(xintercept = .data$size),
+        colour = pal[["observed"]],
+        linetype = "22",
+        linewidth = 0.5
+      ) +
+      ggplot2::scale_y_log10() +
+      ggplot2::labs(y = "share of fires at least this size (log scale)")
+  }
+  if (isTRUE(by_zone)) {
+    gg <- gg + ggplot2::facet_wrap(ggplot2::vars(.data$zone))
+  }
+  gg +
     ggplot2::scale_x_log10() +
-    ggplot2::scale_colour_manual(
-      values = c(observed = pal[["observed"]], simulated = pal[["simulated"]])
-    ) +
-    ggplot2::labs(
-      title = "Fire-size distribution",
-      x = "fire size (ha, log scale)",
-      y = "cumulative share of fires"
-    ) +
+    ggplot2::scale_colour_manual(values = cols) +
+    ggplot2::labs(title = "Fire-size distribution", x = "fire size (ha, log scale)") +
     .calibration_theme()
 }
 
@@ -314,24 +402,61 @@ plot_calibration_fire_sizes <- function(stats) {
 #'
 #' @param stats A `run_calibration_validation()` summary.
 #' @param bins Number of histogram bins.
+#' @param by_zone Logical. One panel per fire zone, from the payload's
+#'   `$zones` (see [save_observed_fire_targets()]). Each replicate's fires are
+#'   counted per zone in each scored year, the counts [loss_from_stats()]
+#'   scores. Zones with no weight in the objective are labelled "(not
+#'   calibrated)".
 #'
 #' @returns A ggplot object.
 #'
 #' @family calibration plots
 #' @export
-plot_calibration_fire_counts <- function(stats, bins = 24L) {
+plot_calibration_fire_counts <- function(stats, bins = 24L, by_zone = FALSE) {
   .need("ggplot2", "plot_calibration_fire_counts()")
   .check_calibration_stats(stats, need = "n_fires_by_year")
-  obs <- stats$observed$primary$n_fires_by_year$n
-  ## drop the summary log's Time 0 row: it is the initial state, always zero fires, and one spurious
-  ## zero per replicate both shifts the mean down and (where counts are large) collapses the spread
-  sim <- unlist(lapply(stats$reps, function(r) .drop_initial_timestep(r$n_fires_by_year)$n_fires))
-  df <- rbind(data.frame(source = "observed", n = obs), data.frame(source = "simulated", n = sim))
-  means <- data.frame(source = c("observed", "simulated"), n = c(mean(obs), mean(sim)))
+  if (isTRUE(by_zone)) {
+    labels <- .calibration_zone_labels(stats)
+    df <- do.call(
+      rbind,
+      lapply(names(labels), function(z) {
+        obs <- stats$observed$zones[[z]]$n_fires_by_year$n
+        sim <- unlist(lapply(stats$reps, function(r) {
+          ## the scored years: the summary log's Time 0 row is the initial state
+          years <- .drop_initial_timestep(r$n_fires_by_year)$year
+          vapply(years, function(y) sum(r$events$eco == z & r$events$year == y), integer(1))
+        }))
+        rbind(
+          data.frame(
+            source = rep("observed", length(obs)),
+            n = as.numeric(obs),
+            zone = labels[[z]]
+          ),
+          data.frame(
+            source = rep("simulated", length(sim)),
+            n = as.numeric(sim),
+            zone = labels[[z]]
+          )
+        )
+      })
+    )
+    df$zone <- factor(df$zone, levels = unname(labels))
+  } else {
+    obs <- stats$observed$primary$n_fires_by_year$n
+    ## drop the summary log's Time 0 row: it is the initial state, always zero fires, and one
+    ## spurious zero per replicate both shifts the mean down and (where counts are large) collapses
+    ## the spread
+    sim <- unlist(lapply(stats$reps, function(r) .drop_initial_timestep(r$n_fires_by_year)$n_fires))
+    df <- rbind(
+      data.frame(source = "observed", n = as.numeric(obs), zone = "all"),
+      data.frame(source = "simulated", n = as.numeric(sim), zone = "all")
+    )
+  }
+  means <- stats::aggregate(n ~ source + zone, data = df, FUN = mean)
   pal <- calibration_plot_palette()
   cols <- c(observed = pal[["observed"]], simulated = pal[["simulated"]])
 
-  ggplot2::ggplot(df, ggplot2::aes(.data$n, fill = .data$source)) +
+  gg <- ggplot2::ggplot(df, ggplot2::aes(.data$n, fill = .data$source)) +
     ggplot2::geom_histogram(
       ggplot2::aes(y = ggplot2::after_stat(.data$density)),
       bins = bins,
@@ -350,6 +475,10 @@ plot_calibration_fire_counts <- function(stats, bins = 24L) {
     ggplot2::scale_colour_manual(values = cols) +
     ggplot2::labs(title = "Fires per year", x = "fires per year", y = "density") +
     .calibration_theme()
+  if (isTRUE(by_zone)) {
+    gg <- gg + ggplot2::facet_wrap(ggplot2::vars(.data$zone), scales = "free")
+  }
+  gg
 }
 
 #' Plot observed against simulated area burned by base fuel type
@@ -384,7 +513,7 @@ plot_calibration_area_by_fuel <- function(stats) {
   }
   ## Never through `stats$observed$fuel_code_to_base`: that decodes the OBSERVED raster's codes,
   ## and read through it a FuelType map value (fuel-type index + 1) names the wrong fuel type.
-  ca <- do.call(rbind, lapply(rep_dfs, function(d) .area_by_fuel_base(d)[, c("base", "area_ha")]))
+  ca <- do.call(rbind, lapply(rep_dfs, function(d) area_by_fuel_base(d)[, c("base", "area_ha")]))
   ca <- ca[!is.na(ca$base), , drop = FALSE]
   sim <- tapply(ca$area_ha, ca$base, sum)
 
@@ -424,11 +553,15 @@ plot_calibration_area_by_fuel <- function(stats) {
 #'
 #' Both options still summarise each fire by its mean severity, so neither
 #' recovers the within-fire variation that a per-pixel reference retains.
+#' `weight_by = "cells"` does: it counts the severity class of every burned
+#' cell ([severity_cell_counts()]), which is what [loss_from_stats()] scores
+#' with `severity_weighting = "cell"`, and needs replicates parsed with
+#' `by_class = TRUE`.
 #'
 #' @param stats A `run_calibration_validation()` summary carrying
 #'   `$observed$primary$severity_dist`.
-#' @param weight_by `"events"` (one vote per fire) or `"area"` (weight each
-#'   fire by the area it burned). See Weighting.
+#' @param weight_by `"events"` (one vote per fire), `"area"` (weight each fire
+#'   by the area it burned) or `"cells"` (every burned cell). See Weighting.
 #' @param classes `3` to collapse to low/medium/high before plotting -- the
 #'   three categories a thresholded observed reference usually distinguishes --
 #'   or `5` for the raw Dynamic Fire classes.
@@ -437,7 +570,11 @@ plot_calibration_area_by_fuel <- function(stats) {
 #'
 #' @family calibration plots
 #' @export
-plot_calibration_severity <- function(stats, weight_by = c("events", "area"), classes = c(3, 5)) {
+plot_calibration_severity <- function(
+  stats,
+  weight_by = c("events", "area", "cells"),
+  classes = c(3, 5)
+) {
   .need("ggplot2", "plot_calibration_severity()")
   .check_calibration_stats(stats, need = "severity_dist")
   weight_by <- match.arg(weight_by)
@@ -448,7 +585,17 @@ plot_calibration_severity <- function(stats, weight_by = c("events", "area"), cl
   ev <- calibration_events(stats)
   ev$cls <- .calibration_severity_bin(ev$mean_severity)
 
-  sim <- if (identical(weight_by, "area")) {
+  sim <- if (identical(weight_by, "cells")) {
+    counts <- severity_cell_counts(stats$reps)
+    if (is.null(counts)) {
+      stop(
+        "`weight_by = \"cells\"` needs replicates parsed with `by_class = TRUE`; ",
+        "these carry no per-class cell counts.",
+        call. = FALSE
+      )
+    }
+    as.numeric(counts / sum(counts))
+  } else if (identical(weight_by, "area")) {
     a <- tapply(ev$area_ha, ev$cls, sum)
     a[is.na(a)] <- 0
     as.numeric(a / sum(a))
@@ -481,7 +628,7 @@ plot_calibration_severity <- function(stats, weight_by = c("events", "area"), cl
       title = "Burn-severity distribution",
       subtitle = sprintf(
         "simulated side weighted by %s",
-        if (identical(weight_by, "area")) "area burned" else "fire count"
+        switch(weight_by, cells = "burned cell", area = "area burned", "fire count")
       ),
       x = "severity class",
       y = "share of burning"

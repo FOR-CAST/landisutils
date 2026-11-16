@@ -4,12 +4,18 @@
 \alias{plot_calibration_fire_counts}
 \title{Plot observed against simulated annual fire counts}
 \usage{
-plot_calibration_fire_counts(stats, bins = 24L)
+plot_calibration_fire_counts(stats, bins = 24L, by_zone = FALSE)
 }
 \arguments{
 \item{stats}{A \code{run_calibration_validation()} summary.}
 
 \item{bins}{Number of histogram bins.}
+
+\item{by_zone}{Logical. One panel per fire zone, from the payload's
+\verb{$zones} (see \code{\link[=save_observed_fire_targets]{save_observed_fire_targets()}}). Each replicate's fires are
+counted per zone in each scored year, the counts \code{\link[=loss_from_stats]{loss_from_stats()}}
+scores. Zones with no weight in the objective are labelled "(not
+calibrated)".}
 }
 \value{
 A ggplot object.

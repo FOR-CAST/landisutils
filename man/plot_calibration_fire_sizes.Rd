@@ -4,18 +4,36 @@
 \alias{plot_calibration_fire_sizes}
 \title{Plot observed against simulated fire sizes}
 \usage{
-plot_calibration_fire_sizes(stats)
+plot_calibration_fire_sizes(
+  stats,
+  scale = c("ecdf", "exceedance"),
+  by_zone = FALSE
+)
 }
 \arguments{
 \item{stats}{A \code{run_calibration_validation()} summary.}
+
+\item{scale}{\code{"ecdf"} (cumulative share, the default) or \code{"exceedance"}.}
+
+\item{by_zone}{Logical. One panel per fire zone, from the payload's
+\verb{$zones} (see \code{\link[=save_observed_fire_targets]{save_observed_fire_targets()}}); a simulated fire belongs to
+the fire region its event log names. Zones with no weight in the objective
+are labelled "(not calibrated)".}
 }
 \value{
 A ggplot object.
 }
 \description{
-Empirical cumulative distributions on a log size axis. Both sides are
+Empirical cumulative distributions on a log size axis, or exceedance curves
+(the share of fires at least each size) on log-log axes. Both sides are
 truncated at the observed \code{min_size_ha} floor when the summary records one,
 matching the truncation the objective's size term applies.
+}
+\details{
+The exceedance scale is the one that shows the large-fire end: on a
+cumulative axis the top few percent of fires, which carry most of the area
+burned, are squeezed against 1. It marks the observed 95th and 99th
+percentiles as dashed lines.
 }
 \seealso{
 Other calibration plots:
