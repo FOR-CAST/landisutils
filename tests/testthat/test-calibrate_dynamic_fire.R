@@ -1021,17 +1021,198 @@ test_that("loss_from_stats() Tier 1 returns finite count + size components", {
     )
   )
   loss <- loss_from_stats(list(rep1), observed)
-  expect_named(loss, c("total", "components", "weights", "severity_weighting"))
+  expect_named(loss, c("total", "components", "weights", "severity_weighting", "zones"))
   expect_named(
     loss$components,
-    c("count", "size", "size_tail", "area_fuel", "severity", "mortality", "area_burned")
+    c("count", "size", "size_tail", "area_fuel", "severity", "mortality", "area_burned", "size_p99")
   )
+  expect_null(loss$zones)
   expect_true(is.finite(loss$total))
   expect_true(loss$components[["count"]] >= 0)
   expect_true(loss$components[["size"]] >= 0 && loss$components[["size"]] <= 1)
   expect_true(loss$components[["size_tail"]] >= 0) ## |log10 sim_q95 - log10 obs_q95|, or 0 if n < 20
   expect_equal(loss$components[["area_fuel"]], 0)
   expect_equal(loss$components[["severity"]], 0)
+})
+
+## Two replicates over scored years 1-4 (the year-0 row is dropped) and a payload WITHOUT zones,
+## built so every component can be derived by hand: the simulated sizes are the observed ones, so
+## `size` is 0, and both samples are under 20 fires, so `size_tail` is 0.
+.nz_fixture <- function() {
+  reps <- list(
+    list(
+      n_fires_by_year = tibble::tibble(year = 0:4, n_fires = c(0L, 1L, 0L, 2L, 1L)),
+      fire_sizes_ha = c(2, 4),
+      events = tibble::tibble(eco = "A", year = c(1L, 3L, 3L, 4L), sites = c(3L, 3L, 3L, 3L))
+    ),
+    list(
+      n_fires_by_year = tibble::tibble(year = 0:4, n_fires = c(0L, 2L, 1L, 1L, 0L)),
+      fire_sizes_ha = 6,
+      events = tibble::tibble(eco = "A", year = c(1L, 1L, 2L, 3L), sites = c(5L, 5L, 5L, 5L))
+    )
+  )
+  observed <- list(
+    primary = list(
+      lambda_obs = 1.5,
+      n_fires_by_year = tibble::tibble(year = 1:4, n = c(1L, 2L, 1L, 2L)),
+      fire_sizes_ha = c(2, 4, 6)
+    ),
+    pixel_area_ha = 1
+  )
+  list(reps = reps, observed = observed)
+}
+
+test_that("loss_from_stats() scores a payload without zones exactly as before", {
+  fx <- .nz_fixture()
+  loss <- loss_from_stats(
+    fx$reps,
+    fx$observed,
+    weights = c(count = 2, size = 1, size_tail = 1, area_burned = 1)
+  )
+  ## both replicates average 1 fire a year against an observed 1.5, sd(1, 2, 1, 2)
+  expect_equal(loss$components[["count"]], 0.5 / sd(c(1, 2, 1, 2)))
+  expect_equal(loss$components[["size"]], 0)
+  expect_equal(loss$components[["size_tail"]], 0)
+  ## 12 and 20 cells of 1 ha over 4 years: 4 ha/yr against 1.5 fires x 4 ha
+  expect_equal(loss$components[["area_burned"]], abs(log10(4 / 6)))
+  expect_equal(loss$total, 2 * 0.5 / sd(c(1, 2, 1, 2)) + abs(log10(4 / 6)))
+})
+
+## Two zones over scored years 1-4. Zone A records 2 fires every year (8 ignitions) and is
+## simulated at 8 and 6 fires; one more zone-A fire burns in year 0, which is not scored. Zone B
+## records 0, 1, 0, 1 (2 ignitions) and is simulated at 0 and 2. `with_c` adds an uncalibrated
+## zone C with fires on both sides.
+.zone_fixture <- function(with_c = FALSE) {
+  ev <- function(eco, year, sites) {
+    tibble::tibble(eco = eco, year = as.integer(year), sites = as.integer(sites))
+  }
+  rep1_events <- ev("A", c(0, 1, 1, 2, 2, 3, 3, 4, 4), 2)
+  rep2_events <- rbind(ev("A", c(1, 1, 2, 2, 3, 4), 2), ev("B", c(2, 4), 3))
+  if (with_c) {
+    rep1_events <- rbind(rep1_events, ev("C", 1:4, 1))
+  }
+  rep_of <- function(events) {
+    list(
+      n_fires_by_year = tibble::tibble(
+        year = 0:4,
+        n_fires = vapply(0:4, function(y) sum(events$year == y), integer(1))
+      ),
+      fire_sizes_ha = sort(as.numeric(events$sites)),
+      events = events
+    )
+  }
+  zone <- function(name, n, sizes, calibrated = TRUE) {
+    list(
+      ecoregion = name,
+      calibrated = calibrated,
+      n_years = 4L,
+      n_ignitions = sum(n),
+      lambda_obs = sum(n) / 4,
+      n_fires_by_year = tibble::tibble(year = 1:4, n = as.integer(n)),
+      fire_sizes_ha = sizes
+    )
+  }
+  zones <- list(A = zone("A", c(2, 2, 2, 2), 1:8), B = zone("B", c(0, 1, 0, 1), c(2, 10)))
+  weights <- c(A = 0.8, B = 0.2)
+  if (with_c) {
+    zones$C <- zone("C", c(1, 1, 1, 1), c(1, 1, 1, 1), calibrated = FALSE)
+    weights <- c(weights, C = 0)
+  }
+  list(
+    reps = list(rep_of(rep1_events), rep_of(rep2_events)),
+    observed = list(
+      primary = list(
+        lambda_obs = 2.5,
+        n_fires_by_year = tibble::tibble(year = 1:4, n = c(2L, 3L, 2L, 3L)),
+        fire_sizes_ha = c(1:8, 2, 10)
+      ),
+      zones = zones,
+      zone_weights = weights,
+      pixel_area_ha = 1
+    )
+  )
+}
+
+test_that("count is the fire-share-weighted sum of per-zone terms", {
+  fx <- .zone_fixture()
+  loss <- loss_from_stats(fx$reps, fx$observed, weights = c(count = 2))
+  term_a <- 0.25 / sqrt(2) ## simulated 1.75 a year against 2; sd 0 floored at sqrt(2)
+  term_b <- 0.25 / sqrt(0.5) ## simulated 0.25 against 0.5; sd 0.577 floored at sqrt(0.5)
+  expect_equal(loss$zones$zone, c("A", "B"))
+  expect_equal(loss$zones$count_term, c(term_a, term_b))
+  expect_equal(loss$components[["count"]], 0.8 * term_a + 0.2 * term_b)
+  expect_equal(loss$total, 2 * (0.8 * term_a + 0.2 * term_b))
+})
+
+test_that("an uncalibrated zone is reported but does not score", {
+  loss_ab <- loss_from_stats(.zone_fixture()$reps, .zone_fixture()$observed)
+  fx <- .zone_fixture(with_c = TRUE)
+  loss <- loss_from_stats(fx$reps, fx$observed)
+  expect_equal(loss$zones$zone, c("A", "B", "C"))
+  expect_equal(loss$zones$weight[loss$zones$zone == "C"], 0)
+  expect_false(loss$zones$calibrated[loss$zones$zone == "C"])
+  expect_gt(loss$zones$count_term[loss$zones$zone == "C"], 0)
+  expect_equal(loss$components[["count"]], loss_ab$components[["count"]])
+})
+
+test_that("a zone with no observed fires never divides by zero", {
+  fx <- .zone_fixture()
+  fx$observed$zones$D <- list(
+    ecoregion = "D",
+    calibrated = TRUE,
+    n_years = 4L,
+    n_ignitions = 0L,
+    lambda_obs = 0,
+    n_fires_by_year = tibble::tibble(year = 1:4, n = rep(0L, 4)),
+    fire_sizes_ha = numeric(0)
+  )
+  fx$observed$zone_weights <- c(fx$observed$zone_weights, D = 0)
+  d_events <- tibble::tibble(eco = "D", year = c(1L, 2L), sites = c(1L, 1L))
+  fx$reps[[1]]$events <- rbind(fx$reps[[1]]$events, d_events)
+  loss <- loss_from_stats(fx$reps, fx$observed)
+  d <- loss$zones[loss$zones$zone == "D", ]
+  expect_equal(d$count_sd, 1)
+  expect_equal(d$count_term, 0.25) ## 2 fires over 4 years in one of two reps
+})
+
+test_that("a simulated fire in a region the payload does not name is an error", {
+  fx <- .zone_fixture()
+  fx$reps[[2]]$events$eco[[1]] <- "FRT13-hi"
+  expect_snapshot(loss_from_stats(fx$reps, fx$observed), error = TRUE)
+})
+
+test_that("size_p99 compares 99th percentiles once both samples hold 100 fires", {
+  p99_for <- function(n) {
+    reps <- list(list(
+      n_fires_by_year = tibble::tibble(year = 1:10, n_fires = rep(1L, 10)),
+      fire_sizes_ha = as.numeric(seq_len(n))
+    ))
+    observed <- list(
+      primary = list(
+        lambda_obs = 1,
+        n_fires_by_year = tibble::tibble(year = 1:10, n = rep(1L, 10)),
+        fire_sizes_ha = 2 * seq_len(n)
+      )
+    )
+    loss_from_stats(reps, observed)$components[["size_p99"]]
+  }
+  expect_equal(p99_for(100), log10(2))
+  expect_equal(p99_for(99), 0)
+})
+
+test_that("zone diagnostics report each side's quantiles", {
+  fx <- .zone_fixture()
+  z <- loss_from_stats(fx$reps, fx$observed)$zones
+  a <- z[z$zone == "A", ]
+  b <- z[z$zone == "B", ]
+  expect_equal(a$obs_q95, stats::quantile(1:8, 0.95, type = 7, names = FALSE))
+  expect_equal(a$obs_median, 4.5)
+  expect_equal(a$sim_n, 14) ## the year-0 fire is not scored
+  expect_equal(a$sim_q95, 2)
+  expect_equal(b$sim_q95, 3)
+  expect_equal(b$obs_p99, stats::quantile(c(2, 10), 0.99, type = 7, names = FALSE))
+  ## simulated 8 x 2 ha and 6 x 2 ha over 4 years against 2 fires a year of mean 4.5 ha
+  expect_equal(a$area_ratio, mean(c(16, 12) / 4) / (2 * 4.5))
 })
 
 test_that("bc_fuel_code_to_base() maps the 13 BC FUEL_TYPE_CD levels", {
@@ -1100,7 +1281,10 @@ test_that("save_observed_fire_targets() writes a payload with expected shape", {
       "pixel_area_ha",
       "min_size_ha",
       "computed_at",
-      "notes"
+      "notes",
+      "record",
+      "zones",
+      "zone_weights"
     )
   )
   ## Primary summary checks
@@ -1653,6 +1837,114 @@ test_that("save_observed_fire_targets() passes `ignitions` to the size rule", {
   }
   expect_equal(sizes(ign), 100, tolerance = 1e-6)
   expect_equal(sizes(NULL), 120)
+})
+
+## --- per-zone observed blocks -------------------------------------------------------------------
+.zone_rast <- function() {
+  r <- terra::rast(
+    nrows = 10,
+    ncols = 110,
+    xmin = 1.2e6,
+    xmax = 1.211e6,
+    ymin = 1e6,
+    ymax = 1.001e6,
+    crs = "EPSG:3005"
+  )
+  terra::values(r) <- 2L
+  r
+}
+## One fire per element, each at its own spot, carrying its zone code in `EcoCode`.
+.zone_points <- function(
+  code,
+  year,
+  size_ha = 5,
+  x = 1.2e6 + 50 + 100 * seq_along(code),
+  y = 1e6 + 500
+) {
+  p <- .ignitions(x, y, year, size_ha)
+  p$EcoCode <- as.integer(code)
+  p
+}
+.zone_table <- function(n = 3L, calibrated = c(TRUE, TRUE, FALSE, TRUE)) {
+  data.frame(
+    EcoCode = seq_len(n),
+    EcoName = c("A", "B", "C", "D")[seq_len(n)],
+    calibrated = calibrated[seq_len(n)]
+  )
+}
+.zone_payload <- function(points, zones, polys = NULL, fire_years = 2001:2002, ...) {
+  path <- withr::local_tempfile(fileext = ".rds")
+  save_observed_fire_targets(points, polys, fire_years, .zone_rast(), path, zones = zones, ...)
+  readRDS(path)
+}
+
+test_that("save_observed_fire_targets() writes one block per zone, keyed by zone name", {
+  p <- .zone_payload(
+    .zone_points(c(1, 1, 2, 3), c(2001, 2002, 2001, 2002)),
+    .zone_table(),
+    record = "hrv"
+  )
+  expect_named(p$zones, c("A", "B", "C"))
+  expect_equal(p$zones$A$lambda_obs, 1)
+  expect_equal(p$zones$A$n_fires_by_year$n, c(1L, 1L))
+  expect_equal(p$zones$A$fire_sizes_ha, c(5, 5))
+  expect_equal(p$zones$B$lambda_obs, 0.5)
+  expect_equal(p$zones$C$lambda_obs, 0.5)
+  expect_false(p$zones$C$calibrated)
+  expect_identical(p$record, "hrv")
+})
+
+test_that("zone weights are each calibrated zone's share of calibrated fires", {
+  p <- .zone_payload(.zone_points(c(1, 1, 2, 3), c(2001, 2002, 2001, 2002)), .zone_table())
+  expect_equal(p$zone_weights, c(A = 2 / 3, B = 1 / 3, C = 0))
+})
+
+test_that("a zone with no fires has rate 0 and weight 0", {
+  p <- .zone_payload(.zone_points(c(1, 1, 2, 3), c(2001, 2002, 2001, 2002)), .zone_table(4L))
+  expect_equal(p$zones$D$lambda_obs, 0)
+  expect_equal(p$zones$D$n_fires_by_year$n, c(0L, 0L))
+  expect_equal(p$zone_weights, c(A = 2 / 3, B = 1 / 3, C = 0, D = 0))
+})
+
+test_that("each zone's sizes use the whole ignition record for the merge test", {
+  ## The two-part feature of the `ignitions` test above: the zone-A fire's part is 100 ha, and the
+  ## other part holds a zone-B fire. Sized against zone A's points alone, the zone-A fire would take
+  ## the whole feature's 120 ha.
+  feat <- .fire_feature(c(.square(1.2e6, 1e6, 1000), .square(1.21e6, 1e6, 500)), 2018, 120)
+  pts <- .zone_points(
+    c(1, 2),
+    2018,
+    size_ha = c(90, 30),
+    x = c(1.2e6 + 500, 1.21e6 + 250),
+    y = c(1e6 + 500, 1e6 + 250)
+  )
+  p <- .zone_payload(pts, .zone_table(2L), polys = feat, fire_years = 2018L)
+  expect_equal(p$zones$A$fire_sizes_ha, 100, tolerance = 1e-6)
+})
+
+test_that("the primary block is unchanged by zones", {
+  pts <- .zone_points(c(1, 1, 2, 3), c(2001, 2002, 2001, 2002))
+  with_zones <- .zone_payload(pts, .zone_table())
+  without <- .zone_payload(pts, NULL)
+  expect_identical(with_zones$primary, without$primary)
+  expect_null(without$zones)
+  expect_null(without$zone_weights)
+})
+
+test_that("an ignition in a zone the table does not name is an error", {
+  pts <- .zone_points(c(1, 9), c(2001, 2002))
+  expect_snapshot(.zone_payload(pts, .zone_table()), error = TRUE)
+})
+
+test_that("a zone name must be letters and digits", {
+  zones <- .zone_table()
+  zones$EcoName[[2]] <- "FRT13-hi"
+  expect_snapshot(.zone_payload(.zone_points(c(1, 2), c(2001, 2002)), zones), error = TRUE)
+})
+
+test_that("no calibrated zone with fires is an error", {
+  zones <- .zone_table(calibrated = c(FALSE, FALSE, FALSE))
+  expect_snapshot(.zone_payload(.zone_points(c(1, 2), c(2001, 2002)), zones), error = TRUE)
 })
 
 test_that("save_observed_fire_targets() falls back to points' SIZE_HA when polys are not supplied", {

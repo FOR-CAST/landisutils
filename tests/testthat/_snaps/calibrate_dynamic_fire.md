@@ -30,6 +30,38 @@
       Error:
       ! DamageAgeMultiplier of 1.5 scales the fire damage table past 100 % of longevity, which the user guide (2.16.2) does not allow
 
+# a simulated fire in a region the payload does not name is an error
+
+    Code
+      loss_from_stats(fx$reps, fx$observed)
+    Condition
+      Error:
+      ! Simulated fires burned in fire region(s) FRT13-hi that the observed payload does not name (it names A, B). The FireSizesTable's EcoName and the payload's zones must be the same zoning.
+
+# an ignition in a zone the table does not name is an error
+
+    Code
+      .zone_payload(pts, .zone_table())
+    Condition
+      Error:
+      ! Ignition point(s) lie in zone code(s) 9 that `zones` does not name.
+
+# a zone name must be letters and digits
+
+    Code
+      .zone_payload(.zone_points(c(1, 2), c(2001, 2002)), zones)
+    Condition
+      Error:
+      ! Zone names must be letters and digits only, so that they match the fire-region names Dynamic Fire writes to its event log; not: FRT13-hi
+
+# no calibrated zone with fires is an error
+
+    Code
+      .zone_payload(.zone_points(c(1, 2), c(2001, 2002)), zones)
+    Condition
+      Error:
+      ! No calibrated zone has an ignition in `fire_years`, so the zones cannot be weighted.
+
 # severity_weighting 'cell' errors when no replicate carries by_class
 
     Code

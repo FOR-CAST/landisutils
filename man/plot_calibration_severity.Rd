@@ -6,7 +6,7 @@
 \usage{
 plot_calibration_severity(
   stats,
-  weight_by = c("events", "area"),
+  weight_by = c("events", "area", "cells"),
   classes = c(3, 5)
 )
 }
@@ -14,8 +14,8 @@ plot_calibration_severity(
 \item{stats}{A \code{run_calibration_validation()} summary carrying
 \verb{$observed$primary$severity_dist}.}
 
-\item{weight_by}{\code{"events"} (one vote per fire) or \code{"area"} (weight each
-fire by the area it burned). See Weighting.}
+\item{weight_by}{\code{"events"} (one vote per fire), \code{"area"} (weight each fire
+by the area it burned) or \code{"cells"} (every burned cell). See Weighting.}
 
 \item{classes}{\code{3} to collapse to low/medium/high before plotting -- the
 three categories a thresholded observed reference usually distinguishes --
@@ -41,6 +41,10 @@ the like-for-like comparison against an area-weighted reference.
 
 Both options still summarise each fire by its mean severity, so neither
 recovers the within-fire variation that a per-pixel reference retains.
+\code{weight_by = "cells"} does: it counts the severity class of every burned
+cell (\code{\link[=severity_cell_counts]{severity_cell_counts()}}), which is what \code{\link[=loss_from_stats]{loss_from_stats()}} scores
+with \code{severity_weighting = "cell"}, and needs replicates parsed with
+\code{by_class = TRUE}.
 }
 
 \seealso{

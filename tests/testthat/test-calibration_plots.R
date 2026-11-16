@@ -138,6 +138,93 @@ test_that("plot_calibration_severity() honours the class count", {
   expect_snapshot(error = TRUE, plot_calibration_severity(stats, classes = 4))
 })
 
+test_that("weight_by = 'cells' plots the burned cells of each severity class", {
+  skip_if_not_installed("ggplot2")
+  stats <- make_calibration_stats()
+  stats$reps[[1]]$overstory_mortality <- list(
+    share = 0.2,
+    by_class = data.frame(class = 0:5, cells = c(5, 10, 20, 30, 25, 15))
+  )
+  stats$reps[[2]]$overstory_mortality <- list(
+    share = 0.3,
+    by_class = data.frame(class = 1:5, cells = c(10, 0, 10, 15, 5))
+  )
+  counts <- severity_cell_counts(stats$reps)
+  expect_equal(counts, c("1" = 20, "2" = 20, "3" = 40, "4" = 40, "5" = 20))
+  p <- plot_calibration_severity(stats, weight_by = "cells")
+  sim <- p$data$prop[p$data$source == "simulated"]
+  expect_equal(sim, unname(.calibration_collapse3(as.numeric(counts) / sum(counts))))
+})
+
+test_that("weight_by = 'cells' needs replicates parsed with their per-class counts", {
+  skip_if_not_installed("ggplot2")
+  expect_snapshot(error = TRUE, plot_calibration_severity(make_calibration_stats(), "cells"))
+})
+
+## make_calibration_stats() split into three fire zones: A and B calibrated, C not.
+make_zone_stats <- function() {
+  stats <- make_calibration_stats()
+  for (i in seq_along(stats$reps)) {
+    stats$reps[[i]]$events$eco <- c("A", "A", "B", "C", "A")
+  }
+  zone <- function(n, sizes, calibrated = TRUE) {
+    list(
+      calibrated = calibrated,
+      lambda_obs = mean(n),
+      n_fires_by_year = data.frame(year = 1:5, n = as.integer(n)),
+      fire_sizes_ha = sizes
+    )
+  }
+  stats$observed$zones <- list(
+    A = zone(c(1, 6, 0, 8, 2), c(1, 3, 9, 40, 20000)),
+    B = zone(c(1, 2, 1, 3, 1), 800),
+    C = zone(c(0, 1, 0, 1, 1), c(2, 5), calibrated = FALSE)
+  )
+  stats$observed$zone_weights <- c(A = 0.8, B = 0.2, C = 0)
+  stats
+}
+
+test_that("the exceedance scale starts every side at 1 and marks the observed tail", {
+  skip_if_not_installed("ggplot2")
+  stats <- make_calibration_stats()
+  p <- plot_calibration_fire_sizes(stats, scale = "exceedance")
+  for (s in c("observed", "simulated")) {
+    d <- p$data[p$data$source == s, ]
+    expect_equal(d$exceedance[which.min(d$size)], 1)
+  }
+  obs <- stats$observed$primary$fire_sizes_ha
+  obs <- obs[obs >= stats$observed$min_size_ha]
+  marks <- p$layers[[2]]$data
+  expect_equal(sort(marks$size), stats::quantile(obs, c(0.95, 0.99), type = 7, names = FALSE))
+})
+
+test_that("by_zone facets the size and count plots, marking uncalibrated zones", {
+  skip_if_not_installed("ggplot2")
+  stats <- make_zone_stats()
+  sizes <- plot_calibration_fire_sizes(stats, by_zone = TRUE)
+  counts <- plot_calibration_fire_counts(stats, by_zone = TRUE)
+  expect_equal(levels(sizes$data$zone), c("A", "B", "C (not calibrated)"))
+  expect_equal(levels(counts$data$zone), c("A", "B", "C (not calibrated)"))
+})
+
+test_that("by_zone counts each replicate's fires per zone and scored year", {
+  skip_if_not_installed("ggplot2")
+  counts <- plot_calibration_fire_counts(make_zone_stats(), by_zone = TRUE)
+  d <- counts$data
+  sim_a <- d$n[d$source == "simulated" & d$zone == "A"]
+  ## zone A fires in years 1, 2 and 5 of each of two replicates
+  expect_equal(sort(sim_a), sort(rep(c(1, 1, 0, 0, 1), 2)))
+  expect_equal(d$n[d$source == "observed" & d$zone == "B"], c(1, 2, 1, 3, 1))
+})
+
+test_that("by_zone needs a payload with zones", {
+  skip_if_not_installed("ggplot2")
+  expect_snapshot(
+    error = TRUE,
+    plot_calibration_fire_sizes(make_calibration_stats(), by_zone = TRUE)
+  )
+})
+
 test_that("plot_calibration_severity_by_size() carries a size summary", {
   skip_if_not_installed("ggplot2")
   stats <- make_calibration_stats()
