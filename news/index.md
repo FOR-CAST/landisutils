@@ -1,5 +1,45 @@
 # Changelog
 
+## landisutils 0.0.184
+
+- Dynamic Fire calibrations can score fire counts zone by zone, for a
+  landscape divided into several fire regions. A landscape total can
+  match while one zone burns too often and another too rarely, which in
+  a range-of-variation study misplaces the stand ages.
+- [`save_observed_fire_targets()`](https://for-cast.github.io/landisutils/reference/save_observed_fire_targets.md)
+  gains `zones`, `zone_field` and `record`. With `zones` (each fire
+  region’s `EcoCode`, `EcoName` and whether it is `calibrated`), the
+  payload carries one observed block per zone in `$zones` and each
+  calibrated zone’s share of the calibrated zones’ ignitions in
+  `$zone_weights`. Each zone’s fire sizes are tested against the whole
+  ignition record, so a perimeter shared with a fire in the next zone is
+  still detected. An ignition in a zone the table does not name, or a
+  zone name that is not letters and digits only, is an error.
+- [`loss_from_stats()`](https://for-cast.github.io/landisutils/reference/loss_from_stats.md)
+  scores `count` as the weighted sum of per-zone terms when the payload
+  carries zones, each against the zone’s year-to-year sd floored at the
+  Poisson sd `sqrt(lambda)`. A simulated fire belongs to the fire region
+  its event log names; one in a region the payload does not name is an
+  error. The result gains `zones`, a per-zone table of count terms and
+  size diagnostics (NULL without zones), and a new component `size_p99`,
+  the log10 gap between simulated and observed 99th-percentile fire
+  sizes once both samples hold 100 fires (weight 0 by default). A
+  payload without zones scores exactly as before.
+- [`area_by_fuel_base()`](https://for-cast.github.io/landisutils/reference/area_by_fuel_base.md)
+  and
+  [`severity_cell_counts()`](https://for-cast.github.io/landisutils/reference/severity_cell_counts.md)
+  are exported (formerly internal `.area_by_fuel_base()` and
+  `.severity_cell_counts()`), so figures drawn outside the package
+  decode fuel types and count severity the way the objective does.
+- [`plot_calibration_fire_sizes()`](https://for-cast.github.io/landisutils/reference/plot_calibration_fire_sizes.md)
+  gains `scale = "exceedance"` (the share of fires at least each size,
+  log-log, with the observed 95th and 99th percentiles marked) and
+  `by_zone`.
+  [`plot_calibration_fire_counts()`](https://for-cast.github.io/landisutils/reference/plot_calibration_fire_counts.md)
+  gains `by_zone`.
+  [`plot_calibration_severity()`](https://for-cast.github.io/landisutils/reference/plot_calibration_severity.md)
+  gains `weight_by = "cells"`.
+
 ## landisutils 0.0.183
 
 - New calibration plots that take plain data frames and return a ggplot

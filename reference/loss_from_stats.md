@@ -58,8 +58,13 @@ loss_from_stats(
 ## Value
 
 Named list with `total` (the scalar minimised by DEoptim), `components`
-(per-component contributions), `weights` (echoed weights), and
-`severity_weighting` (how the severity component was counted).
+(per-component contributions), `weights` (echoed weights),
+`severity_weighting` (how the severity component was counted), and
+`zones`: NULL without zones, otherwise a data.frame with one row per
+zone (`zone`, `calibrated`, `weight`, `lambda_obs`, `sim_rate`,
+`count_sd`, `count_term`, the observed and simulated `n`, mean, median,
+95th and 99th percentile fire size, and `area_ratio`, simulated over
+observed annual area burned).
 
 ## Details
 
@@ -140,6 +145,24 @@ All component values are unitless and non-negative; chi-squared
 components use a small epsilon in the denominator to avoid division by
 zero on empty observed bins.
 
+## Fire zones
+
+When `observed$zones` is present
+([`save_observed_fire_targets()`](https://for-cast.github.io/landisutils/reference/save_observed_fire_targets.md)
+with `zones`), `L_count` is the sum over zones of
+`observed$zone_weights` times each zone's
+`|mean simulated annual count - lambda_obs| / sd`, where `sd` is the
+zone's year-to-year sd floored at `sqrt(lambda_obs)`, the Poisson sd of
+an annual count (1 for a zone with no fires). A simulated fire belongs
+to the fire region its event log names (`events$eco`), counted over the
+same scored years as the landscape count; a region the payload does not
+name is an error. Every other component is computed on the whole
+landscape, as without zones.
+
+`L_size_p99 = |log10(sim_p99) - log10(obs_p99)|` on the pooled, floored
+sizes once both samples hold at least 100 fires, else 0; weighted
+`size_p99`, 0 by default.
+
 ## See also
 
 Other Dynamic Fire calibration helpers:
@@ -147,6 +170,7 @@ Other Dynamic Fire calibration helpers:
 [`apply_calibrated_hi_prop()`](https://for-cast.github.io/landisutils/reference/apply_calibrated_hi_prop.md),
 [`apply_calibrated_ignprob()`](https://for-cast.github.io/landisutils/reference/apply_calibrated_ignprob.md),
 [`apply_calibrated_num_fires()`](https://for-cast.github.io/landisutils/reference/apply_calibrated_num_fires.md),
+[`area_by_fuel_base()`](https://for-cast.github.io/landisutils/reference/area_by_fuel_base.md),
 [`bc_fuel_code_to_base()`](https://for-cast.github.io/landisutils/reference/bc_fuel_code_to_base.md),
 [`bc_fuel_label_to_base()`](https://for-cast.github.io/landisutils/reference/bc_fuel_label_to_base.md),
 [`build_calibration_scenario_template()`](https://for-cast.github.io/landisutils/reference/build_calibration_scenario_template.md),
@@ -166,6 +190,7 @@ Other Dynamic Fire calibration helpers:
 [`run_calibration_spinup()`](https://for-cast.github.io/landisutils/reference/run_calibration_spinup.md),
 [`run_calibration_validation()`](https://for-cast.github.io/landisutils/reference/run_calibration_validation.md),
 [`save_observed_fire_targets()`](https://for-cast.github.io/landisutils/reference/save_observed_fire_targets.md),
+[`severity_cell_counts()`](https://for-cast.github.io/landisutils/reference/severity_cell_counts.md),
 [`sim_landis()`](https://for-cast.github.io/landisutils/reference/sim_landis.md),
 [`sim_mock()`](https://for-cast.github.io/landisutils/reference/sim_mock.md),
 [`sim_r_reimpl()`](https://for-cast.github.io/landisutils/reference/sim_r_reimpl.md)

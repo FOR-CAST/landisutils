@@ -45,6 +45,7 @@ Other Dynamic Fire calibration helpers:
 [`apply_calibrated_hi_prop()`](https://for-cast.github.io/landisutils/reference/apply_calibrated_hi_prop.md),
 [`apply_calibrated_ignprob()`](https://for-cast.github.io/landisutils/reference/apply_calibrated_ignprob.md),
 [`apply_calibrated_num_fires()`](https://for-cast.github.io/landisutils/reference/apply_calibrated_num_fires.md),
+[`area_by_fuel_base()`](https://for-cast.github.io/landisutils/reference/area_by_fuel_base.md),
 [`bc_fuel_code_to_base()`](https://for-cast.github.io/landisutils/reference/bc_fuel_code_to_base.md),
 [`bc_fuel_label_to_base()`](https://for-cast.github.io/landisutils/reference/bc_fuel_label_to_base.md),
 [`build_calibration_scenario_template()`](https://for-cast.github.io/landisutils/reference/build_calibration_scenario_template.md),
@@ -65,6 +66,7 @@ Other Dynamic Fire calibration helpers:
 [`run_calibration_spinup()`](https://for-cast.github.io/landisutils/reference/run_calibration_spinup.md),
 [`run_calibration_validation()`](https://for-cast.github.io/landisutils/reference/run_calibration_validation.md),
 [`save_observed_fire_targets()`](https://for-cast.github.io/landisutils/reference/save_observed_fire_targets.md),
+[`severity_cell_counts()`](https://for-cast.github.io/landisutils/reference/severity_cell_counts.md),
 [`sim_landis()`](https://for-cast.github.io/landisutils/reference/sim_landis.md),
 [`sim_mock()`](https://for-cast.github.io/landisutils/reference/sim_mock.md),
 [`sim_r_reimpl()`](https://for-cast.github.io/landisutils/reference/sim_r_reimpl.md)

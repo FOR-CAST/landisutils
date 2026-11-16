@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.183</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.184</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -50,7 +50,7 @@
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">plot_calibration_severity</span><span class="op">(</span></span>
 <span>  <span class="va">stats</span>,</span>
-<span>  weight_by <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"events"</span>, <span class="st">"area"</span><span class="op">)</span>,</span>
+<span>  weight_by <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"events"</span>, <span class="st">"area"</span>, <span class="st">"cells"</span><span class="op">)</span>,</span>
 <span>  classes <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">3</span>, <span class="fl">5</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -65,8 +65,8 @@
 
 
 <dt id="arg-weight-by">weight_by<a class="anchor" aria-label="anchor" href="#arg-weight-by"></a></dt>
-<dd><p><code>"events"</code> (one vote per fire) or <code>"area"</code> (weight each
-fire by the area it burned). See Weighting.</p></dd>
+<dd><p><code>"events"</code> (one vote per fire), <code>"area"</code> (weight each fire
+by the area it burned) or <code>"cells"</code> (every burned cell). See Weighting.</p></dd>
 
 
 <dt id="arg-classes">classes<a class="anchor" aria-label="anchor" href="#arg-classes"></a></dt>
@@ -93,7 +93,11 @@ differ sharply, and can even disagree in sign about which way the model is
 off. <code>weight_by = "area"</code> weights each event by the area it burned, which is
 the like-for-like comparison against an area-weighted reference.</p>
 <p>Both options still summarise each fire by its mean severity, so neither
-recovers the within-fire variation that a per-pixel reference retains.</p>
+recovers the within-fire variation that a per-pixel reference retains.
+<code>weight_by = "cells"</code> does: it counts the severity class of every burned
+cell (<code><a href="severity_cell_counts.html">severity_cell_counts()</a></code>), which is what <code><a href="loss_from_stats.html">loss_from_stats()</a></code> scores
+with <code>severity_weighting = "cell"</code>, and needs replicates parsed with
+<code>by_class = TRUE</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

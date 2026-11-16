@@ -25,7 +25,10 @@ save_observed_fire_targets(
   severity_dist = NULL,
   mortality_share = NULL,
   min_size_ha = 1,
-  ignitions = NULL
+  ignitions = NULL,
+  zones = NULL,
+  zone_field = "EcoCode",
+  record = NULL
 )
 ```
 
@@ -134,6 +137,30 @@ save_observed_fire_targets(
   ecoregions' points. NULL uses each ecoregion's own points, which
   misses a fire that started outside the ecoregion.
 
+- zones:
+
+  data.frame or NULL. The fire zones (Dynamic Fire fire regions) the
+  primary ecoregion is divided into: `EcoCode` (integer), `EcoName`
+  (character; letters and digits only, the fire-region name written into
+  the `FireSizesTable`, which is what the event log reports as
+  `InitFireRegion`) and `calibrated` (logical). When supplied, the
+  payload carries one observed block per zone in `$zones`, keyed by
+  `EcoName`, and `$zone_weights`, each calibrated zone's share of the
+  calibrated zones' ignitions (others 0).
+  [`loss_from_stats()`](https://for-cast.github.io/landisutils/reference/loss_from_stats.md)
+  then scores fire counts zone by zone. Every primary point must lie in
+  a listed zone. NULL (default) writes no zone blocks.
+
+- zone_field:
+
+  Character. The `primary_points` column holding each point's zone code.
+  Default `"EcoCode"`.
+
+- record:
+
+  Character or NULL. A label for the fire record the points were
+  filtered to (e.g. which causes and years), stored as `$record`.
+
 ## Value
 
 Character. Absolute path to the written file.
@@ -191,6 +218,7 @@ Other Dynamic Fire calibration helpers:
 [`apply_calibrated_hi_prop()`](https://for-cast.github.io/landisutils/reference/apply_calibrated_hi_prop.md),
 [`apply_calibrated_ignprob()`](https://for-cast.github.io/landisutils/reference/apply_calibrated_ignprob.md),
 [`apply_calibrated_num_fires()`](https://for-cast.github.io/landisutils/reference/apply_calibrated_num_fires.md),
+[`area_by_fuel_base()`](https://for-cast.github.io/landisutils/reference/area_by_fuel_base.md),
 [`bc_fuel_code_to_base()`](https://for-cast.github.io/landisutils/reference/bc_fuel_code_to_base.md),
 [`bc_fuel_label_to_base()`](https://for-cast.github.io/landisutils/reference/bc_fuel_label_to_base.md),
 [`build_calibration_scenario_template()`](https://for-cast.github.io/landisutils/reference/build_calibration_scenario_template.md),
@@ -210,6 +238,7 @@ Other Dynamic Fire calibration helpers:
 [`patch_fire_config()`](https://for-cast.github.io/landisutils/reference/patch_fire_config.md),
 [`run_calibration_spinup()`](https://for-cast.github.io/landisutils/reference/run_calibration_spinup.md),
 [`run_calibration_validation()`](https://for-cast.github.io/landisutils/reference/run_calibration_validation.md),
+[`severity_cell_counts()`](https://for-cast.github.io/landisutils/reference/severity_cell_counts.md),
 [`sim_landis()`](https://for-cast.github.io/landisutils/reference/sim_landis.md),
 [`sim_mock()`](https://for-cast.github.io/landisutils/reference/sim_mock.md),
 [`sim_r_reimpl()`](https://for-cast.github.io/landisutils/reference/sim_r_reimpl.md)

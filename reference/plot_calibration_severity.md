@@ -7,7 +7,7 @@ Plot observed against simulated burn-severity classes
 ``` r
 plot_calibration_severity(
   stats,
-  weight_by = c("events", "area"),
+  weight_by = c("events", "area", "cells"),
   classes = c(3, 5)
 )
 ```
@@ -22,8 +22,8 @@ plot_calibration_severity(
 
 - weight_by:
 
-  `"events"` (one vote per fire) or `"area"` (weight each fire by the
-  area it burned). See Weighting.
+  `"events"` (one vote per fire), `"area"` (weight each fire by the area
+  it burned) or `"cells"` (every burned cell). See Weighting.
 
 - classes:
 
@@ -50,6 +50,13 @@ against an area-weighted reference.
 
 Both options still summarise each fire by its mean severity, so neither
 recovers the within-fire variation that a per-pixel reference retains.
+`weight_by = "cells"` does: it counts the severity class of every burned
+cell
+([`severity_cell_counts()`](https://for-cast.github.io/landisutils/reference/severity_cell_counts.md)),
+which is what
+[`loss_from_stats()`](https://for-cast.github.io/landisutils/reference/loss_from_stats.md)
+scores with `severity_weighting = "cell"`, and needs replicates parsed
+with `by_class = TRUE`.
 
 ## See also
 

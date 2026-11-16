@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.183</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.184</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,6 +41,18 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.184" id="landisutils-00184">landisutils 0.0.184<a class="anchor" aria-label="anchor" href="#landisutils-00184"></a></h2>
+<ul><li>Dynamic Fire calibrations can score fire counts zone by zone, for a landscape divided into several fire regions. A landscape total can match while one zone burns too often and another too rarely, which in a range-of-variation study misplaces the stand ages.</li>
+<li>
+<code><a href="../reference/save_observed_fire_targets.html">save_observed_fire_targets()</a></code> gains <code>zones</code>, <code>zone_field</code> and <code>record</code>. With <code>zones</code> (each fire region’s <code>EcoCode</code>, <code>EcoName</code> and whether it is <code>calibrated</code>), the payload carries one observed block per zone in <code>$zones</code> and each calibrated zone’s share of the calibrated zones’ ignitions in <code>$zone_weights</code>. Each zone’s fire sizes are tested against the whole ignition record, so a perimeter shared with a fire in the next zone is still detected. An ignition in a zone the table does not name, or a zone name that is not letters and digits only, is an error.</li>
+<li>
+<code><a href="../reference/loss_from_stats.html">loss_from_stats()</a></code> scores <code>count</code> as the weighted sum of per-zone terms when the payload carries zones, each against the zone’s year-to-year sd floored at the Poisson sd <code>sqrt(lambda)</code>. A simulated fire belongs to the fire region its event log names; one in a region the payload does not name is an error. The result gains <code>zones</code>, a per-zone table of count terms and size diagnostics (NULL without zones), and a new component <code>size_p99</code>, the log10 gap between simulated and observed 99th-percentile fire sizes once both samples hold 100 fires (weight 0 by default). A payload without zones scores exactly as before.</li>
+<li>
+<code><a href="../reference/area_by_fuel_base.html">area_by_fuel_base()</a></code> and <code><a href="../reference/severity_cell_counts.html">severity_cell_counts()</a></code> are exported (formerly internal <code>.area_by_fuel_base()</code> and <code>.severity_cell_counts()</code>), so figures drawn outside the package decode fuel types and count severity the way the objective does.</li>
+<li>
+<code><a href="../reference/plot_calibration_fire_sizes.html">plot_calibration_fire_sizes()</a></code> gains <code>scale = "exceedance"</code> (the share of fires at least each size, log-log, with the observed 95th and 99th percentiles marked) and <code>by_zone</code>. <code><a href="../reference/plot_calibration_fire_counts.html">plot_calibration_fire_counts()</a></code> gains <code>by_zone</code>. <code><a href="../reference/plot_calibration_severity.html">plot_calibration_severity()</a></code> gains <code>weight_by = "cells"</code>.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.183" id="landisutils-00183">landisutils 0.0.183<a class="anchor" aria-label="anchor" href="#landisutils-00183"></a></h2>
 <ul><li>New calibration plots that take plain data frames and return a ggplot with no title, verdict or caption, so projects that score their calibrations differently can share them. Every check is optional: a reference can be a bare target value.

@@ -8,7 +8,7 @@ burned.
 ## Usage
 
 ``` r
-plot_calibration_fire_counts(stats, bins = 24L)
+plot_calibration_fire_counts(stats, bins = 24L, by_zone = FALSE)
 ```
 
 ## Arguments
@@ -22,6 +22,16 @@ plot_calibration_fire_counts(stats, bins = 24L)
 - bins:
 
   Number of histogram bins.
+
+- by_zone:
+
+  Logical. One panel per fire zone, from the payload's `$zones` (see
+  [`save_observed_fire_targets()`](https://for-cast.github.io/landisutils/reference/save_observed_fire_targets.md)).
+  Each replicate's fires are counted per zone in each scored year, the
+  counts
+  [`loss_from_stats()`](https://for-cast.github.io/landisutils/reference/loss_from_stats.md)
+  scores. Zones with no weight in the objective are labelled "(not
+  calibrated)".
 
 ## Value
 

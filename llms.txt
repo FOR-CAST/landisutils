@@ -310,6 +310,9 @@ scenario(
 - [`apply_calibrated_num_fires()`](https://for-cast.github.io/landisutils/reference/apply_calibrated_num_fires.md)
   : Apply a calibrated ignition rate to a FireSizesTable
 
+- [`area_by_fuel_base()`](https://for-cast.github.io/landisutils/reference/area_by_fuel_base.md)
+  : A replicate's burned area by fuel type, with its base fuel type
+
 - [`assemble_climate_library_file()`](https://for-cast.github.io/landisutils/reference/assemble_climate_library_file.md)
   : Assemble LANDIS-II Climate Library wide-format table from a BioSIM
   Arrow dataset
@@ -1156,6 +1159,9 @@ scenario(
 
 - [`scenario()`](https://for-cast.github.io/landisutils/reference/scenario.md)
   : Create LANDIS-II scenario files
+
+- [`severity_cell_counts()`](https://for-cast.github.io/landisutils/reference/severity_cell_counts.md)
+  : Burned cells by severity class, pooled over replicates
 
 - [`sim_landis()`](https://for-cast.github.io/landisutils/reference/sim_landis.md)
   : Run one DEoptim trial for a candidate parameter vector (blocking)

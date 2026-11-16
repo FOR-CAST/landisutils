@@ -53,6 +53,7 @@
 <url><loc>https://for-cast.github.io/landisutils/reference/apply_calibrated_hi_prop.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/apply_calibrated_ignprob.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/apply_calibrated_num_fires.html</loc></url>
+<url><loc>https://for-cast.github.io/landisutils/reference/area_by_fuel_base.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/assemble_climate_library_file.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/assemble_climate_library_file_monthly.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/assemble_climate_library_file_monthly_climr.html</loc></url>
@@ -391,6 +392,7 @@
 <url><loc>https://for-cast.github.io/landisutils/reference/save_observed_fire_targets.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/scale_linetype_growth_reference.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/scenario.html</loc></url>
+<url><loc>https://for-cast.github.io/landisutils/reference/severity_cell_counts.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/sim_landis.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/sim_mock.html</loc></url>
 <url><loc>https://for-cast.github.io/landisutils/reference/sim_r_reimpl.html</loc></url>

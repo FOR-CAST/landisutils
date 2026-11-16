@@ -11,7 +11,7 @@ save_observed_fire_targets()."><meta property="og:image" content="https://for-ca
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.183</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.184</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -102,7 +102,12 @@ to <code>getOption("landisutils.calibration.severity_weighting", "event")</code>
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>Named list with <code>total</code> (the scalar minimised by DEoptim),
 <code>components</code> (per-component contributions), <code>weights</code> (echoed weights),
-and <code>severity_weighting</code> (how the severity component was counted).</p>
+<code>severity_weighting</code> (how the severity component was counted), and
+<code>zones</code>: NULL without zones, otherwise a data.frame with one row per zone
+(<code>zone</code>, <code>calibrated</code>, <code>weight</code>, <code>lambda_obs</code>, <code>sim_rate</code>, <code>count_sd</code>,
+<code>count_term</code>, the observed and simulated <code>n</code>, mean, median, 95th and 99th
+percentile fire size, and <code>area_ratio</code>, simulated over observed annual
+area burned).</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -172,12 +177,30 @@ use a small epsilon in the denominator to avoid division by zero on empty
 observed bins.</p>
     </div>
     <div class="section level2">
+    <h2 id="fire-zones">Fire zones<a class="anchor" aria-label="anchor" href="#fire-zones"></a></h2>
+
+
+<p>When <code>observed$zones</code> is present (<code><a href="save_observed_fire_targets.html">save_observed_fire_targets()</a></code> with
+<code>zones</code>), <code>L_count</code> is the sum over zones of <code>observed$zone_weights</code> times
+each zone's <code>|mean simulated annual count - lambda_obs| / sd</code>, where <code>sd</code> is
+the zone's year-to-year sd floored at <code>sqrt(lambda_obs)</code>, the Poisson sd of
+an annual count (1 for a zone with no fires). A simulated fire belongs to
+the fire region its event log names (<code>events$eco</code>), counted over the same
+scored years as the landscape count; a region the payload does not name is
+an error. Every other component is computed on the whole landscape, as
+without zones.</p>
+<p><code>L_size_p99 = |log10(sim_p99) - log10(obs_p99)|</code> on the pooled, floored
+sizes once both samples hold at least 100 fires, else 0; weighted
+<code>size_p99</code>, 0 by default.</p>
+    </div>
+    <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p>Other Dynamic Fire calibration helpers:
 <code><a href="apply_calibrated_damage_age.html">apply_calibrated_damage_age()</a></code>,
 <code><a href="apply_calibrated_hi_prop.html">apply_calibrated_hi_prop()</a></code>,
 <code><a href="apply_calibrated_ignprob.html">apply_calibrated_ignprob()</a></code>,
 <code><a href="apply_calibrated_num_fires.html">apply_calibrated_num_fires()</a></code>,
+<code><a href="area_by_fuel_base.html">area_by_fuel_base()</a></code>,
 <code><a href="bc_fuel_code_to_base.html">bc_fuel_code_to_base()</a></code>,
 <code><a href="bc_fuel_label_to_base.html">bc_fuel_label_to_base()</a></code>,
 <code><a href="build_calibration_scenario_template.html">build_calibration_scenario_template()</a></code>,
@@ -197,6 +220,7 @@ observed bins.</p>
 <code><a href="run_calibration_spinup.html">run_calibration_spinup()</a></code>,
 <code><a href="run_calibration_validation.html">run_calibration_validation()</a></code>,
 <code><a href="save_observed_fire_targets.html">save_observed_fire_targets()</a></code>,
+<code><a href="severity_cell_counts.html">severity_cell_counts()</a></code>,
 <code><a href="sim_landis.html">sim_landis()</a></code>,
 <code><a href="sim_mock.html">sim_mock()</a></code>,
 <code><a href="sim_r_reimpl.html">sim_r_reimpl()</a></code></p></div>

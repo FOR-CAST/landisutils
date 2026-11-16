@@ -11,7 +11,7 @@ still never produce the extreme years that carry most of the area burned."><meta
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.183</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.184</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -54,7 +54,7 @@ still never produce the extreme years that carry most of the area burned.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">plot_calibration_fire_counts</span><span class="op">(</span><span class="va">stats</span>, bins <span class="op">=</span> <span class="fl">24L</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">plot_calibration_fire_counts</span><span class="op">(</span><span class="va">stats</span>, bins <span class="op">=</span> <span class="fl">24L</span>, by_zone <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -67,6 +67,14 @@ still never produce the extreme years that carry most of the area burned.</p>
 
 <dt id="arg-bins">bins<a class="anchor" aria-label="anchor" href="#arg-bins"></a></dt>
 <dd><p>Number of histogram bins.</p></dd>
+
+
+<dt id="arg-by-zone">by_zone<a class="anchor" aria-label="anchor" href="#arg-by-zone"></a></dt>
+<dd><p>Logical. One panel per fire zone, from the payload's
+<code>$zones</code> (see <code><a href="save_observed_fire_targets.html">save_observed_fire_targets()</a></code>). Each replicate's fires are
+counted per zone in each scored year, the counts <code><a href="loss_from_stats.html">loss_from_stats()</a></code>
+scores. Zones with no weight in the objective are labelled "(not
+calibrated)".</p></dd>
 
 </dl></div>
     <div class="section level2">
