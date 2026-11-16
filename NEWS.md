@@ -1,3 +1,7 @@
+# landisutils 0.0.185
+
+* `ForestRoadsSimulation$write()` registers every input raster the file names, not only `RasterOfBuildableZones` and `InitialRoadNetworkMap`: `CoarseElevationRaster`, `FineElevationRaster`, `CoarseWaterRaster`, `FineWaterRaster` and `SoilsRaster` too, unless set to `"none"` (in any case, as the extension reads it). Before, a scenario that used one was staged without it. A named raster that is not under `path` is now an error at write time.
+
 # landisutils 0.0.184
 
 * Dynamic Fire calibrations can score fire counts zone by zone, for a landscape divided into several fire regions. A landscape total can match while one zone burns too often and another too rarely, which in a range-of-variation study misplaces the stand ages.
