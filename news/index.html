@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.184</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.185</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,6 +41,11 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.185" id="landisutils-00185">landisutils 0.0.185<a class="anchor" aria-label="anchor" href="#landisutils-00185"></a></h2>
+<ul><li>
+<code>ForestRoadsSimulation$write()</code> registers every input raster the file names, not only <code>RasterOfBuildableZones</code> and <code>InitialRoadNetworkMap</code>: <code>CoarseElevationRaster</code>, <code>FineElevationRaster</code>, <code>CoarseWaterRaster</code>, <code>FineWaterRaster</code> and <code>SoilsRaster</code> too, unless set to <code>"none"</code> (in any case, as the extension reads it). Before, a scenario that used one was staged without it. A named raster that is not under <code>path</code> is now an error at write time.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.184" id="landisutils-00184">landisutils 0.0.184<a class="anchor" aria-label="anchor" href="#landisutils-00184"></a></h2>
 <ul><li>Dynamic Fire calibrations can score fire counts zone by zone, for a landscape divided into several fire regions. A landscape total can match while one zone burns too often and another too rarely, which in a range-of-variation study misplaces the stand ages.</li>
