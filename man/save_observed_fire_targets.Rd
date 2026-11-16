@@ -19,7 +19,10 @@ save_observed_fire_targets(
   severity_dist = NULL,
   mortality_share = NULL,
   min_size_ha = 1,
-  ignitions = NULL
+  ignitions = NULL,
+  zones = NULL,
+  zone_field = "EcoCode",
+  record = NULL
 )
 }
 \arguments{
@@ -90,6 +93,22 @@ in or near a perimeter polygon besides the point being sized, passed to
 \code{\link[=observed_fire_sizes]{observed_fire_sizes()}} for both ecoregions. Pass the whole point record,
 including both ecoregions' points. NULL uses each ecoregion's own points,
 which misses a fire that started outside the ecoregion.}
+
+\item{zones}{data.frame or NULL. The fire zones (Dynamic Fire fire regions)
+the primary ecoregion is divided into: \code{EcoCode} (integer), \code{EcoName}
+(character; letters and digits only, the fire-region name written into the
+\code{FireSizesTable}, which is what the event log reports as \code{InitFireRegion})
+and \code{calibrated} (logical). When supplied, the payload carries one observed
+block per zone in \verb{$zones}, keyed by \code{EcoName}, and \verb{$zone_weights}, each
+calibrated zone's share of the calibrated zones' ignitions (others 0).
+\code{\link[=loss_from_stats]{loss_from_stats()}} then scores fire counts zone by zone. Every primary
+point must lie in a listed zone. NULL (default) writes no zone blocks.}
+
+\item{zone_field}{Character. The \code{primary_points} column holding each
+point's zone code. Default \code{"EcoCode"}.}
+
+\item{record}{Character or NULL. A label for the fire record the points were
+filtered to (e.g. which causes and years), stored as \verb{$record}.}
 }
 \value{
 Character. Absolute path to the written file.

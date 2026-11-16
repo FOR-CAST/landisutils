@@ -1143,7 +1143,10 @@ test_that("save_observed_fire_targets() writes a payload with expected shape", {
       "pixel_area_ha",
       "min_size_ha",
       "computed_at",
-      "notes"
+      "notes",
+      "record",
+      "zones",
+      "zone_weights"
     )
   )
   ## Primary summary checks
@@ -1696,6 +1699,114 @@ test_that("save_observed_fire_targets() passes `ignitions` to the size rule", {
   }
   expect_equal(sizes(ign), 100, tolerance = 1e-6)
   expect_equal(sizes(NULL), 120)
+})
+
+## --- per-zone observed blocks -------------------------------------------------------------------
+.zone_rast <- function() {
+  r <- terra::rast(
+    nrows = 10,
+    ncols = 110,
+    xmin = 1.2e6,
+    xmax = 1.211e6,
+    ymin = 1e6,
+    ymax = 1.001e6,
+    crs = "EPSG:3005"
+  )
+  terra::values(r) <- 2L
+  r
+}
+## One fire per element, each at its own spot, carrying its zone code in `EcoCode`.
+.zone_points <- function(
+  code,
+  year,
+  size_ha = 5,
+  x = 1.2e6 + 50 + 100 * seq_along(code),
+  y = 1e6 + 500
+) {
+  p <- .ignitions(x, y, year, size_ha)
+  p$EcoCode <- as.integer(code)
+  p
+}
+.zone_table <- function(n = 3L, calibrated = c(TRUE, TRUE, FALSE, TRUE)) {
+  data.frame(
+    EcoCode = seq_len(n),
+    EcoName = c("A", "B", "C", "D")[seq_len(n)],
+    calibrated = calibrated[seq_len(n)]
+  )
+}
+.zone_payload <- function(points, zones, polys = NULL, fire_years = 2001:2002, ...) {
+  path <- withr::local_tempfile(fileext = ".rds")
+  save_observed_fire_targets(points, polys, fire_years, .zone_rast(), path, zones = zones, ...)
+  readRDS(path)
+}
+
+test_that("save_observed_fire_targets() writes one block per zone, keyed by zone name", {
+  p <- .zone_payload(
+    .zone_points(c(1, 1, 2, 3), c(2001, 2002, 2001, 2002)),
+    .zone_table(),
+    record = "hrv"
+  )
+  expect_named(p$zones, c("A", "B", "C"))
+  expect_equal(p$zones$A$lambda_obs, 1)
+  expect_equal(p$zones$A$n_fires_by_year$n, c(1L, 1L))
+  expect_equal(p$zones$A$fire_sizes_ha, c(5, 5))
+  expect_equal(p$zones$B$lambda_obs, 0.5)
+  expect_equal(p$zones$C$lambda_obs, 0.5)
+  expect_false(p$zones$C$calibrated)
+  expect_identical(p$record, "hrv")
+})
+
+test_that("zone weights are each calibrated zone's share of calibrated fires", {
+  p <- .zone_payload(.zone_points(c(1, 1, 2, 3), c(2001, 2002, 2001, 2002)), .zone_table())
+  expect_equal(p$zone_weights, c(A = 2 / 3, B = 1 / 3, C = 0))
+})
+
+test_that("a zone with no fires has rate 0 and weight 0", {
+  p <- .zone_payload(.zone_points(c(1, 1, 2, 3), c(2001, 2002, 2001, 2002)), .zone_table(4L))
+  expect_equal(p$zones$D$lambda_obs, 0)
+  expect_equal(p$zones$D$n_fires_by_year$n, c(0L, 0L))
+  expect_equal(p$zone_weights, c(A = 2 / 3, B = 1 / 3, C = 0, D = 0))
+})
+
+test_that("each zone's sizes use the whole ignition record for the merge test", {
+  ## The two-part feature of the `ignitions` test above: the zone-A fire's part is 100 ha, and the
+  ## other part holds a zone-B fire. Sized against zone A's points alone, the zone-A fire would take
+  ## the whole feature's 120 ha.
+  feat <- .fire_feature(c(.square(1.2e6, 1e6, 1000), .square(1.21e6, 1e6, 500)), 2018, 120)
+  pts <- .zone_points(
+    c(1, 2),
+    2018,
+    size_ha = c(90, 30),
+    x = c(1.2e6 + 500, 1.21e6 + 250),
+    y = c(1e6 + 500, 1e6 + 250)
+  )
+  p <- .zone_payload(pts, .zone_table(2L), polys = feat, fire_years = 2018L)
+  expect_equal(p$zones$A$fire_sizes_ha, 100, tolerance = 1e-6)
+})
+
+test_that("the primary block is unchanged by zones", {
+  pts <- .zone_points(c(1, 1, 2, 3), c(2001, 2002, 2001, 2002))
+  with_zones <- .zone_payload(pts, .zone_table())
+  without <- .zone_payload(pts, NULL)
+  expect_identical(with_zones$primary, without$primary)
+  expect_null(without$zones)
+  expect_null(without$zone_weights)
+})
+
+test_that("an ignition in a zone the table does not name is an error", {
+  pts <- .zone_points(c(1, 9), c(2001, 2002))
+  expect_snapshot(.zone_payload(pts, .zone_table()), error = TRUE)
+})
+
+test_that("a zone name must be letters and digits", {
+  zones <- .zone_table()
+  zones$EcoName[[2]] <- "FRT13-hi"
+  expect_snapshot(.zone_payload(.zone_points(c(1, 2), c(2001, 2002)), zones), error = TRUE)
+})
+
+test_that("no calibrated zone with fires is an error", {
+  zones <- .zone_table(calibrated = c(FALSE, FALSE, FALSE))
+  expect_snapshot(.zone_payload(.zone_points(c(1, 2), c(2001, 2002)), zones), error = TRUE)
 })
 
 test_that("save_observed_fire_targets() falls back to points' SIZE_HA when polys are not supplied", {

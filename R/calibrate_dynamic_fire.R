@@ -2703,6 +2703,19 @@ observed_fire_sizes <- function(
 #'   [observed_fire_sizes()] for both ecoregions. Pass the whole point record,
 #'   including both ecoregions' points. NULL uses each ecoregion's own points,
 #'   which misses a fire that started outside the ecoregion.
+#' @param zones data.frame or NULL. The fire zones (Dynamic Fire fire regions)
+#'   the primary ecoregion is divided into: `EcoCode` (integer), `EcoName`
+#'   (character; letters and digits only, the fire-region name written into the
+#'   `FireSizesTable`, which is what the event log reports as `InitFireRegion`)
+#'   and `calibrated` (logical). When supplied, the payload carries one observed
+#'   block per zone in `$zones`, keyed by `EcoName`, and `$zone_weights`, each
+#'   calibrated zone's share of the calibrated zones' ignitions (others 0).
+#'   [loss_from_stats()] then scores fire counts zone by zone. Every primary
+#'   point must lie in a listed zone. NULL (default) writes no zone blocks.
+#' @param zone_field Character. The `primary_points` column holding each
+#'   point's zone code. Default `"EcoCode"`.
+#' @param record Character or NULL. A label for the fire record the points were
+#'   filtered to (e.g. which causes and years), stored as `$record`.
 #'
 #' @returns Character. Absolute path to the written file.
 #'
@@ -2724,11 +2737,18 @@ save_observed_fire_targets <- function(
   severity_dist = NULL,
   mortality_share = NULL,
   min_size_ha = 1.0,
-  ignitions = NULL
+  ignitions = NULL,
+  zones = NULL,
+  zone_field = "EcoCode",
+  record = NULL
 ) {
   stopifnot(
     inherits(primary_points, "SpatVector"),
     is.null(ignitions) || inherits(ignitions, "SpatVector"),
+    is.null(zones) || is.data.frame(zones),
+    is.character(zone_field),
+    length(zone_field) == 1L,
+    is.null(record) || (is.character(record) && length(record) == 1L),
     is.numeric(min_size_ha),
     length(min_size_ha) == 1L,
     min_size_ha >= 0,
@@ -2860,6 +2880,19 @@ save_observed_fire_targets <- function(
   } else {
     NULL
   }
+  zone_blocks <- if (is.null(zones)) {
+    list(zones = NULL, zone_weights = NULL)
+  } else {
+    .observed_zone_blocks(
+      primary_points,
+      primary_polys,
+      zones,
+      zone_field,
+      fire_years,
+      min_size_ha,
+      ignitions = if (is.null(ignitions)) primary_points else ignitions
+    )
+  }
 
   ## Keep the named accessors that loss_from_stats() expects ($fru59 in legacy
   ## clients, $primary going forward). Set BOTH so projects can use either name.
@@ -2900,11 +2933,96 @@ save_observed_fire_targets <- function(
         if (is.null(severity_dist)) "NULL (L_severity will contribute 0);" else "set from caller;",
         "see default_severity_prior_sturtevant2009() for a Sturtevant 2009 prior."
       )
-    )
+    ),
+    record = record,
+    zones = zone_blocks$zones,
+    zone_weights = zone_blocks$zone_weights
   )
 
   saveRDS(payload, path)
   fs::path_real(path)
+}
+
+## One observed block per fire zone (internal), for `save_observed_fire_targets(zones = )`. Counts
+## come from each zone's own ignition points. Sizes come from `observed_fire_sizes()` against the
+## WHOLE ignition record, as the primary block's do: tested against one zone's points alone, a
+## perimeter shared with a fire in the next zone would hand its whole area to this zone's fire.
+## Weights are each calibrated zone's share of the calibrated zones' ignitions, so they sum to 1.
+.observed_zone_blocks <- function(
+  points,
+  polys,
+  zones,
+  zone_field,
+  fire_years,
+  min_size_ha,
+  ignitions
+) {
+  stopifnot(
+    all(c("EcoCode", "EcoName", "calibrated") %in% names(zones)),
+    is.logical(zones$calibrated),
+    !anyNA(zones$calibrated),
+    !anyDuplicated(zones$EcoCode),
+    !anyDuplicated(zones$EcoName)
+  )
+  bad <- zones$EcoName[!grepl("^[A-Za-z0-9]+$", zones$EcoName)]
+  if (length(bad) > 0L) {
+    stop(
+      "Zone names must be letters and digits only, so that they match the fire-region names ",
+      "Dynamic Fire writes to its event log; not: ",
+      paste(bad, collapse = ", "),
+      call. = FALSE
+    )
+  }
+  pts <- as.data.frame(points)
+  if (!zone_field %in% names(pts)) {
+    stop("`primary_points` has no `", zone_field, "` column to assign zones from.", call. = FALSE)
+  }
+  code <- as.integer(pts[[zone_field]])
+  unknown <- unique(code[!code %in% zones$EcoCode])
+  if (length(unknown) > 0L) {
+    stop(
+      "Ignition point(s) lie in zone code(s) ",
+      paste(sort(unknown, na.last = TRUE), collapse = ", "),
+      " that `zones` does not name.",
+      call. = FALSE
+    )
+  }
+  years <- as.integer(fire_years)
+  blocks <- lapply(seq_len(nrow(zones)), function(i) {
+    in_zone <- code == zones$EcoCode[[i]]
+    zone_year <- pts$YEAR[in_zone]
+    list(
+      ecoregion = zones$EcoName[[i]],
+      code = as.integer(zones$EcoCode[[i]]),
+      calibrated = zones$calibrated[[i]],
+      n_years = length(years),
+      n_ignitions = sum(in_zone),
+      lambda_obs = sum(in_zone) / length(years),
+      n_fires_by_year = tibble::tibble(
+        year = years,
+        n = vapply(years, function(y) sum(zone_year == y, na.rm = TRUE), integer(1))
+      ),
+      fire_sizes_ha = if (any(in_zone)) {
+        observed_fire_sizes(
+          points[in_zone, ],
+          polys,
+          min_size_ha = min_size_ha,
+          ignitions = ignitions
+        )
+      } else {
+        numeric(0)
+      }
+    )
+  })
+  names(blocks) <- zones$EcoName
+  n_calibrated <- vapply(blocks, function(b) if (b$calibrated) b$n_ignitions else 0L, integer(1))
+  if (sum(n_calibrated) == 0L) {
+    stop(
+      "No calibrated zone has an ignition in `fire_years`, so the zones cannot be weighted.",
+      call. = FALSE
+    )
+  }
+  list(zones = blocks, zone_weights = n_calibrated / sum(n_calibrated))
 }
 
 ## Refuse burned cells the observed fuel decoding cannot read (internal). Dropping them was the
