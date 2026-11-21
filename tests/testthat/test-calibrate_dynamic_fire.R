@@ -3456,6 +3456,72 @@ test_that(".eval_fingerprint changes iff a loss-affecting input changes", {
   }
 })
 
+test_that(".eval_fingerprint ignores when and how the observed targets were described", {
+  base <- list(
+    par_names = calibration_par_names(),
+    weights = c(count = 2, size = 1, area_fuel = 0, severity = 0),
+    n_reps = 10L,
+    sim_years = 30L,
+    base_seed = 12345L,
+    simulator_name = "landis",
+    method = "docker",
+    image = "img:v1",
+    observed = list(
+      primary = list(lambda_obs = 8.23),
+      computed_at = as.POSIXct("2026-11-16 18:16:00", tz = "UTC"),
+      notes = "built once"
+    )
+  )
+  rebuilt <- base
+  rebuilt$observed$computed_at <- as.POSIXct("2026-11-20 15:20:00", tz = "UTC")
+  rebuilt$observed$notes <- "built again"
+  fp <- function(x) do.call(landisutils:::.eval_fingerprint, x)
+  expect_identical(fp(rebuilt), fp(base))
+})
+
+test_that("observed targets rebuilt from the same inputs keep the eval fingerprint", {
+  r <- terra::rast(nrows = 10, ncols = 10, xmin = 0, xmax = 1000, ymin = 0, ymax = 1000)
+  terra::values(r) <- rep(c(rep(2L, 5), rep(8L, 5)), 10)
+  pts <- terra::vect(
+    data.frame(lon = c(250, 750), lat = c(500, 500), YEAR = c(2010L, 2015L), SIZE_HA = c(5, 100)),
+    geom = c("lon", "lat"),
+    crs = terra::crs(r)
+  )
+  polys <- terra::vect(
+    "POLYGON ((600 400, 900 400, 900 600, 600 600, 600 400))",
+    crs = terra::crs(r)
+  )
+  polys$YEAR <- 2015L
+  polys$SIZE_HA <- 100
+  build <- function() {
+    readRDS(save_observed_fire_targets(
+      primary_points = pts,
+      primary_polys = polys,
+      fire_years = 2010L:2020L,
+      fuel_types_rast = r,
+      path = withr::local_tempfile(fileext = ".rds"),
+      primary_label = "TEST_REGION"
+    ))
+  }
+  fp <- function(observed) {
+    landisutils:::.eval_fingerprint(
+      par_names = calibration_par_names(),
+      weights = c(count = 1),
+      n_reps = 1L,
+      sim_years = 10L,
+      base_seed = 1L,
+      simulator_name = "landis",
+      method = "docker",
+      image = "img:v1",
+      observed = observed
+    )
+  }
+  first <- build()
+  second <- build()
+  expect_false(identical(first$computed_at, second$computed_at))
+  expect_identical(fp(second), fp(first))
+})
+
 test_that(".scenario_template_digest() tracks file CONTENTS, not names or mtimes", {
   ## One root for the whole test, so every staged template outlives the digest call that reads it.
   root <- withr::local_tempdir()
