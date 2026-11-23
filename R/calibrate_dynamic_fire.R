@@ -5414,8 +5414,9 @@ calibrate_dynamic_fire <- function(observed_targets_path, scenario_template, cfg
 ## Loss-config fingerprint: a stable hash of everything BESIDES the parameter
 ## vector that determines objfn's return value for a given par_vec -- the loss
 ## `weights`, the per-trial sim settings (`n_reps`, `sim_years`, `base_seed`,
-## `simulator`, `method`, Docker `image`), the `observed` targets, the scenario
-## template's contents, and the parameter ordering. Written into each trial-trace
+## `simulator`, `method`, Docker `image`), the `observed` targets (less their
+## `computed_at` and `notes`), the scenario template's contents, and the
+## parameter ordering. Written into each trial-trace
 ## row and the checkpoint so a resumed run / seeded memoization cache reuses ONLY
 ## evaluations produced under the identical loss config: change any input and the
 ## stale cache is silently dropped instead of poisoning the new run's objective
@@ -5436,6 +5437,14 @@ calibrate_dynamic_fire <- function(observed_targets_path, scenario_template, cfg
   observed,
   template_digest = NULL
 ) {
+  ## The observed targets without the two fields that record when and how they were built, neither
+  ## of which the loss reads. `computed_at` is the Sys.time() of save_observed_fire_targets(), so
+  ## hashing it rejected the checkpoint whenever a project rebuilt the targets from identical data
+  ## (a package-version target upstream of them is enough), and a search restarted at generation 1.
+  provenance <- names(observed) %in% c("computed_at", "notes")
+  if (any(provenance)) {
+    observed <- observed[!provenance]
+  }
   digest::digest(
     list(
       par_names = par_names,

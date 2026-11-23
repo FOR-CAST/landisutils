@@ -1,3 +1,7 @@
+# landisutils 0.0.186
+
+* `calibrate_dynamic_fire()` resumes from its checkpoint after the observed targets are rebuilt from the same data. The evaluation fingerprint hashed the `computed_at` time that `save_observed_fire_targets()` stamps on its payload, so any rebuild rejected the checkpoint and the cached trial losses, and the search restarted at generation 1. The fingerprint now leaves out `computed_at` and `notes`. A checkpoint written by an earlier version does not match the new fingerprint, so upgrade between searches, not during one.
+
 # landisutils 0.0.185
 
 * `ForestRoadsSimulation$write()` registers every input raster the file names, not only `RasterOfBuildableZones` and `InitialRoadNetworkMap`: `CoarseElevationRaster`, `FineElevationRaster`, `CoarseWaterRaster`, `FineWaterRaster` and `SoilsRaster` too, unless set to `"none"` (in any case, as the extension reads it). Before, a scenario that used one was staged without it. A named raster that is not under `path` is now an error at write time.
