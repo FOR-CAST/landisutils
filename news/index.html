@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">landisutils</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.185</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.186</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,6 +41,11 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.186" id="landisutils-00186">landisutils 0.0.186<a class="anchor" aria-label="anchor" href="#landisutils-00186"></a></h2>
+<ul><li>
+<code><a href="../reference/calibrate_dynamic_fire.html">calibrate_dynamic_fire()</a></code> resumes from its checkpoint after the observed targets are rebuilt from the same data. The evaluation fingerprint hashed the <code>computed_at</code> time that <code><a href="../reference/save_observed_fire_targets.html">save_observed_fire_targets()</a></code> stamps on its payload, so any rebuild rejected the checkpoint and the cached trial losses, and the search restarted at generation 1. The fingerprint now leaves out <code>computed_at</code> and <code>notes</code>. A checkpoint written by an earlier version does not match the new fingerprint, so upgrade between searches, not during one.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.185" id="landisutils-00185">landisutils 0.0.185<a class="anchor" aria-label="anchor" href="#landisutils-00185"></a></h2>
 <ul><li>
