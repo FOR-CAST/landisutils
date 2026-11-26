@@ -73,7 +73,8 @@ Tables below are grouped by extension type and sorted alphabetically; use the fi
 You can install the development version of `landisutils` like so:
 
 ``` r
-remotes::install_github("FOR-CAST/landisutils")
+# install.packages("pak")
+pak::pak("FOR-CAST/landisutils")
 ```
 
 ## Preparing data
