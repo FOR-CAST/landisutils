@@ -40,7 +40,8 @@ test_that("the validation pool is granted the SAME memory as the calibration poo
 test_that("run_calibration_validation() passes cfg-derived pool settings, not literals", {
   ## Guard the actual call site: a future edit that reintroduces a hardcoded grant, drops the
   ## image, or drops retries should fail here rather than in a 20-replicate OOM.
-  src <- deparse(body(run_calibration_validation))
+  ## .body_src() drops covr's instrumentation (helper-source.R), which shifts the line window.
+  src <- .body_src(run_calibration_validation)
   start <- grep("landis_pool_start", src)
   expect_length(start, 1L)
   window <- paste(src[start:min(length(src), start + 8L)], collapse = " ")

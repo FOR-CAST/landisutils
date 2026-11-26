@@ -4486,7 +4486,8 @@ test_that("sim_landis() forwards the parse limit, and NULL parses in-process", {
 
 test_that("both calibration drivers take the parse limit from cfg, and can switch it off", {
   for (fn in list(calibrate_dynamic_fire, run_calibration_validation)) {
-    src <- paste(deparse(body(fn)), collapse = " ")
+    ## .body_src() drops covr's instrumentation (helper-source.R), which splits the `if` below.
+    src <- paste(.body_src(fn), collapse = " ")
     ## deparse() wraps long lines, so every gap between tokens may be any run of whitespace.
     expect_match(
       src,
